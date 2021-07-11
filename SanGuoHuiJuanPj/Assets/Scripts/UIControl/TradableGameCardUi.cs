@@ -74,7 +74,8 @@ public class TradableGameCardUi : MonoBehaviour
     {
         Card = card;
         gameObject.SetActive(true);
-        GameCard.Set(card,GameCardUi.CardModes.Desk);
+        GameCard.Init(card);
+        GameCard.Set(GameCardUi.CardModes.Desk);
         GameCard.CityOperation.OffChipValue();
     }
 

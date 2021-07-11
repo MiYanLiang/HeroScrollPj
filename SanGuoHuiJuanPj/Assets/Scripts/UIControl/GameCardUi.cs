@@ -5,9 +5,11 @@ using System.Linq;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class GameCardUi : MonoBehaviour
+
+public class GameCardUi : GameCardUiBase
 {
     public enum CardModes
     {
@@ -16,18 +18,11 @@ public class GameCardUi : MonoBehaviour
         War
     }
     public CardModes Mode { get; private set; }
-    public GameCardInfo CardInfo { get; private set; }
-    public GameCard Card { get; private set; }
-    //persist components
-    public Image Image;
-    public Text Name;
-    public Image Level;
-    public TextImageUi Short;
-    public Image Frame;
-    public GrayScale GrayScale;
-    //dynamic components
+
     public GameCardCityUiOperation CityOperation;
     public GameCardWarUiOperation WarOperation;
+    public Button Button;
+    public EventTrigger EventTrigger;
 
     public bool IsSelected
     {
@@ -47,18 +42,14 @@ public class GameCardUi : MonoBehaviour
         }
     }
 
-    public void Set(GameCard card,CardModes mode)
+    [Obsolete("这个Set方法需要与Init一起用，基本上需要重构整个类")]
+    public void Set(CardModes mode)
     {
         GrayScale.Init();
-        Card = card;
-        CardInfo = card.GetInfo();
         Image.sprite = CardInfo.Type == GameCardType.Hero
-            ? GameResources.Instance.HeroImg[card.CardId]
+            ? GameResources.Instance.HeroImg[Card.CardId]
             : GameResources.Instance.FuZhuImg[CardInfo.ImageId];
         Short.Set(CardInfo.Short, GameResources.Instance.ClassImg[CardInfo.Type == GameCardType.Hero ? 0 : 1]);
-        SetName(CardInfo);
-        SetLevel(card.Level);
-        SetFrame(false);
         SetMode(mode);
         gameObject.SetActive(true);
     }
@@ -74,7 +65,9 @@ public class GameCardUi : MonoBehaviour
         WarOperation.ResetUi();
         CityOperation.ResetUi();
         Mode = mode;
-        if(mode == CardModes.Desk)
+        EventTrigger.enabled = mode == CardModes.War;
+        Button.enabled = mode != CardModes.War;
+        if (mode == CardModes.Desk)
         {
             CityOperation.Show(this);
         }
@@ -85,6 +78,7 @@ public class GameCardUi : MonoBehaviour
         {
             WarOperation.Show(this);
         }
+
         WarOperation.gameObject.SetActive(mode == CardModes.War);
         CityOperation.gameObject.SetActive(mode == CardModes.Desk);
     }
@@ -105,49 +99,4 @@ public class GameCardUi : MonoBehaviour
                 throw new ArgumentOutOfRangeException();
         }
     }
-
-    public void SetFrame(bool on) => Frame.gameObject.SetActive(on);
-    public void SetName(GameCardInfo info)
-    {
-        NameTextSizeAlignment(Name, info.Name);
-        Name.color = info.GetNameColor();
-    }
-
-    public void SetLevel(int level) => Level.sprite = GameResources.Instance.GradeImg[level];
-
-    /// <summary> 
-    /// 名字显示规则 
-    /// </summary> 
-    /// <param name="nameText"></param> 
-    /// <param name="str"></param> 
-    public static void NameTextSizeAlignment(Text nameText, string str)
-    {
-        nameText.text = str;
-        switch (str.Length)
-        {
-            case 1:
-                nameText.fontSize = 50;
-                nameText.lineSpacing = 1.1f;
-                break;
-            case 2:
-                nameText.fontSize = 50;
-                nameText.lineSpacing = 1.1f;
-                break;
-            case 3:
-                nameText.fontSize = 50;
-                nameText.lineSpacing = 0.9f;
-                break;
-            case 4:
-                nameText.fontSize = 45;
-                nameText.lineSpacing = 0.8f;
-                break;
-            default:
-                nameText.fontSize = 45;
-                nameText.lineSpacing = 0.8f;
-                break;
-        }
-    }
-
-    public void SetGay(bool isGray) => GrayScale.SetGray(isGray ? 1 : 0);
-
 }
