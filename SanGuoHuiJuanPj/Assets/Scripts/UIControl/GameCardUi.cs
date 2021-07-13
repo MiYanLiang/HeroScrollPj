@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,8 +22,6 @@ public class GameCardUi : GameCardUiBase
 
     public GameCardCityUiOperation CityOperation;
     public GameCardWarUiOperation WarOperation;
-    public Button Button;
-    public EventTrigger EventTrigger;
 
     public bool IsSelected
     {
@@ -65,8 +64,6 @@ public class GameCardUi : GameCardUiBase
         WarOperation.ResetUi();
         CityOperation.ResetUi();
         Mode = mode;
-        EventTrigger.enabled = mode == CardModes.War;
-        Button.enabled = mode != CardModes.War;
         if (mode == CardModes.Desk)
         {
             CityOperation.Show(this);
@@ -99,4 +96,6 @@ public class GameCardUi : GameCardUiBase
                 throw new ArgumentOutOfRangeException();
         }
     }
+
+    public void Test([CallerMemberName] string methodName = null) => Debug.Log($"{methodName}:Invoke()");
 }

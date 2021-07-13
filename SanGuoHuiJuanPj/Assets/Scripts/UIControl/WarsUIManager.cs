@@ -18,7 +18,7 @@ public class WarsUIManager : MonoBehaviour
 
     public Transform herosCardListTran;
     public ScrollRect herosCardListScrollRect;
-    public bool _isDragItem;
+    public bool isDragDelegated;
 
 
     //[SerializeField]
@@ -27,9 +27,9 @@ public class WarsUIManager : MonoBehaviour
     [SerializeField]
     GameObject cityLevelObj;   //主城信息obj
     [SerializeField]
-    public GameObject heroCardListObj; //武将卡牌初始列表
-    [SerializeField]
-    GameObject cardForWarListPres; //列表卡牌预制件
+    public HorizontalLayoutGroup PlayerCardsRack; //武将卡牌架
+    //[SerializeField]
+    //WarGameCardUi playerGameCardUiPrefab; //列表卡牌预制件
     [SerializeField]
     GameObject guanQiaPreObj;   //关卡按钮预制件
     [SerializeField] Button operationButton;    //关卡执行按钮
@@ -180,7 +180,7 @@ public class WarsUIManager : MonoBehaviour
         point2Pos = point2Tran.position;
 
         Input.multiTouchEnabled = false;    //限制多指拖拽
-        _isDragItem = false;
+        isDragDelegated = false;
         isGettingStage = false;
         //------------Awake----------------//
         PlayerDataForGame.instance.lastSenceIndex = 2;
@@ -964,26 +964,28 @@ public class WarsUIManager : MonoBehaviour
     private void CreateCardToList(GameCard card, GameCardInfo info)
     {
         var re = GameResources;
-        GameObject obj = Instantiate(cardForWarListPres, heroCardListObj.transform);
-        var cardDrag = obj.GetComponent<CardForDrag>();
+        //GameObject obj = Instantiate(cardForWarListPres, heroCardListObj.transform);
+        var ui = PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform);
+        var cardDrag = ui.DragComponent;
         cardDrag.Init(herosCardListTran, herosCardListScrollRect);
-        cardDrag.posIndex = -1;
-        obj.transform.GetChild(1).GetComponent<Image>().sprite =
-            info.Type == GameCardType.Hero ? re.HeroImg[card.id] : re.FuZhuImg[info.ImageId];
-        ShowNameTextRules(obj.transform.GetChild(3).GetComponent<Text>(), info.Name);
-        //名字颜色
-        obj.transform.GetChild(3).GetComponent<Text>().color = GetNameColor(info.Rare);
-        obj.transform.GetChild(4).GetComponent<Image>().sprite = re.GradeImg[card.level];
-        obj.transform.GetChild(5).GetComponentInChildren<Text>().text = info.Short;
-        //兵种框
-        obj.transform.GetChild(5).GetComponent<Image>().sprite =
-            info.Type == GameCardType.Hero ? re.ClassImg[0] : re.ClassImg[1];
-        FrameChoose(info.Rare, obj.transform.GetChild(6).GetComponent<Image>());
+        //ui.transform.GetChild(1).GetComponent<Image>().sprite =
+        //    info.Type == GameCardType.Hero ? re.HeroImg[card.id] : re.FuZhuImg[info.ImageId];
+        //ShowNameTextRules(ui.transform.GetChild(3).GetComponent<Text>(), info.Name);
+        ////名字颜色
+        //ui.transform.GetChild(3).GetComponent<Text>().color = GetNameColor(info.Rare);
+        //ui.transform.GetChild(4).GetComponent<Image>().sprite = re.GradeImg[card.level];
+        //ui.transform.GetChild(5).GetComponentInChildren<Text>().text = info.Short;
+        ////兵种框
+        //ui.transform.GetChild(5).GetComponent<Image>().sprite =
+        //    info.Type == GameCardType.Hero ? re.ClassImg[0] : re.ClassImg[1];
+        //FrameChoose(info.Rare, ui.transform.GetChild(6).GetComponent<Image>());
         //添加按住抬起方法
-        FightForManager.instance.GiveGameObjEventForHoldOn(obj, info.About);
+        ui.Init(card);
+        ui.SetSize(Vector3.one);
+        FightForManager.instance.GiveGameObjEventForHoldOn(ui.gameObject, info.About);
         FightCardData data = new FightCardData();
         data.unitId = 1;
-        data.cardObj = obj;
+        data.cardObj = ui.gameObject;
         data.cardType = card.typeIndex;
         data.cardId = card.id;
         data.posIndex = -1;

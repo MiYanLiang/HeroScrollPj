@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CorrelateLib;
 using UnityEngine;
 
 public enum ForceFlags
@@ -161,4 +163,21 @@ public class GameResources
         public IEnumerable<TValue> Values => Data.Values;
     }
 
+    public Sprite GetCardImage(GameCard card)
+    {
+        var info = card.GetInfo();
+        switch (info.Type)
+        {
+            case GameCardType.Hero:
+                return HeroImg[card.CardId];
+            case GameCardType.Tower:
+            case GameCardType.Trap:
+                return FuZhuImg[info.ImageId];
+            case GameCardType.Spell:
+            case GameCardType.Soldier:
+            case GameCardType.Base:
+            default:
+                throw XDebug.Throw<GameResources>($"不支持类型 [{info.Type}]!");
+        }
+    }
 }

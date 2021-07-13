@@ -6,14 +6,11 @@ using UnityEngine.UI;
 
 public class GameCardWarUiOperation : MonoBehaviour
 {
-    public Button Button;
     public Image Hp;
     public Image Lose;
     public Image Highlight;
     public Image Selected;
     public Transform StateContent;
-    public UnityAction OnclickAction;
-    public CardForDrag CardDrag;
     private Dictionary<States,GameObject> StateObjs
     {
         get
@@ -32,7 +29,6 @@ public class GameCardWarUiOperation : MonoBehaviour
     private Dictionary<States,GameObject> _stateObjs;
     private List<Image> ConditionList = new List<Image>();
 
-    void Awake() => Button.onClick.AddListener(OnclickAction);
     public enum States
     {
         Normal,
@@ -42,11 +38,7 @@ public class GameCardWarUiOperation : MonoBehaviour
 
     public States State { get; private set; }
 
-    public void Show(GameCardUi ui)
-    {
-        Button.image.sprite = ui.Image.sprite;
-        Hp.fillAmount = 0;
-    }
+    public void Show(GameCardUiBase ui) => Hp.fillAmount = 0;
 
     public void SetHp(float hp) => Hp.fillAmount = 1 - hp;
 

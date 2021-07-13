@@ -305,8 +305,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  posIndex: 0
-  isFightCard: 0
 --- !u!1 &5631416490529117875
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,7 +3,10 @@ using UnityEngine.UI;
 
 public class WarGameCardUi : GameCardUiBase
 {
+    public GameCardWarUiOperation War;
+    public DragController DragComponent;
 
+    public void SetSelected(bool selected) => War.Selected.gameObject.SetActive(selected);
 }
 
 public class GameCardUiBase : MonoBehaviour
@@ -21,12 +24,14 @@ public class GameCardUiBase : MonoBehaviour
     {
         Card = card;
         CardInfo = card.GetInfo();
+        Image.sprite = GameResources.Instance.GetCardImage(card);
         SetName(CardInfo);
         SetLevel(Card.Level);
-        SetFrame(false);
+        ShowFrame(false);
     }
 
-    public void SetFrame(bool on) => Frame.gameObject.SetActive(on);
+    public void SetSize(Vector3 size) => transform.localScale = size;
+    public void ShowFrame(bool on) => Frame.gameObject.SetActive(on);
     public void SetName(GameCardInfo info)
     {
         NameTextSizeAlignment(Name, info.Name);
@@ -68,5 +73,5 @@ public class GameCardUiBase : MonoBehaviour
         }
     }
 
-    public void SetGay759873703(bool isGray) => GrayScale.SetGray(isGray ? 1 : 0);
+    public void SetGray(bool isGray) => GrayScale.SetGray(isGray ? 1 : 0);
 }

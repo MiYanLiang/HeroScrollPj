@@ -122,6 +122,50 @@ public class EffectsPoolingControl : MonoBehaviour
         }
     }
 
+    public GameObject GetEffectToFight(string effectName, float takeBackTime, WarGameCardUi ui)
+    {
+        int index = -1;
+        for (int i = 0; i < effectsNameStr.Length; i++)
+        {
+            if (effectsNameStr[i] == effectName)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1)
+        {
+            foreach (GameObject go in effectsPoolingList[index])
+            {
+                if (go == null)
+                    continue;
+                if (!go.activeSelf)
+                {
+                    go.transform.position = ui.transform.position;
+                    go.transform.SetParent(ui.transform);
+                    go.SetActive(true);
+                    //if (go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0]!=null)
+                    //    takeBackTime = go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
+                    StartCoroutine(TakeBackEffect(go, takeBackTime));
+                    return go;
+                }
+            }
+
+            GameObject effectObj = Instantiate(GameResources.Effects[effectName], ui.transform);
+            effectObj.transform.position = ui.transform.position;
+            effectObj.SetActive(true);
+            effectsPoolingList[index].Add(effectObj);
+            //if (effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0] != null)
+            //    takeBackTime = effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
+            StartCoroutine(TakeBackEffect(effectObj, takeBackTime));
+            return effectObj;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// 获取技能特效,不跟随卡牌位置
     /// </summary>

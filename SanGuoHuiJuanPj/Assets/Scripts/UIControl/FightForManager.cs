@@ -1355,7 +1355,7 @@ public class FightForManager : MonoBehaviour
     }
 
     //是否能成功上阵
-    public bool ChangeNumsSuccess(bool isAdd)
+    public bool PlaceOrRemoveCard(bool isAdd)
     {
         var maxCard = WarsUIManager.instance.maxHeroNums;
         if (isAdd)
@@ -1366,25 +1366,19 @@ public class FightForManager : MonoBehaviour
                 UpdateFightNumTextShow(maxCard);
                 return true;
             }
-            else
-            {
-                nowHeroNums = maxCard;
-                return false;
-            }
+
+            nowHeroNums = maxCard;
+            return false;
         }
-        else
+
+        if (nowHeroNums > 0)
         {
-            if (nowHeroNums > 0)
-            {
-                nowHeroNums--;
-                UpdateFightNumTextShow(maxCard);
-            }
-            else
-            {
-                nowHeroNums = 0;
-            }
-            return true;
+            nowHeroNums--;
+            UpdateFightNumTextShow(maxCard);
         }
+        else nowHeroNums = 0;
+
+        return true;
     }
 
     [SerializeField]
