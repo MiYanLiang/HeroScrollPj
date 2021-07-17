@@ -27,7 +27,7 @@ public class FightForManagerForStart : MonoBehaviour
     GameObject fightCardPyPre;          //我方战斗卡牌预制件
 
     [SerializeField]
-    GameObject homeCardObj;             //老巢卡牌预制件
+    WarGameCardUi homeCardObj;             //老巢卡牌预制件
 
     public Transform herosCardListTran; //我方卡牌备战位
 
@@ -384,7 +384,7 @@ public class FightForManagerForStart : MonoBehaviour
     private void CreatePlayerHomeCard()
     {
         FightCardData playerHomeData = new FightCardData();
-        playerHomeData.cardObj = Instantiate(homeCardObj, playerCardsBox);
+        playerHomeData.cardObj= Instantiate(homeCardObj, playerCardsBox);
         playerHomeData.cardObj.transform.position = playerCardsPos[17].transform.position;
         playerHomeData.hpr = 0;
         playerHomeData.cardType = 522;
@@ -416,7 +416,7 @@ public class FightForManagerForStart : MonoBehaviour
         storyObj.GetChild(1).gameObject.SetActive(false);
         storyObj.GetChild(2).gameObject.SetActive(false);
         storyObj.GetComponent<Button>().enabled = false;
-        Image bottonImg = storyObj.GetChild(0).GetChild(3).GetComponent<Image>();
+        var bottonImg = storyObj.GetChild(0).GetChild(3).GetComponent<Image>();
 
         if (storyIndex < guides.Length)
         {
@@ -597,7 +597,7 @@ public class FightForManagerForStart : MonoBehaviour
     private FightCardData CreateFightUnit(Chessman chessman, Transform cardsBoxTran, bool isPlayerCard)
     {
         FightCardData data = new FightCardData();
-        data.cardObj = Instantiate(isPlayerCard ? fightCardPyPre : fightCardPre, cardsBoxTran);
+        data.cardObj = PrefabManager.NewWarGameCardUi(cardsBoxTran); //Instantiate(isPlayerCard ? fightCardPyPre : fightCardPre, cardsBoxTran);
         data.cardType = chessman.CardType;
         data.cardId = chessman.CardId;
         data.cardGrade = chessman.Star;
@@ -945,44 +945,44 @@ public class FightForManagerForStart : MonoBehaviour
             if (jiBan.IsOpen == 0) continue;
             JiBanActivedClass jiBanActivedClass = jiBanActivedClasses[jiBan.Id];
             bool isActived = true;
-            for (int j = 0; j < jiBanActivedClass.cardTypeLists.Count; j++)
+            for (int j = 0; j < jiBanActivedClass.List.Count; j++)
             {
-                if (jiBanActivedClass.cardTypeLists[j].cardType == cardData.cardType &&
-                    jiBanActivedClass.cardTypeLists[j].cardId == cardData.cardId)
+                if (jiBanActivedClass.List[j].CardType == cardData.cardType &&
+                    jiBanActivedClass.List[j].CardId == cardData.cardId)
                 {
                     if (isAdd)
                     {
-                        if (!jiBanActivedClass.cardTypeLists[j].cardLists.Exists(t => t == cardData))
+                        if (!jiBanActivedClass.List[j].Cards.Exists(t => t == cardData))
                         {
-                            jiBanActivedClass.cardTypeLists[j].cardLists.Add(cardData);
+                            jiBanActivedClass.List[j].Cards.Add(cardData);
                         }
                     }
                     else
                     {
-                        jiBanActivedClass.cardTypeLists[j].cardLists.Remove(cardData);
+                        jiBanActivedClass.List[j].Cards.Remove(cardData);
                     }
                 }
 
-                if (jiBanActivedClass.cardTypeLists[j].cardLists.Count <= 0)
+                if (jiBanActivedClass.List[j].Cards.Count <= 0)
                 {
                     isActived = false;
                 }
             }
 
-            if (!jiBanActivedClass.isActived && isActived)
+            if (!jiBanActivedClass.IsActive && isActived)
             {
-                for (int k = 0; k < jiBanActivedClass.cardTypeLists.Count; k++)
+                for (int k = 0; k < jiBanActivedClass.List.Count; k++)
                 {
-                    for (int s = 0; s < jiBanActivedClass.cardTypeLists[k].cardLists.Count; s++)
+                    for (int s = 0; s < jiBanActivedClass.List[k].Cards.Count; s++)
                     {
-                        jiBanActivedClass.cardTypeLists[k].cardLists[s].cardObj.transform.GetChild(10).gameObject
+                        jiBanActivedClass.List[k].Cards[s].cardObj.transform.GetChild(10).gameObject
                             .SetActive(false);
-                        jiBanActivedClass.cardTypeLists[k].cardLists[s].cardObj.transform.GetChild(10).gameObject
+                        jiBanActivedClass.List[k].Cards[s].cardObj.transform.GetChild(10).gameObject
                             .SetActive(true);
                     }
                 }
             }
-            jiBanActivedClass.isActived = isActived;
+            jiBanActivedClass.IsActive = isActived;
         }
     }
 

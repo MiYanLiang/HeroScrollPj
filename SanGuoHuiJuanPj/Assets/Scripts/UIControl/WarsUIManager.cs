@@ -19,7 +19,7 @@ public class WarsUIManager : MonoBehaviour
     public Transform herosCardListTran;
     public ScrollRect herosCardListScrollRect;
     public bool isDragDelegated;
-
+    public ChessmanOperator ChessmanOperator;
 
     //[SerializeField]
     //GameObject playerInfoObj;   //玩家信息obj
@@ -142,6 +142,7 @@ public class WarsUIManager : MonoBehaviour
     public void Init()
     {
         StartCoroutine(Initialize());
+        ChessmanOperator.Init();
         if(EffectsPoolingControl.instance.IsInit)return;
         EffectsPoolingControl.instance.Init();
     }
@@ -555,11 +556,11 @@ public class WarsUIManager : MonoBehaviour
         currentEvent = EventTypes.回春;
         PlayAudioClip(19);
         GenericWindow.SetRecovery(DataTable.GetStringText(55));
-        foreach (var card in FightForManager.instance.playerFightCardsDatas)
+        foreach (var card in FightForManager.instance.GetCardList(true))
         {
             if (card == null || card.nowHp <= 0) continue;
             card.nowHp += (int)(percentReturnHp * card.fullHp);
-            FightController.instance.UpdateUnitHpShow(card);
+            card.UpdateHpUi();
         }
     }
 
@@ -963,45 +964,32 @@ public class WarsUIManager : MonoBehaviour
     private void CreateCardToList(GameCard card) => CreateCardToList(card, card.GetInfo());
     private void CreateCardToList(GameCard card, GameCardInfo info)
     {
-        var re = GameResources;
-        //GameObject obj = Instantiate(cardForWarListPres, heroCardListObj.transform);
         var ui = PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform);
         var cardDrag = ui.DragComponent;
-        cardDrag.Init(herosCardListTran, herosCardListScrollRect);
-        //ui.transform.GetChild(1).GetComponent<Image>().sprite =
-        //    info.Type == GameCardType.Hero ? re.HeroImg[card.id] : re.FuZhuImg[info.ImageId];
-        //ShowNameTextRules(ui.transform.GetChild(3).GetComponent<Text>(), info.Name);
-        ////名字颜色
-        //ui.transform.GetChild(3).GetComponent<Text>().color = GetNameColor(info.Rare);
-        //ui.transform.GetChild(4).GetComponent<Image>().sprite = re.GradeImg[card.level];
-        //ui.transform.GetChild(5).GetComponentInChildren<Text>().text = info.Short;
-        ////兵种框
-        //ui.transform.GetChild(5).GetComponent<Image>().sprite =
-        //    info.Type == GameCardType.Hero ? re.ClassImg[0] : re.ClassImg[1];
-        //FrameChoose(info.Rare, ui.transform.GetChild(6).GetComponent<Image>());
-        //添加按住抬起方法
         ui.Init(card);
         ui.SetSize(Vector3.one);
-        FightForManager.instance.GiveGameObjEventForHoldOn(ui.gameObject, info.About);
-        FightCardData data = new FightCardData();
-        data.unitId = 1;
-        data.cardObj = ui.gameObject;
-        data.cardType = card.typeIndex;
-        data.cardId = card.id;
-        data.posIndex = -1;
-        data.cardGrade = card.level;
-        data.fightState = new FightState();
-        data.damage = info.GetDamage(data.cardGrade);
-        data.hpr = info.GameSetRecovery;
-        data.fullHp = data.nowHp = info.GetHp(data.cardGrade);
-        data.activeUnit = info.Type == GameCardType.Hero || (info.Type == GameCardType.Tower &&
-                                                               (data.cardId == 0 || data.cardId == 1 ||
-                                                                data.cardId == 2 || data.cardId == 3 ||
-                                                                data.cardId == 6));
-        data.isPlayerCard = true;
-        data.cardMoveType = info.CombatType;
-        data.cardDamageType = info.DamageType;
-        playerCardsDatas.Add(data);
+        ui.tag = GameSystem.PyCard;
+        FightForManager.instance.GiveGameObjEventForHoldOn(ui, info.About);
+        FightCardData fightCard = new FightCardData();
+        fightCard.unitId = 1;
+        fightCard.cardObj = ui;
+        fightCard.cardType = card.typeIndex;
+        fightCard.cardId = card.id;
+        fightCard.posIndex = -1;
+        fightCard.cardGrade = card.level;
+        fightCard.fightState = new FightState();
+        fightCard.damage = info.GetDamage(fightCard.cardGrade);
+        fightCard.hpr = info.GameSetRecovery;
+        fightCard.fullHp = fightCard.nowHp = info.GetHp(fightCard.cardGrade);
+        fightCard.activeUnit = info.Type == GameCardType.Hero || (info.Type == GameCardType.Tower &&
+                                                               (fightCard.cardId == 0 || fightCard.cardId == 1 ||
+                                                                fightCard.cardId == 2 || fightCard.cardId == 3 ||
+                                                                fightCard.cardId == 6));
+        fightCard.isPlayerCard = true;
+        fightCard.cardMoveType = info.CombatType;
+        fightCard.cardDamageType = info.DamageType;
+        cardDrag.Init(fightCard, herosCardListTran, herosCardListScrollRect);
+        playerCardsDatas.Add(fightCard);
     }
 
     //匹配稀有度边框

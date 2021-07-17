@@ -10,6 +10,10 @@ using UnityEngine.SceneManagement;
 
 public class GameSystem : MonoBehaviour
 {
+    public const string UnTagged = "Untagged";
+    public const string PyCard = "PyCard";
+    public const string CardPos = "CardPos";
+
     public enum GameScene
     {
         PreloadScene,
@@ -138,6 +142,8 @@ public class GameSystem : MonoBehaviour
     }
 
     public bool ShowStaminaEffect { get; set; }
+
+
     private void OnMainSceneLoaded()
     {
         UIManager.instance.Init();

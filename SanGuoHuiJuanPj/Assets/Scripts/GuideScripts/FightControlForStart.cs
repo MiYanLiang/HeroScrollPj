@@ -341,7 +341,7 @@ public class FightControlForStart : MonoBehaviour
     {
         if (attackedUnit.nowHp <= 0)
         {
-            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight("GetGold", 1.5f, attackedUnit.cardObj.transform);
+            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight("GetGold", 1.5f, attackedUnit.cardObj);
             obj.GetComponentInChildren<Text>().text = string.Format(DataTable.GetStringText(8), DataTable.EnemyUnit[attackedUnit.unitId].GoldReward);
             PlayAudioForSecondClip(98, 0);
         }
@@ -351,7 +351,7 @@ public class FightControlForStart : MonoBehaviour
     {
         for (int i = 0; i < gunMuList.Count; i++)
         {
-            if (gunMuList[i].nowHp <= 0 && !gunMuList[i].isActed)
+            if (gunMuList[i].nowHp <= 0 && !gunMuList[i].isActionDone)
             {
                 yield return StartCoroutine(GunMuTrapAttack(gunMuList[i], 1f, DataTable.GetGameValue(15)));
             }
@@ -359,7 +359,7 @@ public class FightControlForStart : MonoBehaviour
 
         for (int i = 0; i < gunShiList.Count; i++)
         {
-            if (gunShiList[i].nowHp <= 0 && !gunShiList[i].isActed)
+            if (gunShiList[i].nowHp <= 0 && !gunShiList[i].isActionDone)
             {
                 yield return StartCoroutine(GunShiTrapAttack(gunShiList[i], 1f, DataTable.GetGameValue(16)));
             }
@@ -369,7 +369,7 @@ public class FightControlForStart : MonoBehaviour
     //滚木反击
     IEnumerator GunMuTrapAttack(FightCardData attackUnit, float damageRate, int dizzedRate)
     {
-        attackUnit.isActed = true;
+        attackUnit.isActionDone = true;
 
         yield return new WaitForSeconds(attackShakeTimeToGo / 2);
 
@@ -441,7 +441,7 @@ public class FightControlForStart : MonoBehaviour
     //滚石反击
     IEnumerator GunShiTrapAttack(FightCardData attackUnit, float damageRate, int dizzedRate)
     {
-        attackUnit.isActed = true;
+        attackUnit.isActionDone = true;
 
         yield return new WaitForSeconds(attackShakeTimeToGo / 2);
 
@@ -2783,7 +2783,7 @@ public class FightControlForStart : MonoBehaviour
     {
         if (dizzyUnit.fightState.dizzyNums > 0)
         {
-            dizzyUnit.isActed = true;
+            dizzyUnit.isActionDone = true;
             //Debug.Log("---处于眩晕");
             dizzyUnit.fightState.dizzyNums--;
             if (dizzyUnit.fightState.dizzyNums <= 0)
@@ -3018,12 +3018,12 @@ public class FightControlForStart : MonoBehaviour
 
         if (isPuGong)
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("0A", 0.5f, attackedUnit.cardObj.transform);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight("0A", 0.5f, attackedUnit.cardObj);
             effectObj.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
         }
         else
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight(effectName, 1f, attackedUnit.cardObj.transform);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(effectName, 1f, attackedUnit.cardObj);
         }
 
         if (indexAttackType != 0) //非普通攻击
@@ -3055,7 +3055,7 @@ public class FightControlForStart : MonoBehaviour
         GameObject effectObj = new GameObject();
         PlayerDataForGame.garbageStationObjs.Add(effectObj);
 
-        effectObj = EffectsPoolingControl.instance.GetEffectToFight("dropBlood", 1.5f, attackedUnit.cardObj.transform);
+        effectObj = EffectsPoolingControl.instance.GetEffectToFight("dropBlood", 1.5f, attackedUnit.cardObj);
         if (isAdd)
         {
             effectObj.GetComponentInChildren<Text>().text = "+" + Mathf.Abs(cutHpNum);
@@ -3140,34 +3140,34 @@ public class FightControlForStart : MonoBehaviour
     /// <summary>
     /// 技能文字表现
     /// </summary>
-    /// <param name="fightCardObj"></param>
+    /// <param name="ui"></param>
     /// <param name="showTextName"></param>
     /// <param name="isHorizontal"></param>
     /// <param name="isRed"></param>
-    public void ShowSpellTextObj(GameObject fightCardObj, string showTextName, bool isHorizontal, bool isRed = true)
+    public void ShowSpellTextObj(WarGameCardUi ui, string showTextName, bool isHorizontal, bool isRed = true)
     {
         GameObject effectObj = new GameObject();
         PlayerDataForGame.garbageStationObjs.Add(effectObj);
 
         if (isHorizontal)
         {
-            Transform go = fightCardObj.transform.Find("spellTextH(Clone)");
+            Transform go = ui.transform.Find("spellTextH(Clone)");
             if (go != null)
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextH", 1.5f, fightCardObj.transform);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextH", 1.5f, ui);
             effectObj.GetComponentInChildren<Text>().text = showTextName;
             effectObj.GetComponentInChildren<Text>().color = isRed ? Color.red : ColorDataStatic.huiFu_green;
         }
         else
         {
-            Transform go = fightCardObj.transform.Find("spellTextV(Clone)");
+            Transform go = ui.transform.Find("spellTextV(Clone)");
             if (go != null)
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextV", 1.5f, fightCardObj.transform);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextV", 1.5f, ui);
             effectObj.GetComponentsInChildren<Image>()[1].sprite = Resources.Load("Image/battle/" + showTextName, typeof(Sprite)) as Sprite;
         }
     }
@@ -3269,12 +3269,6 @@ public class FightControlForStart : MonoBehaviour
             }
         }
         return randsList;
-    }
-
-    //设置卡牌的parent
-    private void ChangeGameObjParent(GameObject cardObj, Transform parent)
-    {
-        cardObj.transform.SetParent(parent);
     }
 
     /// <summary>
@@ -3470,10 +3464,10 @@ public class FightControlForStart : MonoBehaviour
         //玩家部分
         foreach (var item in playerJiBanAllTypes)
         {
-            if (item.Value.isActived)
+            if (item.Value.IsActive)
             {
                 //Debug.Log("触发羁绊： " + item.Value.jiBanIndex);
-                ShowAllScreenFightEffect(FullScreenEffectName.JiBanEffect, item.Value.jiBanId);
+                ShowAllScreenFightEffect(FullScreenEffectName.JiBanEffect, item.Value.JiBanId);
                 yield return new WaitForSeconds(1f);
                 JiBanAddStateForCard(item.Value, true);
                 yield return new WaitForSeconds(1f);
@@ -3482,10 +3476,10 @@ public class FightControlForStart : MonoBehaviour
         //敌人部分
         foreach (var item in enemyJiBanAllTypes)
         {
-            if (item.Value.isActived)
+            if (item.Value.IsActive)
             {
                 //Debug.Log("敌方触发羁绊： " + item.Value.jiBanIndex);
-                ShowAllScreenFightEffect(FullScreenEffectName.JiBanEffect, item.Value.jiBanId);
+                ShowAllScreenFightEffect(FullScreenEffectName.JiBanEffect, item.Value.JiBanId);
                 yield return new WaitForSeconds(1f);
                 JiBanAddStateForCard(item.Value, false);
                 yield return new WaitForSeconds(1f);
@@ -3499,18 +3493,18 @@ public class FightControlForStart : MonoBehaviour
         FightCardData fightCardData;
         FightCardData[] cardDatas = isPlayer ? FightForManagerForStart.instance.playerFightCardsDatas : FightForManagerForStart.instance.enemyFightCardsDatas;
 
-        switch ((JiBanSkillName)jiBanActivedClass.jiBanId)
+        switch ((JiBanSkillName)jiBanActivedClass.JiBanId)
         {
             case JiBanSkillName.TaoYuanJieYi:
                 //30%概率分别为羁绊武将增加1层【神助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(134)))
                             {
                                 if (fightCardData.fightState.shenzhuNums <= 0)
@@ -3525,14 +3519,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.WuHuShangJiang:
                 //50%概率分别为羁绊武将增加1层【内助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(135)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3555,7 +3549,7 @@ public class FightControlForStart : MonoBehaviour
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 11)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(136)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3570,14 +3564,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.HuChiELai:
                 //30 % 概率分别为羁绊武将增加1层【护盾】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(137)))
                             {
                                 if (fightCardData.fightState.withStandNums <= 0)
@@ -3592,14 +3586,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.WuZiLiangJiang:
                 //40%概率分别为羁绊武将增加1层【内助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(138)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3622,7 +3616,7 @@ public class FightControlForStart : MonoBehaviour
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 12)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(139)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3645,7 +3639,7 @@ public class FightControlForStart : MonoBehaviour
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 3)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(140)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3667,7 +3661,7 @@ public class FightControlForStart : MonoBehaviour
                     {
                         if (DataTable.Hero[fightCardData.cardId].MilitaryUnitTableId == 8)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(141)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3682,14 +3676,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.TianZuoZhiHe:
                 //40%概率分别为羁绊武将增加1层【内助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(142)))
                             {
                                 if (fightCardData.fightState.neizhuNums <= 0)
@@ -3704,14 +3698,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.HeBeiSiTingZhu:
                 //30%概率分别为羁绊武将增加1层【护盾】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(143)))
                             {
                                 if (fightCardData.fightState.withStandNums <= 0)
@@ -3726,14 +3720,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.JueShiWuShuang:
                 //50%概率分别为羁绊武将增加1层【神助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(144)))
                             {
                                 if (fightCardData.fightState.shenzhuNums <= 0)
@@ -3748,14 +3742,14 @@ public class FightControlForStart : MonoBehaviour
                 break;
             case JiBanSkillName.HanMoSanXian:
                 //30%概率分别为羁绊武将增加1层【神助】
-                for (int i = 0; i < jiBanActivedClass.cardTypeLists.Count; i++)
+                for (int i = 0; i < jiBanActivedClass.List.Count; i++)
                 {
-                    for (int j = 0; j < jiBanActivedClass.cardTypeLists[i].cardLists.Count; j++)
+                    for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
-                        fightCardData = jiBanActivedClass.cardTypeLists[i].cardLists[j];
+                        fightCardData = jiBanActivedClass.List[i].Cards[j];
                         if (fightCardData != null && fightCardData.nowHp > 0)
                         {
-                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.jiBanId);
+                            AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(145)))
                             {
                                 if (fightCardData.fightState.shenzhuNums <= 0)
@@ -3790,7 +3784,7 @@ public class FightControlForStart : MonoBehaviour
         {
             if (FightForManagerForStart.instance.playerFightCardsDatas[i] != null && FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp > 0)
             {
-                FightForManagerForStart.instance.playerFightCardsDatas[i].isActed = false;
+                FightForManagerForStart.instance.playerFightCardsDatas[i].isActionDone = false;
                 if (FightForManagerForStart.instance.playerFightCardsDatas[i].cardType == 0)
                 {
                     nowRounds = UpdateOneCardBeforeRound(FightForManagerForStart.instance.playerFightCardsDatas[i]);
@@ -3876,7 +3870,7 @@ public class FightControlForStart : MonoBehaviour
         {
             if (FightForManagerForStart.instance.enemyFightCardsDatas[i] != null && FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp > 0)
             {
-                FightForManagerForStart.instance.enemyFightCardsDatas[i].isActed = false;
+                FightForManagerForStart.instance.enemyFightCardsDatas[i].isActionDone = false;
                 if (FightForManagerForStart.instance.enemyFightCardsDatas[i].cardType == 0)
                 {
                     nowRounds = UpdateOneCardBeforeRound(FightForManagerForStart.instance.enemyFightCardsDatas[i]);
@@ -4286,9 +4280,9 @@ public class FightControlForStart : MonoBehaviour
             cardDatas = FightForManagerForStart.instance.enemyFightCardsDatas;
         }
         //主动单位并且可行动
-        if (attackUnit != null && attackUnit.activeUnit && !attackUnit.isActed && !OffsetDizzyState(attackUnit) && attackUnit.nowHp > 0)
+        if (attackUnit != null && attackUnit.activeUnit && !attackUnit.isActionDone && !OffsetDizzyState(attackUnit) && attackUnit.nowHp > 0)
         {
-            attackUnit.isActed = true;
+            attackUnit.isActionDone = true;
             switch (attackUnit.cardType)
             {
                 case 0:
@@ -4636,34 +4630,34 @@ public class FightControlForStart : MonoBehaviour
     public float four;  //去
     public float posFloat;
     //近战移动方式
-    private void CardMoveToTargetPos(GameObject cardObj, Vector3 targetPos, bool isBack, bool isPlayerCard)
+    private void CardMoveToTargetPos(WarGameCardUi cardObj, Vector3 targetPos, bool isBack, bool isPlayerCard)
     {
         if (isBack)
         {
-            cardObj.transform.DOMove(targetPos, attackShakeTimeToBack).SetEase(Ease.Unset).OnComplete(delegate ()
-            {
-                ChangeGameObjParent(cardObj, isPlayerCard ? FightForManagerForStart.instance.playerCardsBox : FightForManagerForStart.instance.enemyCardsBox);
-            });
+            var cardBox = isPlayerCard
+                ? FightForManagerForStart.instance.playerCardsBox
+                : FightForManagerForStart.instance.enemyCardsBox;
+            cardObj.transform.DOMove(targetPos, attackShakeTimeToBack).SetEase(Ease.Unset).OnComplete(() =>
+                cardObj.transform.SetParent(cardBox));
+            return;
         }
-        else
-        {
-            ChangeGameObjParent(cardObj, transferStation);
 
-            Vector3 vec = new Vector3(
-                targetPos.x,
-                targetPos.y + (isPlayerRound ? (-1 * posFloat) : posFloat) * FightForManagerForStart.instance.oneDisY,
-                targetPos.z
-                );
-            cardObj.transform.DOMove(targetPos, attackShakeTimeToGo * one).SetEase(Ease.Unset).OnComplete(delegate ()
+        cardObj.transform.SetParent(transferStation);
+
+        Vector3 vec = new Vector3(
+            targetPos.x,
+            targetPos.y + (isPlayerRound ? (-1 * posFloat) : posFloat) * FightForManagerForStart.instance.oneDisY,
+            targetPos.z
+        );
+        cardObj.transform.DOMove(targetPos, attackShakeTimeToGo * one).SetEase(Ease.Unset).OnComplete(delegate ()
+        {
+            cardObj.transform.DOMove(cardObj.transform.position, attackShakeTimeToGo * two).SetEase(Ease.Unset).OnComplete(delegate ()
             {
-                cardObj.transform.DOMove(cardObj.transform.position, attackShakeTimeToGo * two).SetEase(Ease.Unset).OnComplete(delegate ()
+                cardObj.transform.DOMove(vec, attackShakeTimeToGo * three).SetEase(Ease.Unset).OnComplete(delegate ()
                 {
-                    cardObj.transform.DOMove(vec, attackShakeTimeToGo * three).SetEase(Ease.Unset).OnComplete(delegate ()
-                      {
-                          cardObj.transform.DOMove(targetPos, attackShakeTimeToGo * four).SetEase(Ease.Unset);
-                      });
+                    cardObj.transform.DOMove(targetPos, attackShakeTimeToGo * four).SetEase(Ease.Unset);
                 });
             });
-        }
+        });
     }
 }

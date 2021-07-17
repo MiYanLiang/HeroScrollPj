@@ -11,6 +11,8 @@ public class GameCardWarUiOperation : MonoBehaviour
     public Image Highlight;
     public Image Selected;
     public Transform StateContent;
+    public GameCardUiBase baseUi { get; private set; }
+    public DragController DragController { get; private set; }
     private Dictionary<States,GameObject> StateObjs
     {
         get
@@ -38,9 +40,22 @@ public class GameCardWarUiOperation : MonoBehaviour
 
     public States State { get; private set; }
 
-    public void Show(GameCardUiBase ui) => Hp.fillAmount = 0;
+    public void Init(DragController drag)
+    {
+        DragController = drag;
+        Selected.gameObject.SetActive(false);
+        Highlight.gameObject.SetActive(false);
+        Lose.gameObject.SetActive(false);
+    }
 
-    public void SetHp(float hp) => Hp.fillAmount = 1 - hp;
+    public void Show(GameCardUiBase ui)
+    {
+        baseUi = ui;
+        Hp.fillAmount = 0;
+        gameObject.SetActive(true);
+    }
+
+    public void SetHp(float hp) => Hp.fillAmount = 1f - hp;
 
     public void SetState(States state)
     {

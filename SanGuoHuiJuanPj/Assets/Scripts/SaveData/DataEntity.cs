@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Assets;
 using CorrelateLib;
@@ -224,49 +223,6 @@ public class Character : ICharacter
 }
 
 //战斗卡牌信息类
-public class FightCardData
-{
-    //单位id,为0表示null
-    public int unitId;
-    //卡牌obj
-    public GameObject cardObj;
-    //卡牌类型
-    public int cardType;
-    //卡牌id
-    public int cardId;
-    //等级
-    public int cardGrade;
-    //伤害
-    public int damage;
-    //满血
-    public int fullHp;
-    //当前血量
-    public int nowHp;
-    //战斗状态
-    public FightState fightState;
-    //摆放位置记录
-    public int posIndex;
-    //生命值回复
-    public int hpr;
-    //主被动单位
-    public bool activeUnit;
-    //此回合是否行动
-    public bool isActed;
-    //是否是玩家卡牌
-    public bool isPlayerCard;
-    /// <summary>
-    /// 单位伤害类型0物理，1法术
-    /// </summary>
-    public int cardDamageType;
-    /// <summary>
-    /// 单位行动类型0近战，1远程
-    /// </summary>
-    public int cardMoveType;
-    /// <summary>
-    /// 被攻击者的行为，0受击，1防护盾，2闪避，3护盾，4无敌
-    /// </summary>
-    public int attackedBehavior;
-}
 
 //战斗状态类
 public class FightState
@@ -378,10 +334,10 @@ public class FightState
 /// </summary>
 public class JiBanActivedClass
 {
-    public int jiBanId { get; set; }
-    public bool isActived { get; set; }
-    public bool isHadBossId { get; set; }
-    public List<JiBanCardTypeClass> cardTypeLists { get; set; }
+    public int JiBanId { get; set; }
+    public bool IsActive { get; set; }
+    public bool IsHadBossId { get; set; }
+    public List<JiBanCardTypeClass> List { get; set; }
 }
 
 /// <summary>
@@ -389,8 +345,8 @@ public class JiBanActivedClass
 /// </summary>
 public class JiBanCardTypeClass
 {
-    public int cardType { get; set; }
-    public int cardId { get; set; }
-    public int bossId { get; set; }
-    public List<FightCardData> cardLists { get; set; }
+    public int CardType { get; set; }
+    public int CardId { get; set; }
+    public int BossId { get; set; }
+    public List<FightCardData> Cards { get; set; }
 }

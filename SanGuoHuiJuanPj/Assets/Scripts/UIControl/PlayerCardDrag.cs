@@ -2,16 +2,19 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+public interface ICardDrag 
+{
+    int PosIndex { get; }
+    void UpdatePos(int pos);
+}
 public class PlayerCardDrag : DragController
 {
-    private const string PyCardTag = "PyCard";
-    private const string CardPosTag = "CardPos";
     [SerializeField] private Image CardBody;
     [SerializeField] private WarGameCardUi Ui;
 
     public override void BeginDrag(BaseEventData data)
     {
-        if (IsMoveable) return;
+        if (IsLocked) return;
 
         Vector2 deltaPosition = Vector2.zero;
 #if UNITY_EDITOR
@@ -42,7 +45,7 @@ public class PlayerCardDrag : DragController
 
     public override void OnDrag(BaseEventData data)
     {
-        if (IsMoveable) return;
+        if (IsLocked) return;
 
         if (!WarsUIManager.instance.isDragDelegated)
         {
@@ -60,203 +63,97 @@ public class PlayerCardDrag : DragController
 
     public override void EndDrag(BaseEventData data)
     {
-        if (IsMoveable) return;
+        if (IsLocked) return;
 
         if (!(data is PointerEventData eventData)) return;
 
-        if (!WarsUIManager.instance.isDragDelegated)    //判断是否拖动的是滑动列表
+        if (!WarsUIManager.instance.isDragDelegated) //判断是否拖动的是滑动列表
         {
             Rack.OnEndDrag(eventData);
             return;
         }
 
-        if (FightController.instance.isRoundBegin) //战斗回合突然开始
+        if (eventData.pointerCurrentRaycast.gameObject == null || FightController.instance.isRoundBegin) //战斗回合突然开始
         {
-            ResetCardToRack();
+            ResetPos();
             return;
         }
 
+        var posObj = eventData.pointerCurrentRaycast.gameObject; //释放时鼠标透过拖动的Image后的物体
+        if (posObj == null)
+        {
+            ResetPos();
+            return;
+        }
 
-        var go = eventData.pointerCurrentRaycast.gameObject;    //释放时鼠标透过拖动的Image后的物体
         var fMgr = FightForManager.instance;
-        //是否拖放在 战斗格子 或 卡牌上
-
-        if (go != null && (go.CompareTag(CardPosTag) || go.CompareTag(PyCardTag)))
+        var targetPosIndex = -1;
+        if (posObj.CompareTag(GameSystem.CardPos)) targetPosIndex = posObj.GetComponent<ChessPos>().PosIndex;
+        else
         {
-            //放在 战斗格子上
-            if (go.CompareTag(CardPosTag))
+            var war = posObj.GetComponent<GameCardWarUiOperation>();
+            if(war && war.baseUi.CompareTag(GameSystem.PyCard)) targetPosIndex = war.DragController.PosIndex;
+        }
+
+
+        //是否拖放在 战斗格子 或 卡牌上
+        if (targetPosIndex == -1)
+        {
+            if (PosIndex != targetPosIndex)//从在棋盘上摘下来
             {
-                //拖动牌原位置 在上阵位
-                if (PosIndex != -1)
-                {
-                    var num = int.Parse(go.GetComponentInChildren<Text>().text);    //目标位置编号
-                    if (PosIndex != num)    //上阵位置改变
-                    {
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, false);
-
-                        fMgr.playerFightCardsDatas[num] = fMgr.playerFightCardsDatas[PosIndex];
-                        fMgr.playerFightCardsDatas[num].posIndex = num;
-                        fMgr.playerFightCardsDatas[PosIndex] = null;
-                        PosIndex = num;
-
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, true);
-                    }
-                    transform.SetParent(fMgr.playerCardsBox);
-                    transform.position = go.transform.position;
-                    FightController.instance.PlayAudioForSecondClip(85, 0);
-
-                    EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[PosIndex].transform);
-                    //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[posIndex].transform);
-                    //eftObj.transform.SetParent(fMgr.playerCardsPos[posIndex].transform);
-                }
-                //拖动牌原位置 在备战位
-                else
-                {
-                    //是否可以上阵
-                    if (fMgr.PlaceOrRemoveCard(true))
-                    {
-                        int num = int.Parse(go.GetComponentInChildren<Text>().text);
-                        int index = WarsUIManager.instance.FindDataFromCardsDatas(gameObject);
-                        if (index != -1)
-                        {
-                            fMgr.playerFightCardsDatas[num] = WarsUIManager.instance.playerCardsDatas[index];
-                            fMgr.playerFightCardsDatas[num].posIndex = num;
-                            //Debug.Log(">>>>>>>" + num);
-                            fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[num], num, fMgr.playerFightCardsDatas, true);
-                        }
-                        transform.SetParent(fMgr.playerCardsBox);
-                        transform.position = go.transform.position;
-                        transform.GetChild(8).gameObject.SetActive(true);
-                        PosIndex = num;
-                        //isFightCard = true;
-                        FightController.instance.PlayAudioForSecondClip(85, 0);
-
-                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[PosIndex].transform);
-                        //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[posIndex].transform);
-                        //eftObj.transform.SetParent(fMgr.playerCardsPos[posIndex].transform);
-                    }
-                    else
-                    {
-                        //Debug.Log("上阵位已满");
-                        transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                        transform.GetChild(8).gameObject.SetActive(false);
-                        PosIndex = -1;
-                    }
-                }
-            }
-            //放在 卡牌上
-            if (go.CompareTag(PyCardTag))
-            {
-                int goIndexPos = go.GetComponent<PlayerCardDrag>().PosIndex;
-                //目的地 卡牌在上阵位 并且 不是上锁卡牌
-                if (goIndexPos != -1 && !go.GetComponent<PlayerCardDrag>().IsMoveable)
-                {
-                    //拖动牌原位置 在上阵位
-                    if (PosIndex != -1)
-                    {
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, false);
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[goIndexPos], goIndexPos, fMgr.playerFightCardsDatas, false);
-
-                        transform.SetParent(fMgr.playerCardsBox);
-                        transform.position = go.transform.position;
-                        go.transform.position = fMgr.playerCardsPos[PosIndex].transform.position;
-                        //WarsUIManager.instance.CardMoveToPos(go, fMgr.playerCardsPos[posIndex].transform.position);
-                        FightCardData dataTemp = fMgr.playerFightCardsDatas[goIndexPos];
-                        fMgr.playerFightCardsDatas[goIndexPos] = fMgr.playerFightCardsDatas[PosIndex];
-                        fMgr.playerFightCardsDatas[goIndexPos].posIndex = goIndexPos;
-                        fMgr.playerFightCardsDatas[PosIndex] = dataTemp;
-                        fMgr.playerFightCardsDatas[PosIndex].posIndex = PosIndex;
-                        go.GetComponent<PlayerCardDrag>().PosIndex = PosIndex;
-
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, true);
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[goIndexPos], goIndexPos, fMgr.playerFightCardsDatas, true);
-
-                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[PosIndex].transform);
-                        //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[posIndex].transform);
-                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[goIndexPos].transform);
-                        //GameObject eftObj1 = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[goIndexPos].transform);
-                        //eftObj.transform.SetParent(fMgr.playerCardsPos[posIndex].transform);
-                        //eftObj1.transform.SetParent(fMgr.playerCardsPos[goIndexPos].transform);
-
-                        PosIndex = goIndexPos;
-                        FightController.instance.PlayAudioForSecondClip(85, 0);
-                    }
-                    //拖动牌原位置 在备战位
-                    else
-                    {
-                        fMgr.PlaceOrRemoveCard(false);
-                        if (fMgr.PlaceOrRemoveCard(true))
-                        {
-                            transform.SetParent(fMgr.playerCardsBox);
-                            transform.position = go.transform.position;
-                            transform.GetChild(8).gameObject.SetActive(true);
-
-                            fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[goIndexPos], goIndexPos, fMgr.playerFightCardsDatas, false);
-
-                            go.transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-
-                            int index = WarsUIManager.instance.FindDataFromCardsDatas(gameObject);
-                            if (index != -1)
-                            {
-                                fMgr.playerFightCardsDatas[go.GetComponent<PlayerCardDrag>().PosIndex] = WarsUIManager.instance.playerCardsDatas[index];
-                                fMgr.playerFightCardsDatas[go.GetComponent<PlayerCardDrag>().PosIndex].posIndex = go.GetComponent<PlayerCardDrag>().PosIndex;
-                            }
-                            go.GetComponent<PlayerCardDrag>().PosIndex = -1;
-                            go.transform.GetChild(8).gameObject.SetActive(false);
-                            PosIndex = goIndexPos;
-
-                            fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, true);
-                            FightController.instance.PlayAudioForSecondClip(85, 0);
-
-                            EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[PosIndex].transform);
-                            //GameObject eftObj =  EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, fMgr.playerCardsPos[posIndex].transform);
-                            //eftObj.transform.SetParent(fMgr.playerCardsPos[posIndex].transform);
-                        }
-                        else
-                        {
-                            fMgr.PlaceOrRemoveCard(true);
-                            //Debug.Log("上阵位已满");
-                            transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                            transform.GetChild(8).gameObject.SetActive(false);
-                            PosIndex = -1;
-                        }
-                    }
-                }
-                //目的地 卡牌在备战位
-                else
-                {
-                    if (PosIndex != -1)
-                    {
-                        fMgr.PlaceOrRemoveCard(false);
-                        fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, false);
-                        fMgr.playerFightCardsDatas[PosIndex] = null;
-                    }
-                    transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                    transform.GetChild(8).gameObject.SetActive(false);
-                    PosIndex = -1;
-                }
+                fMgr.RemoveCardFromBoard(FightCard, true);
+                return;
             }
 
-            CardBody.raycastTarget = true;
+            ResetPos();
             return;
         }
 
-        //目的地为其他
-        if (PosIndex != -1) //原位置在上阵位
+        //放在 战斗格子上
+        //拖动牌原位置 在上阵位
+        if (PosIndex == -1)
         {
-            fMgr.PlaceOrRemoveCard(false);
-            fMgr.CardGoIntoBattleProcess(fMgr.playerFightCardsDatas[PosIndex], PosIndex, fMgr.playerFightCardsDatas, false);
-            fMgr.playerFightCardsDatas[PosIndex] = null;
+            //是否可以上阵
+            if (!fMgr.IsPlayerAvailableToPlace(targetPosIndex))
+            {
+                //Debug.Log("上阵位已满");
+                ResetPos();
+                return;
+            }
+
+            PlaceCard(targetPosIndex);
+            return;
         }
-        ResetCardToRack();
-        CardBody.raycastTarget = true;
+
+        //目标位置编号
+        if (PosIndex == targetPosIndex) //上阵位置没改变
+        {
+            ResetPos();
+            return;
+        }
+
+        PlaceCard(targetPosIndex);
     }
 
-    private void ResetCardToRack()
+    private void PlaceCard(int targetIndex)
     {
-        transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-        CardBody.raycastTarget = true;
+        FightForManager.instance.PlaceCardOnBoard(FightCard, targetIndex, true);
+        Ui.SetHighLight(true);
+
+        FightController.instance.PlayAudioForSecondClip(85, 0);
+
+        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f,
+            FightForManager.instance.playerCardsPos[PosIndex].transform);
+        CardBody.raycastTarget = !IsLocked;
+    }
+
+    public override void ResetPos()
+    {
+        transform.SetParent(PosIndex == -1
+            ? WarsUIManager.instance.PlayerCardsRack.transform
+            : FightForManager.instance.GetChessPos(PosIndex, true));
+        transform.localPosition = Vector3.zero;
         Ui.SetSelected(false);
-        PosIndex = -1;
+        CardBody.raycastTarget = !IsLocked;
     }
 }

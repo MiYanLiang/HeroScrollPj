@@ -45,10 +45,7 @@ public class GameCardUi : GameCardUiBase
     public void Set(CardModes mode)
     {
         GrayScale.Init();
-        Image.sprite = CardInfo.Type == GameCardType.Hero
-            ? GameResources.Instance.HeroImg[Card.CardId]
-            : GameResources.Instance.FuZhuImg[CardInfo.ImageId];
-        Short.Set(CardInfo.Short, GameResources.Instance.ClassImg[CardInfo.Type == GameCardType.Hero ? 0 : 1]);
+        Set();
         SetMode(mode);
         gameObject.SetActive(true);
     }

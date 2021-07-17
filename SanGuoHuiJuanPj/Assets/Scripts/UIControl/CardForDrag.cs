@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -8,33 +9,38 @@ public abstract class DragController : MonoBehaviour
 {
     protected const string Mouse_X = "Mouse X";
     protected const string Mouse_Y = "Mouse Y";
-    public int PosIndex { get; protected set; } = -1;   //上场位置记录
-    public bool IsMoveable { get;  set; } = false; //记录是否是上阵卡牌
+    public int PosIndex => FightCard.posIndex;  //上场位置记录
+    public bool IsLocked { get;  set; } = false; //记录是否是上阵卡牌
     /// <summary>
     /// 场景中的Panel，设置拖拽过程中的父物体
     /// </summary>
-    protected Transform Parent;
+    protected Transform Parent { get; private set; }
     /// <summary>
     /// Scroll View上的Scroll Rect组件
     /// </summary>
-    protected ScrollRect Rack;
-    public virtual void Init(Transform parent,ScrollRect scrollRect)
+    protected ScrollRect Rack { get; private set; }
+
+    protected FightCardData FightCard { get; private set; }
+
+    public virtual void Init(FightCardData fightCard, Transform parent, ScrollRect scrollRect)
     {
         Parent = parent;
         Rack = scrollRect;
+        FightCard = fightCard;
     }
-    
+
     public abstract void BeginDrag(BaseEventData data);
     public abstract void OnDrag(BaseEventData data);
     public abstract void EndDrag(BaseEventData data);
+
+    public abstract void ResetPos();
 }
 
 public class CardForDrag : DragController
 {
-    //开始拖拽
     public override void BeginDrag(BaseEventData data)
     {
-        if (IsMoveable)
+        if (IsLocked)
         {
             return;
         }
@@ -73,7 +79,7 @@ public class CardForDrag : DragController
     //拖动中
     public override void OnDrag(BaseEventData data)
     {
-        if (IsMoveable)
+        if (IsLocked)
         {
             return;
         }
@@ -95,7 +101,7 @@ public class CardForDrag : DragController
     //结束时
     public override void EndDrag(BaseEventData data)
     {
-        if (IsMoveable)
+        if (IsLocked)
         {
             return;
         }
@@ -106,192 +112,183 @@ public class CardForDrag : DragController
             Rack.OnEndDrag(eventData);
             return;
         }
-        else
+
+        if (FightController.instance.isRoundBegin)  //战斗回合突然开始
         {
-            if (FightController.instance.isRoundBegin)  //战斗回合突然开始
-            {
-                transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                transform.GetChild(8).gameObject.SetActive(false);
-                transform.GetComponent<Image>().raycastTarget = true;
-                PosIndex = -1;
-                return;
-            }
+            transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+            transform.GetChild(8).gameObject.SetActive(false);
+            transform.GetComponent<Image>().raycastTarget = true;
+            FightCard.posIndex = -1;
+            return;
+        }
 
-            PointerEventData _eventData = data as PointerEventData; //获取拖拽释放事件
-            if (_eventData == null)
-                return;
-
-            GameObject go = _eventData.pointerCurrentRaycast.gameObject;    //释放时鼠标透过拖动的Image后的物体
-            //是否拖放在 战斗格子 或 卡牌上
-            if (go != null && (go.CompareTag("CardPos") || go.CompareTag("PyCard")))
+        PointerEventData _eventData = data as PointerEventData; //获取拖拽释放事件
+        if (_eventData == null)
+            return;
+        var mgr = FightForManager.instance;
+        GameObject go = _eventData.pointerCurrentRaycast.gameObject;    //释放时鼠标透过拖动的Image后的物体
+        //是否拖放在 战斗格子 或 卡牌上
+        if (go != null && (go.CompareTag("CardPos") || go.CompareTag("PyCard")))
+        {
+            //放在 战斗格子上
+            if (go.CompareTag("CardPos"))
             {
-                //放在 战斗格子上
-                if (go.CompareTag("CardPos"))
+                //拖动牌原位置 在上阵位
+                if (FightCard.posIndex != -1)
                 {
-                    //拖动牌原位置 在上阵位
-                    if (PosIndex != -1)
+                    int targetPos = int.Parse(go.GetComponentInChildren<Text>().text);    //目标位置编号
+                    if (FightCard.posIndex != targetPos)    //上阵位置改变
                     {
-                        int num = int.Parse(go.GetComponentInChildren<Text>().text);    //目标位置编号
-                        if (PosIndex != num)    //上阵位置改变
+                        var playerCards = FightForManager.instance.GetCardList(true);
+                        var card = playerCards[FightCard.posIndex];
+                        FightForManager.instance.PlaceCardOnBoard(playerCards[FightCard.posIndex], FightCard.posIndex,
+                            false);
+                        FightCard.posIndex = targetPos;
+
+                        FightForManager.instance.PlaceCardOnBoard(card, FightCard.posIndex, true);
+                    }
+                    transform.position = go.transform.position;
+                    FightController.instance.PlayAudioForSecondClip(85, 0);
+
+                    EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                    //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                    //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                }
+                //拖动牌原位置 在备战位
+                else
+                {
+                    int num = int.Parse(go.GetComponentInChildren<Text>().text);
+                    //是否可以上阵
+                    if (FightForManager.instance.IsPlayerAvailableToPlace(num))
+                    {
+                        int index = WarsUIManager.instance.FindDataFromCardsDatas(gameObject);
+                        if (index != -1)
                         {
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, false);
-
-                            FightForManager.instance.playerFightCardsDatas[num] = FightForManager.instance.playerFightCardsDatas[PosIndex];
-                            FightForManager.instance.playerFightCardsDatas[num].posIndex = num;
-                            FightForManager.instance.playerFightCardsDatas[PosIndex] = null;
-                            PosIndex = num;
-
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, true);
+                            mgr.GetCardList(true)[num].posIndex = num;
+                            //Debug.Log(">>>>>>>" + num);
+                            FightForManager.instance.OnBoardReactSet(mgr.GetCardList(true)[num], num, true, true);
                         }
-                        transform.SetParent(FightForManager.instance.playerCardsBox);
                         transform.position = go.transform.position;
+                        transform.GetChild(8).gameObject.SetActive(true);
+                        FightCard.posIndex = num;
+                        //isFightCard = true;
                         FightController.instance.PlayAudioForSecondClip(85, 0);
 
-                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[PosIndex].transform);
-                        //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[posIndex].transform);
-                        //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[posIndex].transform);
+                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                    }
+                    else
+                    {
+                        //Debug.Log("上阵位已满");
+                        transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+                        transform.GetChild(8).gameObject.SetActive(false);
+                        FightCard.posIndex = -1;
+                    }
+                }
+            }
+            //放在 卡牌上
+            if (go.CompareTag("PyCard"))
+            {
+                int goIndexPos = go.GetComponent<CardForDrag>().FightCard.posIndex;
+                //目的地 卡牌在上阵位 并且 不是上锁卡牌
+                if (goIndexPos != -1 && !go.GetComponent<CardForDrag>().IsLocked)
+                {
+                    //拖动牌原位置 在上阵位
+                    if (FightCard.posIndex != -1)
+                    {
+                        FightForManager.instance.OnBoardReactSet(mgr.GetCardList(true)[FightCard.posIndex], FightCard.posIndex, true, false);
+                        FightForManager.instance.OnBoardReactSet(mgr.GetCardList(true)[goIndexPos], goIndexPos, true, false);
+
+                        transform.position = go.transform.position;
+                        go.transform.position = FightForManager.instance.playerCardsPos[FightCard.posIndex].transform.position;
+                        //WarsUIManager.instance.CardMoveToPos(go, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform.position);
+                        FightCardData dataTemp = mgr.GetCardList(true)[goIndexPos];
+                        mgr.GetCardList(true)[goIndexPos].posIndex = goIndexPos;
+                        mgr.GetCardList(true)[FightCard.posIndex].posIndex = FightCard.posIndex;
+                        go.GetComponent<CardForDrag>().FightCard.posIndex = FightCard.posIndex;
+
+                        FightForManager.instance.PlaceCardOnBoard(mgr.GetCardList(true)[FightCard.posIndex], FightCard.posIndex, true);
+                        FightForManager.instance.PlaceCardOnBoard(mgr.GetCardList(true)[goIndexPos], goIndexPos, true);
+
+                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[goIndexPos].transform);
+                        //GameObject eftObj1 = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[goIndexPos].transform);
+                        //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        //eftObj1.transform.SetParent(FightForManager.instance.playerCardsPos[goIndexPos].transform);
+
+                        FightCard.posIndex = goIndexPos;
+                        FightController.instance.PlayAudioForSecondClip(85, 0);
                     }
                     //拖动牌原位置 在备战位
                     else
                     {
-                        //是否可以上阵
-                        if (FightForManager.instance.PlaceOrRemoveCard(true))
+                        if (FightForManager.instance.IsPlayerAvailableToPlace(goIndexPos))
                         {
-                            int num = int.Parse(go.GetComponentInChildren<Text>().text);
+                            transform.position = go.transform.position;
+                            transform.GetChild(8).gameObject.SetActive(true);
+
+                            FightForManager.instance.OnBoardReactSet(
+                                FightForManager.instance.GetCardList(true)[goIndexPos], goIndexPos, true, true);
+
+                            go.transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+
                             int index = WarsUIManager.instance.FindDataFromCardsDatas(gameObject);
                             if (index != -1)
                             {
-                                FightForManager.instance.playerFightCardsDatas[num] = WarsUIManager.instance.playerCardsDatas[index];
-                                FightForManager.instance.playerFightCardsDatas[num].posIndex = num;
-                                //Debug.Log(">>>>>>>" + num);
-                                FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[num], num, FightForManager.instance.playerFightCardsDatas, true);
+                                mgr.GetCardList(true)[go.GetComponent<CardForDrag>().FightCard.posIndex].posIndex = go.GetComponent<CardForDrag>().FightCard.posIndex;
                             }
-                            transform.SetParent(FightForManager.instance.playerCardsBox);
-                            transform.position = go.transform.position;
-                            transform.GetChild(8).gameObject.SetActive(true);
-                            PosIndex = num;
-                            //isFightCard = true;
+                            go.GetComponent<CardForDrag>().FightCard.posIndex = -1;
+                            go.transform.GetChild(8).gameObject.SetActive(false);
+                            FightCard.posIndex = goIndexPos;
+
+                            FightForManager.instance.PlaceCardOnBoard(mgr.GetCardList(true)[FightCard.posIndex],
+                                FightCard.posIndex, true);
                             FightController.instance.PlayAudioForSecondClip(85, 0);
 
-                            EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[PosIndex].transform);
-                            //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[posIndex].transform);
-                            //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[posIndex].transform);
-                        }
+                            EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                            //GameObject eftObj =  EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                            //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[FightCard.posIndex].transform);
+                        } 
                         else
                         {
                             //Debug.Log("上阵位已满");
                             transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
                             transform.GetChild(8).gameObject.SetActive(false);
-                            PosIndex = -1;
+                            FightCard.posIndex = -1;
                         }
                     }
                 }
-                //放在 卡牌上
-                if (go.CompareTag("PyCard"))
+                //目的地 卡牌在备战位
+                else
                 {
-                    int goIndexPos = go.GetComponent<CardForDrag>().PosIndex;
-                    //目的地 卡牌在上阵位 并且 不是上锁卡牌
-                    if (goIndexPos != -1 && !go.GetComponent<CardForDrag>().IsMoveable)
+                    if (FightCard.posIndex != -1)
                     {
-                        //拖动牌原位置 在上阵位
-                        if (PosIndex != -1)
-                        {
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, false);
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[goIndexPos], goIndexPos, FightForManager.instance.playerFightCardsDatas, false);
-
-                            transform.SetParent(FightForManager.instance.playerCardsBox);
-                            transform.position = go.transform.position;
-                            go.transform.position = FightForManager.instance.playerCardsPos[PosIndex].transform.position;
-                            //WarsUIManager.instance.CardMoveToPos(go, FightForManager.instance.playerCardsPos[posIndex].transform.position);
-                            FightCardData dataTemp = FightForManager.instance.playerFightCardsDatas[goIndexPos];
-                            FightForManager.instance.playerFightCardsDatas[goIndexPos] = FightForManager.instance.playerFightCardsDatas[PosIndex];
-                            FightForManager.instance.playerFightCardsDatas[goIndexPos].posIndex = goIndexPos;
-                            FightForManager.instance.playerFightCardsDatas[PosIndex] = dataTemp;
-                            FightForManager.instance.playerFightCardsDatas[PosIndex].posIndex = PosIndex;
-                            go.GetComponent<CardForDrag>().PosIndex = PosIndex;
-
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, true);
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[goIndexPos], goIndexPos, FightForManager.instance.playerFightCardsDatas, true);
-
-                            EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[PosIndex].transform);
-                            //GameObject eftObj = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[posIndex].transform);
-                            EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[goIndexPos].transform);
-                            //GameObject eftObj1 = EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[goIndexPos].transform);
-                            //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[posIndex].transform);
-                            //eftObj1.transform.SetParent(FightForManager.instance.playerCardsPos[goIndexPos].transform);
-
-                            PosIndex = goIndexPos;
-                            FightController.instance.PlayAudioForSecondClip(85, 0);
-                        }
-                        //拖动牌原位置 在备战位
-                        else
-                        {
-                            FightForManager.instance.PlaceOrRemoveCard(false);
-                            if (FightForManager.instance.PlaceOrRemoveCard(true))
-                            {
-                                transform.SetParent(FightForManager.instance.playerCardsBox);
-                                transform.position = go.transform.position;
-                                transform.GetChild(8).gameObject.SetActive(true);
-
-                                FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[goIndexPos], goIndexPos, FightForManager.instance.playerFightCardsDatas, false);
-
-                                go.transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-
-                                int index = WarsUIManager.instance.FindDataFromCardsDatas(gameObject);
-                                if (index != -1)
-                                {
-                                    FightForManager.instance.playerFightCardsDatas[go.GetComponent<CardForDrag>().PosIndex] = WarsUIManager.instance.playerCardsDatas[index];
-                                    FightForManager.instance.playerFightCardsDatas[go.GetComponent<CardForDrag>().PosIndex].posIndex = go.GetComponent<CardForDrag>().PosIndex;
-                                }
-                                go.GetComponent<CardForDrag>().PosIndex = -1;
-                                go.transform.GetChild(8).gameObject.SetActive(false);
-                                PosIndex = goIndexPos;
-
-                                FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, true);
-                                FightController.instance.PlayAudioForSecondClip(85, 0);
-
-                                EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[PosIndex].transform);
-                                //GameObject eftObj =  EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f, FightForManager.instance.playerCardsPos[posIndex].transform);
-                                //eftObj.transform.SetParent(FightForManager.instance.playerCardsPos[posIndex].transform);
-                            } 
-                            else
-                            {
-                                FightForManager.instance.PlaceOrRemoveCard(true);
-                                //Debug.Log("上阵位已满");
-                                transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                                transform.GetChild(8).gameObject.SetActive(false);
-                                PosIndex = -1;
-                            }
-                        }
+                        FightForManager.instance.PlaceCardOnBoard(mgr.GetCardList(true)[FightCard.posIndex],
+                            FightCard.posIndex, false);
                     }
-                    //目的地 卡牌在备战位
-                    else
-                    {
-                        if (PosIndex != -1)
-                        {
-                            FightForManager.instance.PlaceOrRemoveCard(false);
-                            FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, false);
-                            FightForManager.instance.playerFightCardsDatas[PosIndex] = null;
-                        }
-                        transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                        transform.GetChild(8).gameObject.SetActive(false);
-                        PosIndex = -1;
-                    }
+                    transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+                    transform.GetChild(8).gameObject.SetActive(false);
+                    FightCard.posIndex = -1;
                 }
             }
-            else //目的地为其他
-            {
-                if (PosIndex != -1) //原位置在上阵位
-                {
-                    FightForManager.instance.PlaceOrRemoveCard(false);
-                    FightForManager.instance.CardGoIntoBattleProcess(FightForManager.instance.playerFightCardsDatas[PosIndex], PosIndex, FightForManager.instance.playerFightCardsDatas, false);
-                    FightForManager.instance.playerFightCardsDatas[PosIndex] = null;
-                }
-                transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
-                transform.GetChild(8).gameObject.SetActive(false);
-                PosIndex = -1;
-            }
-            transform.GetComponent<Image>().raycastTarget = true;
         }
+        else //目的地为其他
+        {
+            if (FightCard.posIndex != -1) //原位置在上阵位
+            {
+                FightForManager.instance.RemoveCardFromBoard(mgr.GetCardList(true)[FightCard.posIndex], true);
+            }
+            transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+            transform.GetChild(8).gameObject.SetActive(false);
+            FightCard.posIndex = -1;
+        }
+        transform.GetComponent<Image>().raycastTarget = true;
+    }
+
+    public override void ResetPos()
+    {
+        throw new System.NotImplementedException();
     }
 }

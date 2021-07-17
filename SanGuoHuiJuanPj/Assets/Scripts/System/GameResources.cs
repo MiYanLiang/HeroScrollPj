@@ -89,10 +89,11 @@ public class GameResources
     {
         if (isInit && !forceReload) return;
         Instance = this;
-        heroImgMap = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(HeroImagesPath)
-                .Select(o => new {imageId = int.Parse(o.name), sprite = o})
-                .Join(DataTable.Hero.Values, c => c.imageId, t => t.ImageId,
-                    (c, t) => new {t.Id, c.sprite}).OrderBy(c => c.Id).ToDictionary(h => h.Id, h => h.sprite),
+        var l = Resources.LoadAll<Sprite>(HeroImagesPath).ToList();
+        var abc = l.Select(o => new {imageId = int.Parse(o.name), sprite = o})
+            .Join(DataTable.Hero.Values, c => c.imageId, t => t.ImageId,
+                (c, t) => new {t.Id, c.sprite}).OrderBy(c => c.Id).ToDictionary(h => h.Id, h => h.sprite);
+        heroImgMap = new ResourceDataWrapper<int, Sprite>(abc,
             nameof(heroImgMap));
         classImgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(ClassImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
@@ -131,6 +132,7 @@ public class GameResources
         jiBanBg = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanBgPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanBg));
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
+        isInit = true;
     }
 
 

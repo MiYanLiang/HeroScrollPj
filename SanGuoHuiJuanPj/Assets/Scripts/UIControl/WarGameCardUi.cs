@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using CorrelateLib;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class WarGameCardUi : GameCardUiBase
@@ -6,7 +7,24 @@ public class WarGameCardUi : GameCardUiBase
     public GameCardWarUiOperation War;
     public DragController DragComponent;
 
-    public void SetSelected(bool selected) => War.Selected.gameObject.SetActive(selected);
+    public override void Init(GameCard card)
+    {
+        base.Init(card);
+        War.Init(DragComponent);
+        War.Show(this);
+    }
+
+    public void SetSelected(bool selected) => SetAnimateGameObject(War.Selected, selected);
+
+    public void SetHighLight(bool on) => SetAnimateGameObject(War.Highlight, on);
+
+    public void SetLose(bool isLose) => SetAnimateGameObject(War.Lose,isLose);
+
+    private void SetAnimateGameObject(Component obj,bool isActive)
+    {
+        if (isActive) obj.gameObject.SetActive(false);//如果物件是开着状态，先关掉再开启以触发播放
+        obj.gameObject.SetActive(isActive);
+    }
 }
 
 public class GameCardUiBase : MonoBehaviour
@@ -25,9 +43,18 @@ public class GameCardUiBase : MonoBehaviour
         Card = card;
         CardInfo = card.GetInfo();
         Image.sprite = GameResources.Instance.GetCardImage(card);
+        Set();
         SetName(CardInfo);
         SetLevel(Card.Level);
         ShowFrame(false);
+    }
+
+    protected void Set()
+    {
+        Image.sprite = CardInfo.Type == GameCardType.Hero
+            ? GameResources.Instance.HeroImg[Card.CardId]
+            : GameResources.Instance.FuZhuImg[CardInfo.ImageId];
+        Short.Set(CardInfo.Short, GameResources.Instance.ClassImg[CardInfo.Type == GameCardType.Hero ? 0 : 1]);
     }
 
     public void SetSize(Vector3 size) => transform.localScale = size;

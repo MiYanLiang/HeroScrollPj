@@ -21,7 +21,6 @@ public class EffectsPoolingControl : MonoBehaviour
 
     List<List<GameObject>> iconPoolingList = new List<List<GameObject>>();   //状态特效池
 
-    private GameResources GameResources => GameResources.Instance;
     public bool IsInit { get; private set; }
 
     private void Awake()
@@ -47,7 +46,7 @@ public class EffectsPoolingControl : MonoBehaviour
             List<GameObject> effectList = new List<GameObject>();
             for (int j = 0; j < maxCount; j++)
             {
-                GameObject effectObj = Instantiate(GameResources.Effects[effectsNameStr[i]], effectContentTran);
+                GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectsNameStr[i]], effectContentTran);
                 effectObj.SetActive(false);
                 effectList.Add(effectObj);
             }
@@ -63,62 +62,11 @@ public class EffectsPoolingControl : MonoBehaviour
             List<GameObject> iconList = new List<GameObject>();
             for (int j = 0; j < maxCount; j++)
             {
-                GameObject iconObj = Instantiate(GameResources.StateDin[iconNameStr[i]], effectContentTran);
+                GameObject iconObj = Instantiate(GameResources.Instance.StateDin[iconNameStr[i]], effectContentTran);
                 iconObj.SetActive(false);
                 iconList.Add(iconObj);
             }
             iconPoolingList.Add(iconList);
-        }
-    }
-
-    /// <summary>
-    /// 获取技能特效,跟随卡牌动
-    /// </summary>
-    /// <param name="effectName">特效名</param>
-    /// <param name="takeBackTime">回收时间</param>
-    /// <param name="usedTran">使用者</param>
-    /// <returns></returns>
-    public GameObject GetEffectToFight(string effectName, float takeBackTime, Transform usedTran)
-    {
-        int index = -1;
-        for (int i = 0; i < effectsNameStr.Length; i++)
-        {
-            if (effectsNameStr[i] == effectName)
-            {
-                index = i;
-                break;
-            }
-        }
-        if (index != -1)
-        {
-            foreach (GameObject go in effectsPoolingList[index])
-            {
-                if (go == null)
-                    continue;
-                if (!go.activeSelf)
-                {
-                    go.transform.position = usedTran.position;
-                    go.transform.SetParent(usedTran);
-                    go.SetActive(true);
-                    //if (go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0]!=null)
-                    //    takeBackTime = go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
-                    StartCoroutine(TakeBackEffect(go, takeBackTime));
-                    return go;
-                }
-            }
-
-            GameObject effectObj = Instantiate(GameResources.Effects[effectName], usedTran);
-            effectObj.transform.position = usedTran.position;
-            effectObj.SetActive(true);
-            effectsPoolingList[index].Add(effectObj);
-            //if (effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0] != null)
-            //    takeBackTime = effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
-            StartCoroutine(TakeBackEffect(effectObj, takeBackTime));
-            return effectObj;
-        }
-        else
-        {
-            return null;
         }
     }
 
@@ -151,7 +99,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Effects[effectName], ui.transform);
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], ui.transform);
             effectObj.transform.position = ui.transform.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
@@ -202,7 +150,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Effects[effectName], effectContentTran);
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], effectContentTran);
             effectObj.transform.position = usedTran.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
@@ -211,10 +159,8 @@ public class EffectsPoolingControl : MonoBehaviour
             StartCoroutine(TakeBackEffect(effectObj, tekeBackTime));
             return effectObj;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>
@@ -246,7 +192,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject iconObj = Instantiate(GameResources.StateDin[iconName], usedTran);
+            GameObject iconObj = Instantiate(GameResources.Instance.StateDin[iconName], usedTran);
             iconObj.transform.position = usedTran.position;
             iconObj.SetActive(true);
             iconPoolingList[index].Add(iconObj);
@@ -273,10 +219,7 @@ public class EffectsPoolingControl : MonoBehaviour
         yield return new WaitForSeconds(takeBackTime);
         if (go != null)
         {
-            if (go.transform.localScale.x != 1)
-            {
-                go.transform.localScale = new Vector3(1, 1, 1);
-            }
+            go.transform.localScale = Vector3.one;
             go.transform.SetParent(effectContentTran);
             go.SetActive(false);
         }
