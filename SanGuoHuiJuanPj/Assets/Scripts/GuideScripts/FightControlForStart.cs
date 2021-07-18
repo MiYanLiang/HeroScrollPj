@@ -121,9 +121,9 @@ public class FightControlForStart : MonoBehaviour
                 cutHpNum = FightDamageForSpecialSkill(cutHpNum, attackUnit, attackedUnit, isCanFightBack);
                 if (isNeedToAttack)
                 {
-                    attackedUnit.nowHp -= cutHpNum;
+                    attackedUnit.Hp.Add(-cutHpNum);
                     AttackedAnimShow(attackedUnit, cutHpNum, false);
-                    if (attackedUnit.nowHp <= 0)
+                    if (attackedUnit.Hp <= 0)
                     {
                         recordWinner = attackedUnit.isPlayerCard ? -1 : 1;
                     }
@@ -164,7 +164,7 @@ public class FightControlForStart : MonoBehaviour
                         finalDamage = FightDamageForSpecialSkill(finalDamage, attackUnit, attackedUnit, isCanFightBack);
                         if (isNeedToAttack)
                         {
-                            attackedUnit.nowHp -= finalDamage;
+                            attackedUnit.Hp.Add(-finalDamage);
                             AttackedAnimShow(attackedUnit, finalDamage, false);
                         }
                     }
@@ -179,7 +179,7 @@ public class FightControlForStart : MonoBehaviour
                     if (isNeedToAttack)
                     {
                         finalDamage = AddOrCutShieldValue(finalDamage, attackedUnit, false);
-                        attackedUnit.nowHp -= finalDamage;
+                        attackedUnit.Hp.Add(-finalDamage);
                         AttackedAnimShow(attackedUnit, finalDamage, false);
                     }
                     yield return StartCoroutine(SpecialHeroSkill0(finalDamage, attackUnit, attackedUnit, isCanFightBack));
@@ -234,12 +234,12 @@ public class FightControlForStart : MonoBehaviour
         switch (attackedUnit.cardId)
         {
             case 0://拒马
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (isCanFightBack && attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
                     damage = DefDamageProcessFun(attackedUnit, attackUnit, damage);
-                    attackUnit.nowHp -= (int)(damage * (DataTable.GetGameValue(8) / 100f));
+                    attackUnit.Hp.Add(-(int)(damage * (DataTable.GetGameValue(8) / 100f)));
                     GameObject effectObj = AttackToEffectShow(attackUnit, false, "7A");
                     effectObj.transform.localScale = new Vector3(1, attackedUnit.isPlayerCard ? 1 : -1, 1);
                     AttackedAnimShow(attackUnit, damage, false);
@@ -247,7 +247,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 1://地雷
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackUnit, damage, false);
                 if (isCanFightBack && attackUnit.cardMoveType == 0)  //踩地雷的是近战
                 {
@@ -256,18 +256,18 @@ public class FightControlForStart : MonoBehaviour
                     //todo : 这里的代码与FightController(351)不同
                     int dileiDamage = (int)(dmg * DataTable.GetGameValue(9) / 100f);
                     dileiDamage = DefDamageProcessFun(attackedUnit, attackUnit, dileiDamage);
-                    attackUnit.nowHp -= dileiDamage;
+                    attackUnit.Hp.Add(-dileiDamage);
                     AttackToEffectShow(attackUnit, false, "201A");
                     AttackedAnimShow(attackUnit, dileiDamage, false);
                     PlayAudioForSecondClip(88, 0.2f);
                 }
                 break;
             case 2://石墙
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 break;
             case 3://八阵图
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -275,7 +275,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 4://金锁阵
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -283,7 +283,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 5://鬼兵阵
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -291,7 +291,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 6://火墙
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (isCanFightBack && attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -299,7 +299,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 7://毒泉
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (isCanFightBack && attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -307,7 +307,7 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 8://刀墙
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 if (isCanFightBack && attackUnit.cardMoveType == 0 && !isGongChengChe)
                 {
@@ -315,17 +315,17 @@ public class FightControlForStart : MonoBehaviour
                 }
                 break;
             case 9://滚石
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 break;
             case 10://滚木
-                attackedUnit.nowHp -= damage;
+                attackedUnit.Hp.Add(-damage);
                 AttackedAnimShow(attackedUnit, damage, false);
                 break;
             case 11://金币宝箱
-                if (attackedUnit.nowHp > 0)
+                if (attackedUnit.Hp > 0)
                 {
-                    attackedUnit.nowHp -= damage;
+                    attackedUnit.Hp.Add(-damage);
                     GetGoldBoxFun(attackedUnit);
                 }
                 AttackedAnimShow(attackedUnit, damage, false);
@@ -339,7 +339,7 @@ public class FightControlForStart : MonoBehaviour
     //获得金币宝箱
     private void GetGoldBoxFun(FightCardData attackedUnit)
     {
-        if (attackedUnit.nowHp <= 0)
+        if (attackedUnit.Hp <= 0)
         {
             GameObject obj = EffectsPoolingControl.instance.GetEffectToFight("GetGold", 1.5f, attackedUnit.cardObj);
             obj.GetComponentInChildren<Text>().text = string.Format(DataTable.GetStringText(8), DataTable.EnemyUnit[attackedUnit.unitId].GoldReward);
@@ -351,7 +351,7 @@ public class FightControlForStart : MonoBehaviour
     {
         for (int i = 0; i < gunMuList.Count; i++)
         {
-            if (gunMuList[i].nowHp <= 0 && !gunMuList[i].isActionDone)
+            if (gunMuList[i].Hp <= 0 && !gunMuList[i].isActionDone)
             {
                 yield return StartCoroutine(GunMuTrapAttack(gunMuList[i], 1f, DataTable.GetGameValue(15)));
             }
@@ -359,7 +359,7 @@ public class FightControlForStart : MonoBehaviour
 
         for (int i = 0; i < gunShiList.Count; i++)
         {
-            if (gunShiList[i].nowHp <= 0 && !gunShiList[i].isActionDone)
+            if (gunShiList[i].Hp <= 0 && !gunShiList[i].isActionDone)
             {
                 yield return StartCoroutine(GunShiTrapAttack(gunShiList[i], 1f, DataTable.GetGameValue(16)));
             }
@@ -388,7 +388,7 @@ public class FightControlForStart : MonoBehaviour
             for (int j = 0; j < 4; j++)
             {
                 int cardIndex = fightColumns[i] + j * 5;
-                if (fightCardDatas[cardIndex] != null && fightCardDatas[cardIndex].nowHp > 0)
+                if (fightCardDatas[cardIndex] != null && fightCardDatas[cardIndex].Hp > 0)
                 {
                     int nowDamage = DefDamageProcessFun(attackUnit, fightCardDatas[cardIndex], cutHpNum);
                     if (fightCardDatas[cardIndex].cardType == 3)    //滚石和滚木，对陷阱造成2倍伤害
@@ -397,13 +397,13 @@ public class FightControlForStart : MonoBehaviour
                     }
                     if (cardIndex != 17)
                     {
-                        fightCardDatas[cardIndex].nowHp -= nowDamage;
+                        fightCardDatas[cardIndex].Hp.Add(-nowDamage);
                         TakeOneUnitDizzed(fightCardDatas[cardIndex], dizzedRate);
                     }
                     else
                     {
-                        fightCardDatas[cardIndex].nowHp -= nowDamage;
-                        if (fightCardDatas[cardIndex].nowHp <= 0)
+                        fightCardDatas[cardIndex].Hp.Add(-nowDamage);
+                        if (fightCardDatas[cardIndex].Hp <= 0)
                         {
                             recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                         }
@@ -412,7 +412,7 @@ public class FightControlForStart : MonoBehaviour
                     ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(9), true, true);
                     AttackedAnimShow(fightCardDatas[cardIndex], nowDamage, false);
 
-                    if (fightCardDatas[cardIndex].nowHp <= 0 &&
+                    if (fightCardDatas[cardIndex].Hp <= 0 &&
                         fightCardDatas[cardIndex].cardType == 3 &&
                         (fightCardDatas[cardIndex].cardId == 9 || fightCardDatas[cardIndex].cardId == 10))
                     {
@@ -458,7 +458,7 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < 4; i++)
         {
             int cardIndex = startIndex + i * 5;
-            if (fightCardDatas[cardIndex] != null && fightCardDatas[cardIndex].nowHp > 0)
+            if (fightCardDatas[cardIndex] != null && fightCardDatas[cardIndex].Hp > 0)
             {
                 int nowDamage = DefDamageProcessFun(attackUnit, fightCardDatas[cardIndex], cutHpNum);
                 if (fightCardDatas[cardIndex].cardType == 3)    //滚石和滚木，对陷阱造成2倍伤害
@@ -467,13 +467,13 @@ public class FightControlForStart : MonoBehaviour
                 }
                 if (cardIndex != 17)
                 {
-                    fightCardDatas[cardIndex].nowHp -= nowDamage;
+                    fightCardDatas[cardIndex].Hp.Add(-nowDamage);
                     TakeOneUnitDizzed(fightCardDatas[cardIndex], dizzedRate);
                 }
                 else
                 {
-                    fightCardDatas[cardIndex].nowHp -= nowDamage;
-                    if (fightCardDatas[cardIndex].nowHp <= 0)
+                    fightCardDatas[cardIndex].Hp.Add(-nowDamage);
+                    if (fightCardDatas[cardIndex].Hp <= 0)
                     {
                         recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                     }
@@ -482,7 +482,7 @@ public class FightControlForStart : MonoBehaviour
                 ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(10), true, true);
                 AttackedAnimShow(fightCardDatas[cardIndex], nowDamage, false);
 
-                if (fightCardDatas[cardIndex].nowHp <= 0 &&
+                if (fightCardDatas[cardIndex].Hp <= 0 &&
                         fightCardDatas[cardIndex].cardType == 3 &&
                         (fightCardDatas[cardIndex].cardId == 9 || fightCardDatas[cardIndex].cardId == 10))
                 {
@@ -516,7 +516,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0)
             {
                 canFightUnits.Add(i);
             }
@@ -528,9 +528,9 @@ public class FightControlForStart : MonoBehaviour
             AttackToEffectShow(attackedUnit, false, "20A");
 
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
-            attackedUnit.nowHp -= nowDamage;
+            attackedUnit.Hp.Add(-nowDamage);
             AttackedAnimShow(attackedUnit, nowDamage, false);
-            if (attackedUnit.cardType == 522 && attackedUnit.nowHp <= 0)
+            if (attackedUnit.cardType == 522 && attackedUnit.Hp <= 0)
             {
                 recordWinner = attackUnit.isPlayerCard ? 1 : -1;
             }
@@ -859,14 +859,14 @@ public class FightControlForStart : MonoBehaviour
         //消除滚石滚木
         for (int i = 0; i < gunMuCards.Count; i++)
         {
-            if (gunMuCards[i].nowHp <= 0)
+            if (gunMuCards[i].Hp <= 0)
             {
                 gunMuCards.Remove(gunMuCards[i]);
             }
         }
         for (int i = 0; i < gunShiCards.Count; i++)
         {
-            if (gunShiCards[i].nowHp <= 0)
+            if (gunShiCards[i].Hp <= 0)
             {
                 gunShiCards.Remove(gunShiCards[i]);
             }
@@ -909,7 +909,7 @@ public class FightControlForStart : MonoBehaviour
         {
             for (int i = 0; i < GoalGfSetFireRound[burnRoundIndex].Length; i++)
             {
-                if (fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]] != null && fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]].cardType == 0 && fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]].nowHp > 0)
+                if (fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]] != null && fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]].cardType == 0 && fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]].Hp > 0)
                 {
                     TakeToBurn(fightCardDatas[GoalGfSetFireRound[burnRoundIndex][i]], DataTable.GetGameValue(33));
                 }
@@ -948,14 +948,14 @@ public class FightControlForStart : MonoBehaviour
             GameObject stateDinObj = Instantiate(Resources.Load("Prefabs/stateDin/" + StringNameStatic.StateIconPath_burned, typeof(GameObject)) as GameObject, posListToSetBurn[targets[i]].transform);
             stateDinObj.name = StringNameStatic.StateIconPath_burned;
 
-            if (fightCardDatas[targets[i]] != null && fightCardDatas[targets[i]].nowHp > 0)
+            if (fightCardDatas[targets[i]] != null && fightCardDatas[targets[i]].Hp > 0)
             {
                 int nowDamage = DefDamageProcessFun(attackUnit, fightCardDatas[targets[i]], damage);
-                fightCardDatas[targets[i]].nowHp -= nowDamage;
+                fightCardDatas[targets[i]].Hp.Add(-nowDamage);
                 AttackedAnimShow(fightCardDatas[targets[i]], nowDamage, false);
                 if (fightCardDatas[targets[i]].cardType == 522)
                 {
-                    if (fightCardDatas[targets[i]].nowHp <= 0)
+                    if (fightCardDatas[targets[i]].Hp <= 0)
                     {
                         recordWinner = fightCardDatas[targets[i]].isPlayerCard ? -1 : 1;
                     }
@@ -1028,14 +1028,14 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < attackedIndexList.Count; i++)
         {
             EffectsPoolingControl.instance.GetEffectToFight1(effectStr, 1f, posListToThunder[attackedIndexList[i]].transform);
-            if (fightCardDatas[attackedIndexList[i]] != null && fightCardDatas[attackedIndexList[i]].nowHp > 0)
+            if (fightCardDatas[attackedIndexList[i]] != null && fightCardDatas[attackedIndexList[i]].Hp > 0)
             {
                 int nowDamage = DefDamageProcessFun(attackUnit, fightCardDatas[attackedIndexList[i]], damage);
-                fightCardDatas[attackedIndexList[i]].nowHp -= nowDamage;
+                fightCardDatas[attackedIndexList[i]].Hp.Add(-nowDamage);
                 AttackedAnimShow(fightCardDatas[attackedIndexList[i]], nowDamage, false);
                 if (fightCardDatas[attackedIndexList[i]].cardType == 522)
                 {
-                    if (fightCardDatas[attackedIndexList[i]].nowHp <= 0)
+                    if (fightCardDatas[attackedIndexList[i]].Hp <= 0)
                     {
                         recordWinner = fightCardDatas[attackedIndexList[i]].isPlayerCard ? -1 : 1;
                         return true;
@@ -1053,13 +1053,13 @@ public class FightControlForStart : MonoBehaviour
     //刀兵连斩技能
     IEnumerator DaoBingLianZhan(float damageBonus, FightCardData attackUnit, FightCardData attackedUnit)
     {
-        if (attackUnit.nowHp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
         {
 
         }
         else
         {
-            if (attackedUnit.nowHp <= 0 && attackedUnit.cardType != 522)
+            if (attackedUnit.Hp <= 0 && attackedUnit.cardType != 522)
             {
                 //Debug.Log("-----刀兵连斩");
                 float waitTime = BeforeFightDoThingFun(attackUnit);
@@ -1082,13 +1082,13 @@ public class FightControlForStart : MonoBehaviour
     //神武战意技能
     IEnumerator ShenWuZhanYi(float damageBonus, FightCardData attackUnit, FightCardData attackedUnit)
     {
-        if (attackUnit.nowHp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
         {
 
         }
         else
         {
-            if (attackedUnit.nowHp > 0 && attackedUnit.cardType == 0)
+            if (attackedUnit.Hp > 0 && attackedUnit.cardType == 0)
             {
                 if (attackedUnit.attackedBehavior == 2 || attackedUnit.attackedBehavior == 3)
                 {
@@ -1112,7 +1112,7 @@ public class FightControlForStart : MonoBehaviour
     //先锋勇武技能
     IEnumerator XianFengYongWu(FightCardData attackUnit, FightCardData attackedUnit, int classType)
     {
-        if (attackUnit.nowHp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
         {
 
         }
@@ -1152,13 +1152,13 @@ public class FightControlForStart : MonoBehaviour
     //骑兵驰骋技能
     IEnumerator QiBingChiCheng(FightCardData attackUnit, FightCardData attackedUnit)
     {
-        if (attackUnit.nowHp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 || attackUnit.fightState.imprisonedNums > 0)
         {
 
         }
         else
         {
-            if (attackedUnit.nowHp > 0 && (indexAttackType != 0 || TakeSpecialAttack(DataTable.GetGameValue(47))))
+            if (attackedUnit.Hp > 0 && (indexAttackType != 0 || TakeSpecialAttack(DataTable.GetGameValue(47))))
             {
                 //Debug.Log("-----骑兵驰骋");
                 float waitTime = BeforeFightDoThingFun(attackUnit);
@@ -1177,7 +1177,7 @@ public class FightControlForStart : MonoBehaviour
     //弩兵连射技能
     IEnumerator NuBingLianShe(FightCardData attackUnit, FightCardData attackedUnit, int classIndex)
     {
-        if (attackedUnit.nowHp > 0 && TakeSpecialAttack(classIndex == 51 ? DataTable.GetGameValue(48) : DataTable.GetGameValue(49)))
+        if (attackedUnit.Hp > 0 && TakeSpecialAttack(classIndex == 51 ? DataTable.GetGameValue(48) : DataTable.GetGameValue(49)))
         {
             //Debug.Log("-----弩兵连射");
             float waitTime = BeforeFightDoThingFun(attackUnit);
@@ -1207,7 +1207,7 @@ public class FightControlForStart : MonoBehaviour
     //禁卫反击技能
     IEnumerator JinWeiFanJiAttack(FightCardData attackUnit, FightCardData attackedUnit)
     {
-        if (attackUnit.nowHp > 0)
+        if (attackUnit.Hp > 0)
         {
             yield return new WaitForSeconds(0.3f);
             ShowSpellTextObj(attackUnit.cardObj, "13", false);
@@ -1216,7 +1216,7 @@ public class FightControlForStart : MonoBehaviour
             AttackToEffectShow(attackedUnit, false, "13A");
 
             int damage = DefDamageProcessFun(attackUnit, attackedUnit, attackUnit.damage);
-            attackedUnit.nowHp -= damage;
+            attackedUnit.Hp.Add(-damage);
             AttackedAnimShow(attackedUnit, damage, false);
         }
     }
@@ -1239,7 +1239,7 @@ public class FightControlForStart : MonoBehaviour
         int sameTypeHeroNums = 0;
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0 && DataTable.Hero[fightCardDatas[i].cardId].MilitaryUnitTableId == 65)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0 && DataTable.Hero[fightCardDatas[i].cardId].MilitaryUnitTableId == 65)
             {
                 AttackToEffectShow(fightCardDatas[i], false, "65B");
                 sameTypeHeroNums++;
@@ -1270,7 +1270,7 @@ public class FightControlForStart : MonoBehaviour
                     int survivalUnit = 0;
                     for (int i = 0; i < tieQiCardsList.Count; i++)
                     {
-                        if (tieQiCardsList[i].nowHp > 0)
+                        if (tieQiCardsList[i].Hp > 0)
                         {
                             survivalUnit++;
                         }
@@ -1281,7 +1281,7 @@ public class FightControlForStart : MonoBehaviour
                         damage = (int)((float)damage / (survivalUnit > 0 ? survivalUnit : 1));
                         for (int i = 0; i < tieQiCardsList.Count; i++)
                         {
-                            if (tieQiCardsList[i].nowHp > 0)
+                            if (tieQiCardsList[i].Hp > 0)
                             {
                                 ShowSpellTextObj(tieQiCardsList[i].cardObj, "58_0", false);
                                 if (tieQiCardsList[i] != attackedUnit)
@@ -1289,7 +1289,7 @@ public class FightControlForStart : MonoBehaviour
                                     if (!(tieQiCardsList[i].fightState.invincibleNums > 0))
                                     {
                                         int backDamage = AddOrCutShieldValue(damage, tieQiCardsList[i], false);
-                                        tieQiCardsList[i].nowHp -= backDamage;
+                                        tieQiCardsList[i].Hp.Add(-backDamage);
                                         AttackedAnimShow(tieQiCardsList[i], backDamage, false);
                                     }
                                 }
@@ -1370,7 +1370,7 @@ public class FightControlForStart : MonoBehaviour
         PlayAudioForSecondClip(56, 0);
         ShowSpellTextObj(attackUnit.cardObj, "56", false);
         AttackToEffectShow(attackedUnit, false, "56A");
-        if (attackedUnit.cardType == 0 && attackedUnit.nowHp > 0)
+        if (attackedUnit.cardType == 0 && attackedUnit.Hp > 0)
         {
             if (TakeSpecialAttack(DataTable.GetGameValue(51)))
             {
@@ -1390,7 +1390,7 @@ public class FightControlForStart : MonoBehaviour
         int takeBurnPro = DataTable.GetGameValue(52);   //附加灼烧概率
 
         //血量小于50%，发起自杀攻击
-        if (attackUnit.nowHp / (float)attackUnit.fullHp <= DataTable.GetGameValue(54) / 100f)
+        if (attackUnit.Hp.Rate() <= DataTable.GetGameValue(54) / 100f)
         {
             PlayAudioForSecondClip(84, 0);
             ShowSpellTextObj(attackUnit.cardObj, "55_0", false);
@@ -1398,7 +1398,7 @@ public class FightControlForStart : MonoBehaviour
 
             takeBurnPro = DataTable.GetGameValue(53);
 
-            attackUnit.nowHp = 0;
+            attackUnit.Hp.Set(0);
             UpdateUnitHpShow(attackUnit);
 
             finalDamage = (int)(finalDamage * DataTable.GetGameValue(55) / 100f);
@@ -1407,20 +1407,20 @@ public class FightControlForStart : MonoBehaviour
             for (int i = 0; i < FightForManagerForStart.instance.CardNearbyAdditionForeach[targetIndex].Length; i++)
             {
                 FightCardData attackedUnits = fightCardDatas[FightForManagerForStart.instance.CardNearbyAdditionForeach[targetIndex][i]];
-                if (attackedUnits != null && attackedUnits.nowHp > 0)
+                if (attackedUnits != null && attackedUnits.Hp > 0)
                 {
                     AttackToEffectShow(attackedUnits, false, "55A");
                     int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
-                    attackedUnits.nowHp -= backDamage;
+                    attackedUnits.Hp.Add(-backDamage);
                     AttackedAnimShow(attackedUnits, backDamage, false);
                     if (attackedUnits.cardType == 522)
                     {
-                        if (attackedUnits.nowHp <= 0)
+                        if (attackedUnits.Hp <= 0)
                         {
                             recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
                         }
                     }
-                    if (attackedUnits.cardType == 0 && attackedUnits.nowHp > 0)
+                    if (attackedUnits.cardType == 0 && attackedUnits.Hp > 0)
                     {
                         TakeToBurn(attackedUnits, takeBurnPro);
                     }
@@ -1444,16 +1444,13 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0)
             {
                 canFightUnits.Add(i);
             }
         }
         //按血量从少到多排序
-        canFightUnits.Sort((int a, int b) =>
-        {
-            return (fightCardDatas[a].nowHp / (float)fightCardDatas[a].fullHp).CompareTo(fightCardDatas[a].nowHp / (float)fightCardDatas[b].fullHp);
-        });
+        canFightUnits.Sort((a, b) => fightCardDatas[a].Hp.Rate().CompareTo(fightCardDatas[b].Hp.Rate()));
         int fightNums = 0;
         int killPos = 0;
         int zhanShaXian = attackUnit.damage;    //斩杀线
@@ -1498,17 +1495,17 @@ public class FightControlForStart : MonoBehaviour
                 int nowDamage = 0;
                 //造成伤害
                 FightCardData attackedUnit = fightCardDatas[canFightUnits[i]];
-                if (attackedUnit.nowHp < zhanShaXian && TakeSpecialAttack(killPos))
+                if (attackedUnit.Hp < zhanShaXian && TakeSpecialAttack(killPos))
                 {
                     ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(13), true, true);
 
-                    nowDamage = attackedUnit.fightState.shieldValue + attackedUnit.nowHp;
-                    attackedUnit.nowHp = 0;
+                    nowDamage = attackedUnit.fightState.shieldValue + attackedUnit.Hp;
+                    attackedUnit.Hp.Set(0);
                 }
                 else
                 {
                     nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
-                    attackedUnit.nowHp -= nowDamage;
+                    attackedUnit.Hp.Add(-nowDamage);
                 }
                 AttackedAnimShow(attackedUnit, nowDamage, false);
                 AttackToEffectShow(attackedUnit, false, effectStr);
@@ -1537,7 +1534,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canHuiFuUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType != 0 && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].nowHp != fightCardDatas[i].fullHp)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType != 0 && fightCardDatas[i].Hp > 0 && fightCardDatas[i].Hp != fightCardDatas[i].Hp.Max)
             {
                 canHuiFuUnits.Add(i);
             }
@@ -1551,7 +1548,7 @@ public class FightControlForStart : MonoBehaviour
             }
             canHuiFuUnits.Sort((int a, int b) =>
             {
-                return fightCardDatas[a].nowHp.CompareTo(fightCardDatas[b].nowHp);
+                return fightCardDatas[a].Hp.CompareTo(fightCardDatas[b].Hp);
             });
 
             ShowSpellTextObj(attackUnit.cardObj, "40", false);
@@ -1561,7 +1558,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 AttackToEffectShow(fightCardDatas[canHuiFuUnits[i]], false, "40A");
                 ShowSpellTextObj(fightCardDatas[canHuiFuUnits[i]].cardObj, DataTable.GetStringText(15), true, false);
-                fightCardDatas[canHuiFuUnits[i]].nowHp += addtionNums;
+                fightCardDatas[canHuiFuUnits[i]].Hp.Add(+addtionNums);
                 AttackedAnimShow(fightCardDatas[canHuiFuUnits[i]], addtionNums, true);
             }
         }
@@ -1574,7 +1571,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 canFightUnits.Add(i);
             }
@@ -1613,7 +1610,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 canFightUnits.Add(i);
             }
@@ -1653,19 +1650,19 @@ public class FightControlForStart : MonoBehaviour
         PlayAudioForSecondClip(24, 0);
         FightCardData[] fightCardDatas = attackUnit.isPlayerCard ? FightForManagerForStart.instance.enemyFightCardsDatas : FightForManagerForStart.instance.playerFightCardsDatas;
         List<int> canFightUnits = new List<int>();
-        if (fightCardDatas[12] != null && fightCardDatas[12].nowHp > 0)
+        if (fightCardDatas[12] != null && fightCardDatas[12].Hp > 0)
         {
             canFightUnits.Add(12);
         }
-        if (fightCardDatas[15] != null && fightCardDatas[15].nowHp > 0)
+        if (fightCardDatas[15] != null && fightCardDatas[15].Hp > 0)
         {
             canFightUnits.Add(15);
         }
-        if (fightCardDatas[16] != null && fightCardDatas[16].nowHp > 0)
+        if (fightCardDatas[16] != null && fightCardDatas[16].Hp > 0)
         {
             canFightUnits.Add(16);
         }
-        if (fightCardDatas[17] != null && fightCardDatas[17].nowHp > 0)
+        if (fightCardDatas[17] != null && fightCardDatas[17].Hp > 0)
         {
             canFightUnits.Add(17);
         }
@@ -1678,8 +1675,8 @@ public class FightControlForStart : MonoBehaviour
             {
                 finalDamage = (int)(finalDamage * DataTable.GetGameValue(72) / 100f);
                 finalDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
-                attackedUnit.nowHp -= finalDamage;
-                if (attackedUnit.nowHp <= 0)
+                attackedUnit.Hp.Add(-finalDamage);
+                if (attackedUnit.Hp <= 0)
                 {
                     recordWinner = attackedUnit.isPlayerCard ? -1 : 1;
                 }
@@ -1687,7 +1684,7 @@ public class FightControlForStart : MonoBehaviour
             else
             {
                 finalDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
-                attackedUnit.nowHp -= finalDamage;
+                attackedUnit.Hp.Add(-finalDamage);
             }
             AttackedAnimShow(attackedUnit, finalDamage, false);
         }
@@ -1718,7 +1715,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 canFightUnits.Add(i);
             }
@@ -1738,7 +1735,7 @@ public class FightControlForStart : MonoBehaviour
                 AttackToEffectShow(attackedUnit, false, effectStr);
                 //造成伤害
                 int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
-                attackedUnit.nowHp -= nowDamage;
+                attackedUnit.Hp.Add(-nowDamage);
                 AttackedAnimShow(attackedUnit, nowDamage, false);
                 //击退
                 int nextPos = attackedUnit.posIndex + 5;
@@ -1766,7 +1763,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (i != attackedUnitForIndex.posIndex && fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0)
+            if (i != attackedUnitForIndex.posIndex && fightCardDatas[i] != null && fightCardDatas[i].Hp > 0)
             {
                 canFightUnits.Add(i);
             }
@@ -1793,11 +1790,11 @@ public class FightControlForStart : MonoBehaviour
             FightCardData attackedUnit = fightCardDatas[attackedIndexList[i]];
             AttackToEffectShow(attackedUnit, false, "20A");
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
-            attackedUnit.nowHp -= nowDamage;
+            attackedUnit.Hp.Add(-nowDamage);
             AttackedAnimShow(attackedUnit, nowDamage, false);
             if (attackedUnit.cardType == 522)
             {
-                if (attackedUnit.nowHp <= 0)
+                if (attackedUnit.Hp <= 0)
                 {
                     recordWinner = attackedUnit.isPlayerCard ? -1 : 1;
                 }
@@ -1813,9 +1810,9 @@ public class FightControlForStart : MonoBehaviour
         float minFlo = 2;
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].fightState.shieldValue < 1000)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0 && fightCardDatas[i].fightState.shieldValue < 1000)
             {
-                float nowFlo = (fightCardDatas[i].nowHp + fightCardDatas[i].fightState.shieldValue) / (float)fightCardDatas[i].fullHp;
+                float nowFlo = (fightCardDatas[i].Hp + fightCardDatas[i].fightState.shieldValue) / (float)fightCardDatas[i].Hp.Max;
                 if (nowFlo < minFlo)
                 {
                     minFlo = nowFlo;
@@ -1848,7 +1845,7 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
             int nowBadNums = 0;
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 if (fightCardDatas[i].fightState.dizzyNums > 0)
                 {
@@ -1977,7 +1974,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canHuiFuUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].nowHp != fightCardDatas[i].fullHp)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0 && fightCardDatas[i].Hp != fightCardDatas[i].Hp.Max)
             {
                 canHuiFuUnits.Add(i);
             }
@@ -1992,7 +1989,7 @@ public class FightControlForStart : MonoBehaviour
             }
             canHuiFuUnits.Sort((int a, int b) =>
             {
-                return fightCardDatas[a].nowHp.CompareTo(fightCardDatas[b].nowHp);
+                return fightCardDatas[a].Hp.CompareTo(fightCardDatas[b].Hp);
             });
 
             ShowSpellTextObj(attackUnit.cardObj, classType.ToString(), false);
@@ -2014,7 +2011,7 @@ public class FightControlForStart : MonoBehaviour
             for (int i = 0; i < fightNums; i++)
             {
                 AttackToEffectShow(fightCardDatas[canHuiFuUnits[i]], false, effectStr);
-                fightCardDatas[canHuiFuUnits[i]].nowHp += addtionNums;
+                fightCardDatas[canHuiFuUnits[i]].Hp.Add(+addtionNums);
                 ShowSpellTextObj(fightCardDatas[canHuiFuUnits[i]].cardObj, DataTable.GetStringText(15), true, false);
                 AttackedAnimShow(fightCardDatas[canHuiFuUnits[i]], addtionNums, true);
             }
@@ -2047,7 +2044,7 @@ public class FightControlForStart : MonoBehaviour
         {
             for (int i = 0; i < fightCardDatas.Length; i++)
             {
-                if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0)
+                if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0)
                 {
                     if (!isHadFirst)
                     {
@@ -2144,7 +2141,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 canFightUnits.Add(i);
             }
@@ -2196,7 +2193,7 @@ public class FightControlForStart : MonoBehaviour
         List<int> canFightUnits = new List<int>();
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].nowHp > 0 && fightCardDatas[i].cardType == 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0)
             {
                 canFightUnits.Add(i);
             }
@@ -2242,7 +2239,7 @@ public class FightControlForStart : MonoBehaviour
                 TakeToPoisoned(fightCardDatas[attackedIndexList[i]], prop);
 
                 int backDamage = DefDamageProcessFun(attackUnit, fightCardDatas[attackedIndexList[i]], finalDamage);
-                fightCardDatas[attackedIndexList[i]].nowHp -= backDamage;
+                fightCardDatas[attackedIndexList[i]].Hp.Add(-backDamage);
                 AttackedAnimShow(fightCardDatas[attackedIndexList[i]], backDamage, false);
             }
         }
@@ -2352,7 +2349,7 @@ public class FightControlForStart : MonoBehaviour
             FightForManagerForStart.instance.DestroySateIcon(attackedUnit.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
         }
 
-        float damageProp = (1f - (float)attackedUnit.nowHp / attackedUnit.fullHp) / (DataTable.GetGameValue(93) / 100f) * (DataTable.GetGameValue(94) / 100f);
+        float damageProp = (1f - attackedUnit.Hp.Rate()) / (DataTable.GetGameValue(93) / 100f) * (DataTable.GetGameValue(94) / 100f);
         if (damageProp > 0)
         {
             ShowSpellTextObj(attackUnit.cardObj, "18", false);
@@ -2374,14 +2371,14 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < FightForManagerForStart.instance.CardNearbyAdditionForeach[targetIndex].Length; i++)
         {
             FightCardData attackedUnits = fightCardDatas[FightForManagerForStart.instance.CardNearbyAdditionForeach[targetIndex][i]];
-            if (attackedUnits != null && attackedUnits.nowHp > 0)
+            if (attackedUnits != null && attackedUnits.Hp > 0)
             {
                 int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
-                attackedUnits.nowHp -= backDamage;
+                attackedUnits.Hp.Add(-backDamage);
                 AttackedAnimShow(attackedUnits, backDamage, false);
                 if (attackedUnits.cardType == 522)
                 {
-                    if (attackedUnits.nowHp <= 0)
+                    if (attackedUnits.Hp <= 0)
                     {
                         recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
                     }
@@ -2407,14 +2404,14 @@ public class FightControlForStart : MonoBehaviour
         for (int n = 0; n < fightNums; n++)
         {
             chuanCiUnitId = chuanCiUnitId + 5;
-            if (chuanCiUnitId < 20 && fightCardDatas[chuanCiUnitId] != null && fightCardDatas[chuanCiUnitId].nowHp > 0)
+            if (chuanCiUnitId < 20 && fightCardDatas[chuanCiUnitId] != null && fightCardDatas[chuanCiUnitId].Hp > 0)
             {
                 int backDamage = DefDamageProcessFun(attackUnit, fightCardDatas[chuanCiUnitId], finalDamage);
-                fightCardDatas[chuanCiUnitId].nowHp -= backDamage;
+                fightCardDatas[chuanCiUnitId].Hp.Add(-backDamage);
                 AttackedAnimShow(fightCardDatas[chuanCiUnitId], backDamage, false);
                 if (fightCardDatas[chuanCiUnitId].cardType == 522)
                 {
-                    if (fightCardDatas[chuanCiUnitId].nowHp <= 0)
+                    if (fightCardDatas[chuanCiUnitId].Hp <= 0)
                     {
                         recordWinner = fightCardDatas[chuanCiUnitId].isPlayerCard ? -1 : 1;
                     }
@@ -2449,7 +2446,7 @@ public class FightControlForStart : MonoBehaviour
         PlayAudioForSecondClip(11, 0);
         AttackToEffectShow(attackedUnit, false, "11A");
         //自身血量每降低10%，提高15%伤害
-        float damageProp = (1f - (float)attackUnit.nowHp / attackUnit.fullHp) / (DataTable.GetGameValue(98) / 100f) * (DataTable.GetGameValue(99) / 100f);
+        float damageProp = (1f - attackUnit.Hp.Rate()) / (DataTable.GetGameValue(98) / 100f) * (DataTable.GetGameValue(99) / 100f);
         if (damageProp > 0)
         {
             ShowSpellTextObj(attackUnit.cardObj, "11", false);
@@ -2462,9 +2459,9 @@ public class FightControlForStart : MonoBehaviour
     private int SiShiSheMingAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         //血量低于25%时，获得【舍命】。下次攻击时，发起自杀式攻击，对敌方全体武将造成一次100%伤害
-        if (attackUnit.nowHp / (float)attackUnit.fullHp <= (DataTable.GetGameValue(100) / 100f))
+        if (attackUnit.Hp.Rate() <= (DataTable.GetGameValue(100) / 100f))
         {
-            attackUnit.nowHp = 0;
+            attackUnit.Hp.Set(0);
             UpdateUnitHpShow(attackUnit);
             ShowSpellTextObj(attackUnit.cardObj, "10", false);
             PlayAudioForSecondClip(10, 0);
@@ -2474,10 +2471,10 @@ public class FightControlForStart : MonoBehaviour
             for (int i = 0; i < fightCardDatas.Length; i++)
             {
                 FightCardData attackedUnits = fightCardDatas[i];
-                if (attackedUnits != null && attackedUnits.cardType == 0 && attackedUnits.nowHp > 0)
+                if (attackedUnits != null && attackedUnits.cardType == 0 && attackedUnits.Hp > 0)
                 {
                     int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
-                    attackedUnits.nowHp -= backDamage;
+                    attackedUnits.Hp.Add(-backDamage);
                     AttackedAnimShow(attackedUnits, backDamage, false);
                     AttackToEffectShow(attackedUnits, false, "10A");
                 }
@@ -2513,7 +2510,7 @@ public class FightControlForStart : MonoBehaviour
             PlayAudioForSecondClip(7, 0.2f);
             ShowSpellTextObj(attackUnit.cardObj, "7", false);
             finalDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
-            attackedUnit.nowHp -= finalDamage;
+            attackedUnit.Hp.Add(-finalDamage);
             AttackedAnimShow(attackedUnit, finalDamage, false);
             GameObject effectObj = AttackToEffectShow(attackedUnit, false, "7A");
             effectObj.transform.localScale = new Vector3(1, attackUnit.isPlayerCard ? 1 : -1, 1);
@@ -2524,13 +2521,13 @@ public class FightControlForStart : MonoBehaviour
     //敢死兵种添加死战状态
     private void SiZhanStateCreate(FightCardData attackedUnit)
     {
-        if (attackedUnit.fightState.deathFightNums == 0 && attackedUnit.nowHp > 0 && attackedUnit.nowHp / (float)attackedUnit.fullHp < (DataTable.GetGameValue(103) / 100f))
+        if (attackedUnit.fightState.deathFightNums == 0 && attackedUnit.Hp > 0 && attackedUnit.Hp.Rate() < (DataTable.GetGameValue(103) / 100f))
         {
             //Debug.Log("---附加死战状态");
             ShowSpellTextObj(attackedUnit.cardObj, "41", false);
-            if (attackedUnit.nowHp <= 0)
+            if (attackedUnit.Hp <= 0)
             {
-                attackedUnit.nowHp = 1;
+                attackedUnit.Hp.Set(1);
             }
             if (attackedUnit.fightState.deathFightNums <= 0)
             {
@@ -2554,7 +2551,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 //武将的陷阵兵种
                 case 5:
-                    if (fightCardData.nowHp / (float)fightCardData.fullHp <= (DataTable.GetGameValue(104) / 100f))
+                    if (fightCardData.Hp.Rate() <= (DataTable.GetGameValue(104) / 100f))
                     {
                         if (fightCardData.fightState.invincibleNums <= 0)
                         {
@@ -2593,11 +2590,11 @@ public class FightControlForStart : MonoBehaviour
             {
                 if (DataTable.Hero[attackedUnit.cardId].MilitaryUnitTableId == 3)
                 {
-                    dodgeRate = dodgeRate + (int)((1f - (float)attackedUnit.nowHp / attackedUnit.fullHp) / (DataTable.GetGameValue(106) / 100f) * DataTable.GetGameValue(107));
+                    dodgeRate = dodgeRate + (int)((1f - attackedUnit.Hp.Rate()) / (DataTable.GetGameValue(106) / 100f) * DataTable.GetGameValue(107));
                 }
                 else
                 {
-                    dodgeRate = dodgeRate + (int)((1f - (float)attackedUnit.nowHp / attackedUnit.fullHp) / (DataTable.GetGameValue(108) / 100f) * DataTable.GetGameValue(109));
+                    dodgeRate = dodgeRate + (int)((1f - attackedUnit.Hp.Rate()) / (DataTable.GetGameValue(108) / 100f) * DataTable.GetGameValue(109));
                 }
             }
             if (TakeSpecialAttack(dodgeRate))
@@ -2648,11 +2645,11 @@ public class FightControlForStart : MonoBehaviour
                                 {
                                     case 2:
                                         //重甲，自身血量每降低10%，提高5%免伤
-                                        defPropNums = defPropNums + (int)((1f - (float)attackedUnit.nowHp / attackedUnit.fullHp) / (DataTable.GetGameValue(110) / 100f) * DataTable.GetGameValue(111));
+                                        defPropNums = defPropNums + (int)((1f - attackedUnit.Hp.Rate()) / (DataTable.GetGameValue(110) / 100f) * DataTable.GetGameValue(111));
                                         break;
                                     case 11:
                                         //白马，自身血量每降低10%，提高5%免伤
-                                        defPropNums = defPropNums + (int)((1f - (float)attackedUnit.nowHp / attackedUnit.fullHp) / (DataTable.GetGameValue(112) / 100f) * DataTable.GetGameValue(113));
+                                        defPropNums = defPropNums + (int)((1f - attackedUnit.Hp.Rate()) / (DataTable.GetGameValue(112) / 100f) * DataTable.GetGameValue(113));
                                         break;
                                     case 58:
                                         //铁骑，单位越多免伤越高
@@ -2660,7 +2657,7 @@ public class FightControlForStart : MonoBehaviour
                                         int nowTieQiNums = 0;
                                         for (int i = 0; i < tieQiList.Count; i++)
                                         {
-                                            if (tieQiList[i].nowHp > 0)
+                                            if (tieQiList[i].Hp > 0)
                                             {
                                                 nowTieQiNums++;
                                             }
@@ -2746,7 +2743,7 @@ public class FightControlForStart : MonoBehaviour
                             {
                                 ShowSpellTextObj(attackUnit.cardObj, "6", false);
                                 int addHp = finalDamage;
-                                attackUnit.nowHp += addHp;
+                                attackUnit.Hp.Add(addHp);
                                 AttackedAnimShow(attackUnit, addHp, true);
                             }
                             break;
@@ -2940,9 +2937,9 @@ public class FightControlForStart : MonoBehaviour
 
         if (cardData.fightState.invincibleNums <= 0)
         {
-            int cutHpNum = (int)(DataTable.GetGameValue(118) / 100f * cardData.fullHp);
+            int cutHpNum = (int)(DataTable.GetGameValue(118) / 100f * cardData.Hp.Max);
             cutHpNum = AddOrCutShieldValue(cutHpNum, cardData, false);
-            cardData.nowHp -= cutHpNum;
+            cardData.Hp.Add(-cutHpNum);
             AttackedAnimShow(cardData, cutHpNum, false);
         }
 
@@ -3118,9 +3115,9 @@ public class FightControlForStart : MonoBehaviour
     //更新血条显示
     public void UpdateUnitHpShow(FightCardData updateUnit)
     {
-        if (updateUnit.nowHp <= 0)
+        if (updateUnit.Hp <= 0)
         {
-            updateUnit.nowHp = 0;
+            updateUnit.Hp.Set(0);
             if (updateUnit.cardType != 522)
             {
                 updateUnit.cardObj.transform.GetChild(9).gameObject.SetActive(true);
@@ -3130,11 +3127,7 @@ public class FightControlForStart : MonoBehaviour
                 updateUnit.cardObj.transform.GetChild(4).gameObject.SetActive(true);
             }
         }
-        if (updateUnit.nowHp > updateUnit.fullHp)
-        {
-            updateUnit.nowHp = updateUnit.fullHp;
-        }
-        updateUnit.cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 1f - updateUnit.nowHp / (float)updateUnit.fullHp;
+        updateUnit.cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 1f - updateUnit.Hp.Rate();
     }
 
     /// <summary>
@@ -3204,10 +3197,10 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < FightForManagerForStart.instance.playerFightCardsDatas.Length; i++)
         {
             fightCardData = FightForManagerForStart.instance.playerFightCardsDatas[i];
-            if (i != 17 && fightCardData != null && fightCardData.nowHp > 0)
+            if (i != 17 && fightCardData != null && fightCardData.Hp > 0)
             {
-                int addtionNums = (int)(fightCardData.fullHp * fightCardData.hpr / 100f);
-                fightCardData.nowHp += addtionNums;
+                int addtionNums = (int)(fightCardData.Hp.Max * fightCardData.hpr / 100f);
+                fightCardData.Hp.Add(addtionNums);
                 ShowSpellTextObj(fightCardData.cardObj, DataTable.GetStringText(15), true, false);
                 AttackedAnimShow(fightCardData, addtionNums, true);
                 if (fightCardData.cardType == 0)
@@ -3356,7 +3349,7 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < FightForManagerForStart.instance.playerFightCardsDatas.Length; i++)
         {
             fightCardData = FightForManagerForStart.instance.playerFightCardsDatas[i];
-            if (i != 17 && fightCardData != null && fightCardData.cardType == 0 && fightCardData.nowHp > 0)
+            if (i != 17 && fightCardData != null && fightCardData.cardType == 0 && fightCardData.Hp > 0)
             {
                 switch (DataTable.Hero[fightCardData.cardId].MilitaryUnitTableId)
                 {
@@ -3502,7 +3495,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(134)))
@@ -3524,7 +3517,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(135)))
@@ -3544,7 +3537,7 @@ public class FightControlForStart : MonoBehaviour
                 for (int i = 0; i < cardDatas.Length; i++)
                 {
                     fightCardData = cardDatas[i];
-                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.nowHp > 0)
+                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.Hp > 0)
                     {
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 11)
@@ -3569,7 +3562,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(137)))
@@ -3591,7 +3584,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(138)))
@@ -3611,7 +3604,7 @@ public class FightControlForStart : MonoBehaviour
                 for (int i = 0; i < cardDatas.Length; i++)
                 {
                     fightCardData = cardDatas[i];
-                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.nowHp > 0)
+                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.Hp > 0)
                     {
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 12)
@@ -3634,7 +3627,7 @@ public class FightControlForStart : MonoBehaviour
                 for (int i = 0; i < cardDatas.Length; i++)
                 {
                     fightCardData = cardDatas[i];
-                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.nowHp > 0)
+                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.Hp > 0)
                     {
                         var armed = MilitaryInfo.GetInfo(fightCardData.cardId).ArmedType;
                         if (armed == 3)
@@ -3657,7 +3650,7 @@ public class FightControlForStart : MonoBehaviour
                 for (int i = 0; i < cardDatas.Length; i++)
                 {
                     fightCardData = cardDatas[i];
-                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.nowHp > 0)
+                    if (fightCardData != null && fightCardData.cardType == 0 && fightCardData.Hp > 0)
                     {
                         if (DataTable.Hero[fightCardData.cardId].MilitaryUnitTableId == 8)
                         {
@@ -3681,7 +3674,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(142)))
@@ -3703,7 +3696,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(143)))
@@ -3725,7 +3718,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(144)))
@@ -3747,7 +3740,7 @@ public class FightControlForStart : MonoBehaviour
                     for (int j = 0; j < jiBanActivedClass.List[i].Cards.Count; j++)
                     {
                         fightCardData = jiBanActivedClass.List[i].Cards[j];
-                        if (fightCardData != null && fightCardData.nowHp > 0)
+                        if (fightCardData != null && fightCardData.Hp > 0)
                         {
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (TakeSpecialAttack(DataTable.GetGameValue(145)))
@@ -3782,14 +3775,14 @@ public class FightControlForStart : MonoBehaviour
 
         for (int i = 0; i < FightForManagerForStart.instance.playerFightCardsDatas.Length; i++)
         {
-            if (FightForManagerForStart.instance.playerFightCardsDatas[i] != null && FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp > 0)
+            if (FightForManagerForStart.instance.playerFightCardsDatas[i] != null && FightForManagerForStart.instance.playerFightCardsDatas[i].Hp > 0)
             {
                 FightForManagerForStart.instance.playerFightCardsDatas[i].isActionDone = false;
                 if (FightForManagerForStart.instance.playerFightCardsDatas[i].cardType == 0)
                 {
                     nowRounds = UpdateOneCardBeforeRound(FightForManagerForStart.instance.playerFightCardsDatas[i]);
                     //是否有统帅
-                    if (!isHadTongShuai && FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp > 0 &&
+                    if (!isHadTongShuai && FightForManagerForStart.instance.playerFightCardsDatas[i].Hp > 0 &&
                         (DataTable.Hero[FightForManagerForStart.instance.playerFightCardsDatas[i].cardId].MilitaryUnitTableId == 32 ||
                         DataTable.Hero[FightForManagerForStart.instance.playerFightCardsDatas[i].cardId].MilitaryUnitTableId == 33))
                     {
@@ -3804,8 +3797,8 @@ public class FightControlForStart : MonoBehaviour
                         {
                             case 0:
                                 //营寨回合开始回血
-                                int addHp = (int)(DataTable.GetGameValue(120) / 100f * FightForManagerForStart.instance.playerFightCardsDatas[i].fullHp);
-                                FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp += addHp;
+                                int addHp = (int)(DataTable.GetGameValue(120) / 100f * FightForManagerForStart.instance.playerFightCardsDatas[i].Hp.Max);
+                                FightForManagerForStart.instance.playerFightCardsDatas[i].Hp.Add(addHp);
                                 AttackedAnimShow(FightForManagerForStart.instance.playerFightCardsDatas[i], addHp, true);
                                 break;
                             //case 17:
@@ -3868,14 +3861,14 @@ public class FightControlForStart : MonoBehaviour
 
         for (int i = 0; i < FightForManagerForStart.instance.enemyFightCardsDatas.Length; i++)
         {
-            if (FightForManagerForStart.instance.enemyFightCardsDatas[i] != null && FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp > 0)
+            if (FightForManagerForStart.instance.enemyFightCardsDatas[i] != null && FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp > 0)
             {
                 FightForManagerForStart.instance.enemyFightCardsDatas[i].isActionDone = false;
                 if (FightForManagerForStart.instance.enemyFightCardsDatas[i].cardType == 0)
                 {
                     nowRounds = UpdateOneCardBeforeRound(FightForManagerForStart.instance.enemyFightCardsDatas[i]);
                     //是否有统帅
-                    if (!isHadTongShuai && FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp > 0 &&
+                    if (!isHadTongShuai && FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp > 0 &&
                         (DataTable.Hero[FightForManagerForStart.instance.enemyFightCardsDatas[i].cardId].MilitaryUnitTableId == 32 ||
                         DataTable.Hero[FightForManagerForStart.instance.enemyFightCardsDatas[i].cardId].MilitaryUnitTableId == 33))
                     {
@@ -3890,8 +3883,8 @@ public class FightControlForStart : MonoBehaviour
                         {
                             case 0:
                                 //营寨回合开始回血
-                                int addHp = (int)(DataTable.GetGameValue(120) / 100f * FightForManagerForStart.instance.enemyFightCardsDatas[i].fullHp);
-                                FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp += addHp;
+                                int addHp = (int)(DataTable.GetGameValue(120) / 100f * FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp.Max);
+                                FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp.Add(addHp);
                                 AttackedAnimShow(FightForManagerForStart.instance.enemyFightCardsDatas[i], addHp, true);
                                 break;
                             case 17:
@@ -3982,9 +3975,9 @@ public class FightControlForStart : MonoBehaviour
 
             if (cardData.fightState.invincibleNums <= 0)
             {
-                int cutHpNum = (int)(DataTable.GetGameValue(121) / 100f * cardData.fullHp);
+                int cutHpNum = (int)(DataTable.GetGameValue(121) / 100f * cardData.Hp.Max);
                 cutHpNum = AddOrCutShieldValue(cutHpNum, cardData, false);
-                cardData.nowHp -= cutHpNum;
+                cardData.Hp.Add(-cutHpNum);
                 AttackedAnimShow(cardData, cutHpNum, false);
             }
 
@@ -4006,11 +3999,11 @@ public class FightControlForStart : MonoBehaviour
         {
             if (i != 17 && FightForManagerForStart.instance.playerFightCardsDatas[i] != null)
             {
-                if (FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp > 0)
+                if (FightForManagerForStart.instance.playerFightCardsDatas[i].Hp > 0)
                 {
                     OnCardStateUpdate(FightForManagerForStart.instance.playerFightCardsDatas[i]);
                 }
-                if (FightForManagerForStart.instance.playerFightCardsDatas[i].nowHp <= 0)
+                if (FightForManagerForStart.instance.playerFightCardsDatas[i].Hp <= 0)
                 {
                     if (FightForManagerForStart.instance.playerFightCardsDatas[i].cardType == 0)
                     {
@@ -4043,11 +4036,11 @@ public class FightControlForStart : MonoBehaviour
         {
             if (i != 17 && FightForManagerForStart.instance.enemyFightCardsDatas[i] != null)
             {
-                if (FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp > 0)
+                if (FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp > 0)
                 {
                     OnCardStateUpdate(FightForManagerForStart.instance.enemyFightCardsDatas[i]);
                 }
-                if (FightForManagerForStart.instance.enemyFightCardsDatas[i].nowHp <= 0)
+                if (FightForManagerForStart.instance.enemyFightCardsDatas[i].Hp <= 0)
                 {
                     if (FightForManagerForStart.instance.enemyFightCardsDatas[i].cardType == 0)
                     {
@@ -4280,7 +4273,7 @@ public class FightControlForStart : MonoBehaviour
             cardDatas = FightForManagerForStart.instance.enemyFightCardsDatas;
         }
         //主动单位并且可行动
-        if (attackUnit != null && attackUnit.activeUnit && !attackUnit.isActionDone && !OffsetDizzyState(attackUnit) && attackUnit.nowHp > 0)
+        if (attackUnit != null && attackUnit.activeUnit && !attackUnit.isActionDone && !OffsetDizzyState(attackUnit) && attackUnit.Hp > 0)
         {
             attackUnit.isActionDone = true;
             switch (attackUnit.cardType)
@@ -4309,7 +4302,7 @@ public class FightControlForStart : MonoBehaviour
         FightCardData[] fightCardDatas = attackUnit.isPlayerCard ? FightForManagerForStart.instance.enemyFightCardsDatas : FightForManagerForStart.instance.playerFightCardsDatas;
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
-            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].nowHp > 0)
+            if (fightCardDatas[i] != null && fightCardDatas[i].cardType == 0 && fightCardDatas[i].Hp > 0)
             {
                 if (fightCardDatas[i].cardMoveType == 1)
                 {
@@ -4349,7 +4342,7 @@ public class FightControlForStart : MonoBehaviour
             for (; index < AttackSelectionOrder[arrIndex].Length; index++)
             {
                 if (FightForManagerForStart.instance.enemyFightCardsDatas[AttackSelectionOrder[arrIndex][index]] != null
-                    && FightForManagerForStart.instance.enemyFightCardsDatas[AttackSelectionOrder[arrIndex][index]].nowHp > 0)
+                    && FightForManagerForStart.instance.enemyFightCardsDatas[AttackSelectionOrder[arrIndex][index]].Hp > 0)
                 {
                     break;
                 }
@@ -4365,7 +4358,7 @@ public class FightControlForStart : MonoBehaviour
             for (; index < AttackSelectionOrder[arrIndex].Length; index++)
             {
                 if (FightForManagerForStart.instance.playerFightCardsDatas[AttackSelectionOrder[arrIndex][index]] != null
-                    && FightForManagerForStart.instance.playerFightCardsDatas[AttackSelectionOrder[arrIndex][index]].nowHp > 0)
+                    && FightForManagerForStart.instance.playerFightCardsDatas[AttackSelectionOrder[arrIndex][index]].Hp > 0)
                 {
                     break;
                 }
@@ -4522,14 +4515,14 @@ public class FightControlForStart : MonoBehaviour
         //消除滚石滚木
         for (int i = 0; i < gunMuCards.Count; i++)
         {
-            if (gunMuCards[i].nowHp <= 0)
+            if (gunMuCards[i].Hp <= 0)
             {
                 gunMuCards.Remove(gunMuCards[i]);
             }
         }
         for (int i = 0; i < gunShiCards.Count; i++)
         {
-            if (gunShiCards[i].nowHp <= 0)
+            if (gunShiCards[i].Hp <= 0)
             {
                 gunShiCards.Remove(gunShiCards[i]);
             }

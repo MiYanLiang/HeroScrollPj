@@ -344,6 +344,8 @@ public class HeroCombatInfo
         MagicResist = h.MagicResist;
     }
 
-    public float GetRouseDamage(int damage) => RouseDamage / 100f * damage;
-    public float GetCriticalDamage(int damage) => CriticalDamage / 100f * damage;
+    public float GetRouseDamage(int damage) => GetRouseDamage() * damage;
+    public float GetRouseDamage() => RouseDamage * 0.01f;
+    public float GetCriticalDamage(int damage) => GetCriticalDamage() * damage;
+    public float GetCriticalDamage() => CriticalDamage * 0.01f;
 }

@@ -558,8 +558,8 @@ public class WarsUIManager : MonoBehaviour
         GenericWindow.SetRecovery(DataTable.GetStringText(55));
         foreach (var card in FightForManager.instance.GetCardList(true))
         {
-            if (card == null || card.nowHp <= 0) continue;
-            card.nowHp += (int)(percentReturnHp * card.fullHp);
+            if (card == null || card.Hp <= 0) continue;
+            card.Hp.Add((int)(percentReturnHp * card.Hp.Value));
             card.UpdateHpUi();
         }
     }
@@ -980,7 +980,7 @@ public class WarsUIManager : MonoBehaviour
         fightCard.fightState = new FightState();
         fightCard.damage = info.GetDamage(fightCard.cardGrade);
         fightCard.hpr = info.GameSetRecovery;
-        fightCard.fullHp = fightCard.nowHp = info.GetHp(fightCard.cardGrade);
+        fightCard.ResetHp(info.GetHp(fightCard.cardGrade));
         fightCard.activeUnit = info.Type == GameCardType.Hero || (info.Type == GameCardType.Tower &&
                                                                (fightCard.cardId == 0 || fightCard.cardId == 1 ||
                                                                 fightCard.cardId == 2 || fightCard.cardId == 3 ||

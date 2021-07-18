@@ -393,7 +393,7 @@ public class FightForManagerForStart : MonoBehaviour
         playerHomeData.activeUnit = false;
         playerHomeData.fightState = new FightState();
         playerFightCardsDatas[17] = playerHomeData;
-        playerFightCardsDatas[17].fullHp = playerFightCardsDatas[17].nowHp = guides[storyIndex].BaseHp;  //我方血量
+        playerFightCardsDatas[17].ResetHp(guides[storyIndex].BaseHp);  //我方血量
 
         FightCardData enemyHomeData = new FightCardData();
         enemyHomeData.cardObj = Instantiate(homeCardObj, enemyCardsBox);
@@ -405,7 +405,7 @@ public class FightForManagerForStart : MonoBehaviour
         enemyHomeData.activeUnit = false;
         enemyHomeData.fightState = new FightState();
         enemyFightCardsDatas[17] = enemyHomeData;
-        enemyFightCardsDatas[17].fullHp = enemyFightCardsDatas[17].nowHp = guides[storyIndex].EnemyBaseHp;    //敌方血量
+        enemyFightCardsDatas[17].ResetHp(guides[storyIndex].EnemyBaseHp);    //敌方血量
     }
 
     //隐藏故事界面
@@ -513,10 +513,8 @@ public class FightForManagerForStart : MonoBehaviour
             playerFightCardsDatas[17].cardObj.transform.GetChild(4).gameObject.SetActive(false);
             enemyFightCardsDatas[17].cardObj.transform.GetChild(4).gameObject.SetActive(false);
 
-            playerFightCardsDatas[17].fullHp =
-                playerFightCardsDatas[17].nowHp = guides[storyIndex].BaseHp; //我方血量
-            enemyFightCardsDatas[17].fullHp =
-                enemyFightCardsDatas[17].nowHp = guides[storyIndex].EnemyBaseHp; //敌方血量
+            playerFightCardsDatas[17].ResetHp(guides[storyIndex].BaseHp); //我方血量
+            enemyFightCardsDatas[17].ResetHp(guides[storyIndex].EnemyBaseHp); //敌方血量
 
             playerFightCardsDatas[17].cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
             enemyFightCardsDatas[17].cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
@@ -626,7 +624,7 @@ public class FightForManagerForStart : MonoBehaviour
         FrameChoose(info.Rare, data.cardObj.transform.GetChild(6).GetComponent<Image>());
         data.damage = info.GetDamage(card.level);
         data.hpr = info.GameSetRecovery;
-        data.fullHp = data.nowHp = info.GetHp(card.level);
+        data.ResetHp(info.GetHp(card.level));
         data.activeUnit = cardType == GameCardType.Hero || ((cardType == GameCardType.Tower) &&
                                                             (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
                                                              info.Id == 3 || info.Id == 6));
@@ -741,7 +739,7 @@ public class FightForManagerForStart : MonoBehaviour
     //营寨行动
     private void YingZhaiFun(FightCardData cardData, FightCardData[] cardsDatas)
     {
-        if (cardData.nowHp > 1)
+        if (cardData.Hp > 1)
         {
             FightControlForStart.instance.indexAttackType = 0;
             FightControlForStart.instance.PlayAudioForSecondClip(42, 0);
@@ -752,11 +750,11 @@ public class FightForManagerForStart : MonoBehaviour
             for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
             {
                 FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-                if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                 {
-                    if (addedFightCard.fullHp - addedFightCard.nowHp > indexCutMaxHp)
+                    if (addedFightCard.Hp - addedFightCard.Hp > indexCutMaxHp)
                     {
-                        indexCutMaxHp = addedFightCard.fullHp - addedFightCard.nowHp;
+                        indexCutMaxHp = addedFightCard.Hp.Max - addedFightCard.Hp;
                         needAddHpCard = addedFightCard;
                     }
                 }
@@ -764,17 +762,17 @@ public class FightForManagerForStart : MonoBehaviour
 
             if (indexCutMaxHp > 0)
             {
-                int canAddHpNum = cardData.nowHp - 1;
+                int canAddHpNum = cardData.Hp - 1;
                 if (canAddHpNum > indexCutMaxHp)
                 {
                     canAddHpNum = indexCutMaxHp;
                 }
                 //自身减血
-                cardData.nowHp -= canAddHpNum;
+                cardData.Hp.Add(-canAddHpNum);
                 FightControlForStart.instance.AttackedAnimShow(cardData, canAddHpNum, false);
                 //单位加血
                 FightControlForStart.instance.AttackToEffectShow(needAddHpCard, false, "42A");
-                needAddHpCard.nowHp += canAddHpNum;
+                needAddHpCard.Hp.Add(canAddHpNum);
                 FightControlForStart.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(needAddHpCard, canAddHpNum, true);
             }
@@ -796,14 +794,14 @@ public class FightForManagerForStart : MonoBehaviour
         List<GameObject> posListToThunder = cardData.isPlayerCard ? enemyCardsPos : playerCardsPos;
         EffectsPoolingControl.instance.GetEffectToFight1("101A", 1f, posListToThunder[cardData.posIndex].transform);
 
-        if (attackedUnits[cardData.posIndex] != null && attackedUnits[cardData.posIndex].nowHp > 0)
+        if (attackedUnits[cardData.posIndex] != null && attackedUnits[cardData.posIndex].Hp > 0)
         {
             int finalDamage = FightControlForStart.instance.DefDamageProcessFun(cardData, attackedUnits[cardData.posIndex], damage);
-            attackedUnits[cardData.posIndex].nowHp -= finalDamage;
+            attackedUnits[cardData.posIndex].Hp.Add(-finalDamage);
             FightControlForStart.instance.AttackedAnimShow(attackedUnits[cardData.posIndex], finalDamage, false);
             if (attackedUnits[cardData.posIndex].cardType == 522)
             {
-                if (attackedUnits[cardData.posIndex].nowHp <= 0)
+                if (attackedUnits[cardData.posIndex].Hp <= 0)
                 {
                     FightControlForStart.instance.recordWinner = attackedUnits[cardData.posIndex].isPlayerCard ? -1 : 1;
                 }
@@ -812,14 +810,14 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
         {
             FightCardData attackedUnit = attackedUnits[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (attackedUnit != null && attackedUnit.nowHp > 0)
+            if (attackedUnit != null && attackedUnit.Hp > 0)
             {
                 int finalDamage = FightControlForStart.instance.DefDamageProcessFun(cardData, attackedUnit, damage);
-                attackedUnit.nowHp -= finalDamage;
+                attackedUnit.Hp.Add(-finalDamage);
                 FightControlForStart.instance.AttackedAnimShow(attackedUnit, finalDamage, false);
                 if (attackedUnit.cardType == 522)
                 {
-                    if (attackedUnit.nowHp <= 0)
+                    if (attackedUnit.Hp <= 0)
                     {
                         FightControlForStart.instance.recordWinner = attackedUnit.isPlayerCard ? -1 : 1;
                     }
@@ -838,10 +836,10 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, "42A");
-                addedFightCard.nowHp += addtionNums;
+                addedFightCard.Hp.Add(addtionNums);
                 FightControlForStart.instance.ShowSpellTextObj(addedFightCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(addedFightCard, addtionNums, true);
             }
@@ -856,7 +854,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (addedFightCard != null && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.Hp > 0)
             {
                 if (addedFightCard.cardType == 0 && addedFightCard.fightState.withStandNums <= 0)
                 {
@@ -1113,7 +1111,7 @@ public class FightForManagerForStart : MonoBehaviour
         {
             FightCardData addtionCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
             
-            if (addtionCard != null && addtionCard.cardType == 2 && addtionCard.nowHp > 0)
+            if (addtionCard != null && addtionCard.cardType == 2 && addtionCard.Hp > 0)
             {
                 int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.cardGrade);
                 var armedType = MilitaryInfo.GetInfo(cardData.cardId).ArmedType;
@@ -1297,7 +1295,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1325,7 +1323,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1356,7 +1354,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1387,7 +1385,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1428,7 +1426,7 @@ public class FightForManagerForStart : MonoBehaviour
                 stateDinObj.GetComponent<Animator>().enabled = false;
             }
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1471,7 +1469,7 @@ public class FightForManagerForStart : MonoBehaviour
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
                 if (isAdd)
                 {
@@ -1505,7 +1503,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                         DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
                 }
                 break;
@@ -1513,7 +1511,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (addedFightCard.cardMoveType == 0)   //近战
                         {
@@ -1526,7 +1524,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (addedFightCard.cardMoveType == 1)   //远程
                         {
@@ -1539,7 +1537,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (addedFightCard.cardDamageType == 1) //法术
                         {
@@ -1552,7 +1550,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (addedFightCard.cardDamageType == 0) //物理
                         {
@@ -1565,7 +1563,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 1) //魏势力
                         {
@@ -1578,7 +1576,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 0) //蜀势力
                         {
@@ -1591,7 +1589,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 2) //吴势力
                         {
@@ -1604,7 +1602,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType == 5)
                         {
@@ -1617,7 +1615,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType == 9)
                         {
@@ -1630,7 +1628,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType == 3)
                         {
@@ -1643,7 +1641,7 @@ public class FightForManagerForStart : MonoBehaviour
                 for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
                 {
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
                         if (MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType == 8)
                         {
