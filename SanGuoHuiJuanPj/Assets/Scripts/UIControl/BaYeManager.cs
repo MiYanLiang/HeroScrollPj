@@ -300,6 +300,8 @@ public class BaYeManager : MonoBehaviour
 
     public bool TradeZhanLing(int forceId, int amount)
     {
+        if (!PlayerDataForGame.instance.baYe.zhanLingMap.ContainsKey(forceId))
+            PlayerDataForGame.instance.baYe.zhanLingMap.Add(forceId, 0);
         if (amount < 0 && PlayerDataForGame.instance.baYe.zhanLingMap[forceId] < -amount)
             return false; //如果数目是负数，并玩家数量小于数量返回交易失败
         PlayerDataForGame.instance.baYe.zhanLingMap[forceId] += amount;
