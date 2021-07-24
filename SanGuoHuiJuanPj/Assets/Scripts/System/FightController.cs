@@ -96,7 +96,7 @@ public class FightController : MonoBehaviour
     }
 
     //普攻
-    IEnumerator OnAttackStart(float damageBonus, FightCardData attackUnit, FightCardData target, bool isMelee)
+    IEnumerator OnAttackStart(float damageBonus, FightCardData attackUnit, FightCardData target, bool counterAble)
     {
         isNormalAttack = true; //*远程兵种普攻
 
@@ -106,16 +106,16 @@ public class FightController : MonoBehaviour
             //return rounds;
             yield return new WaitForSeconds(attackIntervalTime);
 
-            if (isMelee)
+            if (counterAble)
                 //SpecialHeroSkill1(damageBonus, attackUnit, target);
                 yield return SpecialHeroSkill1(damageBonus, attackUnit, target);
 
             yield return null;
         }
 
-        var damage = HeroCardMakeSomeDamages(isMelee, attackUnit); //基础，暴击、会心等
+        var damage = HeroCardMakeSomeDamages(counterAble, attackUnit); //基础，暴击、会心等
         damage += (int)damageBonus;
-        damage = MilitarySkillDamage(damage, attackUnit, target, isMelee); //计算技能
+        damage = MilitarySkillDamage(damage, attackUnit, target, counterAble); //计算技能
 
         switch (target.cardType)
         {
@@ -136,7 +136,7 @@ public class FightController : MonoBehaviour
             {
                 if (isNormalAttack)
                 {
-                    AttackTrapUnit(damage, attackUnit, target, isMelee);
+                    AttackTrapUnit(damage, attackUnit, target, counterAble);
                 }
                 break;
             }
@@ -161,14 +161,14 @@ public class FightController : MonoBehaviour
                     TargetAnimShow(target, damage);
                 }
 
-                yield return SpecialHeroSkill0(damage, attackUnit, target, isMelee); //禁卫反击
+                yield return SpecialHeroSkill0(damage, attackUnit, target, counterAble); //禁卫反击
                 break;
             }
         }
 
         yield return new WaitForSeconds(attackIntervalTime);
 
-        if (isMelee)
+        if (counterAble)
         {
             yield return SpecialHeroSkill1(damageBonus, attackUnit, target);
         }
@@ -257,17 +257,17 @@ public class FightController : MonoBehaviour
     /// <summary>
     /// 计算战鼓台、暴击会心、羁绊等伤害加成
     /// </summary>
-    /// <param name="isMelee"></param>
+    /// <param name="counterable"></param>
     /// <param name="fightCardData"></param>
     /// <returns></returns>
-    private int HeroCardMakeSomeDamages(bool isMelee, FightCardData fightCardData)
+    private int HeroCardMakeSomeDamages(bool counterable, FightCardData fightCardData)
     {
         var combat = HeroCombatInfo.GetInfo(fightCardData.cardId);
         var military = MilitaryInfo.GetInfo(fightCardData.cardId);
         var info = GameCardInfo.GetInfo((GameCardType)fightCardData.cardType,fightCardData.cardId);
         var dmg = 0;
-        dmg = (int)(fightCardData.damage * (fightCardData.fightState.zhangutaiAddtion + 100) / 100f);//战鼓台伤害加成
-        if (isMelee)
+        dmg = (int)(fightCardData.damage * (fightCardData.fightState.ZhanGuTaiAddOn + 100) / 100f);//战鼓台伤害加成
+        if (counterable)
         {
             switch (indexAttackType)
             {
@@ -371,7 +371,7 @@ public class FightController : MonoBehaviour
             dmg = JiBanAddOn(dmg, 161);
         }
 
-        if (fightCardData.cardType == 0 && fightCardData.fightState.removeArmorNums > 0)
+        if (fightCardData.cardType == 0 && fightCardData.fightState.Unarmed > 0)
         {
             //若攻击者有卸甲状态伤害降低30%
             dmg = (int)(dmg * (100 - DataTable.GetGameValue(7)) / 100f);
@@ -558,7 +558,7 @@ public class FightController : MonoBehaviour
                 int cardIndex = fightColumns[i] + j * 5;
                 if (opponents[cardIndex] != null && opponents[cardIndex].Hp > 0)
                 {
-                    int nowDamage = DefDamageProcessFun(attackUnit, opponents[cardIndex], cutHpNum);
+                    var nowDamage = DefDamageProcessFun(attackUnit, opponents[cardIndex], cutHpNum);
                     if (opponents[cardIndex].cardType == 3)    //滚石和滚木，对陷阱造成2倍伤害
                     {
                         nowDamage = nowDamage * 2;
@@ -718,7 +718,7 @@ public class FightController : MonoBehaviour
     {
         if (isCanFightBack)
         {
-            if (attackUnit.fightState.imprisonedNums <= 0) //攻击者没有禁锢状态
+            if (attackUnit.fightState.Imprisoned <= 0) //攻击者没有禁锢状态
             {
                 switch (DataTable.Hero[attackUnit.cardId].MilitaryUnitTableId)
                 {
@@ -729,13 +729,13 @@ public class FightController : MonoBehaviour
                     case 4://大盾
                         ShowSpellTextObj(attackUnit.cardObj, "4", false);
                         AttackToEffectShow(attackUnit, false, "4A");
-                        if (attackUnit.fightState.withStandNums <= 0)
+                        if (attackUnit.fightState.Withstand <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(attackUnit.cardObj.War.StateContent,
                                 StringNameStatic.StateIconPath_withStand, true);
                         }
 
-                        attackUnit.fightState.withStandNums++;
+                        attackUnit.fightState.Withstand++;
                         PlayAudioForSecondClip(4, 0);
                         break;
                     case 6://虎卫
@@ -955,7 +955,7 @@ public class FightController : MonoBehaviour
     IEnumerator SpecialHeroSkill0(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit, bool isCanFightBack)
     {
         if (!isCanFightBack) yield break;
-        if (attackedUnit.fightState.dizzyNums > 0 || attackedUnit.fightState.imprisonedNums > 0) yield break;
+        if (attackedUnit.fightState.Stunned > 0 || attackedUnit.fightState.Imprisoned > 0) yield break;
         //禁卫
         if (DataTable.Hero[attackedUnit.cardId].MilitaryUnitTableId == 13 && attackUnit.cardMoveType == 0)
         {
@@ -968,13 +968,13 @@ public class FightController : MonoBehaviour
     {
         yield return GunMuGunShiSkill(gunMuCards, gunShiCards);
 
-        if (attackUnit.fightState.imprisonedNums > 0) //禁锢，不进行技能攻击
+        if (attackUnit.fightState.Imprisoned > 0) //禁锢，不进行技能攻击
         {
-            attackUnit.fightState.imprisonedNums--;
+            attackUnit.fightState.Imprisoned--;
             ShowSpellTextObj(attackUnit.cardObj, DataTable.GetStringText(11), true, true);
-            if (attackUnit.fightState.imprisonedNums <= 0)
+            if (attackUnit.fightState.Imprisoned <= 0)
             {
-                attackUnit.fightState.imprisonedNums = 0;
+                attackUnit.fightState.Imprisoned = 0;
                 FightForManager.instance.DestroySateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_imprisoned, true);
             }
         }
@@ -1217,8 +1217,8 @@ public class FightController : MonoBehaviour
     //刀兵连斩技能
     IEnumerator DaoBingLianZhan(float damageBonus, FightCardData attackUnit, FightCardData target)
     {
-        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 ||
-            attackUnit.fightState.imprisonedNums > 0) yield break;
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.Stunned > 0 ||
+            attackUnit.fightState.Imprisoned > 0) yield break;
         if (target.Hp > 0 || target.cardType == 522) yield break;
         //Debug.Log("-----刀兵连斩");
         float waitTime = CountAttackTimeSpan(attackUnit);
@@ -1240,8 +1240,8 @@ public class FightController : MonoBehaviour
     //神武战意技能
     IEnumerator ShenWuZhanYi(float damageBonus, FightCardData attackUnit, FightCardData target)
     {
-        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 ||
-            attackUnit.fightState.imprisonedNums > 0) yield break;
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.Stunned > 0 ||
+            attackUnit.fightState.Imprisoned > 0) yield break;
         if (target.Hp <= 0 || target.cardType != 0) yield break;
         if (target.attackedBehavior != 2 && target.attackedBehavior != 3) yield break;
         var waitTime = CountAttackTimeSpan(attackUnit);
@@ -1252,7 +1252,7 @@ public class FightController : MonoBehaviour
         AttackToEffectShow(target, false, "12A");
         PlayAudioForSecondClip(12, 0);
 
-        float propAttack = 1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.willFightNums;
+        float propAttack = 1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate;
 
         yield return OnAttackStart(propAttack, attackUnit, target, true);
     }
@@ -1260,8 +1260,8 @@ public class FightController : MonoBehaviour
     //先锋勇武技能
     IEnumerator XianFengYongWu(FightCardData attackUnit, FightCardData target, int classType)
     {
-        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 ||
-            attackUnit.fightState.imprisonedNums > 0) yield break;
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.Stunned > 0 ||
+            attackUnit.fightState.Imprisoned > 0) yield break;
         int propNums = 0; //特殊技能触发概率
         int attackNums = 0; //攻击次数
         if (classType == 9)
@@ -1293,8 +1293,8 @@ public class FightController : MonoBehaviour
     //骑兵驰骋技能
     IEnumerator QiBingChiCheng(FightCardData attackUnit, FightCardData target)
     {
-        if (attackUnit.Hp <= 0 || attackUnit.fightState.dizzyNums > 0 ||
-            attackUnit.fightState.imprisonedNums > 0) yield break;
+        if (attackUnit.Hp <= 0 || attackUnit.fightState.Stunned > 0 ||
+            attackUnit.fightState.Imprisoned > 0) yield break;
         if (target.Hp <= 0 ||
             (indexAttackType == 0 && !isSuccessFromHalfRandom(DataTable.GetGameValue(47)))) yield break;
         //Debug.Log("-----骑兵驰骋");
@@ -1417,7 +1417,7 @@ public class FightController : MonoBehaviour
                                 ShowSpellTextObj(tieQiCardsList[i].cardObj, "58_0", false);
                                 if (tieQiCardsList[i] != attackedUnit)
                                 {
-                                    if (!(tieQiCardsList[i].fightState.invincibleNums > 0))
+                                    if (!(tieQiCardsList[i].fightState.Invincible > 0))
                                     {
                                         int backDamage = AddOrCutShieldValue(damage, tieQiCardsList[i], false);
                                         tieQiCardsList[i].Hp.Add(-backDamage);
@@ -1511,12 +1511,12 @@ public class FightController : MonoBehaviour
         {
             if (isSuccessFromHalfRandom(DataTable.GetGameValue(51)))
             {
-                if (attackedUnit.fightState.poisonedNums <= 0)
+                if (attackedUnit.fightState.Poisoned <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_poisoned, true);
                 }
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(12), true, true);
-                attackedUnit.fightState.poisonedNums++;
+                attackedUnit.fightState.Poisoned++;
             }
         }
     }
@@ -1540,30 +1540,21 @@ public class FightController : MonoBehaviour
 
             finalDamage = (int)(finalDamage * DataTable.GetGameValue(55) / 100f);
 
-            var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
-            for (int i = 0; i < FightForManager.instance.NeighbourCards[targetIndex].Length; i++)
+            FightForManager.instance.NeighborsLoop(targetIndex, pos =>
             {
-                FightCardData attackedUnits = opponents[FightForManager.instance.NeighbourCards[targetIndex][i]];
-                if (attackedUnits != null && attackedUnits.Hp > 0)
-                {
-                    AttackToEffectShow(attackedUnits, false, "55A");
-                    int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
-                    attackedUnits.Hp.Add(-backDamage);
-                    TargetAnimShow(attackedUnits, backDamage);
-                    if (attackedUnits.cardType == 522)
-                    {
-                        if (attackedUnits.Hp <= 0)
-                        {
-                            recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
-                        }
-                    }
-                    if (attackedUnits.cardType == 0 && attackedUnits.Hp > 0)
-                    {
-                        TakeToBurn(attackedUnits, takeBurnPro, attackUnit);
-                    }
-                }
-            }
+                FightCardData attackedUnits = FightForManager.instance.GetCard(pos, !attackUnit.isPlayerCard);
+                if (attackedUnits == null || attackedUnits.Hp <= 0) return;
+                AttackToEffectShow(attackedUnits, false, "55A");
+                var backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
+                attackedUnits.Hp.Add(-backDamage);
+                TargetAnimShow(attackedUnits, backDamage);
+                if (attackedUnits.cardType == 522 && 
+                    attackedUnits.Hp <= 0)
+                    recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
 
+                if (attackedUnits.cardType != 0 || attackedUnits.Hp <= 0) return;
+                TakeToBurn(attackedUnits, takeBurnPro, attackUnit);
+            });
         }
         else
         {
@@ -1636,7 +1627,7 @@ public class FightController : MonoBehaviour
                 {
                     ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(13), true, true);
 
-                    nowDamage = attackedUnit.fightState.shieldValue + attackedUnit.Hp;
+                    nowDamage = attackedUnit.fightState.Shield + attackedUnit.Hp;
                     attackedUnit.Hp.Set(0);
                 }
                 else
@@ -1807,7 +1798,7 @@ public class FightController : MonoBehaviour
         }
         int randTarget = canFightUnits[Random.Range(0, canFightUnits.Count)];
         FightCardData attackedUnit = opponents[randTarget];
-        if (attackedUnit != null && (!(attackedUnit.fightState.invincibleNums > 0 || OffsetWithStand(attackedUnit))))
+        if (attackedUnit != null && (!(attackedUnit.fightState.Invincible > 0 || OffsetWithStand(attackedUnit))))
         {
             AttackToEffectShow(attackedUnit, false, "24A");
             if (attackedUnit.cardType == 522)   //如果目标是老巢，造成1.5倍伤害
@@ -1948,9 +1939,9 @@ public class FightController : MonoBehaviour
         float minFlo = 2;
         for (int i = 0; i < opponents.Count; i++)
         {
-            if (opponents[i] != null && opponents[i].cardType == 0 && opponents[i].Hp > 0 && opponents[i].fightState.shieldValue < 1000)
+            if (opponents[i] != null && opponents[i].cardType == 0 && opponents[i].Hp > 0 && opponents[i].fightState.Shield < 1000)
             {
-                float nowFlo = (opponents[i].Hp + opponents[i].fightState.shieldValue) / (float)opponents[i].Hp.Max;
+                float nowFlo = (opponents[i].Hp + opponents[i].fightState.Shield) / (float)opponents[i].Hp.Max;
                 if (nowFlo < minFlo)
                 {
                     minFlo = nowFlo;
@@ -1985,33 +1976,33 @@ public class FightController : MonoBehaviour
             int nowBadNums = 0;
             if (opponents[i] != null && opponents[i].Hp > 0 && opponents[i].cardType == 0)
             {
-                if (opponents[i].fightState.dizzyNums > 0)
+                if (opponents[i].fightState.Stunned > 0)
                 {
-                    nowBadNums += opponents[i].fightState.dizzyNums;
+                    nowBadNums += opponents[i].fightState.Stunned;
                 }
-                if (opponents[i].fightState.imprisonedNums > 0)
+                if (opponents[i].fightState.Imprisoned > 0)
                 {
-                    nowBadNums += opponents[i].fightState.imprisonedNums;
+                    nowBadNums += opponents[i].fightState.Imprisoned;
                 }
-                if (opponents[i].fightState.bleedNums > 0)
+                if (opponents[i].fightState.Bleed > 0)
                 {
-                    nowBadNums += opponents[i].fightState.bleedNums;
+                    nowBadNums += opponents[i].fightState.Bleed;
                 }
-                if (opponents[i].fightState.poisonedNums > 0)
+                if (opponents[i].fightState.Poisoned > 0)
                 {
-                    nowBadNums += opponents[i].fightState.poisonedNums;
+                    nowBadNums += opponents[i].fightState.Poisoned;
                 }
-                if (opponents[i].fightState.burnedNums > 0)
+                if (opponents[i].fightState.Burned > 0)
                 {
-                    nowBadNums += opponents[i].fightState.burnedNums;
+                    nowBadNums += opponents[i].fightState.Burned;
                 }
-                if (opponents[i].fightState.removeArmorNums > 0)
+                if (opponents[i].fightState.Unarmed > 0)
                 {
-                    nowBadNums += opponents[i].fightState.removeArmorNums;
+                    nowBadNums += opponents[i].fightState.Unarmed;
                 }
-                if (opponents[i].fightState.cowardlyNums > 0)
+                if (opponents[i].fightState.Cowardly > 0)
                 {
-                    nowBadNums += opponents[i].fightState.cowardlyNums;
+                    nowBadNums += opponents[i].fightState.Cowardly;
                 }
                 if (nowBadNums > maxBadNums)  //记录负面效果最多的单位
                 {
@@ -2068,39 +2059,39 @@ public class FightController : MonoBehaviour
     //清除单个单位的负面状态
     private void ClearOneUnitBadState(FightCardData cardData)
     {
-        if (cardData.fightState.dizzyNums > 0)
+        if (cardData.fightState.Stunned > 0)
         {
-            cardData.fightState.dizzyNums = 0;
+            cardData.fightState.Stunned = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_dizzy, true);
         }
-        if (cardData.fightState.imprisonedNums > 0)
+        if (cardData.fightState.Imprisoned > 0)
         {
-            cardData.fightState.imprisonedNums = 0;
+            cardData.fightState.Imprisoned = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_imprisoned, true);
         }
-        if (cardData.fightState.bleedNums > 0)
+        if (cardData.fightState.Bleed > 0)
         {
-            cardData.fightState.bleedNums = 0;
+            cardData.fightState.Bleed = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_bleed, true);
         }
-        if (cardData.fightState.poisonedNums > 0)
+        if (cardData.fightState.Poisoned > 0)
         {
-            cardData.fightState.poisonedNums = 0;
+            cardData.fightState.Poisoned = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_poisoned, true);
         }
-        if (cardData.fightState.burnedNums > 0)
+        if (cardData.fightState.Burned > 0)
         {
-            cardData.fightState.burnedNums = 0;
+            cardData.fightState.Burned = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_burned, true);
         }
-        if (cardData.fightState.removeArmorNums > 0)
+        if (cardData.fightState.Unarmed > 0)
         {
-            cardData.fightState.removeArmorNums = 0;
+            cardData.fightState.Unarmed = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_removeArmor, true);
         }
-        if (cardData.fightState.cowardlyNums > 0)
+        if (cardData.fightState.Cowardly > 0)
         {
-            cardData.fightState.cowardlyNums = 0;
+            cardData.fightState.Cowardly = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_cowardly, true);
         }
     }
@@ -2195,7 +2186,7 @@ public class FightController : MonoBehaviour
                         {
                             if (opponents[i].damage > opponents[index].damage)
                             {
-                                if (opponents[i].fightState.neizhuNums <= opponents[index].fightState.neizhuNums)
+                                if (opponents[i].fightState.Neizhu <= opponents[index].fightState.Neizhu)
                                 {
                                     index = i;
                                 }
@@ -2206,7 +2197,7 @@ public class FightController : MonoBehaviour
                             }
                             else
                             {
-                                if (opponents[i].fightState.neizhuNums < opponents[index].fightState.neizhuNums)
+                                if (opponents[i].fightState.Neizhu < opponents[index].fightState.Neizhu)
                                 {
                                     index = i;
                                 }
@@ -2220,7 +2211,7 @@ public class FightController : MonoBehaviour
                         {
                             if (opponents[i].damage > opponents[index].damage)
                             {
-                                if (opponents[i].fightState.shenzhuNums <= opponents[index].fightState.shenzhuNums)
+                                if (opponents[i].fightState.ShenZhu <= opponents[index].fightState.ShenZhu)
                                 {
                                     index = i;
                                 }
@@ -2231,7 +2222,7 @@ public class FightController : MonoBehaviour
                             }
                             else
                             {
-                                if (opponents[i].fightState.shenzhuNums < opponents[index].fightState.shenzhuNums)
+                                if (opponents[i].fightState.ShenZhu < opponents[index].fightState.ShenZhu)
                                 {
                                     index = i;
                                 }
@@ -2253,19 +2244,19 @@ public class FightController : MonoBehaviour
                     AttackToEffectShow(opponents[index], false, classType + "A");
                     if (classType == 45)  //美人
                     {
-                        if (opponents[index].fightState.neizhuNums <= 0)
+                        if (opponents[index].fightState.Neizhu <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(opponents[index].cardObj.War.StateContent, StringNameStatic.StateIconPath_neizhu, false);
                         }
-                        opponents[index].fightState.neizhuNums++;
+                        opponents[index].fightState.Neizhu++;
                     }
                     else
                     {//大美人
-                        if (opponents[index].fightState.shenzhuNums <= 0)
+                        if (opponents[index].fightState.ShenZhu <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(opponents[index].cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                         }
-                        opponents[index].fightState.shenzhuNums++;
+                        opponents[index].fightState.ShenZhu++;
                     }
                 }
             }
@@ -2386,7 +2377,7 @@ public class FightController : MonoBehaviour
     //敢死死战技能
     private int GanSiSiZhanAttack(int finalDamage, FightCardData attackedUnit)
     {
-        if (attackedUnit.fightState.deathFightNums >= 1)
+        if (attackedUnit.fightState.DeathFight >= 1)
         {
             //Debug.Log("---敢死死战");
             ShowSpellTextObj(attackedUnit.cardObj, "41", false);
@@ -2435,7 +2426,7 @@ public class FightController : MonoBehaviour
         PlayAudioForSecondClip(22, 0);
         ShowSpellTextObj(attackUnit.cardObj, "22", false);
         AttackToEffectShow(attackedUnit, false, "22A");
-        if (attackedUnit.fightState.dizzyNums > 0)
+        if (attackedUnit.fightState.Stunned > 0)
         {
             finalDamage = (int)(finalDamage * DataTable.GetGameValue(92) / 100f);
         }
@@ -2450,9 +2441,9 @@ public class FightController : MonoBehaviour
         AttackToEffectShow(attackedUnit, false, "18A");
 
         //破护盾
-        if (attackedUnit.fightState.withStandNums > 0)
+        if (attackedUnit.fightState.Withstand > 0)
         {
-            attackedUnit.fightState.withStandNums = 0;
+            attackedUnit.fightState.Withstand = 0;
             FightForManager.instance.DestroySateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
         }
 
@@ -2474,24 +2465,17 @@ public class FightController : MonoBehaviour
 
         //对目标周围的其他单位造成50%伤害
         finalDamage = (int)(finalDamage * DataTable.GetGameValue(95) / 100f);
-        var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
-        for (int i = 0; i < FightForManager.instance.NeighbourCards[targetIndex].Length; i++)
+        FightForManager.instance.NeighborsLoop(targetIndex, pos =>
         {
-            FightCardData attackedUnits = opponents[FightForManager.instance.NeighbourCards[targetIndex][i]];
-            if (attackedUnits != null && attackedUnits.Hp > 0)
-            {
-                int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
-                attackedUnits.Hp.Add(-backDamage);
-                TargetAnimShow(attackedUnits, backDamage);
-                if (attackedUnits.cardType == 522)
-                {
-                    if (attackedUnits.Hp <= 0)
-                    {
-                        recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
-                    }
-                }
-            }
-        }
+            var attackedUnits = FightForManager.instance.GetCard(pos, !attackUnit.isPlayerCard);
+            if (attackedUnits == null || attackedUnits.Hp <= 0) return;
+            int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
+            attackedUnits.Hp.Add(-backDamage);
+            TargetAnimShow(attackedUnits, backDamage);
+            if (attackedUnits.cardType != 522) return;
+            if (attackedUnits.Hp > 0) return;
+            recordWinner = attackedUnits.isPlayerCard ? -1 : 1;
+        });
     }
 
     //枪兵穿刺技能
@@ -2531,19 +2515,19 @@ public class FightController : MonoBehaviour
     private int ShenWuZhanYiAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         //每次攻击时，获得【战意】状态，提升伤害，可叠加10次
-        if (attackUnit.fightState.willFightNums <= 0)
+        if (attackUnit.fightState.Stimulate <= 0)
         {
             FightForManager.instance.CreateSateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_willFight, true);
         }
-        if (attackUnit.fightState.willFightNums < 10)
+        if (attackUnit.fightState.Stimulate < 10)
         {
-            attackUnit.fightState.willFightNums++;
-            attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (attackUnit.fightState.willFightNums / 10f));
+            attackUnit.fightState.Stimulate++;
+            attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (attackUnit.fightState.Stimulate / 10f));
         }
         PlayAudioForSecondClip(12, 0);
         AttackToEffectShow(attackedUnit, false, "12A");
         ShowSpellTextObj(attackUnit.cardObj, "12", false);
-        finalDamage = (int)(finalDamage * (1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.willFightNums));
+        finalDamage = (int)(finalDamage * (1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate));
         return finalDamage;
     }
 
@@ -2628,7 +2612,7 @@ public class FightController : MonoBehaviour
     //敢死兵种添加死战状态
     private void SiZhanStateCreate(FightCardData attackedUnit)
     {
-        if (attackedUnit.fightState.deathFightNums == 0 && attackedUnit.Hp > 0 && attackedUnit.Hp.Rate() < (DataTable.GetGameValue(103) / 100f))
+        if (attackedUnit.fightState.DeathFight == 0 && attackedUnit.Hp > 0 && attackedUnit.Hp.Rate() < (DataTable.GetGameValue(103) / 100f))
         {
             //Debug.Log("---附加死战状态");
             ShowSpellTextObj(attackedUnit.cardObj, "41", false);
@@ -2636,11 +2620,11 @@ public class FightController : MonoBehaviour
             {
                 attackedUnit.Hp.Set(1);
             }
-            if (attackedUnit.fightState.deathFightNums <= 0)
+            if (attackedUnit.fightState.DeathFight <= 0)
             {
                 FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_deathFight, true);
             }
-            attackedUnit.fightState.deathFightNums = 1;
+            attackedUnit.fightState.DeathFight = 1;
         }
     }
 
@@ -2650,7 +2634,7 @@ public class FightController : MonoBehaviour
     /// <param name="fightCardData"></param>
     private void InitCardAfterFightedState(FightCardData fightCardData)
     {
-        if (fightCardData.fightState.dizzyNums > 0 || fightCardData.fightState.imprisonedNums > 0)
+        if (fightCardData.fightState.Stunned > 0 || fightCardData.fightState.Imprisoned > 0)
             return;
         if (fightCardData.cardType == 0)
         {
@@ -2660,9 +2644,9 @@ public class FightController : MonoBehaviour
                 case 5:
                     if (fightCardData.Hp.Rate() <= (DataTable.GetGameValue(104) / 100f))
                     {
-                        if (fightCardData.fightState.invincibleNums <= 0)
+                        if (fightCardData.fightState.Invincible <= 0)
                         {
-                            fightCardData.fightState.invincibleNums = DataTable.GetGameValue(105);
+                            fightCardData.fightState.Invincible = DataTable.GetGameValue(105);
                             FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_invincible, true);
                         }
                     }
@@ -2692,7 +2676,7 @@ public class FightController : MonoBehaviour
             var defUnit = HeroCombatInfo.GetInfo(defendUnit.cardId);
 
             //判断闪避
-            int dodgeRateNums = defUnit.DodgeRatio + defendUnit.fightState.fengShenTaiAddtion;
+            int dodgeRateNums = defUnit.DodgeRatio + defendUnit.fightState.FengShenTaiAddOn;
             if (DataTable.Hero[defendUnit.cardId].MilitaryUnitTableId == 3 || DataTable.Hero[defendUnit.cardId].MilitaryUnitTableId == 10)   //飞甲，死士 自身血量每降低10 %，提高5%闪避
             {
                 if (DataTable.Hero[defendUnit.cardId].MilitaryUnitTableId == 3)
@@ -2714,7 +2698,7 @@ public class FightController : MonoBehaviour
             else
             {
                 //远程攻击者，判断远程闪避
-                if (attackUnit != null && attackUnit.cardType == 0 && attackUnit.cardMoveType == 1 && isSuccessFromHalfRandom(defendUnit.fightState.miWuZhenAddtion))
+                if (attackUnit != null && attackUnit.cardType == 0 && attackUnit.cardMoveType == 1 && isSuccessFromHalfRandom(defendUnit.fightState.MiWuZhenAddOn))
                 {
                     finalDamage = 0;
                     ShowSpellTextObj(defendUnit.cardObj, DataTable.GetStringText(19), false);
@@ -2724,7 +2708,7 @@ public class FightController : MonoBehaviour
                 else
                 {
                     //判断无敌
-                    if (defendUnit.fightState.invincibleNums > 0)
+                    if (defendUnit.fightState.Invincible > 0)
                     {
                         finalDamage = 0;
                         ShowSpellTextObj(defendUnit.cardObj, DataTable.GetStringText(18), false);
@@ -2745,9 +2729,9 @@ public class FightController : MonoBehaviour
                         {
                             int defPropNums = 0;
                             //免伤计算
-                            if (defendUnit.fightState.removeArmorNums <= 0)   //是否有卸甲
+                            if (defendUnit.fightState.Unarmed <= 0)   //是否有卸甲
                             {
-                                defPropNums = defUnit.Armor + defendUnit.fightState.fenghuotaiAddtion;
+                                defPropNums = defUnit.Armor + defendUnit.fightState.FengHuoTaiAddOn;
                                 //白马/重甲，自身血量每降低10%，提高5%免伤
                                 switch (DataTable.Hero[defendUnit.cardId].MilitaryUnitTableId)
                                 {
@@ -2815,7 +2799,7 @@ public class FightController : MonoBehaviour
                             }
 
                             //流血状态加成
-                            if (defendUnit.fightState.bleedNums > 0)
+                            if (defendUnit.fightState.Bleed > 0)
                             {
                                 finalDamage = (int)(finalDamage * DataTable.GetGameValue(117) / 100f);
                             }
@@ -2831,28 +2815,28 @@ public class FightController : MonoBehaviour
                 {
                     case 1:
                         //近战兵种受到暴击和会心加盾
-                        if (defendUnit.fightState.dizzyNums <= 0 && defendUnit.fightState.imprisonedNums <= 0)
+                        if (defendUnit.fightState.Stunned <= 0 && defendUnit.fightState.Imprisoned <= 0)
                         {
                             if (indexAttackType != 0)
                             {
-                                if (defendUnit.fightState.withStandNums <= 0)
+                                if (defendUnit.fightState.Withstand <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(defendUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                                 }
-                                defendUnit.fightState.withStandNums++;
+                                defendUnit.fightState.Withstand++;
                             }
                         }
                         break;
                     case 12:
                         //神武战意技能
-                        if (defendUnit.fightState.willFightNums <= 0)
+                        if (defendUnit.fightState.Stimulate <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(defendUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_willFight, true);
                         }
-                        if (defendUnit.fightState.willFightNums < 10)
+                        if (defendUnit.fightState.Stimulate < 10)
                         {
-                            defendUnit.fightState.willFightNums++;
-                            defendUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (defendUnit.fightState.willFightNums / 10f));
+                            defendUnit.fightState.Stimulate++;
+                            defendUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (defendUnit.fightState.Stimulate / 10f));
                         }
                         ShowSpellTextObj(defendUnit.cardObj, "12", false);
                         break;
@@ -2863,13 +2847,13 @@ public class FightController : MonoBehaviour
                     default:
                         break;
                 }
-                if (attackUnit?.fightState.dizzyNums <= 0 && attackUnit.fightState.imprisonedNums <= 0)
+                if (attackUnit?.fightState.Stunned <= 0 && attackUnit.fightState.Imprisoned <= 0)
                 {
                     switch (DataTable.Hero[attackUnit.cardId].MilitaryUnitTableId)
                     {
                         case 6:
                             //虎卫吸血
-                            if (attackUnit.fightState.dizzyNums <= 0 && attackUnit.fightState.imprisonedNums <= 0)
+                            if (attackUnit.fightState.Stunned <= 0 && attackUnit.fightState.Imprisoned <= 0)
                             {
                                 ShowSpellTextObj(attackUnit.cardObj, "6", false);
                                 int addHp = finalDamage;
@@ -2889,12 +2873,12 @@ public class FightController : MonoBehaviour
     //抵消护盾
     private bool OffsetWithStand(FightCardData fightCardData)
     {
-        if (fightCardData.fightState.withStandNums > 0)
+        if (fightCardData.fightState.Withstand > 0)
         {
-            fightCardData.fightState.withStandNums--;
-            if (fightCardData.fightState.withStandNums <= 0)
+            fightCardData.fightState.Withstand--;
+            if (fightCardData.fightState.Withstand <= 0)
             {
-                fightCardData.fightState.withStandNums = 0;
+                fightCardData.fightState.Withstand = 0;
                 FightForManager.instance.DestroySateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
             }
             return true;
@@ -2908,14 +2892,14 @@ public class FightController : MonoBehaviour
     //判断行动单位是否有眩晕
     private bool OffsetDizzyState(FightCardData dizzyUnit)
     {
-        if (dizzyUnit.fightState.dizzyNums > 0)
+        if (dizzyUnit.fightState.Stunned > 0)
         {
             dizzyUnit.isActionDone = true;
             //Debug.Log("---处于眩晕");
-            dizzyUnit.fightState.dizzyNums--;
-            if (dizzyUnit.fightState.dizzyNums <= 0)
+            dizzyUnit.fightState.Stunned--;
+            if (dizzyUnit.fightState.Stunned <= 0)
             {
-                dizzyUnit.fightState.dizzyNums = 0;
+                dizzyUnit.fightState.Stunned = 0;
                 FightForManager.instance.DestroySateIcon(dizzyUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_dizzy, true);
             }
             return true;
@@ -2929,12 +2913,12 @@ public class FightController : MonoBehaviour
     //判断行动单位是否有内助
     private bool OffsetNeiZhuState(FightCardData attackUnit)
     {
-        if (attackUnit.fightState.neizhuNums > 0)
+        if (attackUnit.fightState.Neizhu > 0)
         {
-            attackUnit.fightState.neizhuNums--;
-            if (attackUnit.fightState.neizhuNums <= 0)
+            attackUnit.fightState.Neizhu--;
+            if (attackUnit.fightState.Neizhu <= 0)
             {
-                attackUnit.fightState.neizhuNums = 0;
+                attackUnit.fightState.Neizhu = 0;
                 FightForManager.instance.DestroySateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_neizhu, false);
             }
             return true;
@@ -2948,12 +2932,12 @@ public class FightController : MonoBehaviour
     //判断行动单位是否有神助
     private bool OffsetShenZhuState(FightCardData attackUnit)
     {
-        if (attackUnit.fightState.shenzhuNums > 0)
+        if (attackUnit.fightState.ShenZhu > 0)
         {
-            attackUnit.fightState.shenzhuNums--;
-            if (attackUnit.fightState.shenzhuNums <= 0)
+            attackUnit.fightState.ShenZhu--;
+            if (attackUnit.fightState.ShenZhu <= 0)
             {
-                attackUnit.fightState.shenzhuNums = 0;
+                attackUnit.fightState.ShenZhu = 0;
                 FightForManager.instance.DestroySateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
             }
             return true;
@@ -3009,11 +2993,11 @@ public class FightController : MonoBehaviour
             //判断免疫负面状效果触发
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.dizzyNums <= 0)
+                if (attackedUnit.fightState.Stunned <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_dizzy, true);
                 }
-                attackedUnit.fightState.dizzyNums++;
+                attackedUnit.fightState.Stunned++;
             }
         }
     }
@@ -3027,11 +3011,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.imprisonedNums <= 0)
+                if (attackedUnit.fightState.Imprisoned <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_imprisoned, true);
                 }
-                attackedUnit.fightState.imprisonedNums += 1;
+                attackedUnit.fightState.Imprisoned += 1;
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(11), true, true);
             }
         }
@@ -3046,11 +3030,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.removeArmorNums <= 0)
+                if (attackedUnit.fightState.Unarmed <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_removeArmor, true);
                 }
-                attackedUnit.fightState.removeArmorNums += 1;
+                attackedUnit.fightState.Unarmed += 1;
             }
         }
     }
@@ -3064,11 +3048,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.bleedNums <= 0)
+                if (attackedUnit.fightState.Bleed <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_bleed, true);
                 }
-                attackedUnit.fightState.bleedNums++;
+                attackedUnit.fightState.Bleed++;
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(16), true, true);
             }
         }
@@ -3083,11 +3067,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.poisonedNums <= 0)
+                if (attackedUnit.fightState.Poisoned <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_poisoned, true);
                 }
-                attackedUnit.fightState.poisonedNums++;
+                attackedUnit.fightState.Poisoned++;
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(12), true, true);
             }
         }
@@ -3102,11 +3086,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.burnedNums <= 0)
+                if (attackedUnit.fightState.Burned <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_burned, true);
                 }
-                attackedUnit.fightState.burnedNums++;
+                attackedUnit.fightState.Burned++;
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(20), true, true);
             }
         }
@@ -3121,11 +3105,11 @@ public class FightController : MonoBehaviour
         {
             if (!isSuccessFromHalfRandom(GetCardDebuffSuccessRate(attackedUnit)))
             {
-                if (attackedUnit.fightState.cowardlyNums <= 0)
+                if (attackedUnit.fightState.Cowardly <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackedUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_cowardly, true);
                 }
-                attackedUnit.fightState.cowardlyNums += 1;
+                attackedUnit.fightState.Cowardly += 1;
                 ShowSpellTextObj(attackedUnit.cardObj, DataTable.GetStringText(21), true, true);
             }
         }
@@ -3136,7 +3120,7 @@ public class FightController : MonoBehaviour
     {
         ShowSpellTextObj(cardData.cardObj, DataTable.GetStringText(20), true, true);
 
-        if (cardData.fightState.invincibleNums <= 0)
+        if (cardData.fightState.Invincible <= 0)
         {
             int cutHpNum = (int)(DataTable.GetGameValue(118) / 100f * cardData.Hp.Max);
             cutHpNum = AddOrCutShieldValue(cutHpNum, cardData, false);
@@ -3144,11 +3128,11 @@ public class FightController : MonoBehaviour
             TargetAnimShow(cardData, cutHpNum);
         }
 
-        cardData.fightState.burnedNums--;
+        cardData.fightState.Burned--;
         PlayAudioForSecondClip(87, 0);
-        if (cardData.fightState.burnedNums <= 0)
+        if (cardData.fightState.Burned <= 0)
         {
-            cardData.fightState.burnedNums = 0;
+            cardData.fightState.Burned = 0;
             FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_burned, true);
         }
     }
@@ -3167,32 +3151,32 @@ public class FightController : MonoBehaviour
         {
             if (isAdd)
             {
-                if (attackUnit.fightState.shieldValue <= 0)
+                if (attackUnit.fightState.Shield <= 0)
                 {
                     FightForManager.instance.CreateSateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_shield, true);
                 }
-                attackUnit.fightState.shieldValue += damage;
-                attackUnit.fightState.shieldValue = Mathf.Min(attackUnit.fightState.shieldValue, DataTable.GetGameValue(119));
-                float fadeFlo = Mathf.Max(0.3f, attackUnit.fightState.shieldValue / (float)DataTable.GetGameValue(119));
+                attackUnit.fightState.Shield += damage;
+                attackUnit.fightState.Shield = Mathf.Min(attackUnit.fightState.Shield, DataTable.GetGameValue(119));
+                float fadeFlo = Mathf.Max(0.3f, attackUnit.fightState.Shield / (float)DataTable.GetGameValue(119));
                 attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_shield + "Din").GetComponent<Image>().color = new Color(1, 1, 1, fadeFlo);
             }
             else
             {
                 if (damage > 0)
                 {
-                    if (damage < attackUnit.fightState.shieldValue)
+                    if (damage < attackUnit.fightState.Shield)
                     {
-                        attackUnit.fightState.shieldValue -= damage;
+                        attackUnit.fightState.Shield -= damage;
                         finalDamage = 0;
-                        float fadeFlo = Mathf.Max(0.3f, attackUnit.fightState.shieldValue / (float)DataTable.GetGameValue(119));
+                        float fadeFlo = Mathf.Max(0.3f, attackUnit.fightState.Shield / (float)DataTable.GetGameValue(119));
                         attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_shield + "Din").GetComponent<Image>().color = new Color(1, 1, 1, fadeFlo);
                     }
                     else
                     {
-                        if (attackUnit.fightState.shieldValue > 0)
+                        if (attackUnit.fightState.Shield > 0)
                         {
-                            finalDamage = damage - attackUnit.fightState.shieldValue;
-                            attackUnit.fightState.shieldValue = 0;
+                            finalDamage = damage - attackUnit.fightState.Shield;
+                            attackUnit.fightState.Shield = 0;
                             FightForManager.instance.DestroySateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_shield, true);
                         }
                     }
@@ -3504,11 +3488,11 @@ public class FightController : MonoBehaviour
                 switch (DataTable.Hero[fightCardData.cardId].MilitaryUnitTableId)
                 {
                     case 4://盾兵
-                        if (fightCardData.fightState.withStandNums <= 0)
+                        if (fightCardData.fightState.Withstand <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                         }
-                        fightCardData.fightState.withStandNums = 1;
+                        fightCardData.fightState.Withstand = 1;
                         break;
                     default:
                         break;
@@ -3650,11 +3634,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(134)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -3709,11 +3693,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(136)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -3732,11 +3716,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(137)))
                             {
-                                if (fightCardData.fightState.withStandNums <= 0)
+                                if (fightCardData.fightState.Withstand <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                                 }
-                                fightCardData.fightState.withStandNums++;
+                                fightCardData.fightState.Withstand++;
                             }
                         }
                     }
@@ -3759,11 +3743,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(138)))
                             {
-                                if (fightCardData.fightState.withStandNums <= 0)
+                                if (fightCardData.fightState.Withstand <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                                 }
-                                fightCardData.fightState.withStandNums++;
+                                fightCardData.fightState.Withstand++;
                             }
                         }
                     }
@@ -3818,11 +3802,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(140)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -3880,11 +3864,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(142)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -3908,11 +3892,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(143)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -3931,11 +3915,11 @@ public class FightController : MonoBehaviour
                             AttackToEffectShow(fightCardData, false, "JB" + jiBanActivedClass.JiBanId);
                             if (isSuccessFromHalfRandom(DataTable.GetGameValue(144)))
                             {
-                                if (fightCardData.fightState.shenzhuNums <= 0)
+                                if (fightCardData.fightState.ShenZhu <= 0)
                                 {
                                     FightForManager.instance.CreateSateIcon(fightCardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
                                 }
-                                fightCardData.fightState.shenzhuNums++;
+                                fightCardData.fightState.ShenZhu++;
                             }
                         }
                     }
@@ -4174,13 +4158,13 @@ public class FightController : MonoBehaviour
     private int UpdateOneCardBeforeRound(FightCardData cardData)
     {
         int showRounds = 0;
-        if (cardData.fightState.poisonedNums > 0) //中毒触发
+        if (cardData.fightState.Poisoned > 0) //中毒触发
         {
             showRounds++;
             ShowSpellTextObj(cardData.cardObj, DataTable.GetStringText(12), true, true);
             PlayAudioForSecondClip(86, 0);
 
-            if (cardData.fightState.invincibleNums <= 0)
+            if (cardData.fightState.Invincible <= 0)
             {
                 int cutHpNum = (int)(DataTable.GetGameValue(121) / 100f * cardData.Hp.Max);
                 cutHpNum = AddOrCutShieldValue(cutHpNum, cardData, false);
@@ -4188,10 +4172,10 @@ public class FightController : MonoBehaviour
                 TargetAnimShow(cardData, cutHpNum);
             }
 
-            cardData.fightState.poisonedNums--;
-            if (cardData.fightState.poisonedNums <= 0)
+            cardData.fightState.Poisoned--;
+            if (cardData.fightState.Poisoned <= 0)
             {
-                cardData.fightState.poisonedNums = 0;
+                cardData.fightState.Poisoned = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_poisoned, true);
             }
         }
@@ -4289,79 +4273,79 @@ public class FightController : MonoBehaviour
     {
         try
         {
-            if (cardData.fightState.dizzyNums > 0)          //眩晕状态
+            if (cardData.fightState.Stunned > 0)          //眩晕状态
             {
-                cardData.fightState.dizzyNums = 0;
+                cardData.fightState.Stunned = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_dizzy, true);
             }
-            if (cardData.fightState.imprisonedNums > 0)     //禁锢状态
+            if (cardData.fightState.Imprisoned > 0)     //禁锢状态
             {
-                cardData.fightState.imprisonedNums = 0;
+                cardData.fightState.Imprisoned = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_imprisoned, true);
             }
-            if (cardData.fightState.bleedNums > 0)          //流血状态
+            if (cardData.fightState.Bleed > 0)          //流血状态
             {
-                cardData.fightState.bleedNums = 0;
+                cardData.fightState.Bleed = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_bleed, true);
             }
-            if (cardData.fightState.poisonedNums > 0)       //中毒状态
+            if (cardData.fightState.Poisoned > 0)       //中毒状态
             {
-                cardData.fightState.poisonedNums = 0;
+                cardData.fightState.Poisoned = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_poisoned, true);
             }
-            if (cardData.fightState.burnedNums > 0)         //灼烧触发
+            if (cardData.fightState.Burned > 0)         //灼烧触发
             {
-                cardData.fightState.burnedNums = 0;
+                cardData.fightState.Burned = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_burned, true);
             }
-            if (cardData.fightState.removeArmorNums > 0)    //卸甲状态
+            if (cardData.fightState.Unarmed > 0)    //卸甲状态
             {
-                cardData.fightState.removeArmorNums = 0;
+                cardData.fightState.Unarmed = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_removeArmor, true);
             }
-            if (cardData.fightState.withStandNums > 0)      //护盾状态
+            if (cardData.fightState.Withstand > 0)      //护盾状态
             {
-                cardData.fightState.withStandNums = 0;
+                cardData.fightState.Withstand = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
             }
-            if (cardData.fightState.invincibleNums > 0)     //无敌消减
+            if (cardData.fightState.Invincible > 0)     //无敌消减
             {
-                cardData.fightState.invincibleNums = 0;
+                cardData.fightState.Invincible = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_invincible, true);
             }
-            if (cardData.fightState.deathFightNums > 0)     //死战状态
+            if (cardData.fightState.DeathFight > 0)     //死战状态
             {
-                cardData.fightState.deathFightNums = 0;
+                cardData.fightState.DeathFight = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_deathFight, true);
             }
-            if (cardData.fightState.willFightNums > 0)      //战意状态
+            if (cardData.fightState.Stimulate > 0)      //战意状态
             {
-                cardData.fightState.willFightNums = 0;
+                cardData.fightState.Stimulate = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_willFight, true);
             }
-            if (cardData.fightState.neizhuNums > 0)         //内助状态
+            if (cardData.fightState.Neizhu > 0)         //内助状态
             {
-                cardData.fightState.neizhuNums = 0;
+                cardData.fightState.Neizhu = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_neizhu, false);
             }
-            if (cardData.fightState.shenzhuNums > 0)        //神助状态
+            if (cardData.fightState.ShenZhu > 0)        //神助状态
             {
-                cardData.fightState.shenzhuNums = 0;
+                cardData.fightState.ShenZhu = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shenzhu, false);
             }
-            if (cardData.fightState.cowardlyNums > 0)       //怯战状态
+            if (cardData.fightState.Cowardly > 0)       //怯战状态
             {
-                cardData.fightState.cowardlyNums = 0;
+                cardData.fightState.Cowardly = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_cowardly, true);
             }
-            if (cardData.fightState.miWuZhenAddtion > 0)    //隐蔽状态
+            if (cardData.fightState.MiWuZhenAddOn > 0)    //隐蔽状态
             {
-                cardData.fightState.miWuZhenAddtion = 0;
+                cardData.fightState.MiWuZhenAddOn = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_miWuZhenAddtion, false);
             }
-            if (cardData.fightState.shieldValue > 0)        //防护盾状态
+            if (cardData.fightState.Shield > 0)        //防护盾状态
             {
-                cardData.fightState.shieldValue = 0;
+                cardData.fightState.Shield = 0;
                 FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_shield, true);
             }
         }
@@ -4376,43 +4360,43 @@ public class FightController : MonoBehaviour
     {
         try
         {
-            if (cardData.fightState.invincibleNums > 0) //无敌消减
+            if (cardData.fightState.Invincible > 0) //无敌消减
             {
-                cardData.fightState.invincibleNums--;
-                if (cardData.fightState.invincibleNums <= 0)
+                cardData.fightState.Invincible--;
+                if (cardData.fightState.Invincible <= 0)
                 {
-                    cardData.fightState.invincibleNums = 0;
+                    cardData.fightState.Invincible = 0;
                     FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_invincible, true);
                 }
             }
-            if (cardData.fightState.burnedNums > 0) //灼烧触发
+            if (cardData.fightState.Burned > 0) //灼烧触发
             {
                 BurningFightUnit(cardData);
             }
-            if (cardData.fightState.bleedNums > 0) //流血状态
+            if (cardData.fightState.Bleed > 0) //流血状态
             {
-                cardData.fightState.bleedNums--;
-                if (cardData.fightState.bleedNums <= 0)
+                cardData.fightState.Bleed--;
+                if (cardData.fightState.Bleed <= 0)
                 {
-                    cardData.fightState.bleedNums = 0;
+                    cardData.fightState.Bleed = 0;
                     FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_bleed, true);
                 }
             }
-            if (cardData.fightState.removeArmorNums > 0) //卸甲状态
+            if (cardData.fightState.Unarmed > 0) //卸甲状态
             {
-                cardData.fightState.removeArmorNums--;
-                if (cardData.fightState.removeArmorNums <= 0)
+                cardData.fightState.Unarmed--;
+                if (cardData.fightState.Unarmed <= 0)
                 {
-                    cardData.fightState.removeArmorNums = 0;
+                    cardData.fightState.Unarmed = 0;
                     FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_removeArmor, true);
                 }
             }
-            if (cardData.fightState.deathFightNums > 0)    //死战状态
+            if (cardData.fightState.DeathFight > 0)    //死战状态
             {
-                cardData.fightState.deathFightNums--;
-                if (cardData.fightState.deathFightNums <= 0)
+                cardData.fightState.DeathFight--;
+                if (cardData.fightState.DeathFight <= 0)
                 {
-                    cardData.fightState.deathFightNums = 0;
+                    cardData.fightState.DeathFight = 0;
                     FightForManager.instance.DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_deathFight, true);
                 }
             }
@@ -4430,14 +4414,14 @@ public class FightController : MonoBehaviour
     [SerializeField]
     float yuanChengShakeTime = 0.1f;
 
-    private List<CardRound> rounds;
+    private List<PieceAction> rounds;
     //武将行动
     IEnumerator InitiativeHeroAction(FightCardData attackUnit)
     {
         float waitTime = 0;
         waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        rounds = new List<CardRound>();
+        rounds = new List<PieceAction>();
         /////////前摇//////////
         targetIndex = FightForManager.instance.FindOpponentIndex(attackUnit); //锁定目标卡牌
         var target = FightForManager.instance.GetCard(targetIndex, !isPlayerRound);
@@ -4585,20 +4569,20 @@ public class FightController : MonoBehaviour
     {
         float needTime = 0;
         indexAttackType = 0;
-        if (attackUnit.fightState.shenzhuNums <= 0 && attackUnit.fightState.neizhuNums <= 0 && attackUnit.fightState.cowardlyNums > 0) //怯战无法使用暴击和会心一击
+        if (attackUnit.fightState.ShenZhu <= 0 && attackUnit.fightState.Neizhu <= 0 && attackUnit.fightState.Cowardly > 0) //怯战无法使用暴击和会心一击
         {
-            attackUnit.fightState.cowardlyNums--;
+            attackUnit.fightState.Cowardly--;
             ShowSpellTextObj(attackUnit.cardObj, DataTable.GetStringText(21), true, true);
-            if (attackUnit.fightState.cowardlyNums <= 0)
+            if (attackUnit.fightState.Cowardly <= 0)
             {
-                attackUnit.fightState.cowardlyNums = 0;
+                attackUnit.fightState.Cowardly = 0;
                 FightForManager.instance.DestroySateIcon(attackUnit.cardObj.War.StateContent, StringNameStatic.StateIconPath_cowardly, true);
             }
         }
         else
         {
             var combat = HeroCombatInfo.GetInfo(attackUnit.cardId);
-            int huixinPropNums = combat.RouseRatio + attackUnit.fightState.langyataiAddtion;
+            int huixinPropNums = combat.RouseRatio + attackUnit.fightState.LangYaTaiAddOn;
             //是否有神助
             if (OffsetShenZhuState(attackUnit))
                 huixinPropNums = 100;
@@ -4611,7 +4595,7 @@ public class FightController : MonoBehaviour
             }
             else
             {
-                int criPropNums = combat.CriticalRatio + attackUnit.fightState.pilitaiAddtion;
+                int criPropNums = combat.CriticalRatio + attackUnit.fightState.PiLiTaiAddOn;
                 //是否有内助
                 if (OffsetNeiZhuState(attackUnit))
                     criPropNums = 100;

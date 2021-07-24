@@ -19,7 +19,7 @@ public class WarsUIManager : MonoBehaviour
     public Transform herosCardListTran;
     public ScrollRect herosCardListScrollRect;
     public bool isDragDelegated;
-    public ChessmanOperator ChessmanOperator;
+    public PieceOperator PieceOperator;
 
     //[SerializeField]
     //GameObject playerInfoObj;   //玩家信息obj
@@ -142,7 +142,7 @@ public class WarsUIManager : MonoBehaviour
     public void Init()
     {
         StartCoroutine(Initialize());
-        ChessmanOperator.Init();
+        PieceOperator.Init();
         if(EffectsPoolingControl.instance.IsInit)return;
         EffectsPoolingControl.instance.Init();
     }

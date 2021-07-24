@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Assets;
 using CorrelateLib;
@@ -227,106 +228,268 @@ public class Character : ICharacter
 //战斗状态类
 public class FightState
 {
+    public enum Cons
+    {
+        Stunned = 1,
+        Withstand = 2,
+        Invincible = 3,
+        Bleed = 4,
+        Poisoned = 5,
+        Burned = 6,
+        Stimulate = 7,
+        Imprisoned = 8,
+        Cowardly = 9,
+        ZhanGuTaiAddOn = 10,
+        FengShenTaiAddOn = 11,
+        PiLiTaiAddOn = 12,
+        LangYaTaiAddOn = 13,
+        FengHuoTaiAddOn = 14,
+        DeathFight = 15,
+        Unarmed = 16,
+        Neizhu = 17,
+        ShenZhu = 18,
+        Shield = 19,
+        MiWuZhenAddOn = 20
+    }
 
     /// <summary>
     /// 眩晕回合数
     /// </summary>
-    public int dizzyNums { get; set; }
+    public int Stunned { get; set; }
 
     /// <summary>
     /// 护盾层数
     /// </summary>
-    public int withStandNums { get; set; }
+    public int Withstand { get; set; }
 
     /// <summary>
     /// 无敌回合
     /// </summary>
-    public int invincibleNums { get; set; }
+    public int Invincible { get; set; }
 
     /// <summary>
     /// 流血层数
     /// </summary>
-    public int bleedNums { get; set; }
+    public int Bleed { get; set; }
 
     /// <summary>
     /// 中毒回合
     /// </summary>
-    public int poisonedNums { get; set; }
+    public int Poisoned { get; set; }
 
     /// <summary>
     /// 灼烧回合
     /// </summary>
-    public int burnedNums { get; set; }
+    public int Burned { get; set; }
 
     /// <summary>
     /// 战意层数
     /// </summary>
-    public int willFightNums { get; set; }
+    public int Stimulate { get; set; }
 
     /// <summary>
     /// 禁锢层数
     /// </summary>
-    public int imprisonedNums { get; set; }
+    public int Imprisoned { get; set; }
 
     /// <summary>
     /// 怯战层数
     /// </summary>
-    public int cowardlyNums { get; set; }
+    public int Cowardly { get; set; }
 
     /// <summary>
     /// 战鼓台-伤害加成
     /// </summary>
-    public int zhangutaiAddtion { get; set; }
+    public int ZhanGuTaiAddOn { get; set; }
 
     /// <summary>
     /// 风神台-闪避加成
     /// </summary>
-    public int fengShenTaiAddtion { get; set; }
+    public int FengShenTaiAddOn { get; set; }
 
     /// <summary>
     /// 霹雳台-暴击加成
     /// </summary>
-    public int pilitaiAddtion { get; set; }
+    public int PiLiTaiAddOn { get; set; }
 
     /// <summary>
     /// 狼牙台-会心加成
     /// </summary>
-    public int langyataiAddtion { get; set; }
+    public int LangYaTaiAddOn { get; set; }
 
     /// <summary>
     /// 烽火台-免伤加成
     /// </summary>
-    public int fenghuotaiAddtion { get; set; }
+    public int FengHuoTaiAddOn { get; set; }
 
     /// <summary>
     /// 死战回合
     /// </summary>
-    public int deathFightNums { get; set; }
+    public int DeathFight { get; set; }
 
     /// <summary>
     /// 卸甲回合
     /// </summary>
-    public int removeArmorNums { get; set; }
+    public int Unarmed { get; set; }
 
     /// <summary>
     /// 内助回合
     /// </summary>
-    public int neizhuNums { get; set; }
+    public int Neizhu { get; set; }
 
     /// <summary>
     /// 神助回合
     /// </summary>
-    public int shenzhuNums { get; set; }
+    public int ShenZhu { get; set; }
 
     /// <summary>
     /// 防护盾数值
     /// </summary>
-    public int shieldValue { get; set; }
+    public int Shield { get; set; }
     
     /// <summary>
     /// 迷雾阵-远程闪避加成
     /// </summary>
-    public int miWuZhenAddtion { get; set; }
+    public int MiWuZhenAddOn { get; set; }
+
+    public void AddState(Cons con,int value)
+    {
+        switch (con)
+        {
+            case Cons.Stunned:
+                Stunned += MinZeroAlign(Stunned);
+                break;
+            case Cons.Withstand:
+                Withstand += MinZeroAlign(Withstand);
+                break;
+            case Cons.Invincible:
+                Invincible += MinZeroAlign(Invincible);
+                break;
+            case Cons.Bleed:
+                Bleed += MinZeroAlign(Bleed);
+                break;
+            case Cons.Poisoned:
+                Poisoned += MinZeroAlign(Poisoned);
+                break;
+            case Cons.Burned:
+                Burned += MinZeroAlign(Burned);
+                break;
+            case Cons.Stimulate:
+                Stimulate += MinZeroAlign(Burned);
+                break;
+            case Cons.Imprisoned:
+                Imprisoned += MinZeroAlign(Imprisoned);
+                break;
+            case Cons.Cowardly:
+                Cowardly += MinZeroAlign(Cowardly);
+                break;
+            case Cons.ZhanGuTaiAddOn:
+                ZhanGuTaiAddOn += MinZeroAlign(ZhanGuTaiAddOn);
+                break;
+            case Cons.FengShenTaiAddOn:
+                FengShenTaiAddOn += MinZeroAlign(FengShenTaiAddOn);
+                break;
+            case Cons.PiLiTaiAddOn:
+                PiLiTaiAddOn += MinZeroAlign(PiLiTaiAddOn);
+                break;
+            case Cons.LangYaTaiAddOn:
+                LangYaTaiAddOn += MinZeroAlign(LangYaTaiAddOn);
+                break;
+            case Cons.FengHuoTaiAddOn:
+                FengHuoTaiAddOn += MinZeroAlign(FengShenTaiAddOn);
+                break;
+            case Cons.DeathFight:
+                DeathFight += MinZeroAlign(DeathFight);
+                break;
+            case Cons.Unarmed:
+                Unarmed += MinZeroAlign(Unarmed);
+                break;
+            case Cons.Neizhu:
+                Neizhu += MinZeroAlign(Neizhu);
+                break;
+            case Cons.ShenZhu:
+                ShenZhu += MinZeroAlign(ShenZhu);
+                break;
+            case Cons.Shield:
+                Shield += MinZeroAlign(Shield);
+                break;
+            case Cons.MiWuZhenAddOn:
+                MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+        int MinZeroAlign(int ori) => value < 0 && ori < value ? -ori : value; //最多是清0
+    }
+
+    public void ClearState(Cons con)
+    {
+        switch (con)
+        {
+            case Cons.Stunned:
+                Stunned = 0;
+                break;
+            case Cons.Withstand:
+                Withstand = 0;
+                break;
+            case Cons.Invincible:
+                Invincible = 0;
+                break;
+            case Cons.Bleed:
+                Bleed = 0;
+                break;
+            case Cons.Poisoned:
+                Poisoned = 0;
+                break;
+            case Cons.Burned:
+                Burned = 0;
+                break;
+            case Cons.Stimulate:
+                Stimulate = 0;
+                break;
+            case Cons.Imprisoned:
+                Imprisoned = 0;
+                break;
+            case Cons.Cowardly:
+                Cowardly = 0;
+                break;
+            case Cons.ZhanGuTaiAddOn:
+                ZhanGuTaiAddOn = 0;
+                break;
+            case Cons.FengShenTaiAddOn:
+                FengShenTaiAddOn = 0;
+                break;
+            case Cons.PiLiTaiAddOn:
+                PiLiTaiAddOn = 0;
+                break;
+            case Cons.LangYaTaiAddOn:
+                LangYaTaiAddOn = 0;
+                break;
+            case Cons.FengHuoTaiAddOn:
+                FengHuoTaiAddOn = 0;
+                break;
+            case Cons.DeathFight:
+                DeathFight = 0;
+                break;
+            case Cons.Unarmed:
+                Unarmed = 0;
+                break;
+            case Cons.Neizhu:
+                Neizhu = 0;
+                break;
+            case Cons.ShenZhu:
+                ShenZhu = 0;
+                break;
+            case Cons.Shield:
+                Shield = 0;
+                break;
+            case Cons.MiWuZhenAddOn:
+                MiWuZhenAddOn = 0;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+    }
 }
 
 /// <summary>

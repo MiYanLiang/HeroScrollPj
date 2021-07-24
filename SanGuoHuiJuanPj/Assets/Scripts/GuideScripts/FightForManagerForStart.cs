@@ -856,10 +856,10 @@ public class FightForManagerForStart : MonoBehaviour
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
             if (addedFightCard != null && addedFightCard.Hp > 0)
             {
-                if (addedFightCard.cardType == 0 && addedFightCard.fightState.withStandNums <= 0)
+                if (addedFightCard.cardType == 0 && addedFightCard.fightState.Withstand <= 0)
                 {
                     FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, "4A");
-                    addedFightCard.fightState.withStandNums = 1;
+                    addedFightCard.fightState.Withstand = 1;
                     CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                     addtionNums--;
                     if (addtionNums <= 0)
@@ -879,45 +879,45 @@ public class FightForManagerForStart : MonoBehaviour
                 DestroyImmediate(tranZyt.gameObject);
         }
         //战斗力图标
-        if (cardData.fightState.zhangutaiAddtion > 0)
+        if (cardData.fightState.ZhanGuTaiAddon > 0)
         {
-            cardData.fightState.zhangutaiAddtion = 0;
+            cardData.fightState.ZhanGuTaiAddon = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
         }
         //风神台图标
-        if (cardData.fightState.fengShenTaiAddtion > 0)
+        if (cardData.fightState.FengShenTaiAddOn > 0)
         {
-            cardData.fightState.fengShenTaiAddtion = 0;
+            cardData.fightState.FengShenTaiAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
         }
         //霹雳台图标
-        if (cardData.fightState.pilitaiAddtion > 0)
+        if (cardData.fightState.PiLiTaiAddOn > 0)
         {
-            cardData.fightState.pilitaiAddtion = 0;
+            cardData.fightState.PiLiTaiAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
         }
         //霹雳台图标
-        if (cardData.fightState.pilitaiAddtion > 0)
+        if (cardData.fightState.PiLiTaiAddOn > 0)
         {
-            cardData.fightState.pilitaiAddtion = 0;
+            cardData.fightState.PiLiTaiAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
         }
         //狼牙台图标
-        if (cardData.fightState.langyataiAddtion > 0)
+        if (cardData.fightState.LangYaTaiAddOn > 0)
         {
-            cardData.fightState.langyataiAddtion = 0;
+            cardData.fightState.LangYaTaiAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
         }
         //烽火台图标
-        if (cardData.fightState.fenghuotaiAddtion > 0)
+        if (cardData.fightState.FengHuoTaiAddOn > 0)
         {
-            cardData.fightState.fenghuotaiAddtion = 0;
+            cardData.fightState.FengHuoTaiAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
         }
         //迷雾阵图标
-        if (cardData.fightState.miWuZhenAddtion > 0)
+        if (cardData.fightState.MiWuZhenAddOn > 0)
         {
-            cardData.fightState.miWuZhenAddtion = 0;
+            cardData.fightState.MiWuZhenAddOn = 0;
             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
         }
     }
@@ -997,15 +997,15 @@ public class FightForManagerForStart : MonoBehaviour
                     case 4://盾兵
                         if (isAdd)
                         {
-                            if (cardData.fightState.withStandNums <= 0)
+                            if (cardData.fightState.Withstand <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                             }
-                            cardData.fightState.withStandNums = 1;
+                            cardData.fightState.Withstand = 1;
                         }
                         else
                         {
-                            cardData.fightState.withStandNums = 0;
+                            cardData.fightState.Withstand = 0;
                             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                         }
                         break;
@@ -1124,162 +1124,162 @@ public class FightForManagerForStart : MonoBehaviour
                         }
                         break;
                     case 4://战鼓台
-                        if (cardData.fightState.zhangutaiAddtion <= 0)
+                        if (cardData.fightState.ZhanGuTaiAddon <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.zhangutaiAddtion += addtionNums;
+                        cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         break;
                     case 5://风神台
-                        if (cardData.fightState.fengShenTaiAddtion <= 0)
+                        if (cardData.fightState.FengShenTaiAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
                         }
-                        cardData.fightState.fengShenTaiAddtion += addtionNums;
+                        cardData.fightState.FengShenTaiAddOn += addtionNums;
                         break;
                     case 7://霹雳台
-                        if (cardData.fightState.pilitaiAddtion <= 0)
+                        if (cardData.fightState.PiLiTaiAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
                         }
-                        cardData.fightState.pilitaiAddtion += addtionNums;
+                        cardData.fightState.PiLiTaiAddOn += addtionNums;
                         break;
                     case 8://狼牙台
-                        if (cardData.fightState.langyataiAddtion <= 0)
+                        if (cardData.fightState.LangYaTaiAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
                         }
-                        cardData.fightState.langyataiAddtion += addtionNums;
+                        cardData.fightState.LangYaTaiAddOn += addtionNums;
                         break;
                     case 9://烽火台
-                        if (cardData.fightState.fenghuotaiAddtion <= 0)
+                        if (cardData.fightState.FengHuoTaiAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
                         }
-                        cardData.fightState.fenghuotaiAddtion += addtionNums;
+                        cardData.fightState.FengHuoTaiAddOn += addtionNums;
                         break;
                     case 10://号角台
                         if (cardData.cardMoveType == 0)   //近战
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 11://瞭望台
                         if (cardData.cardMoveType == 1)   //远程
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 12://七星坛
                         if (cardData.cardDamageType == 1) //法术
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 13://斗神台
                         if (cardData.cardDamageType == 0) //物理
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 14://曹魏旗
                         if (DataTable.Hero[cardData.cardId].ForceTableId == 1)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 15://蜀汉旗
                         if (DataTable.Hero[cardData.cardId].ForceTableId == 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 16://东吴旗
                         if (DataTable.Hero[cardData.cardId].ForceTableId == 2)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 17://迷雾阵
-                        if (cardData.fightState.miWuZhenAddtion <= 0)
+                        if (cardData.fightState.MiWuZhenAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
                         }
-                        cardData.fightState.miWuZhenAddtion += addtionNums;
+                        cardData.fightState.MiWuZhenAddOn += addtionNums;
                         break;
                     case 18://迷雾阵
-                        if (cardData.fightState.miWuZhenAddtion <= 0)
+                        if (cardData.fightState.MiWuZhenAddOn <= 0)
                         {
                             CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
                         }
-                        cardData.fightState.miWuZhenAddtion += addtionNums;
+                        cardData.fightState.MiWuZhenAddOn += addtionNums;
                         break;
                     case 19://骑兵营
                         if (armedType == 5)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 20://弓弩营
                         if (armedType == 9)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 22://长持营
                         if (armedType == 3)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     case 23://战船营
                         if (armedType == 8)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
+                            if (cardData.fightState.ZhanGuTaiAddon <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                             }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            cardData.fightState.ZhanGuTaiAddon += addtionNums;
                         }
                         break;
                     default:
@@ -1327,18 +1327,18 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.fenghuotaiAddtion <= 0)
+                    if (addedFightCard.fightState.FengHuoTaiAddOn <= 0)
                     {
                         CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
                     }
-                    addedFightCard.fightState.fenghuotaiAddtion += addtionNums;
+                    addedFightCard.fightState.FengHuoTaiAddOn += addtionNums;
                 }
                 else
                 {
-                    addedFightCard.fightState.fenghuotaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.fenghuotaiAddtion <= 0)
+                    addedFightCard.fightState.FengHuoTaiAddOn -= addtionNums;
+                    if (addedFightCard.fightState.FengHuoTaiAddOn <= 0)
                     {
-                        addedFightCard.fightState.fenghuotaiAddtion = 0;
+                        addedFightCard.fightState.FengHuoTaiAddOn = 0;
                         DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
                     }
                 }
@@ -1358,18 +1358,18 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.langyataiAddtion <= 0)
+                    if (addedFightCard.fightState.LangYaTaiAddOn <= 0)
                     {
                         CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
                     }
-                    addedFightCard.fightState.langyataiAddtion += addtionNums;
+                    addedFightCard.fightState.LangYaTaiAddOn += addtionNums;
                 }
                 else
                 {
-                    addedFightCard.fightState.langyataiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.langyataiAddtion <= 0)
+                    addedFightCard.fightState.LangYaTaiAddOn -= addtionNums;
+                    if (addedFightCard.fightState.LangYaTaiAddOn <= 0)
                     {
-                        addedFightCard.fightState.langyataiAddtion = 0;
+                        addedFightCard.fightState.LangYaTaiAddOn = 0;
                         DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
                     }
                 }
@@ -1389,18 +1389,18 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.pilitaiAddtion <= 0)
+                    if (addedFightCard.fightState.PiLiTaiAddOn <= 0)
                     {
                         CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
                     }
-                    addedFightCard.fightState.pilitaiAddtion += addtionNums;
+                    addedFightCard.fightState.PiLiTaiAddOn += addtionNums;
                 }
                 else
                 {
-                    addedFightCard.fightState.pilitaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.pilitaiAddtion <= 0)
+                    addedFightCard.fightState.PiLiTaiAddOn -= addtionNums;
+                    if (addedFightCard.fightState.PiLiTaiAddOn <= 0)
                     {
-                        addedFightCard.fightState.pilitaiAddtion = 0;
+                        addedFightCard.fightState.PiLiTaiAddOn = 0;
                         DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
                     }
                 }
@@ -1430,18 +1430,18 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.miWuZhenAddtion <= 0)
+                    if (addedFightCard.fightState.MiWuZhenAddOn <= 0)
                     {
                         CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
                     }
-                    addedFightCard.fightState.miWuZhenAddtion += addtionNums;
+                    addedFightCard.fightState.MiWuZhenAddOn += addtionNums;
                 }
                 else
                 {
-                    addedFightCard.fightState.miWuZhenAddtion -= addtionNums;
-                    if (addedFightCard.fightState.miWuZhenAddtion <= 0)
+                    addedFightCard.fightState.MiWuZhenAddOn -= addtionNums;
+                    if (addedFightCard.fightState.MiWuZhenAddOn <= 0)
                     {
-                        addedFightCard.fightState.miWuZhenAddtion = 0;
+                        addedFightCard.fightState.MiWuZhenAddOn = 0;
                         DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
                     }
                 }
@@ -1473,18 +1473,18 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.fengShenTaiAddtion <= 0)
+                    if (addedFightCard.fightState.FengShenTaiAddOn <= 0)
                     {
                         CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
                     }
-                    addedFightCard.fightState.fengShenTaiAddtion += addtionNums;
+                    addedFightCard.fightState.FengShenTaiAddOn += addtionNums;
                 }
                 else
                 {
-                    addedFightCard.fightState.fengShenTaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.fengShenTaiAddtion <= 0)
+                    addedFightCard.fightState.FengShenTaiAddOn -= addtionNums;
+                    if (addedFightCard.fightState.FengShenTaiAddOn <= 0)
                     {
-                        addedFightCard.fightState.fengShenTaiAddtion = 0;
+                        addedFightCard.fightState.FengShenTaiAddOn = 0;
                         DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
                     }
                 }
@@ -1661,18 +1661,18 @@ public class FightForManagerForStart : MonoBehaviour
     {
         if (isAdd)
         {
-            if (addedFightCard.fightState.zhangutaiAddtion <= 0)
+            if (addedFightCard.fightState.ZhanGuTaiAddon <= 0)
             {
                 CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
             }
-            addedFightCard.fightState.zhangutaiAddtion += addtionNums;
+            addedFightCard.fightState.ZhanGuTaiAddon += addtionNums;
         }
         else
         {
-            addedFightCard.fightState.zhangutaiAddtion -= addtionNums;
-            if (addedFightCard.fightState.zhangutaiAddtion <= 0)
+            addedFightCard.fightState.ZhanGuTaiAddon -= addtionNums;
+            if (addedFightCard.fightState.ZhanGuTaiAddon <= 0)
             {
-                addedFightCard.fightState.zhangutaiAddtion = 0;
+                addedFightCard.fightState.ZhanGuTaiAddon = 0;
                 DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
             }
         }

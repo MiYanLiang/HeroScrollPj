@@ -7,7 +7,7 @@ public class ChessmanTester : MonoBehaviour
 {
     public EffectsPoolingControl EffectsPooling;
     public DataTable DataTable;
-    public ChessmanOperator Operator;
+    public PieceOperator Operator;
     public FightCardData CardData;
     private FightCardData TargetCard;
     public WarGameCardUi Target;
