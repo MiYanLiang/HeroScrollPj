@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47dce7a34b74320499b89990464516a9, type: 3}
   m_Name: cdnConfig
   m_EditorClassIdentifier: 
-  ServerUrl: https://HeroScrollPj.azureedge.net/api/
+  ServerUrl: https://heroscrollpj.azureedge.net/api/
   PLAYER_SAVE_DATA_UPLOAD_API: UploadSaveData
   INSTANCE_ID_API: GenerateUserId
   REQUEST_USERNAME_API: RequestUsername
