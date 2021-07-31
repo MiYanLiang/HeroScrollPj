@@ -99,8 +99,8 @@ public class FightController : MonoBehaviour
     IEnumerator OnAttackStart(float damageBonus, FightCardData attackUnit, FightCardData target, bool counterAble)
     {
         isNormalAttack = true; //*远程兵种普攻
-
-        var attackUnitIsNonGeneralDamage = attackUnit.IsNonGeneralDamage;
+        var armed = MilitaryInfo.GetInfo(attackUnit.cardId).Id;
+        var attackUnitIsNonGeneralDamage = armed == 28 || armed == 29 || armed == 32 || armed == 33;
         if (attackUnitIsNonGeneralDamage)//如果是无普通攻击单位
         {
             //return rounds;
@@ -175,84 +175,84 @@ public class FightController : MonoBehaviour
     }
 
 
-    IEnumerator NewOnAttackStart(GameCardOperation op, float damageBonus, bool allowCounterAttack)
-    {
-        isNormalAttack = true; //*远程兵种普攻
+    //IEnumerator NewOnAttackStart(GameCardOperation op, float damageBonus, bool allowCounterAttack)
+    //{
+    //    isNormalAttack = true; //*远程兵种普攻
 
-        var attackUnitIsNonGeneralDamage = op.Unit.IsNonGeneralDamage;
-        var target = op.Target.Unit;
-        if (attackUnitIsNonGeneralDamage)//如果是无普通攻击单位
-        {
-            yield return new WaitForSeconds(attackIntervalTime);
+    //    var attackUnitIsNonGeneralDamage = op.Unit.IsNonGeneralDamage;
+    //    var target = op.Target.Unit;
+    //    if (attackUnitIsNonGeneralDamage)//如果是无普通攻击单位
+    //    {
+    //        yield return new WaitForSeconds(attackIntervalTime);
 
-            if (allowCounterAttack)
-            {
-                op.MainOperation = SpecialHeroSkill1(damageBonus, op.Unit, target);
-            }
+    //        if (allowCounterAttack)
+    //        {
+    //            op.MainOperation = SpecialHeroSkill1(damageBonus, op.Unit, target);
+    //        }
 
-            yield return null;
-        }
+    //        yield return null;
+    //    }
 
-        int damage = 0;
-        damage = (int) (HeroCardMakeSomeDamages(allowCounterAttack, op.Unit) * damageBonus); //基础，暴击、会心等
-        damage = MilitarySkillDamage(damage, op.Unit, target, allowCounterAttack); //计算技能
+    //    int damage = 0;
+    //    damage = (int) (HeroCardMakeSomeDamages(allowCounterAttack, op.Unit) * damageBonus); //基础，暴击、会心等
+    //    damage = MilitarySkillDamage(damage, op.Unit, target, allowCounterAttack); //计算技能
 
-        switch (target.cardType)
-        {
-            //攻击老巢
-            case 522:
-            {
-                if (isNormalAttack)
-                {
-                    target.Hp.Add(-damage);
-                    TargetAnimShow(target, damage);
-                    //判定胜负
-                    if (target.Hp <= 0) recordWinner = target.isPlayerCard ? -1 : 1;
-                }
-                break;
-            }
-            //攻击的是陷阱单位
-            case 3:
-            {
-                if (isNormalAttack)
-                {
-                    AttackTrapUnit(damage, op.Unit, target, allowCounterAttack);
-                }
-                break;
-            }
-            //攻击的是塔单位
-            case 2:
-            {
-                if (isNormalAttack)
-                {
-                    target.Hp.Add(-damage);
-                    TargetAnimShow(target, damage);
-                }
-                break;
-            }
-            default://攻击的是武将单位
-            {
-                damage = DefDamageProcessFun(op.Unit, target, damage); //计算防御
-                damage = TieQiFenTan(damage, target); //铁骑伤害分摊
-                if (isNormalAttack)
-                {
-                    damage = AddOrCutShieldValue(damage, target, false); //计算防护盾
-                    target.Hp.Add(-damage);
-                    TargetAnimShow(target, damage);
-                }
+    //    switch (target.cardType)
+    //    {
+    //        //攻击老巢
+    //        case 522:
+    //        {
+    //            if (isNormalAttack)
+    //            {
+    //                target.Hp.Add(-damage);
+    //                TargetAnimShow(target, damage);
+    //                //判定胜负
+    //                if (target.Hp <= 0) recordWinner = target.isPlayerCard ? -1 : 1;
+    //            }
+    //            break;
+    //        }
+    //        //攻击的是陷阱单位
+    //        case 3:
+    //        {
+    //            if (isNormalAttack)
+    //            {
+    //                AttackTrapUnit(damage, op.Unit, target, allowCounterAttack);
+    //            }
+    //            break;
+    //        }
+    //        //攻击的是塔单位
+    //        case 2:
+    //        {
+    //            if (isNormalAttack)
+    //            {
+    //                target.Hp.Add(-damage);
+    //                TargetAnimShow(target, damage);
+    //            }
+    //            break;
+    //        }
+    //        default://攻击的是武将单位
+    //        {
+    //            damage = DefDamageProcessFun(op.Unit, target, damage); //计算防御
+    //            damage = TieQiFenTan(damage, target); //铁骑伤害分摊
+    //            if (isNormalAttack)
+    //            {
+    //                damage = AddOrCutShieldValue(damage, target, false); //计算防护盾
+    //                target.Hp.Add(-damage);
+    //                TargetAnimShow(target, damage);
+    //            }
 
-                op.MainOperation = SpecialHeroSkill0(damage, op.Unit, target, allowCounterAttack); //禁卫反击
-                break;
-            }
-        }
+    //            op.MainOperation = SpecialHeroSkill0(damage, op.Unit, target, allowCounterAttack); //禁卫反击
+    //            break;
+    //        }
+    //    }
 
-        yield return new WaitForSeconds(attackIntervalTime);
+    //    yield return new WaitForSeconds(attackIntervalTime);
 
-        if (allowCounterAttack)
-        {
-            op.MainOperation = SpecialHeroSkill1(damageBonus, op.Unit, target);
-        }
-    }
+    //    if (allowCounterAttack)
+    //    {
+    //        op.MainOperation = SpecialHeroSkill1(damageBonus, op.Unit, target);
+    //    }
+    //}
 
     /// <summary>
     /// 计算战鼓台、暴击会心、羁绊等伤害加成
@@ -1262,20 +1262,20 @@ public class FightController : MonoBehaviour
     {
         if (attackUnit.Hp <= 0 || attackUnit.fightState.Stunned > 0 ||
             attackUnit.fightState.Imprisoned > 0) yield break;
-        int propNums = 0; //特殊技能触发概率
+        int triggerRatio = 0; //特殊技能触发概率
         int attackNums = 0; //攻击次数
         if (classType == 9)
         {
-            propNums = DataTable.GetGameValue(42);
+            triggerRatio = DataTable.GetGameValue(42);
             attackNums = DataTable.GetGameValue(43);
         }
         else
         {
-            propNums = DataTable.GetGameValue(44);
+            triggerRatio = DataTable.GetGameValue(44);
             attackNums = DataTable.GetGameValue(45);
         }
 
-        if (!isSuccessFromHalfRandom(propNums)) yield break;
+        if (!isSuccessFromHalfRandom(triggerRatio)) yield break;
         for (var i = 0; i < attackNums; i++)
         {
             float waitTime = CountAttackTimeSpan(attackUnit);
@@ -4414,14 +4414,14 @@ public class FightController : MonoBehaviour
     [SerializeField]
     float yuanChengShakeTime = 0.1f;
 
-    private List<PieceAction> rounds;
+    private List<ChessPosProcess> rounds;
     //武将行动
     IEnumerator InitiativeHeroAction(FightCardData attackUnit)
     {
         float waitTime = 0;
         waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        rounds = new List<PieceAction>();
+        rounds = new List<ChessPosProcess>();
         /////////前摇//////////
         targetIndex = FightForManager.instance.FindOpponentIndex(attackUnit); //锁定目标卡牌
         var target = FightForManager.instance.GetCard(targetIndex, !isPlayerRound);

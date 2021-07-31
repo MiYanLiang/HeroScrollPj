@@ -203,7 +203,7 @@ public class FightControlForStart : MonoBehaviour
     private int HeroCardMakeSomeDamages(bool isCanAdd, FightCardData fightCardData)
     {
         var combat = HeroCombatInfo.GetInfo(fightCardData.cardId);
-         int damage = (int)(fightCardData.damage * (fightCardData.fightState.ZhanGuTaiAddon + 100) / 100f);
+         int damage = (int)(fightCardData.damage * (fightCardData.fightState.ZhanGuTaiAddOn + 100) / 100f);
         if (isCanAdd)
         {
             switch (indexAttackType)

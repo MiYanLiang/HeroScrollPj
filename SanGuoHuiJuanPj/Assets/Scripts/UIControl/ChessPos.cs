@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 
-public class ChessPos : MonoBehaviour
+public class ChessPos : MonoBehaviour,IChessPos<FightCardData>
 {
     [SerializeField]private int posIndex = -1;
     private Chessboard board;
+    public FightCardData Chessman => Card;
     public FightCardData Card { get; private set; }
     public int PosIndex
     {
@@ -13,6 +14,7 @@ public class ChessPos : MonoBehaviour
             return posIndex;
         }
     }
+
 
     public void Init(Chessboard chessboard, int i)
     {
@@ -29,4 +31,8 @@ public class ChessPos : MonoBehaviour
     }
 
     public void RemoveCard() => Card = null;
+
+    public void SetPos(FightCardData chessman) => SetCard(chessman);
+    
+    public void RemovePos() => posIndex = -1;
 }

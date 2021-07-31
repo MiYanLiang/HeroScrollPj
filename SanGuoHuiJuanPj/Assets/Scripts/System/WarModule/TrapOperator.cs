@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;using UnityEngine.UI;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.UI;
 
 /// <summary>
 /// 陷阱处理器
@@ -10,18 +12,14 @@ public abstract class TrapOperator : ChessmanOperator
     /// 陷阱不会主动攻击
     /// </summary>
     /// <returns></returns>
-    public override PieceAction Invoke() => null;
-
-    protected override CombatFactor DamageRespond(PieceOperator offense, CombatFactor damage)
-    {
-        if (offense.Style.ArmedType == -2) //如果对面是陷阱类型
-            return CombatFactor.InstanceDamage(damage.Basic * 2);//执行两倍伤害
-        return base.DamageRespond(offense, damage);
-    }
-
+    public override PieceAction[] MainActions(ChessGrid<FightCardData> grid) => null;
 }
 
 public class BlankTrapOperator : TrapOperator
+{
+}
+
+public class BBlankTrapOperator : TrapOperator
 {
     private readonly CombatFactor[] offensiveFactors = new CombatFactor[0];
     private readonly IEnumerable<PieceOperator> targets = new PieceOperator[0];
@@ -33,8 +31,8 @@ public class BlankTrapOperator : TrapOperator
 
     protected override CombatFactor[] GetOffensiveFactors() => offensiveFactors;
 
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit) => null;
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit) => null;
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action) => null;
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action) => null;
 }
 
 /// <summary>
@@ -42,11 +40,11 @@ public class BlankTrapOperator : TrapOperator
 /// </summary>
 public abstract class DeathTriggerTrapOperator : TrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit) => null;
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action) => null;
 
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action)
     {
-        var move = PieceAction.Instance(Card.PosIndex);
+        var move = ChessPosProcess.Instance(Chessman.PosIndex);
         foreach (var target in GetTargets()) target.Respond(this, move, GetOffensiveFactors());
         return move;
     }
@@ -58,7 +56,7 @@ public abstract class ReflexiveTrapOperator : TrapOperator
 {
     protected override IEnumerable<PieceOperator> GetTargets() => new PieceOperator[0];
     protected override CombatFactor[] GetOffensiveFactors() => new CombatFactor[0];
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit) => null;
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action) => null;
 
     /// <summary>
     /// 是否攻城车
@@ -72,12 +70,12 @@ public abstract class ReflexiveTrapOperator : TrapOperator
 /// </summary>
 public class JuMaOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (offense.Style.CombatStyle > 0) return null;
         if (IsGongChengChe(offense)) return null;//如果攻城车，不反伤
-        var damage = hit.Factors.First(f => f.Kind == CombatFactor.Kinds.Damage).Total;
-        var move = PieceAction.Instance(Pos);
+        var damage = action.Factors.First(f => f.Kind == CombatFactor.Kinds.Damage).Total;
+        var move = ChessPosProcess.Instance(Pos);
         var factor = CombatFactor.InstanceDamage(damage * 0.01f * DataTable.GetGameValue(8));
         offense.Respond(this, move, factor);
         return move;
@@ -90,7 +88,7 @@ public class GunMuOperator : DeathTriggerTrapOperator
 {
     protected override IEnumerable<PieceOperator> GetTargets()
     {
-        var cards = FightForManager.instance.GetCardList(!Card.isPlayerCard).Where(c => c.IsAlive)
+        var cards = FightForManager.instance.GetCardList(!Chessman.isPlayerCard).Where(c => c.IsAlive)
             .OrderBy(c => c.PosIndex);
         var grid = FrontRows.ToDictionary(i => i, _ => false); //init mapper
         var max = FrontRows.Length;
@@ -102,19 +100,19 @@ public class GunMuOperator : DeathTriggerTrapOperator
             targets.Add(card);
         }
 
-        return targets.Select(WarOperatorManager.GetWarCard);
+        return targets.Select(ChessOperatorManager.GetWarCard);
     }
 
     protected override CombatFactor[] GetOffensiveFactors()
     {
         //根据比率给出是否眩晕
-        if (IsRandomPass(DataTable.GetGameValue(15)))
+        if (ChessOperatorManager.RandomFromConfigTable(15))
             return new[]
             {
-                CombatFactor.InstanceDamage(Card.damage),
+                CombatFactor.InstanceDamage(Chessman.damage),
                 CombatFactor.InstanceOffendState(FightState.Cons.Stunned)
             };
-        return new[] {CombatFactor.InstanceDamage(Card.damage)};
+        return new[] {CombatFactor.InstanceDamage(Chessman.damage)};
     }
 }
 /// <summary>
@@ -124,23 +122,23 @@ public class GunShiOperator : DeathTriggerTrapOperator
 {
     protected override IEnumerable<PieceOperator> GetTargets()
     {
-        var verticalIndex = Card.PosIndex % 5;
-        var cards = FightForManager.instance.GetCardList(!Card.isPlayerCard)
+        var verticalIndex = Chessman.PosIndex % 5;
+        var cards = FightForManager.instance.GetCardList(!Chessman.isPlayerCard)
             .Where(c => c.IsAlive && c.PosIndex == verticalIndex)
             .OrderBy(c => c.PosIndex);
-        return cards.Select(WarOperatorManager.GetWarCard);
+        return cards.Select(ChessOperatorManager.GetWarCard);
     }
 
     protected override CombatFactor[] GetOffensiveFactors()
     {
         //根据比率给出是否眩晕
-        if (IsRandomPass(DataTable.GetGameValue(16)))
+        if (ChessOperatorManager.RandomFromConfigTable(16))
             return new[]
             {
-                CombatFactor.InstanceDamage(Card.damage),
+                CombatFactor.InstanceDamage(Chessman.damage),
                 CombatFactor.InstanceOffendState(FightState.Cons.Stunned)
             };
-        return new[] {CombatFactor.InstanceDamage(Card.damage)};
+        return new[] {CombatFactor.InstanceDamage(Chessman.damage)};
     }
 }
 /// <summary>
@@ -148,14 +146,14 @@ public class GunShiOperator : DeathTriggerTrapOperator
 /// </summary>
 public class DiLeiOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         //非英雄，非可反击单位，非近战，不产出伤害
         if (offense.Style.ArmedType < 0 || offense.Style.CounterStyle == 0 || offense.Style.CombatStyle == 1)
             return null;
         if (Hp > 0) return null;
-        var explode = PieceAction.Instance(Pos);
-        var damage = Card.damage * 0.01f * DataTable.GetGameValue(9);
+        var explode = ChessPosProcess.Instance(Pos);
+        var damage = Chessman.damage * 0.01f * DataTable.GetGameValue(9);
         offense.Respond(this, explode, CombatFactor.InstanceDamage(damage));
         return explode;
     }
@@ -178,19 +176,19 @@ public class ShiQiangOperator : TrapOperator
         return offensiveFactors;
     }
 
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit) => null;
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action) => null;
 
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit) => null;
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action) => null;
 }
 /// <summary>
 /// 八阵图
 /// </summary>
 public class BaZhenTuOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var stun = PieceAction.Instance(Pos);
+        var stun = ChessPosProcess.Instance(Pos);
         offense.Respond(this, stun,
             CombatFactor.InstanceOffendState(FightState.Cons.Stunned, DataTable.GetGameValue(133)));
         return stun;
@@ -201,10 +199,10 @@ public class BaZhenTuOperator : ReflexiveTrapOperator
 /// </summary>
 public class JinSuoZhenOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var move = PieceAction.Instance(Pos);
+        var move = ChessPosProcess.Instance(Pos);
         offense.Respond(this, move,
             CombatFactor.InstanceOffendState(FightState.Cons.Imprisoned, DataTable.GetGameValue(10)));
         return move;
@@ -215,10 +213,10 @@ public class JinSuoZhenOperator : ReflexiveTrapOperator
 /// </summary>
 public class GuiBingZhenOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var move = PieceAction.Instance(Pos);
+        var move = ChessPosProcess.Instance(Pos);
         offense.Respond(this, move,
             CombatFactor.InstanceOffendState(FightState.Cons.Cowardly, DataTable.GetGameValue(11)));
         return move;
@@ -230,10 +228,10 @@ public class GuiBingZhenOperator : ReflexiveTrapOperator
 /// </summary>
 public class FireWallOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var move = PieceAction.Instance(Pos);
+        var move = ChessPosProcess.Instance(Pos);
         offense.Respond(this, move,
             CombatFactor.InstanceOffendState(FightState.Cons.Burned, DataTable.GetGameValue(12)));
         return move;
@@ -245,10 +243,10 @@ public class FireWallOperator : ReflexiveTrapOperator
 /// </summary>
 public class PoisonSpringOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var move = PieceAction.Instance(Pos);
+        var move = ChessPosProcess.Instance(Pos);
         offense.Respond(this, move,
             CombatFactor.InstanceOffendState(FightState.Cons.Poisoned, DataTable.GetGameValue(13)));
         return move;
@@ -260,10 +258,10 @@ public class PoisonSpringOperator : ReflexiveTrapOperator
 /// </summary>
 public class BladeWallOperator : ReflexiveTrapOperator
 {
-    protected override PieceAction OnCounter(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnCounter(PieceOperator offense, PieceAction action)
     {
         if (IsGongChengChe(offense)) return null;
-        var move = PieceAction.Instance(Pos);
+        var move = ChessPosProcess.Instance(Pos);
         offense.Respond(this, move,
             CombatFactor.InstanceOffendState(FightState.Cons.Bleed, DataTable.GetGameValue(14)));
         return move;
@@ -287,11 +285,11 @@ public class TreasureOperator : DeathTriggerTrapOperator
         return offensiveFactors;
     }
 
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action)
     {
-        var action = PieceAction.Instance(Pos);
-        action.Triggers.Add(PieceTrigger.Instance(PieceTrigger.Gold, DataTable.EnemyUnit[Card.unitId].GoldReward));
-        return action;
+        var process = ChessPosProcess.Instance(Pos);
+        process.Triggers.Add(PieceTrigger.Instance(PieceTrigger.Gold, DataTable.EnemyUnit[Chessman.unitId].GoldReward));
+        return process;
     }
 }
 /// <summary>
@@ -312,10 +310,10 @@ public class WarChestOperator : DeathTriggerTrapOperator
         return offensiveFactors;
     }
 
-    protected override PieceAction OnDeathTrigger(PieceOperator offense, PieceHit hit)
+    protected override ChessPosProcess OnDeathTrigger(PieceOperator offense, PieceAction action)
     {
-        var action = PieceAction.Instance(Pos);
-        action.Triggers.Add(PieceTrigger.Instance(PieceTrigger.WarChest, DataTable.EnemyUnit[Card.unitId].WarChest));
-        return action;
+        var process = ChessPosProcess.Instance(Pos);
+        process.Triggers.Add(PieceTrigger.Instance(PieceTrigger.WarChest, DataTable.EnemyUnit[Chessman.unitId].WarChest));
+        return process;
     }
 }

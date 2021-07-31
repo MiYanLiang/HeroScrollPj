@@ -228,6 +228,7 @@ public class Character : ICharacter
 //战斗状态类
 public class FightState
 {
+    private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
     public enum Cons
     {
         Stunned = 1,
@@ -252,105 +253,108 @@ public class FightState
         MiWuZhenAddOn = 20
     }
 
+    public FightState() => data = _consInts.ToDictionary(s => s, _ => 0);
+    private Dictionary<int, int> data;
+    public IReadOnlyDictionary<int, int> Data => data;
     /// <summary>
     /// 眩晕回合数
     /// </summary>
-    public int Stunned { get; set; }
+    public int Stunned { get=>data[1]; set=>data[1] = value; }
 
     /// <summary>
     /// 护盾层数
     /// </summary>
-    public int Withstand { get; set; }
+    public int Withstand { get => data[2]; set => data[2] = value; }
 
     /// <summary>
     /// 无敌回合
     /// </summary>
-    public int Invincible { get; set; }
+    public int Invincible { get => data[3]; set => data[3] = value; }
 
     /// <summary>
     /// 流血层数
     /// </summary>
-    public int Bleed { get; set; }
+    public int Bleed { get => data[4]; set => data[4] = value; }
 
     /// <summary>
     /// 中毒回合
     /// </summary>
-    public int Poisoned { get; set; }
+    public int Poisoned { get => data[5]; set => data[5] = value; }
 
     /// <summary>
     /// 灼烧回合
     /// </summary>
-    public int Burned { get; set; }
+    public int Burned { get => data[6]; set => data[6] = value; }
 
     /// <summary>
     /// 战意层数
     /// </summary>
-    public int Stimulate { get; set; }
+    public int Stimulate { get => data[7]; set => data[7] = value; }
 
     /// <summary>
     /// 禁锢层数
     /// </summary>
-    public int Imprisoned { get; set; }
+    public int Imprisoned { get => data[8]; set => data[8] = value; }
 
     /// <summary>
     /// 怯战层数
     /// </summary>
-    public int Cowardly { get; set; }
+    public int Cowardly { get => data[9]; set => data[9] = value; }
 
     /// <summary>
     /// 战鼓台-伤害加成
     /// </summary>
-    public int ZhanGuTaiAddOn { get; set; }
+    public int ZhanGuTaiAddOn { get => data[10]; set => data[10] = value; }
 
     /// <summary>
     /// 风神台-闪避加成
     /// </summary>
-    public int FengShenTaiAddOn { get; set; }
+    public int FengShenTaiAddOn { get => data[11]; set => data[11] = value; }
 
     /// <summary>
     /// 霹雳台-暴击加成
     /// </summary>
-    public int PiLiTaiAddOn { get; set; }
+    public int PiLiTaiAddOn { get => data[12]; set => data[12] = value; }
 
     /// <summary>
     /// 狼牙台-会心加成
     /// </summary>
-    public int LangYaTaiAddOn { get; set; }
+    public int LangYaTaiAddOn { get => data[13]; set => data[13] = value; }
 
     /// <summary>
     /// 烽火台-免伤加成
     /// </summary>
-    public int FengHuoTaiAddOn { get; set; }
+    public int FengHuoTaiAddOn { get => data[14]; set => data[14] = value; }
 
     /// <summary>
     /// 死战回合
     /// </summary>
-    public int DeathFight { get; set; }
+    public int DeathFight { get => data[15]; set => data[15] = value; }
 
     /// <summary>
     /// 卸甲回合
     /// </summary>
-    public int Unarmed { get; set; }
+    public int Unarmed { get => data[16]; set => data[16] = value; }
 
     /// <summary>
     /// 内助回合
     /// </summary>
-    public int Neizhu { get; set; }
+    public int Neizhu { get => data[17]; set => data[17] = value; }
 
     /// <summary>
     /// 神助回合
     /// </summary>
-    public int ShenZhu { get; set; }
+    public int ShenZhu { get => data[18]; set => data[18] = value; }
 
     /// <summary>
     /// 防护盾数值
     /// </summary>
-    public int Shield { get; set; }
-    
+    public int Shield { get => data[19]; set => data[19] = value; }
+
     /// <summary>
     /// 迷雾阵-远程闪避加成
     /// </summary>
-    public int MiWuZhenAddOn { get; set; }
+    public int MiWuZhenAddOn { get => data[20]; set => data[20] = value; }
 
     public void AddState(Cons con,int value)
     {

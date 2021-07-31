@@ -11,6 +11,7 @@ public class ChessmanTester : MonoBehaviour
     public FightCardData CardData;
     private FightCardData TargetCard;
     public WarGameCardUi Target;
+    
 
     private GameResources gameResources;
     void Start()
@@ -29,25 +30,18 @@ public class ChessmanTester : MonoBehaviour
         TargetCard.cardObj = Target;
         Target.Init(card);
         CardData.cardObj.Init(card);
-        Operator.Init();
     }
 
     public void InvokeCard()
     {
-        var hero = new HeroOperation();
-        var target = new HeroOperation();
-        CardData.isPlayerCard = true;
-        hero.SetUnit(CardData);
-        target.SetUnit(TargetCard);
-        hero.Target = target;
-        target.Target = hero;
-        StartCoroutine(Fight(hero, target));
+        var opMgr = new ChessOperatorManager();
+        Operator = ChessOperatorManager.GetWarCard(CardData);
     }
 
-    private IEnumerator Fight(ChessmanOperation player,ChessmanOperation target)
-    {
-        yield return Operator.MainOperation(player);
-        yield return new WaitForSeconds(1);
-        yield return Operator.MainOperation(target);
-    }
+    //private IEnumerator Fight(ChessmanOperation player,ChessmanOperation target)
+    //{
+    //    yield return Operator.MainOperation(player);
+    //    yield return new WaitForSeconds(1);
+    //    yield return Operator.MainOperation(target);
+    //}
 }
