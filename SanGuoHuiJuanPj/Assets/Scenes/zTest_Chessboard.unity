@@ -913,7 +913,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 379474649}
-  - component: {fileID: 379474650}
   - component: {fileID: 379474648}
   m_Layer: 0
   m_Name: EffectPoolManager
@@ -1044,19 +1043,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &379474650
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 379474647}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a9651159254c7a2469306cf2ddf69a91, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Chessboard: {fileID: 1894831812}
 --- !u!1 &398402355
 GameObject:
   m_ObjectHideFlags: 0
@@ -1131,6 +1117,91 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 398402355}
   m_CullTransparentMesh: 0
+--- !u!1 &413234020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 413234022}
+  - component: {fileID: 413234021}
+  m_Layer: 0
+  m_Name: NewWarManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &413234021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 413234020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c51cddced990be4cb070da249ce04f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PlayerPoses:
+  - {fileID: 890143788}
+  - {fileID: 1099502986}
+  - {fileID: 177523461}
+  - {fileID: 1998837917}
+  - {fileID: 1119615864}
+  - {fileID: 889946846}
+  - {fileID: 29352998}
+  - {fileID: 1475240218}
+  - {fileID: 1051938241}
+  - {fileID: 1433161575}
+  - {fileID: 1901072554}
+  - {fileID: 1147011136}
+  - {fileID: 1291667532}
+  - {fileID: 647263408}
+  - {fileID: 1178292829}
+  - {fileID: 805947691}
+  - {fileID: 1765745679}
+  - {fileID: 185924660}
+  - {fileID: 1280876998}
+  - {fileID: 1914330803}
+  EnemyPoses:
+  - {fileID: 146907156}
+  - {fileID: 1046547263}
+  - {fileID: 86238248}
+  - {fileID: 1815046899}
+  - {fileID: 1224597768}
+  - {fileID: 1174285678}
+  - {fileID: 1892793289}
+  - {fileID: 1840737794}
+  - {fileID: 1795384219}
+  - {fileID: 430556227}
+  - {fileID: 1576171722}
+  - {fileID: 575002883}
+  - {fileID: 525339224}
+  - {fileID: 1110362776}
+  - {fileID: 1326962940}
+  - {fileID: 1884646995}
+  - {fileID: 1209053671}
+  - {fileID: 653596008}
+  - {fileID: 690417046}
+  - {fileID: 342535828}
+--- !u!4 &413234022
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 413234020}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &426299410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 787100996886803183, guid: 2a9a19f9e29a23648ab70875b63e8ef1,
@@ -5400,25 +5471,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EffectsPooling: {fileID: 379474648}
   DataTable: {fileID: 1144099187}
-  Operator: {fileID: 379474650}
-  CardData:
-    unitId: 1
-    cardObj: {fileID: 7399384604892203614}
-    cardType: 0
-    cardId: 1
-    cardGrade: 1
-    damage: 0
-    fullHp: 0
-    nowHp: 0
-    posIndex: -1
-    hpr: 0
-    activeUnit: 0
-    isActed: 0
-    isPlayerCard: 0
-    cardDamageType: 0
-    cardMoveType: 0
-    attackedBehavior: 0
-  Target: {fileID: 6671476796633883234}
+  Self:
+    Id: 1
+    Type: 0
+    Level: 1
+  Target:
+    Id: 0
+    Type: 3
+    Level: 1
+  SelfUi: {fileID: 7399384604892203614}
+  TargetUi: {fileID: 6671476796633883234}
+  NewWar: {fileID: 413234021}
 --- !u!1 &2118999410
 GameObject:
   m_ObjectHideFlags: 0

@@ -984,7 +984,7 @@ public class WarsUIManager : MonoBehaviour
                                                                 fightCard.cardId == 2 || fightCard.cardId == 3 ||
                                                                 fightCard.cardId == 6));
         fightCard.isPlayerCard = true;
-        fightCard.cardMoveType = info.CombatType;
+        fightCard.combatType = info.CombatType;
         fightCard.cardDamageType = info.DamageType;
         cardDrag.Init(fightCard, herosCardListTran, herosCardListScrollRect);
         playerCardsDatas.Add(fightCard);

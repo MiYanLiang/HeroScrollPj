@@ -259,8 +259,19 @@ public class GameCardInfo
         Intro = $"字 【{nickname}】\n {sign}";
     }
 
-    public int GetDamage(int level) => damageMap[level];
-    public int GetHp(int level) => hpsMap[level];
+    public int GetDamage(int level)
+    {
+        if (!damageMap.ContainsKey(level))
+            throw new InvalidOperationException($"Level = {level} not in damageMap");
+        return damageMap[level];
+    }
+
+    public int GetHp(int level)
+    {
+        if(!hpsMap.ContainsKey(level))
+            throw new InvalidOperationException($"Level = {level} not in hpMap");
+        return hpsMap[level];
+    }
 
     public Color GetNameColor()
     {
@@ -338,9 +349,26 @@ public class HeroCombatInfo
         PhysicalResist = h.PhysicalResist;
         MagicResist = h.MagicResist;
     }
-
-    public float GetRouseDamage(int damage) => GetRouseDamage() * damage;
-    public float GetRouseDamage() => RouseDamage * 0.01f;
-    public float GetCriticalDamage(int damage) => GetCriticalDamage() * damage;
-    public float GetCriticalDamage() => CriticalDamage * 0.01f;
+    /// <summary>
+    /// 获取会心伤害，注意：伤害不包括基础伤害
+    /// </summary>
+    /// <param name="damage"></param>
+    /// <returns></returns>
+    public float GetRouseDamage(int damage) => GetRouseDamageRate() * damage;
+    /// <summary>
+    /// 获取会心率
+    /// </summary>
+    /// <returns></returns>
+    public float GetRouseDamageRate() => RouseDamage * 0.01f;
+    /// <summary>
+    /// 获取暴击伤害，注意：伤害不包括基础伤害
+    /// </summary>
+    /// <param name="damage"></param>
+    /// <returns></returns>
+    public float GetCriticalDamage(int damage) => GetCriticalDamageRate() * damage;
+    /// <summary>
+    /// 获取暴击率
+    /// </summary>
+    /// <returns></returns>
+    public float GetCriticalDamageRate() => CriticalDamage * 0.01f;
 }

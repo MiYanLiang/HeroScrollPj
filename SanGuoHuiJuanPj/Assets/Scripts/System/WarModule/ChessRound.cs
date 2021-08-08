@@ -1,11 +1,17 @@
 ﻿using Newtonsoft.Json;
 
-public class ChessRound
+namespace Assets.System.WarModule
 {
-    [JsonProperty("I")] public int InstanceId { get; set; }
-    [JsonProperty("P")] public StateAction PreAction { get; set; }
-    [JsonProperty("M")] public ChessPosProcess[] Processes { get; set; }
-    [JsonProperty("F")] public StateAction FinalAction { get; set; }
-    [JsonProperty("L")] public int LastRound { get; set; }
-    [JsonIgnore] public bool IsLastRound => LastRound > 0;
+    public class ChessRound
+    {
+        [JsonProperty("I")] public int InstanceId { get; set; }
+        [JsonProperty("P")] public RoundAction PreAction { get; set; }
+        [JsonProperty("M")] public ChessPosProcess[] Processes { get; set; }
+        [JsonProperty("F")] public RoundAction FinalAction { get; set; }
+        [JsonProperty("L")] public int LastRound { get; set; }
+        [JsonIgnore] public bool IsLastRound => LastRound > 0;
+
+        public override string ToString() =>
+            $"{InstanceId}.Process[{Processes.Length}].Pre[{PreAction.Activities.Count}].Fin[{FinalAction.Activities.Count}]";
+    }
 }

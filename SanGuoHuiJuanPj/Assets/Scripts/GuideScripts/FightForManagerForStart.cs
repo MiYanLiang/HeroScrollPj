@@ -628,7 +628,7 @@ public class FightForManagerForStart : MonoBehaviour
         data.activeUnit = cardType == GameCardType.Hero || ((cardType == GameCardType.Tower) &&
                                                             (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
                                                              info.Id == 3 || info.Id == 6));
-        data.cardMoveType = info.CombatType;
+        data.combatType = info.CombatType;
         data.cardDamageType = info.DamageType;
         if (cardType != GameCardType.Hero) data.cardObj.transform.GetChild(5).GetComponent<Image>().sprite = GameResources.ClassImg[1];
         return data;
@@ -856,10 +856,10 @@ public class FightForManagerForStart : MonoBehaviour
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
             if (addedFightCard != null && addedFightCard.Hp > 0)
             {
-                if (addedFightCard.cardType == 0 && addedFightCard.fightState.Withstand <= 0)
+                if (addedFightCard.cardType == 0 && addedFightCard.fightState.Shield <= 0)
                 {
                     FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, "4A");
-                    addedFightCard.fightState.Withstand = 1;
+                    addedFightCard.fightState.Shield = 1;
                     CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                     addtionNums--;
                     if (addtionNums <= 0)
@@ -997,15 +997,15 @@ public class FightForManagerForStart : MonoBehaviour
                     case 4://盾兵
                         if (isAdd)
                         {
-                            if (cardData.fightState.Withstand <= 0)
+                            if (cardData.fightState.Shield <= 0)
                             {
                                 CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                             }
-                            cardData.fightState.Withstand = 1;
+                            cardData.fightState.Shield = 1;
                         }
                         else
                         {
-                            cardData.fightState.Withstand = 0;
+                            cardData.fightState.Shield = 0;
                             DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                         }
                         break;
@@ -1159,7 +1159,7 @@ public class FightForManagerForStart : MonoBehaviour
                         cardData.fightState.FengHuoTaiAddOn += addtionNums;
                         break;
                     case 10://号角台
-                        if (cardData.cardMoveType == 0)   //近战
+                        if (cardData.combatType == 0)   //近战
                         {
                             if (cardData.fightState.ZhanGuTaiAddOn <= 0)
                             {
@@ -1169,7 +1169,7 @@ public class FightForManagerForStart : MonoBehaviour
                         }
                         break;
                     case 11://瞭望台
-                        if (cardData.cardMoveType == 1)   //远程
+                        if (cardData.combatType == 1)   //远程
                         {
                             if (cardData.fightState.ZhanGuTaiAddOn <= 0)
                             {
@@ -1513,7 +1513,7 @@ public class FightForManagerForStart : MonoBehaviour
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
                     if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
-                        if (addedFightCard.cardMoveType == 0)   //近战
+                        if (addedFightCard.combatType == 0)   //近战
                         {
                             DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
                         }
@@ -1526,7 +1526,7 @@ public class FightForManagerForStart : MonoBehaviour
                     FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
                     if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
                     {
-                        if (addedFightCard.cardMoveType == 1)   //远程
+                        if (addedFightCard.combatType == 1)   //远程
                         {
                             DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
                         }

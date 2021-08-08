@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using CorrelateLib;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -7,10 +8,13 @@ public class ChessmanTester : MonoBehaviour
 {
     public EffectsPoolingControl EffectsPooling;
     public DataTable DataTable;
-    public PieceOperator Operator;
-    public FightCardData CardData;
-    private FightCardData TargetCard;
-    public WarGameCardUi Target;
+    public TestCard Self;
+    public TestCard Target;
+    private FightCardData CardData;
+    private FightCardData TargetData;
+    public WarGameCardUi SelfUi;
+    public WarGameCardUi TargetUi;
+    public NewWarManager NewWar;
     
 
     private GameResources gameResources;
@@ -20,22 +24,28 @@ public class ChessmanTester : MonoBehaviour
         gameResources = new GameResources();
         gameResources.Init();
         EffectsPooling.Init();
-        var jCard = JsonConvert.SerializeObject(CardData,new JsonSerializerSettings
-        {
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        });
-        //CardData.isPlayerCard = true;
-        var card = GameCard.Instance(CardData.cardId, CardData.cardType, CardData.cardGrade);
-        TargetCard = Json.Deserialize<FightCardData>(jCard);
-        TargetCard.cardObj = Target;
-        Target.Init(card);
-        CardData.cardObj.Init(card);
+        CardData = InitCard(Self, SelfUi, true, NewWar);
+        TargetData = InitCard(Target, TargetUi, false, NewWar);
+    }
+
+    private static FightCardData InitCard(TestCard self,WarGameCardUi ui,bool isPlayer,NewWarManager mgr)
+    {
+        var card = GameCard.Instance(self.Id, self.Type, self.Level);
+        var data = new FightCardData(card);
+        data.isPlayerCard = isPlayer;
+        data.cardObj = ui;
+        ui.Init(card);
+        var op = mgr.ChessOperator.RegOperator(data);
+        var selfPos = ui.GetComponentInParent<ChessPos>();
+        op.SetPos(selfPos.Pos);
+        return data;
     }
 
     public void InvokeCard()
     {
-        var opMgr = new ChessOperatorManager();
-        Operator = ChessOperatorManager.GetWarCard(CardData);
+        var round = NewWar.ChessOperator.StartRound();
+        //var opMgr = new ChessOperatorManager();
+        //Operator = ChessOperatorManager.GetWarCard(CardData);
     }
 
     //private IEnumerator Fight(ChessmanOperation player,ChessmanOperation target)
@@ -44,4 +54,11 @@ public class ChessmanTester : MonoBehaviour
     //    yield return new WaitForSeconds(1);
     //    yield return Operator.MainOperation(target);
     //}
+    [Serializable]
+    public class TestCard
+    {
+        public int Id;
+        public int Type;
+        public int Level;
+    }
 }

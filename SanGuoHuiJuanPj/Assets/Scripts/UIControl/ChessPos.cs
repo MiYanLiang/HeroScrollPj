@@ -1,11 +1,16 @@
-﻿using UnityEngine;
+﻿using Assets.System.WarModule;
+using UnityEngine;
 
 public class ChessPos : MonoBehaviour,IChessPos<FightCardData>
 {
     [SerializeField]private int posIndex = -1;
-    private Chessboard board;
+    
     public FightCardData Chessman => Card;
+    public ChessTerrain Terrain { get; private set; }
+
+    public int Pos => posIndex;
     public FightCardData Card { get; private set; }
+    
     public int PosIndex
     {
         get
@@ -16,10 +21,10 @@ public class ChessPos : MonoBehaviour,IChessPos<FightCardData>
     }
 
 
-    public void Init(Chessboard chessboard, int i)
+    public void Init(int pos)
     {
-        board = chessboard;
-        posIndex = i;
+        posIndex = pos;
+        Terrain = new ChessTerrain();
     }
 
     public void SetCard(FightCardData card)
@@ -32,7 +37,11 @@ public class ChessPos : MonoBehaviour,IChessPos<FightCardData>
 
     public void RemoveCard() => Card = null;
 
-    public void SetPos(FightCardData chessman) => SetCard(chessman);
-    
+    public void SetPos(FightCardData chessman)
+    {
+        SetCard(chessman);
+        chessman.UpdatePos(posIndex);
+    }
+
     public void RemovePos() => posIndex = -1;
 }

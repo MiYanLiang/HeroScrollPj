@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Assets.System.WarModule;
 using CorrelateLib;
 using Newtonsoft.Json;
+using UnityEngine;
 
 [Serializable]public class FightCardData : ICardDrag,IChessman
 {
@@ -23,7 +25,11 @@ using Newtonsoft.Json;
     //伤害
     public int damage;
 
-    public HitPoint Hp { get; protected set; }
+    public HitPoint Hp
+    {
+        get => hp;
+        protected set => hp = value;
+    }
 
     //战斗状态
     [JsonIgnore]public FightState fightState;
@@ -44,19 +50,41 @@ using Newtonsoft.Json;
     /// <summary>
     /// 单位行动类型0近战，1远程
     /// </summary>
-    public int cardMoveType;
+    public int combatType;
     /// <summary>
     /// 被攻击者的行为，0受击，1防护盾，2闪避，3护盾，4无敌
     /// </summary>
     public int attackedBehavior;
 
+    [SerializeField]private HitPoint hp;
+
     public FightCardData()
     {
-        
     }
-    public int PosIndex => posIndex;
-    public bool IsAlive => Hp > 0;
-    public GameCardType CardType => cardObj.CardInfo.Type;
+
+    public FightCardData(int maxHp)
+    {
+        Hp = new HitPoint(maxHp);
+    }
+
+    public FightCardData(GameCard card)
+    {
+        var info = card.GetInfo();
+        unitId = 1;
+        cardType = card.typeIndex;
+        cardId = card.CardId;
+        cardGrade = card.Level;
+        damage = info.GetDamage(card.Level);
+        fightState = new FightState();
+        hpr = info.GameSetRecovery;
+        cardDamageType = info.DamageType;
+        combatType = info.CombatType;
+        hp = new HitPoint(info.GetHp(card.Level));
+    }
+
+    [JsonIgnore]public int PosIndex => posIndex;
+    [JsonIgnore]public bool IsAlive => Hp > 0;
+    [JsonIgnore]public GameCardType CardType => cardObj.CardInfo.Type;
 
     public void UpdatePos(int pos) => posIndex = pos;
     //更新血条显示
@@ -76,21 +104,31 @@ using Newtonsoft.Json;
     }
 
     public void ResetHp(int hp) => Hp = new HitPoint(hp);
-    public int Pos => PosIndex;
-    public bool IsPlayer => isPlayerCard;
-    public bool IsActed => isActionDone;
-    public bool IsAvailable => !IsActed && IsAlive;
+    [JsonIgnore]public int Pos => PosIndex;
+    [JsonIgnore]public bool IsPlayer => isPlayerCard;
+    [JsonIgnore]public bool IsActed => isActionDone;
+    [JsonIgnore]public bool IsAvailable => !IsActed && IsAlive;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
+
 }
 
+[Serializable]
 public class HitPoint:IComparable, IEquatable<HitPoint>,IComparer<HitPoint>
 {
-    public int Max { get; private set; }
-    public int Value { get; private set; }
+    [SerializeField]private int max;
+    [SerializeField]private int value;
+
+    public int Max => max;
+
+    public int Value
+    {
+        get => value;
+        private set => this.value = value;
+    }
 
     public HitPoint(int max)
     {
-        Max = max;
+        this.max = max;
         Value = max;
     }
 

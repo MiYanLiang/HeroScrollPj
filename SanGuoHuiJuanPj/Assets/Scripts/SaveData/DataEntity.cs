@@ -224,32 +224,92 @@ public class Character : ICharacter
 }
 
 //战斗卡牌信息类
-
+[Serializable]
 //战斗状态类
 public class FightState
 {
     private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
     public enum Cons
     {
+        /// <summary>
+        /// 眩晕
+        /// </summary>
         Stunned = 1,
-        Withstand = 2,
+        /// <summary>
+        /// 护盾
+        /// </summary>
+        Shield = 2,
+        /// <summary>
+        /// 无敌
+        /// </summary>
         Invincible = 3,
+        /// <summary>
+        /// 流血
+        /// </summary>
         Bleed = 4,
-        Poisoned = 5,
-        Burned = 6,
+        /// <summary>
+        /// 毒
+        /// </summary>
+        Poison = 5,
+        /// <summary>
+        /// 灼烧
+        /// </summary>
+        Burn = 6,
+        /// <summary>
+        /// 战意
+        /// </summary>
         Stimulate = 7,
+        /// <summary>
+        /// 禁锢
+        /// </summary>
         Imprisoned = 8,
+        /// <summary>
+        /// 胆怯
+        /// </summary>
         Cowardly = 9,
+        /// <summary>
+        /// 战鼓台
+        /// </summary>
         ZhanGuTaiAddOn = 10,
+        /// <summary>
+        /// 风神台
+        /// </summary>
         FengShenTaiAddOn = 11,
+        /// <summary>
+        /// 霹雳台
+        /// </summary>
         PiLiTaiAddOn = 12,
+        /// <summary>
+        /// 琅琊台
+        /// </summary>
         LangYaTaiAddOn = 13,
+        /// <summary>
+        /// 烽火台
+        /// </summary>
         FengHuoTaiAddOn = 14,
+        /// <summary>
+        /// 死战
+        /// </summary>
         DeathFight = 15,
+        /// <summary>
+        /// 卸甲
+        /// </summary>
         Unarmed = 16,
+        /// <summary>
+        /// 内助
+        /// </summary>
         Neizhu = 17,
+        /// <summary>
+        /// 神助
+        /// </summary>
         ShenZhu = 18,
-        Shield = 19,
+        /// <summary>
+        /// 防护盾
+        /// </summary>
+        ExtendedHp = 19,
+        /// <summary>
+        /// 迷雾
+        /// </summary>
         MiWuZhenAddOn = 20
     }
 
@@ -264,7 +324,7 @@ public class FightState
     /// <summary>
     /// 护盾层数
     /// </summary>
-    public int Withstand { get => data[2]; set => data[2] = value; }
+    public int Shield { get => data[2]; set => data[2] = value; }
 
     /// <summary>
     /// 无敌回合
@@ -279,12 +339,12 @@ public class FightState
     /// <summary>
     /// 中毒回合
     /// </summary>
-    public int Poisoned { get => data[5]; set => data[5] = value; }
+    public int Poison { get => data[5]; set => data[5] = value; }
 
     /// <summary>
     /// 灼烧回合
     /// </summary>
-    public int Burned { get => data[6]; set => data[6] = value; }
+    public int Burn { get => data[6]; set => data[6] = value; }
 
     /// <summary>
     /// 战意层数
@@ -349,7 +409,7 @@ public class FightState
     /// <summary>
     /// 防护盾数值
     /// </summary>
-    public int Shield { get => data[19]; set => data[19] = value; }
+    public int ExtendedHp { get => data[19]; set => data[19] = value; }
 
     /// <summary>
     /// 迷雾阵-远程闪避加成
@@ -363,8 +423,8 @@ public class FightState
             case Cons.Stunned:
                 Stunned += MinZeroAlign(Stunned);
                 break;
-            case Cons.Withstand:
-                Withstand += MinZeroAlign(Withstand);
+            case Cons.Shield:
+                Shield += MinZeroAlign(Shield);
                 break;
             case Cons.Invincible:
                 Invincible += MinZeroAlign(Invincible);
@@ -372,14 +432,14 @@ public class FightState
             case Cons.Bleed:
                 Bleed += MinZeroAlign(Bleed);
                 break;
-            case Cons.Poisoned:
-                Poisoned += MinZeroAlign(Poisoned);
+            case Cons.Poison:
+                Poison += MinZeroAlign(Poison);
                 break;
-            case Cons.Burned:
-                Burned += MinZeroAlign(Burned);
+            case Cons.Burn:
+                Burn += MinZeroAlign(Burn);
                 break;
             case Cons.Stimulate:
-                Stimulate += MinZeroAlign(Burned);
+                Stimulate += MinZeroAlign(Burn);
                 break;
             case Cons.Imprisoned:
                 Imprisoned += MinZeroAlign(Imprisoned);
@@ -414,8 +474,8 @@ public class FightState
             case Cons.ShenZhu:
                 ShenZhu += MinZeroAlign(ShenZhu);
                 break;
-            case Cons.Shield:
-                Shield += MinZeroAlign(Shield);
+            case Cons.ExtendedHp:
+                ExtendedHp += MinZeroAlign(ExtendedHp);
                 break;
             case Cons.MiWuZhenAddOn:
                 MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn);
@@ -433,8 +493,8 @@ public class FightState
             case Cons.Stunned:
                 Stunned = 0;
                 break;
-            case Cons.Withstand:
-                Withstand = 0;
+            case Cons.Shield:
+                Shield = 0;
                 break;
             case Cons.Invincible:
                 Invincible = 0;
@@ -442,11 +502,11 @@ public class FightState
             case Cons.Bleed:
                 Bleed = 0;
                 break;
-            case Cons.Poisoned:
-                Poisoned = 0;
+            case Cons.Poison:
+                Poison = 0;
                 break;
-            case Cons.Burned:
-                Burned = 0;
+            case Cons.Burn:
+                Burn = 0;
                 break;
             case Cons.Stimulate:
                 Stimulate = 0;
@@ -484,8 +544,8 @@ public class FightState
             case Cons.ShenZhu:
                 ShenZhu = 0;
                 break;
-            case Cons.Shield:
-                Shield = 0;
+            case Cons.ExtendedHp:
+                ExtendedHp = 0;
                 break;
             case Cons.MiWuZhenAddOn:
                 MiWuZhenAddOn = 0;

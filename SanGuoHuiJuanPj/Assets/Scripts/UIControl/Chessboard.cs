@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Assets.System.WarModule;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
@@ -17,8 +18,8 @@ public class Chessboard : MonoBehaviour
     public void Init()
     {
         grid = new ChessGrid<FightCardData>(PlayerScope, EnemyScope);
-        for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(this, i);
-        for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(this, i);
+        for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i);
+        for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i);
     }
 
     public ChessPos[] GetScope(bool isPlayer) => isPlayer ? PlayerScope : EnemyScope;

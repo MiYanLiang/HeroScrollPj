@@ -190,7 +190,7 @@ public class FightForManager : MonoBehaviour
             fCard.activeUnit = info.Type == GameCardType.Hero || ((info.Type == GameCardType.Tower) &&
                                                                 (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
                                                                  info.Id == 3 || info.Id == 6));
-            fCard.cardMoveType = info.CombatType;
+            fCard.combatType = info.CombatType;
             fCard.cardDamageType = info.DamageType;
             GiveGameObjEventForHoldOn(fCard.cardObj, info.About);
             return fCard;
@@ -335,10 +335,10 @@ public class FightForManager : MonoBehaviour
             if (addedFightCard == null ||
                 addedFightCard.Hp <= 0 ||
                 addedFightCard.cardType != 0 ||
-                addedFightCard.fightState.Withstand > 0 ||
+                addedFightCard.fightState.Shield > 0 ||
                 addtionNums <= 0) return;
             FightController.instance.AttackToEffectShow(addedFightCard, false, "4A");
-            addedFightCard.fightState.Withstand = 1;
+            addedFightCard.fightState.Shield = 1;
             CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
             addtionNums--;
         });
@@ -497,15 +497,15 @@ public class FightForManager : MonoBehaviour
                     case 4://盾兵
                         if (isAdd)
                         {
-                            if (card.fightState.Withstand <= 0)
+                            if (card.fightState.Shield <= 0)
                             {
                                 CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                             }
-                            card.fightState.Withstand = 1;
+                            card.fightState.Shield = 1;
                         }
                         else
                         {
-                            card.fightState.Withstand = 0;
+                            card.fightState.Shield = 0;
                             DestroySateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                         }
                         break;
@@ -660,7 +660,7 @@ public class FightForManager : MonoBehaviour
                     card.fightState.FengHuoTaiAddOn += addtionNums;
                     break;
                 case 10://号角台
-                    if (card.cardMoveType == 0)   //近战
+                    if (card.combatType == 0)   //近战
                     {
                         if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
@@ -670,7 +670,7 @@ public class FightForManager : MonoBehaviour
                     }
                     break;
                 case 11://瞭望台
-                    if (card.cardMoveType == 1)   //远程
+                    if (card.combatType == 1)   //远程
                     {
                         if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
@@ -999,10 +999,10 @@ public class FightForManager : MonoBehaviour
                 WhileNeighborsTrueAddOn(c => true);
                 break;
             case 10://号角台
-                WhileNeighborsTrueAddOn(c=>c.cardMoveType == 0);
+                WhileNeighborsTrueAddOn(c=>c.combatType == 0);
                 break;
             case 11://瞭望台
-                WhileNeighborsTrueAddOn(c=>c.cardMoveType == 1);
+                WhileNeighborsTrueAddOn(c=>c.combatType == 1);
                 break;
             case 12://七星坛
                 WhileNeighborsTrueAddOn(c=>c.cardDamageType == 1);
@@ -1239,7 +1239,7 @@ public class FightForManager : MonoBehaviour
         {
             if (cardList[i] != null && cardList[i].cardType == 0 && cardList[i].Hp > 0)
             {
-                if (cardList[i].cardMoveType == 1)
+                if (cardList[i].combatType == 1)
                 {
                     if (cardList[i].damage > maxDamage)
                     {
