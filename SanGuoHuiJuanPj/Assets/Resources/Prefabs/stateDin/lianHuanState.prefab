@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2245357710326488842}
   - component: {fileID: 2245357710326488843}
   - component: {fileID: 2245357710326488836}
+  - component: {fileID: -2360639085158269371}
   m_Layer: 5
   m_Name: lianHuanState
   m_TagString: Untagged
@@ -61,11 +62,10 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 21300000, guid: 124ebe8760b95914cad88f6401c5b45a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
@@ -95,3 +95,17 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &-2360639085158269371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2245357710326488838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a37344004e99d54d8f1876436a048c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Image: {fileID: 2245357710326488843}
+  Animator: {fileID: 2245357710326488836}

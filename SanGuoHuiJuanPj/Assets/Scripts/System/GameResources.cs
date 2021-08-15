@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CorrelateLib;
 using UnityEngine;
 
 public enum ForceFlags
@@ -36,6 +38,7 @@ public class GameResources
     private const string JiBanBgPath = "Image/JiBan/art";
     private const string JiBanVTextPath = "Image/JiBan/name_v";
     private const string JiBanHTextPath = "Image/JiBan/name_h";
+    private const string BattleEffectPath = "Image/battle";
     /// <summary>
     /// Key = heroId, Value = sprite
     /// </summary>
@@ -53,7 +56,7 @@ public class GameResources
     public IReadOnlyDictionary<ForceFlags, Sprite> ForceFlag => forceFlagMap;
     public IReadOnlyDictionary<ForceFlags, Sprite> ForceName => forceNameMap;
     public IReadOnlyDictionary<string, GameObject> Effects => effectsMap;
-    public IReadOnlyDictionary<string, GameObject> StateDin => stateDinMap;
+    public IReadOnlyDictionary<string, EffectStateUi> StateDin => stateDinMap;
     public IReadOnlyDictionary<int, Sprite> CityFlag => cityFlag;
     public IReadOnlyDictionary<int, Sprite> CityIcon => cityIcon;
     public IReadOnlyDictionary<int, Sprite> Avatar => avatar;
@@ -74,7 +77,7 @@ public class GameResources
     private IReadOnlyDictionary<ForceFlags, Sprite> forceFlagMap;
     private IReadOnlyDictionary<ForceFlags, Sprite> forceNameMap;
     private IReadOnlyDictionary<string, GameObject> effectsMap;
-    private IReadOnlyDictionary<string, GameObject> stateDinMap;
+    private IReadOnlyDictionary<string, EffectStateUi> stateDinMap;
     private IReadOnlyDictionary<int, Sprite> cityFlag;
     private IReadOnlyDictionary<int, Sprite> cityIcon;
     private IReadOnlyDictionary<int, Sprite> avatar;
@@ -87,10 +90,11 @@ public class GameResources
     {
         if (isInit && !forceReload) return;
         Instance = this;
-        heroImgMap = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(HeroImagesPath)
-                .Select(o => new {imageId = int.Parse(o.name), sprite = o})
-                .Join(DataTable.Hero.Values, c => c.imageId, t => t.ImageId,
-                    (c, t) => new {t.Id, c.sprite}).OrderBy(c => c.Id).ToDictionary(h => h.Id, h => h.sprite),
+        var l = Resources.LoadAll<Sprite>(HeroImagesPath).ToList();
+        var abc = l.Select(o => new {imageId = int.Parse(o.name), sprite = o})
+            .Join(DataTable.Hero.Values, c => c.imageId, t => t.ImageId,
+                (c, t) => new {t.Id, c.sprite}).OrderBy(c => c.Id).ToDictionary(h => h.Id, h => h.sprite);
+        heroImgMap = new ResourceDataWrapper<int, Sprite>(abc,
             nameof(heroImgMap));
         classImgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(ClassImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
@@ -121,14 +125,15 @@ public class GameResources
             nameof(forceNameMap));
         effectsMap = new ResourceDataWrapper<string, GameObject>(
             Resources.LoadAll<GameObject>(EffectsGameObjectPath).ToDictionary(g => g.name, g => g), nameof(effectsMap));
-        stateDinMap = new ResourceDataWrapper<string, GameObject>(
-            Resources.LoadAll<GameObject>(StateDinPath).ToDictionary(g => g.name, g => g), nameof(stateDinMap));
+        stateDinMap = new ResourceDataWrapper<string, EffectStateUi>(
+            Resources.LoadAll<EffectStateUi>(StateDinPath).ToDictionary(g => g.name, g => g), nameof(stateDinMap));
         cityFlag = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(CityFlagPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(stateDinMap));
         cityIcon = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(CityIconPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(stateDinMap));
         avatar = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(AvatarPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(avatar));
         jiBanBg = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanBgPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanBg));
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
+        isInit = true;
     }
 
 
@@ -161,4 +166,21 @@ public class GameResources
         public IEnumerable<TValue> Values => Data.Values;
     }
 
+    public Sprite GetCardImage(GameCard card)
+    {
+        var info = card.GetInfo();
+        switch (info.Type)
+        {
+            case GameCardType.Hero:
+                return HeroImg[card.CardId];
+            case GameCardType.Tower:
+            case GameCardType.Trap:
+                return FuZhuImg[info.ImageId];
+            case GameCardType.Spell:
+            case GameCardType.Soldier:
+            case GameCardType.Base:
+            default:
+                throw XDebug.Throw<GameResources>($"不支持类型 [{info.Type}]!");
+        }
+    }
 }

@@ -72,7 +72,8 @@ public class RewardObjectUi : MonoBehaviour
     public void SetCard(GameCard card)
     {
         DisplayItem(Items.Card);
-        CardUi.Set(card, GameCardUi.CardModes.Desk);
+        CardUi.Init(card);
+        CardUi.Set(GameCardUi.CardModes.Desk);
         CardUi.CityOperation.OffChipValue();
         CardUi.CityOperation.OffEnlisted();
         CardUi.SetLevel(0);
