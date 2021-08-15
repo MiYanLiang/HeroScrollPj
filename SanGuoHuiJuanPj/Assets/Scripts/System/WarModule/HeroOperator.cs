@@ -2,7 +2,7 @@
 
 namespace Assets.System.WarModule
 {
-    public class HeroOperator : ChessmanOperator
+    public class HeroOperator : CardOperator
     {
         public const int HeroArmorLimit = 90;
         public const int HeroDodgeLimit = 75;
@@ -27,9 +27,9 @@ namespace Assets.System.WarModule
         public static int HpDepletedRatioWithGap(PieceStatus status, int basicValue, int gap, int gapValue) =>
             HpDepletedRatioWithGap(status.Hp,status.MaxHp, basicValue, gap, gapValue);
 
-        public override void Init(FightCardData card, AttackStyle style, IChessboardOperator<FightCardData> chessboardOp)
+        public override void Init(IChessman card, AttackStyle style, IChessboardOperator chessboardOp)
         {
-            combatInfo = HeroCombatInfo.GetInfo(card.cardId);
+            combatInfo = HeroCombatInfo.GetInfo(card.CardId);
             base.Init(card, style, chessboardOp);
         }
 
@@ -46,12 +46,12 @@ namespace Assets.System.WarModule
 
         protected ActivityResult BasicActions()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             if (target == null) return null;
             return Chessboard.ActionRespondResult(this, target, Activity.Offensive, BasicDamage());
         }
 
-        private CombatConduct[] BasicDamage() => Singular(CombatConduct.InstanceDamage(Card.damage, Card.cardDamageType));
+        private CombatConduct[] BasicDamage() => Singular(CombatConduct.InstanceDamage(Style.Strength, Style.Element));
 
         /// <summary>
         /// 兵种攻击
@@ -59,12 +59,12 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             if (target == null) return;
             Chessboard.ActionRespondResult(this, target, Activity.Offensive, MilitaryDamages(target));
         }
 
-        protected virtual CombatConduct[] MilitaryDamages(IChessPos<FightCardData> targetPos) => Singular(InstanceHeroPerformDamage());
+        protected virtual CombatConduct[] MilitaryDamages(IChessPos targetPos) => Singular(InstanceHeroPerformDamage());
 
         /// <summary>
         /// 当治疗的时候血量转化
@@ -80,16 +80,24 @@ namespace Assets.System.WarModule
         protected override int OnDamageConvert(CombatConduct conduct)
         {
             var damage = conduct.Total;
+            if (conduct.Element == CombatConduct.UnResistDmg)
+            {
+                return (int) damage;
+            }
+
             if (conduct.Element <= 0)
             {
                 if (Status.GetBuff(FightState.Cons.Bleed) > 0)
                     damage += GetRatio(damage, DataTable.GetGameValue(117));
                 if (Status.GetBuff(FightState.Cons.Unarmed) > 0) return (int) damage;
             }
+
             var armor = conduct.Element > 0 ? GetMagicArmor() : GetPhysicArmor();
             if (armor > HeroArmorLimit) armor = HeroArmorLimit;
-            //法术
-            return (int) (damage + GetRatio(damage, -armor));
+            var finalDamage = (int) (damage + GetRatio(damage, -armor));
+            if (Status.GetBuff(FightState.Cons.DeathFight) > 0 && finalDamage < 0) 
+                return -finalDamage;//死战任何扣血的情况都会补血
+            return finalDamage;
         }
         /// <summary>
         /// 法术免伤
@@ -116,42 +124,42 @@ namespace Assets.System.WarModule
             if (Status.GetBuff(FightState.Cons.Cowardly) <= 0)
             {
                 var critical = TryGenerateCritical();
-                if (critical > 0) return CombatConduct.InstanceDamage(damage, critical, Card.cardDamageType);
+                if (critical > 0) return CombatConduct.InstanceDamage(damage, critical, Style.Element);
                 var rouse = TryGenerateRouseDamage();
                 if (rouse > 0)
-                    return CombatConduct.Instance(damage, 0, rouse, Card.cardDamageType, CombatConduct.DamageKind);
+                    return CombatConduct.Instance(damage, 0, rouse, Style.Element, CombatConduct.DamageKind);
             }
-            return CombatConduct.InstanceDamage(damage, Card.cardDamageType);
+            return CombatConduct.InstanceDamage(damage, Style.Element);
         }
 
-        protected virtual int GetBasicDamage() => Card.damage;
+        protected virtual int GetBasicDamage() => Style.Strength;
 
         //跟据会心率获取会心伤害
         private float TryGenerateRouseDamage()
         {
-            var rouse = Card.damage - combatInfo.GetRouseDamage(Card.damage);
+            var rouse = Style.Strength - combatInfo.GetRouseDamage(Style.Strength);
             if (Status.TryDeplete(FightState.Cons.ShenZhu))
                 return rouse;
-            if (Chessboard.RandomFromHeroTable(Card.cardId, 2))
+            if (Chessboard.RandomFromHeroTable(CardId, 2))
                 return rouse;
             return 0;
         }
         //根据暴击率获取暴击伤害
         private float TryGenerateCritical()
         {
-            var critical = Card.damage - combatInfo.GetCriticalDamage(Card.damage);
+            var critical = Style.Strength - combatInfo.GetCriticalDamage(Style.Strength);
             if (Status.TryDeplete(FightState.Cons.Neizhu))
                 return critical;
-            if (Chessboard.RandomFromHeroTable(Card.cardId, 1))
+            if (Chessboard.RandomFromHeroTable(CardId, 1))
                 return critical;
             return 0;
         }
 
-        protected override bool DodgeOnAttack(IChessOperator<FightCardData> offender)
+        protected override bool DodgeOnAttack(IChessOperator offender)
         {
             var dodgeRate = GetDodgeRate();
             var buffAddOn = Status.GetBuff(FightState.Cons.FengShenTaiAddOn);
-            if (offender != null && offender.Style.CombatStyle == AttackStyle.RangeCombatStyle)
+            if (offender != null && offender.Style.CombatStyle == AttackStyle.CombatStyles.Range)
                 buffAddOn += Status.GetBuff(FightState.Cons.MiWuZhenAddOn);
             var value = dodgeRate + buffAddOn;
             if (value > HeroDodgeLimit)
@@ -177,7 +185,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(Chessman), Activity.Self,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
                 Singular(CombatConduct.InstanceBuff(FightState.Cons.Shield)));
         }
     }
@@ -192,7 +200,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             if (target == null) return;
 
             for (int i = 0; i < ComboTimes; i++)
@@ -219,7 +227,7 @@ namespace Assets.System.WarModule
         protected virtual int ComboRatio => DataTable.GetGameValue(47);
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             if (target == null) return;
             //var tOp = Chessboard.GetOperator(target);
             var combo = false;
@@ -228,7 +236,7 @@ namespace Assets.System.WarModule
                 combo = false;
                 var hit = InstanceHeroPerformDamage();
                 var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(hit));
-                if (!result.IsDeath && result.Result != ActivityResult.Friendly)
+                if (!result.IsDeath && result.Type != ActivityResult.Types.Friendly)
                     combo = hit.Critical > 0 || hit.Rouse > 0;
                 if (!combo) combo = Chessboard.RandomFromConfigTable(47);
             } while (combo);

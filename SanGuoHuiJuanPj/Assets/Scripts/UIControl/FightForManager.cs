@@ -250,7 +250,7 @@ public class FightForManager : MonoBehaviour
         NeighborsLoop(card.PosIndex, i =>
         {
             var target = GetCardList(isPlayer)[i];
-            if (target == null || target.cardType != 0 || !target.IsAlive) return;
+            if (target == null || target.cardType != 0 || target.Hp.Value <= 0) return;
             if (target.Hp.Max - target.Hp.Value <= mostHpRequest) return;//找出最缺血的单位
             mostHpRequest = target.Hp.Max - target.Hp.Value;
             needAddHpCard = target;
@@ -263,7 +263,7 @@ public class FightForManager : MonoBehaviour
         card.Hp.Add(-maxAddingHp);
         FightController.instance.TargetAnimShow(card, maxAddingHp);
         //单位加血
-        FightController.instance.AttackToEffectShow(needAddHpCard, false, "42A");
+        FightController.instance.AttackToEffectShow(needAddHpCard, false, Effect.Heal);
         needAddHpCard.Hp.Add(maxAddingHp);
         FightController.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
         FightController.instance.TargetAnimShow(needAddHpCard, maxAddingHp);
@@ -315,7 +315,7 @@ public class FightForManager : MonoBehaviour
             FightCardData addedFightCard = GetCardList(isPlayer)[i];
             if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
-                FightController.instance.AttackToEffectShow(addedFightCard, false, "42A");
+                FightController.instance.AttackToEffectShow(addedFightCard, false, Effect.Heal);
                 addedFightCard.Hp.Add(addtionNums);
                 FightController.instance.ShowSpellTextObj(addedFightCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightController.instance.TargetAnimShow(addedFightCard, addtionNums);
@@ -337,7 +337,7 @@ public class FightForManager : MonoBehaviour
                 addedFightCard.cardType != 0 ||
                 addedFightCard.fightState.Shield > 0 ||
                 addtionNums <= 0) return;
-            FightController.instance.AttackToEffectShow(addedFightCard, false, "4A");
+            FightController.instance.AttackToEffectShow(addedFightCard, false, Effect.Shield);
             addedFightCard.fightState.Shield = 1;
             CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
             addtionNums--;
@@ -1157,7 +1157,7 @@ public class FightForManager : MonoBehaviour
     public IReadOnlyList<FightCardData> GetCardList(bool isPlayer) =>
         chessboard.GetScope(isPlayer).Where(o => o.Card != null).Select(o => o.Card).ToArray();
 
-    public FightCardData GetCard(int index, bool isPlayer) => chessboard.GetCard(index, isPlayer).Card;
+    public FightCardData GetCard(int index, bool isPlayer) => chessboard.GetChessPos(index, isPlayer).Card;
 
     /// <summary>
     /// ////////////////战斗主线逻辑//////////////////////////////////////////////////
@@ -1297,7 +1297,7 @@ public class FightForManager : MonoBehaviour
     //    return true;
     //}
 
-    public Transform GetChessPos(int posIndex, bool isPlayer) => chessboard.GetCard(posIndex, isPlayer).transform;
+    public Transform GetChessPos(int posIndex, bool isPlayer) => chessboard.GetChessPos(posIndex, isPlayer).transform;
 
     public void DestroyCard(FightCardData playerCard) => chessboard.DestroyCard(playerCard);
 

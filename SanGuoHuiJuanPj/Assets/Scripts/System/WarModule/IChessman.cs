@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
 using System.Linq;
+using CorrelateLib;
 using Newtonsoft.Json;
 
 namespace Assets.System.WarModule
@@ -52,7 +53,7 @@ namespace Assets.System.WarModule
         public void AddBuff(FightState.Cons con, int value = 1) => AddBuff((int) con, value);
         public void AddBuff(int buffId, int value)
         {
-            if (Buffs.ContainsKey(buffId))
+            if (!Buffs.ContainsKey(buffId))
                 Buffs.Add(buffId, 0);
             Buffs[buffId] += value;
             //去掉负数或是0的状态
@@ -83,7 +84,7 @@ namespace Assets.System.WarModule
         public static PieceStatus Instance(PieceStatus ps) =>
             Instance(ps.Hp, ps.MaxHp, ps.Pos, ps.Buffs.ToDictionary(s => s.Key, s => s.Value));
         public int Hp { get; set; }
-        public int Pos { get; set; }
+        public int Pos { get; private set; }
         public int MaxHp { get; set; }
         [JsonIgnore] public bool IsDeath => Hp <= 0;
         [JsonIgnore] public float HpRate => 1f * Hp / MaxHp;
@@ -121,7 +122,10 @@ namespace Assets.System.WarModule
             return balance;
         }
 
-        public override string ToString() => $"[{Hp}/{MaxHp}]Buffs[{Buffs.Count}].LastS[{LastSuffers.Sum()}]";
+        public void SetPos(int pos) => Pos = pos;
+
+        public override string ToString() =>
+            $"[{Hp}/{MaxHp}]Buffs[{Buffs.Count(b => b.Value > 0)}].LastS[{LastSuffers.Sum()}]";
     }
 
     /// <summary>
@@ -160,36 +164,49 @@ namespace Assets.System.WarModule
 
     public class ActivityResult
     {
-        /// <summary>
-        /// 承受
-        /// </summary>
-        public const int Suffer = 0;
-        /// <summary>
-        /// 闪避
-        /// </summary>
-        public const int Dodge = 1;
-        /// <summary>
-        /// 同势力，如果同势力表现会不同，例如被同势力伤害了(反击单位)不会反击
-        /// </summary>
-        public const int Friendly = 2;
-        /// <summary>
-        /// 盾挡状态
-        /// </summary>
-        public const int Shield = 4;
-        /// <summary>
-        /// 无敌状态
-        /// </summary>
-        public const int Invincible = 5;
-        /// <summary>
-        /// 防护盾
-        /// </summary>
-        public const int ExtendedShield = 6;
+
+        [JsonConstructor]private ActivityResult()
+        {
+            
+        }
+
+        public static ActivityResult Instance(int resultId) => new ActivityResult {Result = resultId};
+        public static ActivityResult Instance(Types type) => Instance((int) type);
+
+        public enum Types
+        {
+            /// <summary>
+            /// 承受
+            /// </summary>
+            Suffer = 0,
+            /// <summary>
+            /// 闪避
+            /// </summary>
+            Dodge = 1,
+            /// <summary>
+            /// 同势力，如果同势力表现会不同，例如被同势力伤害了(反击单位)不会反击
+            /// </summary>
+            Friendly = 2,
+            /// <summary>
+            /// 盾挡状态
+            /// </summary>
+            Shield = 4,
+            /// <summary>
+            /// 无敌状态
+            /// </summary>
+            Invincible = 5,
+            /// <summary>
+            /// 防护盾
+            /// </summary>
+            ExtendedShield = 6
+        }
 
         public int Result { get; set; }
-        public List<Activity> Activities { get; set; } = new List<Activity>();
         public PieceStatus Status { get; set; }
+        public Types Type => (Types) Result;
         [JsonIgnore]public bool IsDeath => Status.IsDeath;
-        public override string ToString() => $"Res[{Result}].Sta[{Status.Hp}/{Status.MaxHp}].Act[{Activities.Count}]";
+        public override string ToString() => $"{Type}({Result}).Sta[{Status.Hp}/{Status.MaxHp}]";
+        public void SetStatus(PieceStatus status) => Status = status.Clone();
     }
 
     /// <summary>
@@ -200,6 +217,13 @@ namespace Assets.System.WarModule
     [Serializable]
     public class Activity
     {
+        public enum Intention
+        {
+            UnDefined,
+            Major,
+            Responsive,
+            Attach
+        }
         public static Activity[] Empty { get; } = new Activity[0];
         //注意，负数是非棋子行动。一般都是上升到棋手这个维度的东西如：资源，金币
         /// <summary>
@@ -235,20 +259,26 @@ namespace Assets.System.WarModule
         /// 生成<see cref="Activity"/>
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="roundId"></param>
+        /// <param name="processId"></param>
+        /// <param name="from"></param>
+        /// <param name="isChallenger"></param>
         /// <param name="to">正数为棋格，-1=玩家，-2=对手</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
+        /// <param name="rePos">换位</param>
         /// <returns></returns>
-        public static Activity Instance(int id,int roundId ,int to, int intent, CombatConduct[] conducts)
+        public static Activity Instance(int id,int processId,int from ,int isChallenger,int to ,int intent, CombatConduct[] conducts,int rePos)
         {
             return new Activity()
             {
                 InstanceId = id,
-                RoundId = roundId,
+                ProcessId = processId,
+                From = from,
+                IsChallenger = isChallenger,
                 To = to,
                 Conducts = conducts,
                 Intent = intent,
+                RePos = rePos
             };
         }
 
@@ -268,11 +298,48 @@ namespace Assets.System.WarModule
         /// Target Pos, > 0 = ChessPos, -1 = Player, -2 = Opponent
         /// </summary>
         [JsonProperty("T")] public int To { get; set; }
-        [JsonProperty("R")] public int RoundId { get; set; }
+        [JsonProperty("F")] public int From { get; set; }
+        /// <summary>
+        /// 如果正数代表换位
+        /// </summary>
+        [JsonProperty("R")] public int RePos { get; set; } = -1;
+        [JsonProperty("P")] public int ProcessId { get; set; }
         [JsonProperty("C")] public CombatConduct[] Conducts { get; set; }
         [JsonProperty("A")] public ActivityResult Result { get; set; }
+        [JsonProperty("O")] public int IsChallenger { get; set; }
 
-        public override string ToString() => $"{InstanceId}.Intent[{Intent}].To[{To}].Com[{Conducts.Length}].Res[{Result.Result}]";
+        public Intention GetIntensive()
+        {
+            switch (Intent)
+            {
+                case Offensive: 
+                case Friendly: 
+                case Self: return Intention.Major;
+                case Counter: return Intention.Responsive;
+                case OffendTrigger: 
+                case FriendlyTrigger: return Intention.Attach;
+                case PlayerResource: return Intention.UnDefined;
+                default:
+                    throw new ArgumentOutOfRangeException($"{nameof(GetIntensive)}:Unknown intent({Intent})");
+            }
+        }
+
+        [JsonIgnore] public bool IsRePos => RePos >= 0;
+        [JsonIgnore]
+        public bool TargetIsChallenger
+        {
+            get
+            {
+                var isChallenger = IsChallenger == 0;
+                return (Intent == Offensive ||
+                        Intent == OffendTrigger ||
+                        Intent == Counter)
+                    ? !isChallenger
+                    : isChallenger;
+            }
+        }
+
+        public override string ToString() => $"{InstanceId}.Intent({GetIntensive()})[{Intent}].From[{From}({IsChallenger})].To[{To}].Com[{Conducts.Length}].Result[{Result.Result}]";
     }
 
     /// <summary>
@@ -288,15 +355,21 @@ namespace Assets.System.WarModule
         /// 非人类物理伤害，对陷阱伤害双倍
         /// </summary>
         public const int NonHumanDmg = -1;
+        /// <summary>
+        /// 不可免伤类型伤害
+        /// </summary>
+        public const int UnResistDmg = -2;
+        public const int BasicMagicDmg = 1;
+        public const int FireDmg = 2;
+        public const int ThunderDmg = 3;
         #endregion
 
         #region Kinds 因素类型
         public const int DamageKind = 0;
         public const int HealKind = 1;
         public const int BuffKind = 2;
-        public const int RePosKind = 3;
-        public const int KillingKind = 4;
-        public const int PlayerDegreeKind = 5;
+        public const int KillingKind = 3;
+        public const int PlayerDegreeKind = 4;
         #endregion
     
         private static CombatConduct _zeroDamage = InstanceDamage(0);
@@ -309,7 +382,6 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 战斗类<see cref="DamageKind"/> 或 <see cref="HealKind"/> 将为： 0 = 物理 ，大于0 = 法术元素，小于0 = 特殊物理，
         /// 状态类<see cref="BuffKind"/>将会是状态Id，详情看 <see cref="FightState.Cons"/>
-        /// 移动类<see cref="RePosKind"/>将会是位置Id(PosId)。
         /// 斩杀类<see cref="KillingKind"/>
         /// 如果是玩家维度<see cref="PlayerDegreeKind"/>的资源，将视为资源Id(-1=金币,正数=宝箱id)
         /// </summary>
@@ -344,7 +416,6 @@ namespace Assets.System.WarModule
         /// <param name="value">默认1，-1为清除状态</param>
         /// <returns></returns>
         public static CombatConduct InstanceBuff(FightState.Cons con, float value = 1) => Instance(value, 0, 0, (int)con, BuffKind);
-        public static CombatConduct InstanceRePos(int pos = 0) => Instance(0, 0, 0, pos, BuffKind);
 
         public static CombatConduct InstanceDamage(float damage, int element = 0) => Instance(damage, 0, 0, element,DamageKind);
 
@@ -370,8 +441,12 @@ namespace Assets.System.WarModule
     /// </summary>
     public class AttackStyle
     {
-        public const int MeleeCombatStyle = 0;
-        public const int RangeCombatStyle = 1;
+        public enum CombatStyles
+        {
+            Melee = 0,
+            Range = 1,
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -380,8 +455,11 @@ namespace Assets.System.WarModule
         /// <param name="combat">攻击类型，近战=0，远程=1</param>
         /// <param name="counter">反击类型，不可反击=0，可反击>0</param>
         /// <param name="element">0=物理，负数=特殊物理，正数=魔法</param>
+        /// <param name="strength">力量</param>
+        /// <param name="level"></param>
         /// <returns></returns>
-        public static AttackStyle Instance(int military, int armedType, int combat, int counter, int element) => new AttackStyle(military, armedType, combat, counter, element);
+        public static AttackStyle Instance(int military, int armedType, int combat, int counter, int element,
+            int strength, int level) => new AttackStyle(military, armedType, combat, counter, element, strength, level);
 
         /// <summary>
         /// 普通系
@@ -448,7 +526,7 @@ namespace Assets.System.WarModule
         /// 攻击分类
         /// 0 = melee, 1 = range
         /// </summary>
-        public int CombatStyle { get; set; }
+        public CombatStyles CombatStyle { get; set; }
         /// <summary>
         /// 兵种系数
         /// -1 = 塔, -2 陷阱, 正数为兵种系数
@@ -464,60 +542,77 @@ namespace Assets.System.WarModule
         /// </summary>
         public int Element { get; set; }
 
+        public int Strength { get; set; }
+        public int Level { get; set; }
+
         [JsonConstructor]
         private AttackStyle()
         {
         }
 
-        private AttackStyle(int military, int armedType, int combatStyle, int counterStyle, int element)
+        private AttackStyle(int military, int armedType, int combatStyle, int counterStyle, int element,int strength, int level)
         {
             CounterStyle = counterStyle;
             Element = element;
-            CombatStyle = combatStyle;
+            CombatStyle = (CombatStyles)combatStyle;
             ArmedType = armedType;
             Military = military;
+            Strength = strength;
+            Level = level;
         }
 
-        public override string ToString() =>
-            $"Com[{CombatStyle}].Cou[{CounterStyle}].Arm[{ArmedType}].M[{Military}].E[{Element}]";
+        public override string ToString()
+        {
+            var counterString = CounterStyle > 0 ? $".Counter({CounterStyle})" : string.Empty;
+            return
+                $"Combat({CombatStyle}){counterString}.Armed[{ArmedType}] MId({Military}):E[{Element}]";
+        }
     }
 
     /// <summary>
     /// 棋子接口规范
     /// </summary>
-    public interface IChessman 
+    public interface IChessman
     {
         int Pos { get; }
         bool IsPlayer { get; }
+        int CardId { get; }
+        GameCardType CardType { get; }
+        GameCardInfo Info { get; }
+        int HitPoint { get; }
+        int Level { get; }
         bool IsActed { get; }
-        bool IsAvailable { get; }
-        bool IsAlive { get; }
         void SetActed(bool isActed = true);
     }
     /// <summary>
     /// 棋位接口规范
     /// </summary>
-    public interface IChessPos<T> where T : class, IChessman, new()
+    public interface IChessPos
     {
-        T Chessman { get; }
         ChessTerrain Terrain { get; }
+        /// <summary>
+        /// 棋子执行代理，一切活动都用此代理数据为基准
+        /// </summary>
+        IChessOperator Operator { get; }
         int Pos { get; }
-        void SetPos(T chessman);
-        void RemovePos();
-        void Init(int pos);
+        bool IsChallenger { get; }
+        bool IsPostedAlive { get; }
+        bool IsAliveHero { get; }
+        void RemoveOperator();
+        void Init(int pos, bool isCChallenger);
+        void SetPos(IChessOperator op);
     }
 
     /// <summary>
     /// 棋格管理器
     /// </summary>
-    /// <typeparam name="TPos"></typeparam>
     /// <typeparam name="TChess"></typeparam>
-    public class ChessGrid<TChess> where TChess : class, IChessman, new() 
+    public class ChessGrid
     {
-        private readonly Dictionary<int, IChessPos<TChess>> _challenger;
-        private readonly Dictionary<int, IChessPos<TChess>> opposite;
-        public IReadOnlyDictionary<int, IChessPos<TChess>> Challenger => _challenger;
-        public IReadOnlyDictionary<int, IChessPos<TChess>> Opposite => opposite;
+        private readonly Dictionary<int, IChessPos> _challenger;
+        private readonly Dictionary<int, IChessPos> opposite;
+        public IReadOnlyDictionary<int, IChessPos> Challenger => _challenger;
+        public IReadOnlyDictionary<int, IChessPos> Opposite => opposite;
         public int[] FrontRows { get; } = { 0, 1, 2, 3, 4 };
 
         private static int[][] NeighborCards { get; }= new int[20][] {
@@ -543,7 +638,7 @@ namespace Assets.System.WarModule
             new int[2]{ 14,16},             //19
         };
         //位置列攻击目标选择次序
-        private static int[][] AttackSelectionOrder { get; }= new int[5][]
+        private static int[][] AttackPath { get; }= new int[5][]
         {
             new int[11]{ 0, 2, 3, 5, 7, 8, 10,12,13,15,17},     //0列
             new int[11]{ 1, 2, 4, 6, 7, 9, 11,12,14,16,17},     //1列
@@ -552,25 +647,25 @@ namespace Assets.System.WarModule
             new int[8] { 1, 4, 6, 9, 11,14,16,17},              //4列
         };
 
-        public ChessGrid(IList<IChessPos<TChess>> player, IList<IChessPos<TChess>> enemy)
+        public ChessGrid(IList<IChessPos> player, IList<IChessPos> enemy)
         {
-            _challenger = new Dictionary<int, IChessPos<TChess>>();
-            opposite = new Dictionary<int, IChessPos<TChess>>();
+            _challenger = new Dictionary<int, IChessPos>();
+            opposite = new Dictionary<int, IChessPos>();
             for (var i = 0; i < player.Count; i++)
             {
-                player[i].Init(i);
+                player[i].Init(i,true);
                 _challenger.Add(i, player[i]);
             }
             for (var i = 0; i < enemy.Count; i++)
             {
-                enemy[i].Init(i);
+                enemy[i].Init(i,false);
                 opposite.Add(i, enemy[i]);
             }
         }
         public ChessGrid()
         {
-            _challenger = new Dictionary<int, IChessPos<TChess>>();
-            opposite = new Dictionary<int, IChessPos<TChess>>();
+            _challenger = new Dictionary<int, IChessPos>();
+            opposite = new Dictionary<int, IChessPos>();
         }
 
         /// <summary>
@@ -578,40 +673,49 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="pos"></param>
         /// <param name="obj"></param>
-        public void Set(int pos, TChess obj) => Replace(pos, obj);
+        public void SetPos(int pos, IChessOperator obj) => Replace(pos, obj);
         /// <summary>
-        /// 替换棋位，如果改位置有棋子，返回棋子，否则返回null
+        /// 替换棋位，如果该位置有棋子，返回棋子，否则返回null
         /// </summary>
         /// <param name="pos"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public TChess Replace(int pos, TChess obj)
+        public IChessOperator Replace(int pos, IChessOperator obj)
         {
-            var chessPos = GetScope(obj.IsPlayer)[pos];
-            var last = chessPos.Chessman;
+            var chessPos = GetScope(obj.IsChallenger)[pos];
+            var last = chessPos.Operator;
             chessPos.SetPos(obj);
             return last;
         }
         /// <summary>
         /// 移除棋子
         /// </summary>
-        public void Remove(int pos, bool isChallenger) => GetScope(isChallenger)[pos].RemovePos();
+        public void Remove(int pos, bool isChallenger)
+        {
+            var scope = GetScope(isChallenger);
+            if (!scope.ContainsKey(pos))
+                throw new KeyNotFoundException(
+                    $"{nameof(ChessGrid)}.{nameof(Remove)}(): [{pos}({(isChallenger ? 0 : 1)})]Key not found!");
+            scope[pos].RemoveOperator();
+        }
+
         /// <summary>
         /// 移除棋子
         /// </summary>
         /// <param name="obj"></param>
-        public void Remove(TChess obj) => Remove(obj.Pos, obj.IsPlayer);
+        public void Remove(IChessOperator obj) => Remove(obj.Pos, obj.IsChallenger);
 
-        public IChessPos<TChess> BackPos(IChessPos<TChess> pos)
+        public IChessPos BackPos(IChessPos pos)
         {
-            var scope = GetScope(pos.Chessman.IsPlayer);
-            var backPos = pos.Chessman.Pos + 5;
+            var scope = GetScope(pos.IsChallenger);
+            var backPos = pos.Pos + 5;
             return scope.ContainsKey(backPos) ? scope[backPos] : null;
         }
 
-        public IReadOnlyDictionary<int, IChessPos<TChess>> GetScope(bool isChallenger) => isChallenger ? _challenger : opposite;
-        public IReadOnlyDictionary<int, IChessPos<TChess>> GetRivalScope(bool isChallenger) => GetScope(!isChallenger);
-        public IReadOnlyDictionary<int, IChessPos<TChess>> GetRivalScope(IChessman chessman) => GetRivalScope(chessman.IsPlayer);
+        public IReadOnlyDictionary<int, IChessPos> GetScope(IChessOperator chessman) => GetScope(chessman.IsChallenger);
+        public IReadOnlyDictionary<int, IChessPos> GetScope(bool isChallenger) => isChallenger ? _challenger : opposite;
+        public IReadOnlyDictionary<int, IChessPos> GetRivalScope(bool isChallenger) => GetScope(!isChallenger);
+        public IReadOnlyDictionary<int, IChessPos> GetRivalScope(IChessOperator chessman) => GetRivalScope(chessman.IsChallenger);
         /// <summary>
         /// 获取改棋位的周围棋位
         /// </summary>
@@ -624,34 +728,37 @@ namespace Assets.System.WarModule
         /// <param name="pos"></param>
         /// <param name="isChallenger"></param>
         /// <returns></returns>
-        public IEnumerable<IChessPos<TChess>> GetNeighbors(int pos, bool isChallenger) =>
+        public IEnumerable<IChessPos> GetNeighbors(int pos, bool isChallenger) =>
             NeighborCards[pos].Select(i => GetScope(isChallenger)[i]).Where(o => o != null);
 
-        public IChessPos<TChess> GetRivalChessPos(int pos, IChessman chessman) => GetRivalChessPos(pos, chessman.IsPlayer);
-        public IChessPos<TChess> GetRivalChessPos(int pos, bool isChallenger) => GetChessPos(pos, !isChallenger);
-        public IChessPos<TChess> GetChessPos(int pos, bool isChallenger)
+        public IChessPos GetRivalChessPos(int pos, IChessOperator chessman) => GetRivalChessPos(pos, chessman.IsChallenger);
+        public IChessPos GetRivalChessPos(int pos, bool isChallenger) => GetChessPos(pos, !isChallenger);
+        public IChessPos GetChessPos(int pos, bool isChallenger)
         {
             var scope = GetScope(isChallenger);
             return !scope.ContainsKey(pos) ? null : scope[pos];
         }
 
-        public IEnumerable<IChessPos<TChess>> GetFriendlyNeighbors(IChessman chessman) => GetNeighbors(chessman.Pos, chessman.IsPlayer);
+        public IEnumerable<IChessPos> GetFriendlyNeighbors(IChessOperator chessman) => GetNeighbors(chessman.Pos, chessman.IsChallenger);
 
-        public IChessPos<TChess> GetChessmanInSequence(bool isChallenger,Func<IChessPos<TChess>,bool> condition) => GetScope(isChallenger).OrderBy(c => c.Key).Select(c => c.Value).FirstOrDefault(condition);
+        public IChessPos GetChessmanInSequence(bool isChallenger,Func<IChessPos,bool> condition) => GetScope(isChallenger).OrderBy(c => c.Key).Select(c => c.Value).FirstOrDefault(condition);
         /// <summary>
         /// 获取以对位开始排列的目标,
-        /// 默认 p => p.Chessman != null && p.Chessman.IsAlive
+        /// 默认 p => p.IsPostedAlive
         /// </summary>
         /// <param name="chessman"></param>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IChessPos<TChess> GetContraPositionInSequence(IChessman chessman,Func<IChessPos<TChess>,bool> condition = null)
+        public IChessPos GetContraPositionInSequence(IChessOperator chessman,Func<IChessPos,bool> condition = null)
         {
-            condition ??= p => p.Chessman != null && p.Chessman.IsAlive;
-            var series = AttackSelectionOrder[chessman.Pos % 5];
+            if (condition == null) condition = p => p.IsPostedAlive;
+            var series = AttackPath[chessman.Pos % 5];
             return GetRivalScope(chessman).Join(series, p => p.Key, s => s, (p, _) => p.Value).FirstOrDefault(condition);
         }
 
-        public IChessPos<TChess> GetChessPos(IChessman chessman) => GetChessPos(chessman.Pos, chessman.IsPlayer);
+        //public IChessPos GetChessPos(IChessOperator chessman) => GetChessPos(chessman.Pos, chessman.IsPlayer);
+        public int[] GetAttackPath(IChessOperator chessman) => AttackPath[chessman.Pos % 5];
+
+        public IChessPos GetChessPos(IChessOperator op) => GetChessPos(op.Pos, op.IsChallenger);
     }
 }

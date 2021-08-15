@@ -88,7 +88,7 @@ public class PlayerCardDrag : DragController
 
         var fMgr = FightForManager.instance;
         var targetPosIndex = -1;
-        if (posObj.CompareTag(GameSystem.CardPos)) targetPosIndex = posObj.GetComponent<ChessPos>().PosIndex;
+        if (posObj.CompareTag(GameSystem.CardPos)) targetPosIndex = posObj.GetComponent<ChessPos>().Pos;
         else
         {
             var war = posObj.GetComponent<GameCardWarUiOperation>();
@@ -149,11 +149,14 @@ public class PlayerCardDrag : DragController
 
     public override void ResetPos()
     {
-        transform.SetParent(PosIndex == -1
-            ? WarsUIManager.instance.PlayerCardsRack.transform
-            : FightForManager.instance.GetChessPos(PosIndex, true));
-        transform.localPosition = Vector3.zero;
-        Ui.SetSelected(false);
-        CardBody.raycastTarget = !IsLocked;
+        if(WarsUIManager.instance!=null && FightForManager.instance!=null)
+        {
+            transform.SetParent(PosIndex == -1
+                ? WarsUIManager.instance.PlayerCardsRack.transform
+                : FightForManager.instance.GetChessPos(PosIndex, true));
+            transform.localPosition = Vector3.zero;
+            Ui.SetSelected(false);
+            CardBody.raycastTarget = !IsLocked;
+        }
     }
 }

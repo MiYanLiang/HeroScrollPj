@@ -70,9 +70,11 @@ public class EffectsPoolingControl : MonoBehaviour
         }
     }
 
-    public GameObject GetEffectToFight(string effectName, float takeBackTime, WarGameCardUi ui)
+    public GameObject GetEffectToFight(string effectName, float takeBackTime, WarGameCardUi ui) =>
+        GetEffectToFight(effectName, takeBackTime, ui.transform);
+    public GameObject GetEffectToFight(string effectName, float takeBackTime, Transform trans)
     {
-        int index = -1;
+        var index = -1;
         for (int i = 0; i < effectsNameStr.Length; i++)
         {
             if (effectsNameStr[i] == effectName)
@@ -89,29 +91,24 @@ public class EffectsPoolingControl : MonoBehaviour
                     continue;
                 if (!go.activeSelf)
                 {
-                    go.transform.position = ui.transform.position;
-                    go.transform.SetParent(ui.transform);
+                    go.transform.localPosition = Vector3.zero;
+                    go.transform.position = trans.position;
+                    go.transform.SetParent(trans);
                     go.SetActive(true);
-                    //if (go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0]!=null)
-                    //    takeBackTime = go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
                     StartCoroutine(TakeBackEffect(go, takeBackTime));
                     return go;
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], ui.transform);
-            effectObj.transform.position = ui.transform.position;
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], trans);
+            effectObj.transform.position = trans.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
-            //if (effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0] != null)
-            //    takeBackTime = effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
             StartCoroutine(TakeBackEffect(effectObj, takeBackTime));
             return effectObj;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>
@@ -224,4 +221,57 @@ public class EffectsPoolingControl : MonoBehaviour
             go.SetActive(false);
         }
     }
+}
+
+public class Effect
+{
+    public const string GetGold = "GetGold";
+    public const string DropBlood = "dropBlood";
+    public const string SpellTextH = "spellTextH";
+    public const string SpellTextV = "spellTextV";
+    
+    public const string BasicAttack = "0A";
+    public const string ReflectDamage = "7A";
+    public const string Explode = "201A";
+    public const string Dropping = "209A";
+    public const string LongBow = "20A";
+    public const string FeiJia = "3A";
+    public const string Shield = "4A";
+    public const string SuckBlood = "6A";
+    public const string CavalryCharge = "9A";
+    public const string CavalryAssault = "60A";
+    public const string CavalryGallop = "16A";
+    public const string BladeCombo = "17A";
+    public const string CrossBowCombo = "19A";
+    public const string Crossbow = "49A";
+    public const string MagicStrike = "50A";
+    public const string TengJiaAttack = "57A";
+    public const string Stimulate = "12A";
+    public const string GuardCounter = "13A";
+    public const string YellowBand = "65A";
+    public const string YellowBandB = "65B";
+    public const string HeavyCavalry = "58A";
+    public const string Barbarians = "56A";
+    public const string FireShipExplode = "55A0";
+    public const string FireShipAttack = "55A";
+    public const string DisarmAttack = "44A";
+    public const string Mechanical = "40A";
+    public const string Debate = "34A";
+    public const string Controversy = "35A";
+    public const string Persuade = "47A";
+    public const string Convince = "48A";
+    public const string ThrowRocks = "24A";
+    public const string SiegeMachine = "23A";
+    public const string Support = "39A";
+    public const string StateAffairs = "38A";
+    public const string Heal = "42A";
+    public const string Cure = "43A";
+    public const string AssassinStrike = "25A";
+    public const string WarshipAttack = "21A";
+    public const string ChariotAttack = "22A";
+    public const string AxeStrike = "18A";
+    public const string HalberdSweep = "15A";
+    public const string KnightAttack = "11A";
+    public const string Daredevil = "10A";
+    public const string ElephantAttack = "8A";
 }

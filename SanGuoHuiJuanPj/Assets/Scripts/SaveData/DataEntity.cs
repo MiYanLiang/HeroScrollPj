@@ -554,6 +554,11 @@ public class FightState
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
     }
+
+    public void SetStates(Dictionary<int, int> buffs)
+    {
+        data = buffs;
+    }
 }
 
 /// <summary>

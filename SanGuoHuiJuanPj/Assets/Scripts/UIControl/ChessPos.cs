@@ -1,47 +1,43 @@
 ﻿using Assets.System.WarModule;
+using CorrelateLib;
 using UnityEngine;
 
-public class ChessPos : MonoBehaviour,IChessPos<FightCardData>
+public class ChessPos : MonoBehaviour,IChessPos
 {
     [SerializeField]private int posIndex = -1;
     
-    public FightCardData Chessman => Card;
     public ChessTerrain Terrain { get; private set; }
+    
+    public IChessOperator Operator { get; private set; }
 
     public int Pos => posIndex;
+    public bool IsChallenger { get; private set; }
+    public bool IsPostedAlive => Operator != null && Operator.IsAlive;
+    public bool IsAliveHero => IsPostedAlive && Operator.CardType == GameCardType.Hero;
     public FightCardData Card { get; private set; }
-    
-    public int PosIndex
-    {
-        get
-        {
-            if (posIndex < 0) throw XDebug.Throw<ChessPos>("棋盘未初始化!");
-            return posIndex;
-        }
-    }
 
-
-    public void Init(int pos)
+    public void Init(int pos,bool isChallenger)
     {
         posIndex = pos;
+        IsChallenger = isChallenger;
         Terrain = new ChessTerrain();
     }
 
-    public void SetCard(FightCardData card)
+    void IChessPos.SetPos(IChessOperator op)
     {
-        Card = card;
-        card.cardObj.transform.SetParent(transform);
-        card.cardObj.transform.localPosition = Vector3.zero;
-        card.cardObj.transform.localScale = Vector3.one;
+        Operator = op;
     }
-
+    void IChessPos.RemoveOperator() => Operator = null;
     public void RemoveCard() => Card = null;
-
-    public void SetPos(FightCardData chessman)
+    public void PlaceCard(FightCardData chessman, bool resetPos)
     {
-        SetCard(chessman);
         chessman.UpdatePos(posIndex);
+        chessman.cardObj.transform.SetParent(transform);
+        Card = chessman;
+        if (resetPos)
+        {
+            Card.cardObj.transform.localPosition = Vector3.zero;
+            Card.cardObj.transform.localScale = Vector3.one;
+        }
     }
-
-    public void RemovePos() => posIndex = -1;
 }

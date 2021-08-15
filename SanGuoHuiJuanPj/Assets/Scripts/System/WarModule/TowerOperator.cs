@@ -7,17 +7,15 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 塔单位棋子处理器
     /// </summary>
-    public abstract class TowerOperator : ChessmanOperator
+    public abstract class TowerOperator : CardOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct) => Activity.Empty;
-
-        protected override int OnHealConvert(CombatConduct conduct) => (int)conduct.Total;
+        protected override int OnHealConvert(CombatConduct conduct) => (int) conduct.Total;
 
         protected override int OnDamageConvert(CombatConduct conduct) => (int) conduct.Total;
 
-        protected override int OnBuffingConvert(CombatConduct conduct) => (int) conduct.Total;
+        protected override int OnBuffingConvert(CombatConduct conduct) => 0;
 
-        protected override bool DodgeOnAttack(IChessOperator<FightCardData> iChessOperator) => false;
+        protected override bool DodgeOnAttack(IChessOperator iChessOperator) => false;
     }
 
     public class BlankTowerOperator : TowerOperator
@@ -31,7 +29,7 @@ namespace Assets.System.WarModule
     {
         public override void StartActions()
         {
-            var targets = Grid.GetFriendlyNeighbors(Chessman).Where(c=>c.Chessman!=null && c.Chessman.IsAlive && c.Chessman.CardType == GameCardType.Hero).ToArray();
+            var targets = Grid.GetFriendlyNeighbors(this).Where(c=>c.IsPostedAlive && c.Operator.CardType == GameCardType.Hero).ToArray();
             if (targets.Length == 0) return;
             var target = targets.OrderBy(c => Chessboard.GetStatus(c).HpRate).First();
             var status = Chessboard.GetStatus(target);
@@ -50,12 +48,12 @@ namespace Assets.System.WarModule
         public override void StartActions()
         {
             // 获取对位与周围的单位
-            var targets = Grid.GetNeighbors(Chessman.Pos, !Chessman.IsPlayer).Where(p => p.Chessman != null && p.Chessman.IsAlive).ToArray();
+            var targets = Grid.GetNeighbors(Pos, !IsChallenger).Where(p => p.IsPostedAlive).ToArray();
             if (targets.Length == 0) return;
             foreach (var target in targets)
             {
                 Chessboard.ActionRespondResult(this, target, Activity.Offensive,
-                    Singular(CombatConduct.InstanceDamage(Card.damage)));
+                    Singular(CombatConduct.InstanceDamage(Style.Strength)));
             }
         }
     }
@@ -66,12 +64,12 @@ namespace Assets.System.WarModule
     {
         public override void StartActions()
         {
-            var targets = Grid.GetFriendlyNeighbors(Chessman).Where(p =>
-                p.Chessman != null && p.Chessman.CardType == GameCardType.Hero && p.Chessman.IsAlive);
+            var targets = Grid.GetFriendlyNeighbors(this).Where(p =>
+                p.IsAliveHero);
             foreach (var target in targets)
             {
                 Chessboard.ActionRespondResult(this, target, Activity.Friendly,
-                    Singular(CombatConduct.InstanceHeal(Card.damage)));
+                    Singular(CombatConduct.InstanceHeal(Style.Strength)));
             }
         }
     }
@@ -83,11 +81,11 @@ namespace Assets.System.WarModule
 
         public override void StartActions()
         {
-            var chessPoses = Grid.GetRivalScope(Chessman).Values.Where(p => p.Chessman != null && p.Chessman.IsAlive).ToArray();
+            var chessPoses = Grid.GetRivalScope(this).Values.Where(p => p.IsPostedAlive).ToArray();
             var maxTargets = DataTable.GetGameValue(18); //箭楼攻击数量
             var pick = chessPoses.Length > maxTargets ? maxTargets : chessPoses.Length;
             //17, 箭楼远射伤害百分比
-            var damage = Card.damage * DataTable.GetGameValue(17);
+            var damage = Style.Strength * DataTable.GetGameValue(17);
             var targets = chessPoses.Select(RandomElement.Instance).Pick(pick);
             foreach (var target in targets)
             {
@@ -99,11 +97,11 @@ namespace Assets.System.WarModule
 
         class RandomElement : IWeightElement
         {
-            public static RandomElement Instance(IChessPos<FightCardData> card) => new RandomElement(card);
+            public static RandomElement Instance(IChessPos card) => new RandomElement(card);
             public int Weight => 1;
-            public IChessPos<FightCardData> Pos { get; }
+            public IChessPos Pos { get; }
 
-            public RandomElement(IChessPos<FightCardData> pos)
+            public RandomElement(IChessPos pos)
             {
                 Pos = pos;
             }
@@ -117,12 +115,11 @@ namespace Assets.System.WarModule
     {
         public override void StartActions()
         {
-            var targets = Grid.GetFriendlyNeighbors(Chessman)
-                .Where(p => p.Chessman != null &&
-                            p.Chessman.IsAlive &&
-                            p.Chessman.CardType == GameCardType.Hero)
-                .OrderBy(p => Chessboard.GetOperator(p).Status.GetBuff((int) FightState.Cons.Shield))
-                .Take(Card.damage); //Card.Damage = 最大添加数
+            var targets = Grid.GetFriendlyNeighbors(this)
+                .Where(p => p.IsPostedAlive &&
+                            p.Operator.CardType == GameCardType.Hero)
+                .OrderBy(p => p.Operator.Status.GetBuff((int) FightState.Cons.Shield))
+                .Take(Style.Strength); //Style.Strength = 最大添加数
             foreach (var target in targets)
             {
                 Chessboard.ActionRespondResult(this, target, Activity.FriendlyTrigger,

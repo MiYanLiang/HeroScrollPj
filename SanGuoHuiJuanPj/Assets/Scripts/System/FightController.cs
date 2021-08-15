@@ -397,7 +397,7 @@ public class FightController : MonoBehaviour
                 {
                     damage = DefDamageProcessFun(defUnit, attackUnit, damage);
                     attackUnit.Hp.Add(-(int)(damage * (DataTable.GetGameValue(8) / 100f)));
-                    GameObject effectObj = AttackToEffectShow(attackUnit, false, "7A");
+                    GameObject effectObj = AttackToEffectShow(attackUnit, false, Effect.ReflectDamage);
                     effectObj.transform.localScale = new Vector3(1, defUnit.isPlayerCard ? 1 : -1, 1);
                     TargetAnimShow(attackUnit, damage);
                     PlayAudioForSecondClip(89, 0.2f);
@@ -413,7 +413,7 @@ public class FightController : MonoBehaviour
                         //;
                     dileiDamage = DefDamageProcessFun(defUnit, attackUnit, dileiDamage);
                     attackUnit.Hp.Add(-dileiDamage);
-                    AttackToEffectShow(attackUnit, false, "201A");
+                    AttackToEffectShow(attackUnit, false, Effect.Explode);
                     TargetAnimShow(attackUnit, dileiDamage);
                     PlayAudioForSecondClip(88, 0.2f);
                 }
@@ -510,7 +510,7 @@ public class FightController : MonoBehaviour
     {
         if (attackedUnit.Hp <= 0)
         {
-            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight("GetGold", 1.5f, attackedUnit.cardObj);
+            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight(Effect.GetGold, 1.5f, attackedUnit.cardObj);
             obj.GetComponentInChildren<Text>().text = string.Format(DataTable.GetStringText(8), DataTable.EnemyUnit[attackedUnit.unitId].GoldReward);
             PlayAudioForSecondClip(98, 0);
         }
@@ -544,7 +544,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(95, 0);
-        yield return CardAnimator.RangePreAction(attackUnit, attackShakeTimeToGo / 2);
+        yield return CardAnimator.RangeActivity(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -577,7 +577,7 @@ public class FightController : MonoBehaviour
                             recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                         }
                     }
-                    AttackToEffectShow(opponents[cardIndex], false, "209A");
+                    AttackToEffectShow(opponents[cardIndex], false, Effect.Dropping);
                     ShowSpellTextObj(opponents[cardIndex].cardObj, DataTable.GetStringText(9), true, true);
                     TargetAnimShow(opponents[cardIndex], nowDamage);
 
@@ -616,7 +616,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(94, 0);
-        yield return CardAnimator.RangePreAction(attackUnit, attackShakeTimeToGo / 2);
+        yield return CardAnimator.RangeActivity(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -647,7 +647,7 @@ public class FightController : MonoBehaviour
                         recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                     }
                 }
-                AttackToEffectShow(opponents[cardIndex], false, "209A");
+                AttackToEffectShow(opponents[cardIndex], false, Effect.Dropping);
                 ShowSpellTextObj(opponents[cardIndex].cardObj, DataTable.GetStringText(10), true, true);
                 TargetAnimShow(opponents[cardIndex], nowDamage);
 
@@ -695,7 +695,7 @@ public class FightController : MonoBehaviour
         for (int i = 0; i < attackedIndexList.Count; i++)
         {
             FightCardData attackedUnit = opponents[attackedIndexList[i]];
-            AttackToEffectShow(attackedUnit, false, "20A");
+            AttackToEffectShow(attackedUnit, false, Effect.LongBow);
 
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
             attackedUnit.Hp.Add(-nowDamage);
@@ -725,11 +725,11 @@ public class FightController : MonoBehaviour
                 {
                     case 3://飞甲
                         PlayAudioForSecondClip(3, 0);
-                        AttackToEffectShow(target, false, "3A");
+                        AttackToEffectShow(target, false, Effect.FeiJia);
                         break;
                     case 4://大盾
                         ShowSpellTextObj(attackUnit.cardObj, "4", false);
-                        AttackToEffectShow(attackUnit, false, "4A");
+                        AttackToEffectShow(attackUnit, false, Effect.Shield);
                         if (attackUnit.fightState.Shield <= 0)
                         {
                             FightForManager.instance.CreateSateIcon(attackUnit.cardObj.War.StateContent,
@@ -740,18 +740,18 @@ public class FightController : MonoBehaviour
                         PlayAudioForSecondClip(4, 0);
                         break;
                     case 6://虎卫
-                        AttackToEffectShow(target, false, "6A");
+                        AttackToEffectShow(target, false, Effect.SuckBlood);
                         PlayAudioForSecondClip(6, 0);
                         break;
                     case 8://象兵
                         XiangBingTrampleAttAck(target, attackUnit);
                         break;
                     case 9://先锋
-                        AttackToEffectShow(target, false, "9A");
+                        AttackToEffectShow(target, false, Effect.CavalryCharge);
                         PlayAudioForSecondClip(9, 0);
                         break;
                     case 60:
-                        AttackToEffectShow(target, false, "60A");
+                        AttackToEffectShow(target, false, Effect.CavalryAssault);
                         PlayAudioForSecondClip(9, 0);
                         break;
                     case 10:
@@ -773,22 +773,22 @@ public class FightController : MonoBehaviour
                         JianBingHengSaoAttack(finalDamage, attackUnit, target);
                         break;
                     case 16:
-                        AttackToEffectShow(target, false, "16A");
+                        AttackToEffectShow(target, false, Effect.CavalryGallop);
                         PlayAudioForSecondClip(16, 0);
                         break;
                     case 17:
-                        AttackToEffectShow(target, false, "17A");
+                        AttackToEffectShow(target, false, Effect.BladeCombo);
                         PlayAudioForSecondClip(17, 0);
                         break;
                     case 18:
                         finalDamage = FuBingTuLuAttack(finalDamage, target, attackUnit);
                         break;
                     case 19:
-                        AttackToEffectShow(target, false, "19A");
+                        AttackToEffectShow(target, false, Effect.CrossBowCombo);
                         PlayAudioForSecondClip(19, 0);
                         break;
                     case 51:
-                        AttackToEffectShow(target, false, "19A");
+                        AttackToEffectShow(target, false, Effect.CrossBowCombo);
                         PlayAudioForSecondClip(19, 0);
                         break;
                     case 20:
@@ -891,11 +891,11 @@ public class FightController : MonoBehaviour
                         break;
                     case 49:
                         PlayAudioForSecondClip(49, 0);
-                        AttackToEffectShow(target, false, "49A");
+                        AttackToEffectShow(target, false, Effect.Crossbow);
                         break;
                     case 50:
                         PlayAudioForSecondClip(50, 0);
-                        AttackToEffectShow(target, false, "50A");
+                        AttackToEffectShow(target, false, Effect.MagicStrike);
                         break;
                     case 53:
                         YinShiSkill(DataTable.GetGameValue(29), attackUnit, 53, finalDamage);
@@ -1227,11 +1227,11 @@ public class FightController : MonoBehaviour
         ShowSpellTextObj(attackUnit.cardObj, "17", false);
 
         targetIndex = FightForManager.instance.FindOpponentIndex(attackUnit); //锁定目标卡牌
-        if(ChessPosIndex != -1) yield return CardAnimator.MeleePreAction(attackUnit, target);
+        if(ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
 
         var nextAttackedUnit = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard)[targetIndex];
-        AttackToEffectShow(nextAttackedUnit, false, "17A");
+        AttackToEffectShow(nextAttackedUnit, false, Effect.BladeCombo);
         PlayAudioForSecondClip(17, 0);
 
         yield return OnAttackStart(damageBonus + DataTable.GetGameValue(41) / 100f, attackUnit,
@@ -1248,9 +1248,9 @@ public class FightController : MonoBehaviour
         var waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
         ShowSpellTextObj(attackUnit.cardObj, "12", false);
-        if (ChessPosIndex != -1) yield return CardAnimator.MeleePreAction(attackUnit, target);
+        if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
-        AttackToEffectShow(target, false, "12A");
+        AttackToEffectShow(target, false, Effect.Stimulate);
         PlayAudioForSecondClip(12, 0);
 
         float propAttack = 1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate;
@@ -1282,7 +1282,7 @@ public class FightController : MonoBehaviour
             float waitTime = CountAttackTimeSpan(attackUnit);
             yield return new WaitForSeconds(waitTime);
             ShowSpellTextObj(attackUnit.cardObj, "9", false);
-            if(ChessPosIndex!=-1) yield return CardAnimator.MeleePreAction(attackUnit, target);
+            if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
             yield return new WaitForSeconds(attackShakeTimeToGo);
             AttackToEffectShow(target, false, classType + "A");
             PlayAudioForSecondClip(9, 0);
@@ -1302,9 +1302,9 @@ public class FightController : MonoBehaviour
         float waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
         ShowSpellTextObj(attackUnit.cardObj, "16", false);
-        if(ChessPosIndex!=-1) yield return CardAnimator.MeleePreAction(attackUnit, target);
+        if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
-        AttackToEffectShow(target, false, "16A");
+        AttackToEffectShow(target, false, Effect.CavalryGallop);
         PlayAudioForSecondClip(16, 0);
 
         yield return OnAttackStart(1f, attackUnit, target, true);
@@ -1318,20 +1318,20 @@ public class FightController : MonoBehaviour
         //Debug.Log("-----弩兵连射");
         var waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangePreAction(attackUnit, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
 
         ShowSpellTextObj(attackUnit.cardObj, "19", false);
-        AttackToEffectShow(attackedUnit, false, "19A");
+        AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
         PlayAudioForSecondClip(19, 0);
         //连射
         yield return OnAttackStart(1, attackUnit, attackedUnit, false);
 
         if (classIndex != 51) yield break;
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangePreAction(attackUnit, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
-        AttackToEffectShow(attackedUnit, false, "19A");
+        AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
         PlayAudioForSecondClip(19, 0);
         //连射
         yield return OnAttackStart(1, attackUnit, attackedUnit, false);
@@ -1345,7 +1345,7 @@ public class FightController : MonoBehaviour
         ShowSpellTextObj(attackUnit.cardObj, "13", false);
         yield return new WaitForSeconds(0.2f);
         PlayAudioForSecondClip(13, 0);
-        AttackToEffectShow(attackedUnit, false, "13A");
+        AttackToEffectShow(attackedUnit, false, Effect.GuardCounter);
 
         int damage = DefDamageProcessFun(attackUnit, attackedUnit, attackUnit.damage);
         attackedUnit.Hp.Add(-damage);
@@ -1365,14 +1365,14 @@ public class FightController : MonoBehaviour
 
         PlayAudioForSecondClip(65, 0);
         ShowSpellTextObj(attackUnit.cardObj, "65", false);
-        AttackToEffectShow(attackedUnit, false, "65A");
+        AttackToEffectShow(attackedUnit, false, Effect.YellowBand);
 
         int sameTypeHeroNums = 0;
         for (int i = 0; i < opponents.Count; i++)
         {
             if (opponents[i] != null && opponents[i].Hp > 0 && opponents[i].cardType == 0 && DataTable.Hero[opponents[i].cardId].MilitaryUnitTableId == 65)
             {
-                AttackToEffectShow(opponents[i], false, "65B");
+                AttackToEffectShow(opponents[i], false, Effect.YellowBandB);
 
                 sameTypeHeroNums++;
             }
@@ -1446,7 +1446,7 @@ public class FightController : MonoBehaviour
 
         PlayAudioForSecondClip(58, 0);
         ShowSpellTextObj(attackUnit.cardObj, "58", false);
-        AttackToEffectShow(attackedUnit, false, "58A");
+        AttackToEffectShow(attackedUnit, false, Effect.HeavyCavalry);
 
         float damageBonus = 0;
         if (tieQiCardsList.Count > 1)
@@ -1507,7 +1507,7 @@ public class FightController : MonoBehaviour
     {
         PlayAudioForSecondClip(56, 0);
         ShowSpellTextObj(attackUnit.cardObj, "56", false);
-        AttackToEffectShow(attackedUnit, false, "56A");
+        AttackToEffectShow(attackedUnit, false, Effect.Barbarians);
         if (attackedUnit.cardType == 0 && attackedUnit.Hp > 0)
         {
             if (isSuccessFromHalfRandom(DataTable.GetGameValue(51)))
@@ -1532,7 +1532,7 @@ public class FightController : MonoBehaviour
         {
             PlayAudioForSecondClip(84, 0);
             ShowSpellTextObj(attackUnit.cardObj, "55_0", false);
-            AttackToEffectShow(attackedUnit, false, "55A0");
+            AttackToEffectShow(attackedUnit, false, Effect.FireShipExplode);
 
             takeBurnPro = DataTable.GetGameValue(53);
 
@@ -1545,7 +1545,7 @@ public class FightController : MonoBehaviour
             {
                 FightCardData attackedUnits = FightForManager.instance.GetCard(pos, !attackUnit.isPlayerCard);
                 if (attackedUnits == null || attackedUnits.Hp <= 0) return;
-                AttackToEffectShow(attackedUnits, false, "55A");
+                AttackToEffectShow(attackedUnits, false, Effect.FireShipAttack);
                 var backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
                 attackedUnits.Hp.Add(-backDamage);
                 TargetAnimShow(attackedUnits, backDamage);
@@ -1561,7 +1561,7 @@ public class FightController : MonoBehaviour
         {
             PlayAudioForSecondClip(55, 0);
             ShowSpellTextObj(attackUnit.cardObj, "55", false);
-            AttackToEffectShow(attackedUnit, false, "55A");
+            AttackToEffectShow(attackedUnit, false, Effect.FireShipAttack);
         }
         TakeToBurn(attackedUnit, takeBurnPro, attackUnit);
     }
@@ -1645,7 +1645,7 @@ public class FightController : MonoBehaviour
     //水兵卸甲技能
     private void ShuiBingXieJia(FightCardData attackUnit, FightCardData attackedUnit)
     {
-        AttackToEffectShow(attackedUnit, false, "44A");
+        AttackToEffectShow(attackedUnit, false, Effect.DisarmAttack);
         PlayAudioForSecondClip(44, 0);
         if (attackedUnit.cardType == 0)
         {
@@ -1685,7 +1685,7 @@ public class FightController : MonoBehaviour
             int addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(65) / 100f) / fightNums);
             for (int i = 0; i < fightNums; i++)
             {
-                AttackToEffectShow(opponents[canHuiFuUnits[i]], false, "40A");
+                AttackToEffectShow(opponents[canHuiFuUnits[i]], false, Effect.Mechanical);
                 ShowSpellTextObj(opponents[canHuiFuUnits[i]].cardObj, DataTable.GetStringText(15), true, false);
                 opponents[canHuiFuUnits[i]].Hp.Add(addtionNums);
                 TargetAnimShow(opponents[canHuiFuUnits[i]], addtionNums);
@@ -1710,15 +1710,15 @@ public class FightController : MonoBehaviour
             isNormalAttack = false;
             List<int> targets = BackRandsList(canFightUnits, fightNums);
             ShowSpellTextObj(attackUnit.cardObj, classType.ToString(), false);
-            string effectStr = "";
+            string effectStr = Effect.Debate;
             if (classType == 34)  //辩士
             {
-                effectStr = "34A";
+                effectStr = Effect.Debate;
                 PlayAudioForSecondClip(34, 0);
             }
             else
             {//大辩士
-                effectStr = "35A";
+                effectStr = Effect.Controversy;
                 PlayAudioForSecondClip(35, 0);
             }
             for (int i = 0; i < targets.Count; i++)
@@ -1753,12 +1753,12 @@ public class FightController : MonoBehaviour
             string effectStr = "";
             if (classType == 47)  //说客
             {
-                effectStr = "47A";
+                effectStr = Effect.Persuade;
                 PlayAudioForSecondClip(47, 0);
             }
             else
             {//大说客
-                effectStr = "48A";
+                effectStr = Effect.Convince;
                 PlayAudioForSecondClip(48, 0);
             }
             for (int i = 0; i < attackedIndexList.Count; i++)
@@ -1801,7 +1801,7 @@ public class FightController : MonoBehaviour
         FightCardData attackedUnit = opponents[randTarget];
         if (attackedUnit != null && (!(attackedUnit.fightState.Invincible > 0 || OffsetWithStand(attackedUnit))))
         {
-            AttackToEffectShow(attackedUnit, false, "24A");
+            AttackToEffectShow(attackedUnit, false, Effect.ThrowRocks);
             if (attackedUnit.cardType == 522)   //如果目标是老巢，造成1.5倍伤害
             {
                 finalDamage = (int)(finalDamage * DataTable.GetGameValue(72) / 100f);
@@ -1828,7 +1828,7 @@ public class FightController : MonoBehaviour
         {
             //Debug.Log("----攻城车破城");
             ShowSpellTextObj(attackUnit.cardObj, "23", false);
-            AttackToEffectShow(attackedUnit, false, "23A");
+            AttackToEffectShow(attackedUnit, false, Effect.SiegeMachine);
             PlayAudioForSecondClip(23, 0);
             return (int)(damage * DataTable.GetGameValue(73) / 100f);
         }
@@ -1918,7 +1918,7 @@ public class FightController : MonoBehaviour
         for (int i = 0; i < attackedIndexList.Count; i++)
         {
             FightCardData attackedUnit = opponents[attackedIndexList[i]];
-            AttackToEffectShow(attackedUnit, false, "20A");
+            AttackToEffectShow(attackedUnit, false, Effect.LongBow);
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
             attackedUnit.Hp.Add(-nowDamage);
             TargetAnimShow(attackedUnit, nowDamage);
@@ -1956,7 +1956,7 @@ public class FightController : MonoBehaviour
             AddOrCutShieldValue(finalDamage, opponents[addIndex], true);
             //Debug.Log("---辅佐技能");
             ShowSpellTextObj(attackUnit.cardObj, "39", false);
-            AttackToEffectShow(opponents[addIndex], false, "39A");
+            AttackToEffectShow(opponents[addIndex], false, Effect.Support);
             PlayAudioForSecondClip(39, 0);
         }
     }
@@ -2020,7 +2020,7 @@ public class FightController : MonoBehaviour
             //Debug.Log("---内政技能");
             ShowSpellTextObj(attackUnit.cardObj, "38", false);
             PlayAudioForSecondClip(38, 0);
-            AttackToEffectShow(opponents[cardIndex], false, "38A");
+            AttackToEffectShow(opponents[cardIndex], false, Effect.StateAffairs);
             ShowSpellTextObj(opponents[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
 
             if (isSuccessFromHalfRandom(prop))
@@ -2034,7 +2034,7 @@ public class FightController : MonoBehaviour
             isNormalAttack = false;
             ShowSpellTextObj(attackUnit.cardObj, "38", false);
             PlayAudioForSecondClip(38, 0);
-            AttackToEffectShow(opponents[cardIndex], false, "38A");
+            AttackToEffectShow(opponents[cardIndex], false, Effect.StateAffairs);
             ShowSpellTextObj(opponents[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
             if (isSuccessFromHalfRandom(prop))
             {
@@ -2047,7 +2047,7 @@ public class FightController : MonoBehaviour
                 isNormalAttack = false;
                 ShowSpellTextObj(attackUnit.cardObj, "38", false);
                 PlayAudioForSecondClip(38, 0);
-                AttackToEffectShow(opponents[cardIndex], false, "38A");
+                AttackToEffectShow(opponents[cardIndex], false, Effect.StateAffairs);
                 ShowSpellTextObj(opponents[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
                 if (isSuccessFromHalfRandom(prop))
                 {
@@ -2128,13 +2128,13 @@ public class FightController : MonoBehaviour
             string effectStr = "";
             if (classType == 42)  //医士
             {
-                effectStr = "42A";
+                effectStr = Effect.Heal;
                 PlayAudioForSecondClip(42, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(80) / 100f) / fightNums);
             }
             else
             {//大医士
-                effectStr = "43A";
+                effectStr = Effect.Cure;
                 PlayAudioForSecondClip(43, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(81) / 100f) / fightNums);
             }
@@ -2392,7 +2392,7 @@ public class FightController : MonoBehaviour
     {
         //Debug.Log("---刺客破甲");
         PlayAudioForSecondClip(25, 0);
-        AttackToEffectShow(attackedUnit, false, "25A");
+        AttackToEffectShow(attackedUnit, false, Effect.AssassinStrike);
         if (attackedUnit.cardType == 0)
         {
             ShowSpellTextObj(attackUnit.cardObj, "25", false);
@@ -2407,7 +2407,7 @@ public class FightController : MonoBehaviour
     {
         //使敌方武将和士兵单位往后退一格。当敌方单位无法再后退时，造成2.5倍伤害
         PlayAudioForSecondClip(21, 0);
-        AttackToEffectShow(attackedUnit, false, "21A");
+        AttackToEffectShow(attackedUnit, false, Effect.WarshipAttack);
         ShowSpellTextObj(attackUnit.cardObj, "21", false);
         var mgr = FightForManager.instance;
         if (attackedUnit.cardType != 0) return finalDamage;
@@ -2426,7 +2426,7 @@ public class FightController : MonoBehaviour
         //50%概率使敌方武将和士兵单位【眩晕】。对已经眩晕单位，造成2.5倍伤害
         PlayAudioForSecondClip(22, 0);
         ShowSpellTextObj(attackUnit.cardObj, "22", false);
-        AttackToEffectShow(attackedUnit, false, "22A");
+        AttackToEffectShow(attackedUnit, false, Effect.ChariotAttack);
         if (attackedUnit.fightState.Stunned > 0)
         {
             finalDamage = (int)(finalDamage * DataTable.GetGameValue(92) / 100f);
@@ -2439,7 +2439,7 @@ public class FightController : MonoBehaviour
     private int FuBingTuLuAttack(int finalDamage, FightCardData attackedUnit, FightCardData attackUnit)
     {
         PlayAudioForSecondClip(18, 0);
-        AttackToEffectShow(attackedUnit, false, "18A");
+        AttackToEffectShow(attackedUnit, false, Effect.AxeStrike);
 
         //破护盾
         if (attackedUnit.fightState.Shield > 0)
@@ -2461,7 +2461,7 @@ public class FightController : MonoBehaviour
     private void JianBingHengSaoAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         PlayAudioForSecondClip(15, 0);
-        AttackToEffectShow(attackedUnit, false, "15A");
+        AttackToEffectShow(attackedUnit, false, Effect.HalberdSweep);
         ShowSpellTextObj(attackUnit.cardObj, "15", false);
 
         //对目标周围的其他单位造成50%伤害
@@ -2526,7 +2526,7 @@ public class FightController : MonoBehaviour
             attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (attackUnit.fightState.Stimulate / 10f));
         }
         PlayAudioForSecondClip(12, 0);
-        AttackToEffectShow(attackedUnit, false, "12A");
+        AttackToEffectShow(attackedUnit, false, Effect.Stimulate);
         ShowSpellTextObj(attackUnit.cardObj, "12", false);
         finalDamage = (int)(finalDamage * (1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate));
         return finalDamage;
@@ -2536,7 +2536,7 @@ public class FightController : MonoBehaviour
     private int TieQiWuWeiAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         PlayAudioForSecondClip(11, 0);
-        AttackToEffectShow(attackedUnit, false, "11A");
+        AttackToEffectShow(attackedUnit, false, Effect.KnightAttack);
         //自身血量每降低10%，提高15%伤害
         float damageProp = (1f - attackUnit.Hp.Rate()) / (DataTable.GetGameValue(98) / 100f) * (DataTable.GetGameValue(99) / 100f);
         if (damageProp > 0)
@@ -2568,10 +2568,10 @@ public class FightController : MonoBehaviour
                     int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
                     attackedUnits.Hp.Add(-backDamage);
                     TargetAnimShow(attackedUnits, backDamage);
-                    AttackToEffectShow(attackedUnits, false, "10A");
+                    AttackToEffectShow(attackedUnits, false, Effect.Daredevil);
                 }
             }
-            AttackToEffectShow(attackedUnit, false, "10A");
+            AttackToEffectShow(attackedUnit, false, Effect.Daredevil);
 
             return finalDamage;
         }
@@ -2590,7 +2590,7 @@ public class FightController : MonoBehaviour
         ShowSpellTextObj(attackUnit.cardObj, "8", false);
 
         PlayAudioForSecondClip(8, 0);
-        AttackToEffectShow(attackedUnit, false, "8A");
+        AttackToEffectShow(attackedUnit, false, Effect.ElephantAttack);
         TakeOneUnitDizzed(attackedUnit, DataTable.GetGameValue(102), attackUnit);
     }
 
@@ -2604,7 +2604,7 @@ public class FightController : MonoBehaviour
             finalDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
             attackedUnit.Hp.Add(-finalDamage);
             TargetAnimShow(attackedUnit, finalDamage);
-            GameObject effectObj = AttackToEffectShow(attackedUnit, false, "7A");
+            GameObject effectObj = AttackToEffectShow(attackedUnit, false, Effect.ReflectDamage);
             effectObj.transform.localScale = new Vector3(1, attackUnit.isPlayerCard ? 1 : -1, 1);
         }
     }
@@ -3201,7 +3201,7 @@ public class FightController : MonoBehaviour
 
         if (isPuGong)
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("0A", 0.5f, target.cardObj);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.BasicAttack, 0.5f, target.cardObj);
             effectObj.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
         }
         else
@@ -3227,7 +3227,7 @@ public class FightController : MonoBehaviour
         GameObject effectObj = new GameObject();
         PlayerDataForGame.garbageStationObjs.Add(effectObj);
 
-        effectObj = EffectsPoolingControl.instance.GetEffectToFight("dropBlood", 1.5f, target.cardObj);
+        effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f, target.cardObj);
         var effectText = (isAdd ? "+" : "-") + Mathf.Abs(hpSubtract);
         effectObj.GetComponentInChildren<Text>().text = effectText;
         effectObj.GetComponentInChildren<Text>().color = isAdd ? ColorDataStatic.huiFu_green : Color.red;
@@ -3300,7 +3300,7 @@ public class FightController : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextH", 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, ui);
             effectObj.GetComponentInChildren<Text>().text = showTextName;
             effectObj.GetComponentInChildren<Text>().color = isRed ? Color.red : ColorDataStatic.huiFu_green;
         }
@@ -3311,7 +3311,7 @@ public class FightController : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextV", 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, ui);
             effectObj.GetComponentsInChildren<Image>()[1].sprite = Resources.Load("Image/battle/" + showTextName, typeof(Sprite)) as Sprite;
         }
     }
@@ -4429,7 +4429,7 @@ public class FightController : MonoBehaviour
         //近战跟远程选择不同的进攻方式
         if (attackUnit.combatType == 0)
         {
-            if (ChessPosIndex != -1) yield return CardAnimator.MeleePreAction(attackUnit, target);
+            if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
             yield return new WaitForSeconds(attackShakeTimeToGo);
             //var tg = new MeleeOperation();
             //var melee = new MeleeOperation();
@@ -4447,7 +4447,7 @@ public class FightController : MonoBehaviour
             yield return null;
         }
 
-        yield return CardAnimator.RangePreAction(attackUnit, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
         yield return OnAttackStart(1f, attackUnit, target, true);
         //yield return new WaitForSeconds(yuanChengShakeTime);
 
@@ -4620,7 +4620,7 @@ public class FightController : MonoBehaviour
     //主动塔行动
     IEnumerator InitiativeTowerAction(FightCardData attackUnit, bool playerRound)
     {
-        yield return CardAnimator.RangePreAction(attackUnit, towerFightTime0);
+        yield return CardAnimator.RangeActivity(attackUnit);//, towerFightTime0);
         //yield return new WaitForSeconds(towerFightTime0 / 2);
         FightForManager.instance.ActiveTowerFight(attackUnit, playerRound);
         yield return new WaitForSeconds(towerFightTime1);

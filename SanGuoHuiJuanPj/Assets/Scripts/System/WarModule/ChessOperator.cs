@@ -5,13 +5,14 @@ using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.IO.Pipelines;
 using System.Linq;
+using CorrelateLib;
 using UnityEngine;
 
 namespace Assets.System.WarModule
 {
-    public interface IChessOperator<TChess> where TChess : class, IChessman, new()
+    public interface IChessOperator
     {
-        IChessman Chessman { get; }
+        //IChessman Chessman { get; }
         /// <summary>
         /// 棋子攻击方式
         /// </summary>
@@ -20,37 +21,42 @@ namespace Assets.System.WarModule
         /// 棋子状态
         /// </summary>
         PieceStatus Status { get; }
+
+        bool IsAlive { get; }
+        GameCardType CardType { get; }
+        int CardId { get; }
+        bool IsChallenger { get; }
+        int Pos { get; }
+
         /// <summary>
         /// 棋子的反馈行动。
         /// </summary>
         /// <param name="activity"></param>
         /// <param name="offender"></param>
         /// <returns></returns>
-        ActivityResult Respond(Activity activity, IChessOperator<TChess> offender);
+        ActivityResult Respond(Activity activity, IChessOperator offender);
         /// <summary>
         /// 更新状态
         /// </summary>
-        ActivityResult UpdateConducts(Activity activity, IChessOperator<TChess> offender);
+        ActivityResult UpdateConducts(Activity activity, IChessOperator offender);
         /// <summary>
         /// 棋子主进程的行动
         /// </summary>
-        /// <param name="grid"></param>
         /// <returns></returns>
         void StartActions();
     }
-    public abstract class ChessOperator : IChessOperator<FightCardData>
+    public abstract class ChessOperator : IChessOperator
     {
-        public IChessman Chessman => Card;
+        //protected abstract IChessman Chessman { get; }
         public abstract AttackStyle Style { get; }
-        /// <summary>
-        /// 棋子数据
-        /// </summary>
-        public abstract FightCardData Card { get; }
-        /// <summary>
-        /// 棋子时事状态
-        /// </summary>
         public abstract PieceStatus Status { get; }
-        protected abstract ChessGrid<FightCardData> Grid { get; }
+
+        public bool IsAlive => !Status.IsDeath;
+        public abstract GameCardType CardType { get; }
+        public abstract int CardId { get; }
+        public abstract bool IsChallenger { get; }
+        public int Pos => Status.Pos;
+        protected abstract ChessGrid Grid { get; }
 
         public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() => null;
 
@@ -58,10 +64,11 @@ namespace Assets.System.WarModule
 
         public abstract void StartActions();
 
-        public ActivityResult Respond(Activity activity, IChessOperator<FightCardData> offender)
+        public ActivityResult Respond(Activity activity, IChessOperator offender)
         {
             //处理行动
-            var result = UpdateConducts(activity,offender);
+            var result = UpdateConducts(activity, offender);
+            if (activity.RePos >= 0) SetPos(activity.RePos);
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
             if (offender!=null && 
                 Status.Hp > 0 &&
@@ -79,56 +86,60 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="activity"></param>
         /// <param name="offender"></param>
-        public ActivityResult UpdateConducts(Activity activity, IChessOperator<FightCardData> offender)
+        public ActivityResult UpdateConducts(Activity activity, IChessOperator offender)
         {
-            //位置改变的战斗因子
-            var rePoses = activity.Conducts.Where(f => f.Kind == CombatConduct.RePosKind).ToArray();
-            var damages = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind).ToArray();
-            var buffs = activity.Conducts.Where(c => c.Kind == CombatConduct.BuffKind).ToArray();
-            var heals = activity.Conducts.Where(c => c.Kind == CombatConduct.HealKind).ToArray();
-            var result = new ActivityResult {Result = ActivityResult.Suffer};
+            var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
 
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.FriendlyTrigger ||
                 activity.Intent == Activity.Self)
-                result.Result = ActivityResult.Friendly;
+                result.Result = (int)ActivityResult.Types.Friendly;
 
-            if (result.Result == ActivityResult.Friendly) //同势力活动
+            if (result.Type == ActivityResult.Types.Friendly) //同势力活动
             {
                 foreach (var conduct in activity.Conducts)
                 {
                     if (Status.Hp <= 0) break;
                     UpdateConduct(conduct);
                 }
-                result.Status = Status;
+                result.SetStatus(Status);
                 return result;
             }
 
+            return OnOffensiveActivity(activity, offender, result);
+        }
+
+        private ActivityResult OnOffensiveActivity(Activity activity, IChessOperator offender,
+            ActivityResult result)
+        {
+            //位置改变的战斗因子
+            var damages = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind).ToArray();
+            var buffs = activity.Conducts.Where(c => c.Kind == CombatConduct.BuffKind).ToArray();
+            var heals = activity.Conducts.Where(c => c.Kind == CombatConduct.HealKind).ToArray();
             if (DodgeOnAttack(offender)) //闪避
-                result.Result = ActivityResult.Dodge;
+                result.Result = (int)ActivityResult.Types.Dodge;
             else if (Status.GetBuff(FightState.Cons.Invincible) > 0) //无敌
-                result.Result = ActivityResult.Invincible;
+                result.Result = (int)ActivityResult.Types.Invincible;
             else if (Status.TryDeplete(FightState.Cons.Shield)) //护盾
-                result.Result = ActivityResult.Shield;
+                result.Result = (int)ActivityResult.Types.Shield;
             else if (Status.GetBuff(FightState.Cons.ExtendedHp) > 0)
-                result.Result = ActivityResult.ExtendedShield;
-        
+                result.Result = (int)ActivityResult.Types.ExtendedShield;
+
             /***执行Activities***/
             //治疗
             ProceedConducts(heals);
             //伤害
-            if (result.Result == ActivityResult.Suffer ||
-                result.Result == ActivityResult.ExtendedShield)
+            if (result.Type == ActivityResult.Types.Suffer ||
+                result.Type == ActivityResult.Types.ExtendedShield)
             {
                 ProceedConducts(damages); //伤害
                 if (activity.Intent != Activity.OffendTrigger)
                     OnSufferConduct(offender, damages);
             }
 
-            if (result.Result != ActivityResult.Invincible) 
+            if (result.Type != ActivityResult.Types.Invincible)
                 ProceedConducts(buffs);//添加状态
-            //调位
-            ProceedConducts(rePoses);
+
             result.Status = Status.Clone();
             return result;
 
@@ -147,18 +158,25 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="iChessOperator"></param>
         /// <param name="damages"></param>
-        protected virtual void OnSufferConduct(IChessOperator<FightCardData> iChessOperator, CombatConduct[] damages){}
+        protected virtual void OnSufferConduct(IChessOperator iChessOperator, CombatConduct[] damages){}
 
-        public bool SetPos(int pos)
+        public void SetPos(int pos)
         {
-            var cPos = Grid.GetChessPos(pos, Card.isPlayerCard);
-            if (cPos == null || cPos.Chessman != null) return false;
-            Status.Pos = pos;
-            cPos.SetPos(Card);
-            return true;
+            if (Pos >= 0) Grid.Remove(this);
+            //var pPos = Grid.GetChessPos(Chessman);
+            //pPos?.RemoveOperator();
+            var chess = Grid.Replace(pos, this);
+            if(chess!=null)
+                throw new InvalidOperationException(
+                    $"Pos({pos}) has [{chess.CardId}({chess.CardType})] exist!");
+            //var cPos = Grid.GetChessPos(pos, Chessman.IsPlayer);
+            //if (cPos == null) throw new NullReferenceException($"Pos({pos}) is null!");
+            //if (cPos.Operator != null)
+            //cPos.SetPos(this);
+            Status.SetPos(pos);
         }
 
-        protected virtual void OnCounter(Activity activity, IChessOperator<FightCardData> offender){}
+        protected virtual void OnCounter(Activity activity, IChessOperator offender){}
         /// <summary>
         /// 更新行动，主要是分类调用
         /// 更新状态:<see cref="UpdateBuffs"/>，
@@ -183,34 +201,19 @@ namespace Assets.System.WarModule
                 case CombatConduct.HealKind:
                     Healing(conduct);
                     break;
-                case CombatConduct.RePosKind:
-                    RePosition(conduct);
-                    break;
                 case CombatConduct.PlayerDegreeKind://特别类不是棋子维度可执行的
+                case CombatConduct.KillingKind://属于直接提取棋子的类型
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        /// <summary>
-        /// 执行移位命令，主要是如果目标位置上不是空的，将不执行
-        /// </summary>
-        /// <param name="conduct"></param>
-        protected virtual void RePosition(CombatConduct conduct)
+        protected abstract bool DodgeOnAttack(IChessOperator offender);
+
+        protected virtual void OnDeadTrigger(CombatConduct conduct)
         {
-            if (conduct.Kind != CombatConduct.RePosKind)
-                throw new InvalidOperationException($"Expected Conduct kind is {CombatConduct.RePosKind} != {conduct.Kind}!");
-            var origin = Grid.GetChessPos(Card.Pos, Card.IsPlayer);
-            var targetPos = Grid.GetChessPos(conduct.Element, Card.IsPlayer);
-            if(targetPos.Chessman!=null)return;//如果目标位置有卡牌，不执行换位
-            origin.RemovePos();
-            targetPos.SetPos(Card);
         }
-
-        protected abstract bool DodgeOnAttack(IChessOperator<FightCardData> offender);
-
-        protected virtual IList<Activity> OnDeadTrigger(CombatConduct conduct) => null;
 
         /// <summary>
         /// 治疗执行因子<see cref="CombatConduct"/>的血量增值转换
@@ -265,33 +268,38 @@ namespace Assets.System.WarModule
                 Status.ClearBuff(conduct.Element);
                 return;
             }
-            Status.AddBuff(conduct.Element, OnBuffingConvert(conduct));
+            var value = OnBuffingConvert(conduct);
+            if (value == 0) return;
+            Status.AddBuff(conduct.Element, value);
         }
     }
 
-    public abstract class ChessmanOperator : ChessOperator
+    public abstract class CardOperator : ChessOperator
     {
-        private FightCardData chessman;
+        private IChessman chessman;
         private AttackStyle attackStyle;
         private PieceStatus dynamicStatus;
-        private IChessboardOperator<FightCardData> chessboard;
+        private IChessboardOperator chessboard;
 
-        protected IChessboardOperator<FightCardData> Chessboard => chessboard;
+        protected IChessboardOperator Chessboard => chessboard;
         protected GameCardInfo Info { get; private set; }
-        public override FightCardData Card => chessman;
+        //public override IChessman Chessman => chessman;
         public override AttackStyle Style => attackStyle;
         public override PieceStatus Status => dynamicStatus;
+        public override GameCardType CardType => chessman.CardType;
+        public override int CardId => chessman.CardId;
+        public override bool IsChallenger => chessman.IsPlayer;
 
-        protected override ChessGrid<FightCardData> Grid => chessboard.Grid;
+        protected override ChessGrid Grid => chessboard.Grid;
 
-        public virtual void Init(FightCardData card, AttackStyle style, IChessboardOperator<FightCardData> chessboardOp)
+        public virtual void Init(IChessman card, AttackStyle style, IChessboardOperator chessboardOp)
         {
             chessman = card;
             attackStyle = style;
             chessboard = chessboardOp;
-            dynamicStatus = PieceStatus.Instance(card.Hp.Value, card.Hp.Max, card.Pos,
-                card.fightState.Data.ToDictionary(s => s.Key, s => s.Value));
-            Info = card.cardObj.CardInfo;
+            dynamicStatus = PieceStatus.Instance(card.HitPoint, card.HitPoint, card.Pos, new Dictionary<int, int>());
+            if (card.CardType != GameCardType.Base)
+                Info = card.Info;
         }
 
         /// <summary>

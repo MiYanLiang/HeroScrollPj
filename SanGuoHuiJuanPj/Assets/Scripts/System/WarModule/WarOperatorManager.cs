@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
-using JetBrains.Annotations;
 
 namespace Assets.System.WarModule
 {
-    public class ChessOperatorManager : ChessboardOperator<FightCardData>
+    public class ChessOperatorManager : ChessboardOperator
     {
         private const int TowerArmedType = -1;
         private const int TrapArmedType = -2;
@@ -16,18 +15,14 @@ namespace Assets.System.WarModule
         private const int NoCounter = 0;
         private const int BasicCounterStyle = 1;
 
-        private static AttackStyle TowerRangeNoCounter =
-            AttackStyle.Instance(TowerArmedType, TowerArmedType, RangeCombatStyle, NoCounter, 0);
-        private static AttackStyle TrapSpecialNoCounter =
-            AttackStyle.Instance(TrapArmedType, TrapArmedType, SpecialCombatStyle, NoCounter, 0);
-
         private Dictionary<FightCardData, ChessOperator> OpMapper { get; }
+        public IReadOnlyDictionary<FightCardData, ChessOperator> Data => OpMapper;
         public int ChallengerGold { get; set; }
         public int OpponentGold { get; set; }
         public List<int> ChallengerChests { get; set; }
         public List<int> OpponentChests { get; set; }
 
-        public ChessOperatorManager(bool isChallengerFirst,ChessGrid<FightCardData> grid) : base(isChallengerFirst,grid)
+        public ChessOperatorManager(bool isChallengerFirst,ChessGrid grid) : base(isChallengerFirst,grid)
         {
             OpMapper = new Dictionary<FightCardData, ChessOperator>();
         }
@@ -63,10 +58,18 @@ namespace Assets.System.WarModule
                     return InstanceTrap(card);
                 case GameCardType.Spell:
                 case GameCardType.Base:
+                    return InstanceBase(card);//todo 需要实现一个老巢的类
                 case GameCardType.Soldier:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private ChessOperator InstanceBase(FightCardData card)
+        {
+            var op = new BlankTowerOperator();
+            op.Init(card, AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level), this);
+            return op;
         }
 
         private ChessOperator InstanceHero(FightCardData card)
@@ -123,8 +126,8 @@ namespace Assets.System.WarModule
                 case 46: op = new DaMeiRenOperator();break;//46  大美人
                 case 47: op = new ShuiKeOperator();break;//47  说客
                 case 48: op = new DaShuiKeOperator();break;//48  大说客
-                case 49: op = new NuBingOperator();break;//49  弩兵
-                case 50: op = new WenShiOperator();break;//50  文士
+                case 49: op = new HeroOperator();break;//49  弩兵
+                case 50: op = new HeroOperator();break;//50  文士
                 case 51: op = new QiangNuOperator();break;//51  强弩
                 case 52: op = new DaGongOperator();break;//52  大弓
                 case 53: op = new YinShiOperator();break;//53  隐士
@@ -132,7 +135,7 @@ namespace Assets.System.WarModule
                 case 55: op = new HuoChuanOperator();break;//55  火船
                 case 56: op = new ManZuOperator();break;//56  蛮族
                 case 57: op = new TengJiaOperator();break;//57  藤甲
-                case 58: op = new TieQiOperator();break;//58  铁骑
+                case 58: op = new TieJiOperator();break;//58  铁骑
                 case 59: op = new DuanQiangOperator();break;//59  短枪
                 case 60: op = new JiXianFengOperator();break;//60  急先锋
                 ////61  红颜
@@ -151,7 +154,7 @@ namespace Assets.System.WarModule
         {
             var m = MilitaryInfo.GetInfo(card.cardId);
             return AttackStyle.Instance(m.Id, m.ArmedType, card.combatType, card.combatType == 1 ? 1 : 0,
-                card.cardDamageType);
+                card.cardDamageType, card.damage,card.Level);
         }
 
         private ChessOperator InstanceTrap(FightCardData card)
@@ -175,11 +178,13 @@ namespace Assets.System.WarModule
                 default: op = new BlankTrapOperator(); break;
             }
 
-            op.Init(card, TrapSpecialNoCounter,this);
+            op.Init(card,
+                AttackStyle.Instance(TrapArmedType, TrapArmedType, SpecialCombatStyle, NoCounter, 0, card.damage,card.Level),
+                this);
             return op;
         }
 
-        private ChessOperator InstanceTower(FightCardData card)
+    private ChessOperator InstanceTower(FightCardData card)
         {
             TowerOperator op = null;
             switch (card.cardId)
@@ -197,17 +202,10 @@ namespace Assets.System.WarModule
                 default: op = new BlankTowerOperator(); break;
             }
 
-            op.Init(card, TowerRangeNoCounter, this);
+            op.Init(card,
+                AttackStyle.Instance(TowerArmedType, TowerArmedType, RangeCombatStyle, NoCounter, 0, card.damage,card.Level),
+                this);
             return op;
-        }
-
-        public override IChessOperator<FightCardData> GetOperator(IChessPos<FightCardData> chessPos)
-        {
-            if (chessPos.Chessman == null) return null;
-            if (!OpMapper.ContainsKey(chessPos.Chessman))
-                throw new InvalidOperationException(
-                    $"{nameof(ChessOperatorManager)}:pos[{chessPos.Pos}].Chessman[{chessPos.Chessman.cardId}].Type[{chessPos.Chessman.CardType}] not registered!");
-            return OpMapper[chessPos.Chessman];
         }
 
         #region RoundTrigger
@@ -293,6 +291,376 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
+    /// 58  铁骑 - 多铁骑上阵发动【连环战马】。所有铁骑分担伤害，并按铁骑数量提升伤害。
+    /// </summary>
+    public class TieJiOperator : HeroOperator
+    {
+        protected virtual int ShareRate => DataTable.GetGameValue(50);
+        protected virtual int DamageStackRate => DataTable.GetGameValue(50);
+        protected IEnumerable<IChessPos> GetComrades() => Grid.GetScope(this).Values
+                .Where(p => p.Operator != null &&
+                            p.Operator.IsAlive &&
+                            p.Operator.CardType == GameCardType.Hero &&
+                            p.Operator.Style.Military == 58);
+
+        protected override int OnDamageConvert(CombatConduct conduct)
+        {
+            var comrades = GetComrades().ToArray();
+            var finalDamage = conduct.Total / (comrades.Length + 1);
+            foreach (var comrade in comrades)
+            {
+                Chessboard.ActionRespondResult(this, comrade, Activity.FriendlyTrigger,
+                    Singular(CombatConduct.Instance(finalDamage, 0, 0, CombatConduct.UnResistDmg,
+                        CombatConduct.DamageKind)));
+            }
+            return (int) finalDamage;
+        }
+
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var stacks = GetComrades().Count();
+            if (stacks <= 0) return base.MilitaryDamages(targetPos);
+            var damage = 0.01f * GetBasicDamage() * DamageStackRate * stacks;
+            return Singular(InstanceHeroPerformDamage((int) damage));
+        }
+    }
+
+    /// <summary>
+    /// 65  黄巾 - 水能载舟，亦能覆舟。场上黄巾数量越多，攻击越高。
+    /// </summary>
+    public class HuangJinOperator : HeroOperator
+    {
+        protected virtual int DamageRate => DataTable.GetGameValue(146);
+
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var cluster = Grid.GetScope(this).Values
+                .Count(p => p.Operator != null &&
+                            p.Operator.IsAlive &&
+                            p.Operator.CardType == GameCardType.Hero &&
+                            p.Operator.Style.Military == 65);
+            return Singular(InstanceHeroPerformDamage((int) (0.01f * GetBasicDamage() * cluster * DamageRate)));
+        }
+    }
+
+    /// <summary>
+    /// 57  藤甲 - 藤甲护体，刀枪不入。高度免疫物理伤害。
+    /// </summary>
+    public class TengJiaOperator : HeroOperator
+    {
+        protected override int OnDamageConvert(CombatConduct conduct)
+        {
+            if (conduct.Element == CombatConduct.FireDmg) return (int) (conduct.Total * 3);
+            return base.OnDamageConvert(conduct);
+        }
+    }
+
+    /// <summary>
+    /// 59  短枪 - 手持短枪，攻击时，可穿刺攻击目标身后1个单位。
+    /// </summary>
+    public class DuanQiangOperator : ExtendedDamageHero
+    {
+        /// <summary>
+        /// 刺穿单位数
+        /// </summary>
+        protected virtual int PenetrateUnits => 1;
+
+        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
+        {
+            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(96) * 0.01f;
+            return CombatConduct.InstanceDamage(penetrateDmg);
+        }
+
+        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target)
+        {
+            var tPoss = new List<int>();
+            for (var  i = 1; i < PenetrateUnits + 1; i++)
+            {
+                var pos = i * 5 * target.Pos;
+                tPoss.Add(pos);
+            }
+
+            return Grid.GetRivalScope(this)
+                .Where(p => tPoss.Contains(p.Key) && p.Value != target && p.Value.IsPostedAlive)
+                .Select(p => p.Value)
+                .OrderBy(p => p.Pos)
+                .Take(PenetrateUnits);
+        }
+    }
+
+    /// <summary>
+    /// 56  蛮族 - 剧毒粹刃，攻击时有概率使敌方武将【中毒】。
+    /// </summary>
+    public class ManZuOperator : HeroOperator
+    {
+        protected virtual int PoisonRate => DataTable.GetGameValue(51);
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var combat = new List<CombatConduct> {InstanceHeroPerformDamage()};
+            if(Chessboard.IsRandomPass(PoisonRate))
+                combat.Add(CombatConduct.InstanceBuff(FightState.Cons.Poison));
+            return combat.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// 55  火船 - 驱动火船，可引燃敌方武将，或自爆对敌方造成大范围伤害及【灼烧】。
+    /// </summary>
+    public class HuoChuanOperator : HeroOperator
+    {
+        protected virtual int BurnRate => DataTable.GetGameValue(52);
+        protected virtual int BurnExplodeRatio => DataTable.GetGameValue(53);
+        protected virtual int ExplodeRatio => DataTable.GetGameValue(55);
+
+        protected override void MilitaryPerforms()
+        {
+            var target = Grid.GetContraPositionInSequence(this);
+            if (Status.HpRate < 0.5)
+            {
+                var explode = new List<CombatConduct>
+                {
+                    InstanceHeroPerformDamage((int)
+                        (GetBasicDamage() * ExplodeRatio * 0.01f))
+                };
+                var surrounded = Grid.GetNeighbors(target.Pos, target.IsChallenger)
+                    .Where(p => p.IsPostedAlive).ToList();
+                surrounded.Insert(0, target);
+                foreach (var chessPos in surrounded)
+                {
+                    if (Chessboard.IsRandomPass(BurnExplodeRatio))
+                        explode.Add(CombatConduct.InstanceBuff(FightState.Cons.Burn));
+                    Chessboard.ActionRespondResult(this, chessPos, Activity.OffendTrigger, explode.ToArray());
+                }
+
+                Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
+                    Singular(CombatConduct.InstanceKilling()));
+                return;
+            }
+
+            var combat = new List<CombatConduct> {InstanceHeroPerformDamage()};
+            if (Chessboard.IsRandomPass(BurnRate))
+                combat.Add(CombatConduct.InstanceBuff(FightState.Cons.Burn));
+            Chessboard.ActionRespondResult(this, target, Activity.Offensive, combat.ToArray());
+        }
+    }
+
+    /// <summary>
+    /// 54  大隐士 - 召唤水龙，攻击敌方5个武将，造成伤害并将其击退。
+    /// </summary>
+    public class DaYinShiOperator : YinShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(30);
+    }
+
+    /// <summary>
+    /// 53  隐士 - 召唤激流，攻击敌方3个武将，造成伤害并将其击退。
+    /// </summary>
+    public class YinShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(29);
+        protected virtual int DamageRate => DataTable.GetGameValue(75);
+        protected override void MilitaryPerforms()
+        {
+            var targets = Grid.GetRivalScope(this).Values
+                .Where(p => p.Operator != null &&
+                            p.Operator.IsAlive &&
+                            p.Operator.CardType == GameCardType.Hero)
+                .Select(p => new WeightElement<IChessPos>
+                {
+                    Obj = p,
+                    Weight = Chessboard.Randomize(3)
+                }).Pick(TargetAmount).ToArray();
+            foreach (var target in targets)
+            {
+                var damage = InstanceHeroPerformDamage((int) (DamageRate * 0.01f * GetBasicDamage()));
+                var backPos = Grid.BackPos(target.Obj);
+                if (backPos!=null && backPos.Operator == null)
+                {
+                    Chessboard.ActionRespondResult(this, target.Obj, Activity.Offensive, Singular(damage), backPos.Pos);
+                    continue;
+                }
+                Chessboard.ActionRespondResult(this, target.Obj, Activity.Offensive, Singular(damage));
+            }
+        }
+    }
+
+    /// <summary>
+    /// 48  大说客 - 随机选择5个敌方武将进行游说，有概率对其造成【怯战】，无法暴击和会心一击。
+    /// </summary>
+    public class DaShuiKeOperator : ShuiKeOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(28);
+    }
+
+    /// <summary>
+    /// 47  说客 - 随机选择3个敌方武将进行游说，有概率对其造成【怯战】，无法暴击和会心一击。
+    /// </summary>
+    public class ShuiKeOperator : CounselorOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(27);
+        protected override int LevelRate => DataTable.GetGameValue(71);
+        protected override int BasicRate => DataTable.GetGameValue(70);
+        protected override int MaxRate => DataTable.GetGameValue(69);
+        protected override CombatConduct[] Skills() => Singular(CombatConduct.InstanceBuff(FightState.Cons.Cowardly));
+    }
+
+    /// <summary>
+    /// 46  大美人 - 以倾国之姿激励友方武将，有概率使其获得【神助】，下次攻击时必定会心一击。
+    /// </summary>
+    public class DaMeiRenOperator : MeiRenOperator
+    {
+        protected override CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(FightState.Cons.ShenZhu);
+    }
+
+    /// <summary>
+    /// 45  美人 - 以倾城之姿激励友方武将，有概率使其获得【内助】，下次攻击时必定暴击。
+    /// </summary>
+    public class MeiRenOperator : HeroOperator
+    {
+        protected virtual CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(FightState.Cons.Neizhu);
+        protected override void MilitaryPerforms()
+        {
+            var target = Grid.GetScope(this)
+                .Values.Where(p => p.Operator != null &&
+                                   p.Operator.IsAlive &&
+                                   p.Operator.CardType == GameCardType.Hero)
+                .FirstOrDefault();
+            if (target == null)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+            Chessboard.ActionRespondResult(this, target, Activity.Friendly, Singular(BuffToFriendly));
+        }
+    }
+
+    /// <summary>
+    /// 44  巾帼 - 巾帼不让须眉，攻击同时对目标造成【卸甲】，大幅降低其攻击和防御。
+    /// </summary>
+    public class JingGuoOperator : HeroOperator
+    {
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            return new CombatConduct[]
+            {
+                CombatConduct.InstanceBuff(FightState.Cons.Unarmed),
+                InstanceHeroPerformDamage()
+            };
+        }
+    }
+
+    /// <summary>
+    /// 43  大医师 - 分发神药，最多治疗3个友方武将。治疗单位越少，治疗量越高。
+    /// </summary>
+    public class DaYiShiOperator : YiShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(26);
+        protected override int HealingRate => DataTable.GetGameValue(81);
+    }
+
+    /// <summary>
+    /// 42  医师 - 分发草药，治疗1个友方武将。
+    /// </summary>
+    public class YiShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(25);
+        protected virtual int HealingRate => DataTable.GetGameValue(80);
+        protected override void MilitaryPerforms()
+        {
+            var targets = Grid.GetScope(this)
+                .Values.Where(p => p.Operator != null &&
+                                   p.Operator.IsAlive &&
+                                   p.Operator.CardType == GameCardType.Hero &&
+                                   p.Operator.Status.HpRate < 1)
+                .OrderBy(p => p.Operator.Status.HpRate)
+                .Take(TargetAmount).ToArray();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+            var basicHeal = GetBasicDamage() * HealingRate * 0.01f / targets.Length;
+            var heal = CombatConduct.InstanceHeal(basicHeal);
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var target = targets[i];
+                Chessboard.ActionRespondResult(this, target, i == 0 ? Activity.Friendly : Activity.FriendlyTrigger,
+                    Singular(heal));
+            }
+        }
+    }
+
+    /// <summary>
+    /// 41  敢死 - 武将陷入危急之时进入【死战】状态，将受到的伤害转化为自身血量数。
+    /// </summary>
+    public class GanSiOperator : HeroOperator
+    {
+        protected virtual int TriggerRate => DataTable.GetGameValue(103);
+        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        {
+            if (Status.HpRate > TriggerRate * 0.01f)return;
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
+                Singular(CombatConduct.InstanceBuff(FightState.Cons.DeathFight)));
+        }
+    }
+
+    /// <summary>
+    /// 40  器械 - 神斧天工，最多选择3个建筑（包括大营）进行修复。修复单位越少，修复量越高。
+    /// </summary>
+    public class QiXieOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(132);
+        protected virtual int RecoverRate => DataTable.GetGameValue(65);
+        protected override void MilitaryPerforms()
+        {
+            var targets = Grid.GetScope(this).Values
+                .Where(p => p.Operator != null &&
+                            p.Operator.IsAlive && (
+                                p.Operator.CardType == GameCardType.Tower ||
+                                p.Operator.CardType == GameCardType.Trap ||
+                                p.Operator.CardType == GameCardType.Base))
+                .OrderBy(p => p.Operator.Status.HpRate)
+                .Take(TargetAmount).ToArray();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+
+            var recover = GetBasicDamage() * RecoverRate * 0.01f / targets.Length;
+            foreach (var target in targets)
+            {
+                Chessboard.ActionRespondResult(this, target, Activity.Friendly,
+                    Singular(CombatConduct.InstanceHeal(recover)));
+            }
+        }
+    }
+
+    /// <summary>
+    /// 39  辅佐 - 为血量数最低的友方武将添加【防护盾】，可持续抵挡伤害。
+    /// </summary>
+    public class FuZuoOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms()
+        {
+            var target = Grid.GetScope(this).Values
+                .Where(p => p.Operator != null && 
+                            p.Operator.IsAlive && 
+                            p.Operator.CardType == GameCardType.Hero)
+                .OrderBy(p => (p.Operator.Status.Hp + p.Operator.Status.GetBuff(FightState.Cons.ExtendedHp)) / p.Operator.Status.MaxHp)
+                .FirstOrDefault();
+            if (target == null)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+            var basicDamage = InstanceHeroPerformDamage();
+            Chessboard.ActionRespondResult(this, target, Activity.Friendly,
+                Singular(CombatConduct.InstanceBuff(FightState.Cons.ExtendedHp, basicDamage.Total)));
+        }
+    }
+
+    /// <summary>
     /// 38  内政 - 稳定军心，选择有减益的友方武将，有概率为其清除减益状态。
     /// </summary>
     public class NeiZhengOperator : HeroOperator
@@ -308,9 +676,51 @@ namespace Assets.System.WarModule
             FightState.Cons.Unarmed
         };
 
+        protected virtual int BasicRate => DataTable.GetGameValue(126);
+        protected virtual int LevelingIncrease => DataTable.GetGameValue(127);
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).
+            var rate = BasicRate + LevelingIncrease * Style.Level;
+            var targets = Grid.GetScope(IsChallenger).Values
+                .Where(p => p.IsPostedAlive && 
+                            p.Operator.CardType == GameCardType.Hero)
+                .Select(pos =>
+                {
+                    return new
+                    {
+                        pos,pos.Operator, value = pos.Operator.Status.Buffs
+                            .Join(NegativeBuffs, b => b.Key, n => (int) n, (b, _) => b)
+                            .Sum(b => b.Value)
+                    };
+                }) //找出所有武将的负面数
+                .OrderByDescending(b => b.value).Take(3).ToArray();
+            var basicDamage = InstanceHeroPerformDamage();
+
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+
+            for (var i = 0; i < targets.Length; i++)
+            {
+                if(Chessboard.IsRandomPass(rate))
+                {
+                    var target = targets[i];
+                    var keys = target.Operator.Status.Buffs.Where(p => p.Value > 0)
+                        .Join(NegativeBuffs, p => p.Key, n => (int) n, (_, n) => n)
+                        .ToArray();
+                    var con = keys[Chessboard.Randomize(keys.Length)];
+                    Chessboard.ActionRespondResult(this, target.pos, Activity.Friendly,
+                        Singular(CombatConduct.InstanceBuff(con, -1)));
+                }
+                if(basicDamage.Rouse > 0 && i < 2)
+                    continue;
+                if(basicDamage.Critical > 0 && i < 1)
+                    continue;
+                break;
+            }
+
         }
     }
 
@@ -328,6 +738,8 @@ namespace Assets.System.WarModule
     public class MouShiOperator : CounselorOperator
     {
         protected override int TargetAmount => DataTable.GetGameValue(23);
+        protected override int LevelRate => DataTable.GetGameValue(83);
+        protected override int BasicRate => DataTable.GetGameValue(82);
         protected override CombatConduct[] Skills() => Singular(CombatConduct.InstanceBuff(FightState.Cons.Stunned));
     }
 
@@ -345,25 +757,59 @@ namespace Assets.System.WarModule
     public class BianShiOperator : CounselorOperator
     {
         protected override int TargetAmount => DataTable.GetGameValue(21);
+        protected override int MaxRate => DataTable.GetGameValue(66);
+        protected override int LevelRate => DataTable.GetGameValue(68);
+        protected override int BasicRate => DataTable.GetGameValue(67);
         protected override CombatConduct[] Skills() => Singular(CombatConduct.InstanceBuff(FightState.Cons.Imprisoned));
     }
     /// <summary>
-    /// 参军/谋士，主要技能是获取一定数量的地方逐一对其发出武将技
+    /// 参军/谋士，主要技能是获取一定数量的对方武将类逐一对其发出武将技
     /// </summary>
     public abstract class CounselorOperator : HeroOperator
     {
         protected abstract int TargetAmount { get; }
+        /// <summary>
+        /// 暴击增率
+        /// </summary>
+        protected virtual int CriticalRate => DataTable.GetGameValue(84);
+        /// <summary>
+        /// 会心增率
+        /// </summary>
+        protected virtual int RouseRate => DataTable.GetGameValue(85);
+        /// <summary>
+        /// buff最大率
+        /// </summary>
+        protected virtual int MaxRate => 100;
+        /// <summary>
+        /// 根据等级递增率
+        /// </summary>
+        protected abstract int LevelRate { get; }
+        /// <summary>
+        /// 基础值
+        /// </summary>
+        protected abstract int BasicRate { get; }
         protected abstract CombatConduct[] Skills();
 
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).Values
-                .Where(p => p.Chessman != null && p.Chessman.IsAlive)
-                .Select(c => new WeightElement<IChessPos<FightCardData>> { Obj = c, Weight = Chessboard.Randomize(3) })
+            var targets = Grid.GetRivalScope(this).Values
+                .Where(p => p.IsPostedAlive && p.Operator.CardType == GameCardType.Hero)
+                .Select(c => new WeightElement<IChessPos> { Obj = c, Weight = Chessboard.Randomize(3) })
                 .Pick(TargetAmount).Select(c => c.Obj).ToArray();
+            var damage = InstanceHeroPerformDamage();
+            var rate = BasicRate + Style.Level * LevelRate;
+            if (damage.Rouse > 0)
+                rate += RouseRate;
+            else if (damage.Critical > 0)
+                rate += CriticalRate;
+            if (rate > MaxRate)
+                rate = MaxRate;
             foreach (var target in targets)
-                Chessboard.ActionRespondResult(this, target, Activity.Offensive,
-                    Skills());
+            {
+                if (Chessboard.IsRandomPass(rate))
+                    Chessboard.ActionRespondResult(this, target, Activity.Offensive,
+                        Skills());
+            }
         }
     }
 
@@ -395,7 +841,7 @@ namespace Assets.System.WarModule
         
         protected override void MilitaryPerforms()
         {
-            var scope = Grid.GetRivalScope(Chessman);
+            var scope = Grid.GetRivalScope(this);
             var ringIndex = -1;
             for (int i = 0; i < FireRings.Length; i++)
             {
@@ -415,7 +861,7 @@ namespace Assets.System.WarModule
                 if(Chessboard.IsRandomPass(BurnRatio))
                     combat.Add(burnBuff);
                 chessPos.Terrain.AddCondition(ChessTerrain.Fire, 2);
-                if (chessPos.Chessman == null || chessPos.Chessman.IsAlive) continue;
+                if (chessPos.Operator == null || chessPos.Operator.IsAlive) continue;
                 Chessboard.ActionRespondResult(this, chessPos, Activity.Offensive, combat.ToArray());
             }
         }
@@ -440,19 +886,18 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).Values
-                .Where(p => p.Chessman != null &&
-                            p.Chessman.IsAlive &&
-                            p.Chessman.CardType == GameCardType.Hero)
-                .Select(p=>new WeightElement<IChessPos<FightCardData>>
+            var targets = Grid.GetRivalScope(this).Values
+                .Where(p => p.IsPostedAlive &&
+                            p.Operator.CardType == GameCardType.Hero)
+                .Select(p=>new WeightElement<IChessPos>
                 {
                     Obj = p,
-                    Weight = WeightElement<IChessPos<FightCardData>>.Random.Next(1,4)
+                    Weight = WeightElement<IChessPos>.Random.Next(1,4)
                 }).Pick(TargetAmount);
             foreach (var target in targets)
             {
                 var basicConduct = InstanceHeroPerformDamage((int) (GetBasicDamage() * DamageRate * 0.01f));
-                var poisonRate = (int) (Chessboard.ConfigValue(88) + (Chessboard.ConfigValue(89) * Card.cardGrade - 1));
+                var poisonRate = (int) (Chessboard.ConfigValue(88) + (Chessboard.ConfigValue(89) * Style.Level - 1));
 
                 if (basicConduct.Rouse > 0)
                     poisonRate += DataTable.GetGameValue(125);
@@ -491,12 +936,12 @@ namespace Assets.System.WarModule
             for (var i = 0; i <= AttackTimes; i++)
             {
                 var pick = Chessboard.Randomize(TargetLimit) + 1;
-                var targets = Grid.GetRivalScope(Chessman).Values
-                    .Where(p => p.Chessman != null && p.Chessman.IsAlive)
-                    .Select(p => new WeightElement<IChessPos<FightCardData>>
+                var targets = Grid.GetRivalScope(this).Values
+                    .Where(p => p.IsPostedAlive)
+                    .Select(p => new WeightElement<IChessPos>
                     {
                         Obj = p,
-                        Weight = WeightElement<IChessPos<FightCardData>>.Random.Next(1, 4)
+                        Weight = WeightElement<IChessPos>.Random.Next(1, 4)
                     }).Pick(pick).ToArray();
                 foreach (var target in targets)
                 {
@@ -528,10 +973,9 @@ namespace Assets.System.WarModule
         protected virtual int KillingRate => DataTable.GetGameValue(60);
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).Values
-                .Where(c => c.Chessman != null && 
-                            c.Chessman.IsAlive &&
-                            c.Chessman.CardType == GameCardType.Hero)
+            var targets = Grid.GetRivalScope(this).Values
+                .Where(c => c.IsPostedAlive &&
+                            c.Operator.CardType == GameCardType.Hero)
                 .OrderBy(p => Chessboard.GetStatus(p).HpRate)
                 .Take(TargetAmount).ToArray();
             var baseDamage = InstanceHeroPerformDamage();
@@ -559,11 +1003,11 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetRivalScope(Chessman).Values
-                .Where(p => p.Chessman != null && p.Chessman.IsAlive)
-                .OrderByDescending(p => p.Chessman.combatType)
-                .ThenByDescending(p => p.Chessman.damage)
-                .ThenByDescending(p => p.Chessman.Pos).FirstOrDefault();
+            var target = Grid.GetRivalScope(this).Values
+                .Where(p => p.IsPostedAlive)
+                .OrderByDescending(p => p.Operator.Style.CombatStyle)
+                .ThenByDescending(p => p.Operator.Style.Strength)
+                .ThenByDescending(p => p.Pos).FirstOrDefault();
             var combats = new List<CombatConduct> {InstanceHeroPerformDamage()};
             if (Chessboard.RandomFromConfigTable(147)) 
                 combats.Add(CombatConduct.InstanceBuff(FightState.Cons.Bleed));
@@ -579,12 +1023,12 @@ namespace Assets.System.WarModule
         private int[] TargetPoses = new[] {12, 15, 16, 17};
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).Values.Where(p => p.Chessman != null && p.Chessman.IsAlive)
+            var targets = Grid.GetRivalScope(this).Values.Where(p => p.Operator != null && p.Operator.IsAlive)
                 .Join(TargetPoses, t => t.Pos, p => p, (t, _) => t).ToArray();
             foreach (var target in targets)
             {
                 var damage = GetBasicDamage();
-                if (target.Chessman.CardType == GameCardType.Base)
+                if (target.Operator.CardType == GameCardType.Base)
                     damage = (int) (damage * 0.01f * DataTable.GetGameValue(72));
                 Chessboard.ActionRespondResult(this, target, Activity.Offensive,
                     Singular(InstanceHeroPerformDamage(damage)));
@@ -597,12 +1041,12 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GongChengCheOperator : HeroOperator
     {
-        protected override CombatConduct[] MilitaryDamages(IChessPos<FightCardData> targetPos)
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var damage = GetBasicDamage();
             damage = (int) (damage * 0.01f * 
-                            (target.Chessman.CardType != GameCardType.Hero
+                            (target.Operator.CardType != GameCardType.Hero
                                 ? DataTable.GetGameValue(73)
                                 : DataTable.GetGameValue(74)));
             return Singular(CombatConduct.InstanceDamage(damage, CombatConduct.NonHumanDmg));
@@ -616,7 +1060,7 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var status = Chessboard.GetStatus(target);
             var basicDamage = GetBasicDamage();
             if (status.GetBuff(FightState.Cons.Stunned) > 0)
@@ -635,21 +1079,16 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var combatConducts = new List<CombatConduct>();
             var backPos = Grid.BackPos(target);
-            if (backPos.Chessman == null)
-            {
-                combatConducts.Add(InstanceHeroPerformDamage());
-                combatConducts.Add(CombatConduct.InstanceRePos(backPos.Pos));
-            }
-            else
-            {
-                combatConducts.Add(
-                    InstanceHeroPerformDamage((int) (GetBasicDamage() * DataTable.GetGameValue(90) * 0.01f)));
-            }
+            var rePos = backPos != null && backPos.Operator == null ? backPos.Pos : -1;
+            combatConducts.Add(
+                rePos < 0
+                    ? InstanceHeroPerformDamage((int) (GetBasicDamage() * DataTable.GetGameValue(90) * 0.01f))
+                    : InstanceHeroPerformDamage());
 
-            Chessboard.ActionRespondResult(this, target, Activity.Offensive, combatConducts.ToArray());
+            Chessboard.ActionRespondResult(this, target, Activity.Offensive, combatConducts.ToArray(), rePos);
         }
     }
 
@@ -671,8 +1110,8 @@ namespace Assets.System.WarModule
         protected virtual int DamageRate => DataTable.GetGameValue(77);
         protected override void MilitaryPerforms()
         {
-            var targets = Grid.GetRivalScope(Chessman).Values.Where(p => p.Chessman != null && p.Chessman.IsAlive).Take(TargetsPick).ToArray();
-            if(targets.Any())return;
+            var targets = Grid.GetRivalScope(this).Values.Where(p => p.IsPostedAlive).Take(TargetsPick).ToArray();
+            if (targets.Length == 0) return;
             var damage = DamageRate * GetBasicDamage() * 0.01f / targets.Length;
             var perform = InstanceHeroPerformDamage((int)damage);
             foreach (var target in targets)
@@ -691,7 +1130,7 @@ namespace Assets.System.WarModule
         protected virtual int ComboRate => DataTable.GetGameValue(48);
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             for (int i = 0; i < Combo; i++)
             {
                 var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive,
@@ -719,7 +1158,7 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var status = Chessboard.GetStatus(target);
             var damageRate = HpDepletedRatioWithGap(status, 0, DataTable.GetGameValue(93), DataTable.GetGameValue(94));
             var performDamage = InstanceHeroPerformDamage(GetBasicDamage() * (int) (damageRate * 0.01f));
@@ -736,15 +1175,22 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DaDaoOperator : HeroOperator
     {
+        protected virtual int DamageIncreaseRate => DataTable.GetGameValue(41);
         protected override void MilitaryPerforms()
         {
-            bool isDeath = false;
-            do
+            var paths = Grid.GetAttackPath(this);
+            var targets = Grid.GetRivalScope(this).Join(paths,p=>p.Key,p=>p,(p,_)=>p.Value)
+                .Where(p => p.IsPostedAlive);
+            var addOnDmg = 0;
+            foreach (var target in targets)
             {
-                var target = Grid.GetContraPositionInSequence(Chessman);
-                isDeath = Chessboard
-                    .ActionRespondResult(this, target, Activity.Offensive, Singular(InstanceHeroPerformDamage())).IsDeath;
-            } while (isDeath);
+                var damage = GetBasicDamage() + addOnDmg;
+                if (!Chessboard
+                    .ActionRespondResult(this, target, Activity.Offensive, Singular(InstanceHeroPerformDamage()))
+                    .IsDeath)
+                    break;
+                addOnDmg += (int)(damage * DamageIncreaseRate * 0.01f);
+            }
         }
     }
 
@@ -759,46 +1205,29 @@ namespace Assets.System.WarModule
             return CombatConduct.InstanceDamage(penetrateDmg);
         }
 
-        protected override IEnumerable<IChessPos<FightCardData>> ExtendedTargets(IChessPos<FightCardData> target) => Grid.GetNeighbors(target.Pos, target.Chessman.IsPlayer);
+        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target) => Grid.GetNeighbors(target.Pos, target.IsChallenger);
     }
 
     /// <summary>
     /// 14  长枪 - 手持长枪，攻击时，可穿刺攻击目标身后2个单位。穿刺伤害比攻击伤害略低。
     /// </summary>
-    public class ChangQiangOperator : ExtendedDamageHero
+    public class ChangQiangOperator : DuanQiangOperator
     {
-        /// <summary>
-        /// 刺穿单位数
-        /// </summary>
-        protected virtual int PenetrateUnits => 2;
-
-        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
-        {
-            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(96) * 0.01f;
-            return CombatConduct.InstanceDamage(penetrateDmg);
-        }
-
-        protected override IEnumerable<IChessPos<FightCardData>> ExtendedTargets(IChessPos<FightCardData> target)
-        {
-            return Grid.GetRivalScope(Chessman).Where(p => p.Key % 5 == target.Pos && p.Value != target)
-                .Select(p=>p.Value)
-                .OrderBy(p => p.Pos)
-                .Take(PenetrateUnits);
-        }
+        protected override int PenetrateUnits => 2;
     }
 
     /// <summary>
-    /// 给予二度伤害的武将类型
+    /// 给予散列伤害的武将类型
     /// </summary>
     public abstract class ExtendedDamageHero : HeroOperator
     {
         protected abstract CombatConduct GetExtendedDamage(CombatConduct currentDamage);
 
-        protected abstract IEnumerable<IChessPos<FightCardData>> ExtendedTargets(IChessPos<FightCardData> target);
+        protected abstract IEnumerable<IChessPos> ExtendedTargets(IChessPos target);
 
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var penetrates = ExtendedTargets(target);
             var damage = InstanceHeroPerformDamage();
             var penetrateDmg = GetExtendedDamage(damage);
@@ -817,9 +1246,9 @@ namespace Assets.System.WarModule
     /// 
     public class JinWeiOperator : HeroOperator
     {
-        protected override void OnCounter(Activity activity, IChessOperator<FightCardData> offender)
+        protected override void OnCounter(Activity activity, IChessOperator offender)
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Chessman), Activity.Counter,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Pos,offender.IsChallenger), Activity.Counter,
                 Singular(InstanceHeroPerformDamage()));
         }
     }
@@ -830,7 +1259,7 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(Chessman), Activity.Self,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
                 Singular(CombatConduct.InstanceBuff(FightState.Cons.Stimulate)));
             base.MilitaryPerforms();
         }
@@ -848,7 +1277,7 @@ namespace Assets.System.WarModule
             HpDepletedRatioWithGap(Status, CombatInfo.PhysicalResist, ConfigGap, ConfigMultipleRate);
 
         protected override int GetBasicDamage() =>
-            HpDepletedRatioWithGap(Status, Card.damage, ConfigGap, ConfigMultipleRate);
+            HpDepletedRatioWithGap(Status, Style.Strength, ConfigGap, ConfigMultipleRate);
     }
 
     /// <summary>
@@ -864,14 +1293,14 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var damage = InstanceHeroPerformDamage((int) (Card.damage * DataTable.GetGameValue(101) / 100f));
-            foreach (var pos in Grid.GetRivalScope(Chessman).Values.Where(p=>p.Chessman!=null && p.Chessman.IsAlive))
+            var damage = InstanceHeroPerformDamage((int) (Style.Strength * DataTable.GetGameValue(101) / 100f));
+            foreach (var pos in Grid.GetRivalScope(this).Values.Where(p=>p.IsPostedAlive))
             {
                 Chessboard.ActionRespondResult(this, pos, Activity.OffendTrigger, Singular(damage));
             }
 
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(Chessman), Activity.Self,
-                Singular(CombatConduct.InstanceDamage(Status.MaxHp, 1)));
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
+                Singular(CombatConduct.InstanceKilling()));
         }
 
         protected override int GetDodgeRate() => HpDepletedRatioWithGap(Status, CombatInfo.DodgeRatio,
@@ -886,7 +1315,7 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var list = new List<CombatConduct> {InstanceHeroPerformDamage()};
             if (Chessboard.IsRandomPass(DataTable.GetGameValue(102)))
                 list.Add(CombatConduct.InstanceBuff(FightState.Cons.Stunned));
@@ -899,10 +1328,10 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ChiJiaOperator : HeroOperator
     {
-        protected override void OnSufferConduct(IChessOperator<FightCardData> offender, CombatConduct[] damages)
+        protected override void OnSufferConduct(IChessOperator offender, CombatConduct[] damages)
         {
             var damage = damages.Sum(c => c.Total);
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Chessman), Activity.OffendTrigger,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender), Activity.OffendTrigger,
                 Singular(CombatConduct.InstanceDamage(damage)));
         }
     }
@@ -914,10 +1343,10 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms()
         {
-            var target = Grid.GetContraPositionInSequence(Chessman);
+            var target = Grid.GetContraPositionInSequence(this);
             var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(InstanceHeroPerformDamage()));
             var totalSuffer = result.Status.LastSuffers.Sum();
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(Chessman), Activity.Self,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
                 Singular(CombatConduct.InstanceHeal(totalSuffer)));
         }
     }
@@ -929,7 +1358,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(Chessman), Activity.Self,
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
                 Singular(CombatConduct.InstanceBuff(FightState.Cons.Invincible)));
         }
 
@@ -937,7 +1366,7 @@ namespace Assets.System.WarModule
         {
             if (Status.GetBuff(FightState.Cons.Invincible) > 0)
                 return Singular(new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing,
-                    Singular(Chessboard.InstanceRoundAction(this, Chessman.Pos, Activity.Self,
+                    Singular(Chessboard.InstanceRoundAction(this, this.Pos, Activity.Self,
                         Singular(CombatConduct.InstanceBuff(FightState.Cons.Invincible, -1))))));
             return base.OnRoundEnd();
         }
@@ -950,7 +1379,7 @@ namespace Assets.System.WarModule
     {
         public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() =>
             Singular(new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing,
-                Singular(Chessboard.InstanceRoundAction(this, Chessman.Pos, Activity.Self,
+                Singular(Chessboard.InstanceRoundAction(this, this.Pos, Activity.Self,
                     Singular(CombatConduct.InstanceBuff(FightState.Cons.Shield))))));
     }
 

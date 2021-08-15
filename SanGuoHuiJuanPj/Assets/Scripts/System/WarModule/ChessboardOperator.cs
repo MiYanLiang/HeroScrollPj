@@ -5,10 +5,9 @@ using UnityEngine.Timeline;
 
 namespace Assets.System.WarModule
 {
-    public interface IChessboardOperator<TChess> where TChess : class, IChessman, new()
+    public interface IChessboardOperator
     {
-        ChessGrid<TChess> Grid { get; }
-        IChessOperator<TChess> GetOperator(IChessPos<TChess> chessPos);
+        ChessGrid Grid { get; }
         /// <summary>
         /// 从数据表调出触发率，并给出随机判断
         /// </summary>
@@ -34,7 +33,7 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="to">如果是玩家资源维度的,-1 = 己方，-2 = 对方。正数为棋格</param>
         /// <param name="value"></param>
-        void RegGoldOnRoundEnd(IChessOperator<TChess> op, int to, int value);
+        void RegGoldOnRoundEnd(IChessOperator op, int to, int value);
 
         /// <summary>
         /// 回合结束添加战役宝箱
@@ -42,7 +41,7 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="to">如果是玩家资源维度的,-1 = 己方，-2 = 对方。正数为棋格</param>
         /// <param name="warChests"></param>
-        void RegWarChestOnRoundEnd(IChessOperator<TChess> op, int to, int[] warChests);
+        void RegWarChestOnRoundEnd(IChessOperator op, int to, int[] warChests);
         /// <summary>
         /// 根据武将表的值反馈是否触发特殊攻击。
         /// 1 = 暴击，2 = 会心
@@ -66,8 +65,8 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         int Randomize(int excludedMax);
 
-        ActivityResult ActionRespondResult(IChessOperator<TChess> offender, IChessPos<TChess> target, int intent,
-            CombatConduct[] conducts);
+        ActivityResult ActionRespondResult(IChessOperator offender, IChessPos target, int intent,
+            CombatConduct[] conducts, int rePos = -1);
 
         /// <summary>
         /// 生成回合触发器
@@ -77,23 +76,22 @@ namespace Assets.System.WarModule
         /// <param name="intent"><see cref="Activity"/>Intent</param>
         /// <param name="conducts"></param>
         /// <returns></returns>
-        Activity InstanceRoundAction(IChessOperator<TChess> op,int to,int intent, CombatConduct[] conducts);
+        Activity InstanceRoundAction(IChessOperator op,int to,int intent, CombatConduct[] conducts);
 
-        PieceStatus GetStatus(IChessPos<TChess> chessman);
+        PieceStatus GetStatus(IChessPos pos);
     }
 
     /// <summary>
     /// 棋盘处理器。主要处理<see cref="IChessOperator{TChess}"/>的交互与进程逻辑。
     /// </summary>
     /// <typeparam name="TChess"></typeparam>
-    public abstract class ChessboardOperator<TChess> : IChessboardOperator<TChess> where TChess : class, IChessman, new() 
+    public abstract class ChessboardOperator : IChessboardOperator
     {
-        public ChessGrid<TChess> Grid { get; }
+        public ChessGrid Grid { get; }
 
         private int _roundId = 0;
         public int RoundId => _roundId;
         private bool IsChallengerOdd => _isChallengerOdd;
-        public bool IsOddRound => _roundId % 2 == 0;
 
         public IReadOnlyList<ChessRound> Rounds => rounds;
         private ChessRound currentRound;
@@ -127,27 +125,19 @@ namespace Assets.System.WarModule
         protected static T[] Singular<T>(T t) => new[] { t };
         #endregion
 
-        protected ChessboardOperator(bool isChallengerFirst, ChessGrid<TChess> grid)
+        protected ChessboardOperator(bool isChallengerFirst, ChessGrid grid)
         {
             _isChallengerOdd = isChallengerFirst;
             rounds = new List<ChessRound>();
             Grid = grid;
         }
 
-        public bool IsChallengerRound(int roundId = -1)
-        {
-            if (roundId < 0)
-                roundId = RoundId;
-            var isOdd = roundId % 2 == 0;
-            return _isChallengerOdd == isOdd;
-        }
-
         public ChessRound StartRound()
         {
             //instance Round
             //invoke pre-action
-            //Get all sorted Chessman operators
-            //invoke Chessman operations
+            //Get all sorted this operators
+            //invoke this operations
             //invoke finalization
             RecursiveActionCount = 0;
             currentRound = new ChessRound
@@ -157,37 +147,30 @@ namespace Assets.System.WarModule
                 FinalAction = new RoundAction(),
             };
 
-            if (IsOddRound)//双数激活双方回合
-            {
                 var preActions = GetPreRoundTriggerByOperators();
                 currentRound.PreAction.Concat(preActions);
                 foreach (var activity in currentRound.PreAction.Activities)
                     RoundActionInvocation(activity.Key, activity.Value);
-            }
-
-            var sortedOperators = GetSortedChessmanOperators();
+            var sortedOperators = GetSortedthisOperators();
             //UpdatePosesBuffs(currentRound.PreAction, false);
             var roundProcesses = new List<ChessPosProcess>();
             for (var i = 0; i < sortedOperators.Length; i++)
             {
-                var chessPos = sortedOperators[i];
-                if (chessPos.Chessman == null) continue;
-                var process = PosInvocation(chessPos);
+                var op = sortedOperators[i];
+                if (op.Status.IsDeath) continue;
+                var process = PosInvocation(op);
                 if (process == null) continue;
                 roundProcesses.Add(process);
             }
 
             currentRound.Processes = roundProcesses.ToArray();
 
-            if(!IsOddRound)//单数激活双方回合的结束
-            {
                 var finalAction = GetRoundEndTriggerByOperators();
                 currentRound.FinalAction.Concat(finalAction);
                 foreach (var activity in currentRound.FinalAction.Activities)
                     RoundActionInvocation(activity.Key, activity.Value);
-            }
 
-            //UpdatePosesBuffs(currentRound.FinalAction, true);
+                //UpdatePosesBuffs(currentRound.FinalAction, true);
             _roundId++;
             return currentRound;
         }
@@ -204,25 +187,31 @@ namespace Assets.System.WarModule
         // 注册当回合结束执行的全局逻辑
         private void RegRoundEnd(int id,IEnumerable<Activity> activity) => AddRoundResourceHelper(currentRound.FinalAction.Activities, id, activity);
 
-        public void RegGoldOnRoundEnd(IChessOperator<TChess> op, int to, int value)
+        public void RegGoldOnRoundEnd(IChessOperator op,int to ,int value)
         {
             RegRoundEnd(RoundAction.PlayerResources,
                 Singular(Activity.Instance(
                     ActivitySeed,
-                    currentRound.InstanceId,
-                    ResourceTarget(op.Chessman.IsPlayer,to, RoundId),
+                    CurrentProcess.InstanceId,
+                    op.Pos,
+                    op.IsChallenger ? 0 : 1,
+                    ResourceTarget(op , to == -1),
                     Activity.PlayerResource,
-                    Singular(CombatConduct.InstancePlayerResource(-1, value)))));
+                    Singular(CombatConduct.InstancePlayerResource(-1, value))
+                    , -1)));
         }
 
-        public void RegWarChestOnRoundEnd(IChessOperator<TChess> op, int to, int[] warChests)
+        public void RegWarChestOnRoundEnd(IChessOperator op,int to ,int[] warChests)
         {
             RegRoundEnd(RoundAction.PlayerResources,
                 Singular(Activity.Instance(ActivitySeed,
-                    RoundId,
-                    ResourceTarget(op.Chessman.IsPlayer, to, RoundId),
+                    CurrentProcess.InstanceId,
+                    op.Pos,
+                    op.IsChallenger ? 0 : 1,
+                    ResourceTarget(op, to == -1),
                     Activity.PlayerResource,
-                    warChests.Select(CombatConduct.InstancePlayerResource).ToArray()
+                    warChests.Select(CombatConduct.InstancePlayerResource).ToArray(),
+                    -1
                 )));
         }
 
@@ -236,7 +225,6 @@ namespace Assets.System.WarModule
 
         #endregion
 
-        public abstract IChessOperator<TChess> GetOperator(IChessPos<TChess> chessPos);
         //棋子的全局状态更新，用于回合前与回合结束
         //private void UpdatePosesBuffs(RoundAction roundAction,bool isLastRoundActivities)
         //{
@@ -253,8 +241,8 @@ namespace Assets.System.WarModule
         //        a => a.To, p => p.Key, (a, p) => (a, p));
         //    ListInvoke(fList);//Invoke Friendly Activities
         //    ListInvoke(oList);//Invoke Opposite Activities
-        //    //var list = roundAction.Activities.Join(posList, s => s.Value.To, p => p.Chessman.Pos,(s,p)=> new {s, p}).ToList();
-        //    void ListInvoke(IEnumerable<(Activity a, KeyValuePair<int, IChessPos<TChess>> p)> list)
+        //    //var list = roundAction.Activities.Join(posList, s => s.Value.To, p => p.this.Pos,(s,p)=> new {s, p}).ToList();
+        //    void ListInvoke(IEnumerable<(Activity a, KeyValuePair<int, IChessPos> p)> list)
         //    {
         //        foreach (var obj in list)
         //        {
@@ -272,79 +260,73 @@ namespace Assets.System.WarModule
         //}
 
         private ChessPosProcess CurrentProcess { get; set; }
-        private ChessPosProcess PosInvocation(IChessPos<TChess> chessPos)
+        private ChessPosProcess PosInvocation(IChessOperator op)
         {
             //invoke pos operation & return pieceProcess
             //finalize pieceProcess by interactive invocation
-            var op = GetOperator(chessPos);
-            CurrentProcess = ChessPosProcess.Instance(ActivitySeed, op.Status.Clone());
+            CurrentProcess = ChessPosProcess.Instance(ActivitySeed, op.Pos, op.IsChallenger,
+                op.Status);
             op.StartActions();
             PieceProcessSeed++;
             return CurrentProcess;
         }
 
-        protected IChessPos<TChess> GetTarget(Activity ac)
+        protected IChessPos GetTarget(Activity ac)
         {
             var isOpposite = ac.Intent == Activity.Offensive ||
                              ac.Intent == Activity.Counter ||
                              ac.Intent == Activity.OffendTrigger;
 
-            var isChallenger = IsChallengerRound(ac.RoundId) ? !isOpposite : isOpposite;
+            var isChallenger = IsChallengerOdd && ac.ProcessId % 2 == 0 ? !isOpposite : isOpposite;
             return Grid.GetChessPos(ac.To, isChallenger);
         }
 
-        private IChessPos<TChess>[] GetSortedChessmanOperators() =>
-            Grid.GetScope(IsChallengerRound()).OrderBy(o => o.Key).Select(o => o.Value).ToArray();
+        private IChessOperator[] GetSortedthisOperators() =>
+            Grid.Challenger.Concat(Grid.Opposite)
+                .Where(o => o.Value.IsPostedAlive)
+                .OrderBy(o => o.Key)
+                .ThenBy(o => o.Value.IsChallenger != IsChallengerOdd)
+                .Select(o => o.Value.Operator).ToArray();
 
         public int Randomize(int excludedMax) => random.Next(excludedMax);
 
-        public ActivityResult ActionRespondResult(IChessOperator<TChess> offender, IChessPos<TChess> target, int intent,
-            CombatConduct[] conducts)
+        public ActivityResult ActionRespondResult(IChessOperator offender, IChessPos target, int intent,
+            CombatConduct[] conducts, int rePos = -1)
         {
             RecursiveActionCount++;
-            var activity = Activity.Instance(ActivitySeed, RoundId, target.Pos, intent, conducts);
+            var activity = Activity.Instance(ActivitySeed, CurrentProcess.InstanceId, offender.Pos, 
+                offender.IsChallenger ? 0 : 1,
+                target.Pos,
+                intent, conducts,rePos);
             ActivitySeed++;
-            CurrentProcess.Actions.Add(activity);
-            var op = GetOperator(target);
+            CurrentProcess.Activities.Add(activity);
+            var op = target.Operator;
+            if (op == null)
+                throw new NullReferenceException(
+                    $"Target[{target.Pos}] is null! from offender[{offender.Pos}] as IsChallenger[{offender.IsChallenger}] type[{offender.GetType().Name}]");
             activity.Result = op.Respond(activity, offender);
             return activity.Result;
         }
 
-        public Activity InstanceRoundAction(IChessOperator<TChess> op, int to, int intent, CombatConduct[] conducts) =>
-            Activity.Instance(ActivitySeed, RoundId, ResourceTarget(op.Chessman.IsPlayer, to, RoundId), intent, conducts);
+        public Activity InstanceRoundAction(IChessOperator op, int to, int intent, CombatConduct[] conducts) =>
+            Activity.Instance(ActivitySeed, CurrentProcess.InstanceId, op.Pos,
+                op.IsChallenger ? 0 : 1,
+                ResourceTarget(op, to == -1),
+                intent, conducts, -1);
 
-        public PieceStatus GetStatus(IChessPos<TChess> chessman) => GetOperator(chessman)?.Status;
+        public PieceStatus GetStatus(IChessPos pos) => pos.Operator?.Status;
 
         /// <summary>
         /// 找出该回合中指定的对象
         /// </summary>
-        /// <param name="isChallenger"></param>
-        /// <param name="to"></param>
-        /// <param name="roundId"></param>
+        /// <param name="op"></param>
+        /// <param name="isSelf"></param>
         /// <returns></returns>
-        private int ResourceTarget(bool isChallenger, int to, int roundId)
+        private int ResourceTarget(IChessOperator op, bool isSelf)
         {
-            var target = 0;
-            if(!isChallenger)
-            {
-                to -= 1;
-                if (to < -2)
-                    to = -1;
-            }
-            switch (to)
-            {
-                case -1 when IsChallengerRound(roundId):
-                    target = -1;
-                    break;
-                case -1:
-                case -2 when IsChallengerRound(roundId):
-                    target = -2;
-                    break;
-                case -2:
-                    target = -1;
-                    break;
-            }
-            return target;
+            var isChallenger = op.IsChallenger;
+            if (isSelf) isChallenger = !isChallenger;
+            return isChallenger ? -1 : -2;
         }
 
         public bool RandomFromConfigTable(int id) => IsRandomPass(DataTable.GetGameValue(id));

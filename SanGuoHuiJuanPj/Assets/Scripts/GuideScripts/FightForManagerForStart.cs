@@ -771,7 +771,7 @@ public class FightForManagerForStart : MonoBehaviour
                 cardData.Hp.Add(-canAddHpNum);
                 FightControlForStart.instance.AttackedAnimShow(cardData, canAddHpNum, false);
                 //单位加血
-                FightControlForStart.instance.AttackToEffectShow(needAddHpCard, false, "42A");
+                FightControlForStart.instance.AttackToEffectShow(needAddHpCard, false, Effect.Heal);
                 needAddHpCard.Hp.Add(canAddHpNum);
                 FightControlForStart.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(needAddHpCard, canAddHpNum, true);
@@ -838,7 +838,7 @@ public class FightForManagerForStart : MonoBehaviour
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
             if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
-                FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, "42A");
+                FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, Effect.Heal);
                 addedFightCard.Hp.Add(addtionNums);
                 FightControlForStart.instance.ShowSpellTextObj(addedFightCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(addedFightCard, addtionNums, true);
@@ -858,7 +858,7 @@ public class FightForManagerForStart : MonoBehaviour
             {
                 if (addedFightCard.cardType == 0 && addedFightCard.fightState.Shield <= 0)
                 {
-                    FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, "4A");
+                    FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, Effect.Shield);
                     addedFightCard.fightState.Shield = 1;
                     CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
                     addtionNums--;

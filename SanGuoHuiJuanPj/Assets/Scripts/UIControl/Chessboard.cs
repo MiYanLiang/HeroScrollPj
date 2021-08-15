@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
 using UnityEngine;
@@ -9,29 +10,46 @@ public class Chessboard : MonoBehaviour
 {
     [SerializeField] private ChessPos[] PlayerScope;
     [SerializeField] private ChessPos[] EnemyScope;
-    //卡牌附近单位遍历次序
-    private ChessGrid<FightCardData> grid;
+    
+    private ChessGrid grid;
 
     public int PlayerCardsOnBoard => PlayerScope.Count(p => p.Card != null && p.Card.cardType != 522);
     public int EnemyCardsOnBoard => EnemyScope.Count(p => p.Card != null && p.Card.cardType != 522);
 
     public void Init()
     {
-        grid = new ChessGrid<FightCardData>(PlayerScope, EnemyScope);
-        for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i);
-        for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i);
+        grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
+        for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
+        for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
     }
 
+    public FightCardData OnActivityBegin(int pos, bool isPlayer)
+    {
+        var card = GetChessPos(pos, isPlayer).Card;
+        var trans = card.cardObj.transform;
+        trans.SetParent(transform,true);
+        trans.SetAsLastSibling();
+        return card;
+    }
+
+    public void ResetPos(IChessOperator op,FightCardData card)
+    {
+        //注意这里是获取状态里的位置而不是原始位置。
+        PlaceCard(op.Pos, card);
+    }
+
+    public IEnumerable<ChessPos> GetData() => PlayerScope.Concat(EnemyScope);
     public ChessPos[] GetScope(bool isPlayer) => isPlayer ? PlayerScope : EnemyScope;
-    public ChessPos GetCard(int index, bool isPlayer) => GetScope(isPlayer)[index];
+    public ChessPos GetChessPos(int index, bool isPlayer) => GetScope(isPlayer)[index];
+    public ChessPos GetChessPos(FightCardData card) => GetScope(card.IsPlayer)[card.Pos];
 
     public void PlaceCard(int index, FightCardData card)
     {
         var scope = GetScope(card.isPlayerCard);
-        if (scope[index].Card != null) RemoveCard(index, card.isPlayerCard);
-
-        scope[index].SetCard(card);
-
+        var pos = scope.FirstOrDefault(p => p.Card == card);
+        if (pos != null) RemoveCard(pos.Pos, card.IsPlayer);//移除卡牌前位置
+        if (scope[index].Card != null) RemoveCard(index, card.isPlayerCard);//移除目标位置上的卡牌
+        scope[index].PlaceCard(card, true);
         card.UpdatePos(index);
         if (card.isPlayerCard) card.cardObj.DragComponent?.ResetPos();
     }
@@ -42,9 +60,10 @@ public class Chessboard : MonoBehaviour
         if (scope[index].Card == null)
             throw XDebug.Throw<Chessboard>($"位置[{index}] 没有卡牌！");
         var card = scope[index].Card;
-        card.UpdatePos(-1);
         scope[index].RemoveCard();
-        if (isPlayer) card.cardObj.DragComponent?.ResetPos();
+        card.UpdatePos(-1);
+        if (isPlayer && card.cardObj.DragComponent!=null) 
+            card.cardObj.DragComponent.ResetPos();
         return card;
     }
 
@@ -77,4 +96,5 @@ public class Chessboard : MonoBehaviour
     }
 
     public int[] GetNeighborIndexes(int pos) => grid.GetNeighborIndexes(pos);
+
 }

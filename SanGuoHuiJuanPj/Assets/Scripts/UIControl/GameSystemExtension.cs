@@ -176,6 +176,11 @@ public class GameCardInfo
                 return new GameCardInfo(c.Id, GameCardType.Trap, c.Name, c.Intro, c.Rarity, c.ForceId, c.ImageId,
                     c.IsProduce > 0, c.Short, c.GameSetRecovery, c.Damages, c.Hps, 0, 0, c.About);
             }
+            case GameCardType.Base:
+                return new GameCardInfo(0, GameCardType.Base, string.Empty, string.Empty, 1, 0, 0, false, string.Empty,
+                    0, null, null, 0, 0, string.Empty);
+            case GameCardType.Soldier:
+            case GameCardType.Spell:
             default:
                 throw new ArgumentOutOfRangeException($"type = {type}, id = {id}", type, null);
         }
@@ -240,12 +245,17 @@ public class GameCardInfo
         damageMap = new Dictionary<int, int>();
         hpsMap = new Dictionary<int, int>();
         var index = 1;
-        foreach (var damage in damages)
+        if(damages!=null)
         {
-            damageMap.Add(index, damage);
-            index++;
+            foreach (var damage in damages)
+            {
+                damageMap.Add(index, damage);
+                index++;
+            }
+
+            index = 1;
         }
-        index = 1;
+        if (hps == null) return;
         foreach (var hp in hps)
         {
             hpsMap.Add(index, hp);

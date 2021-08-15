@@ -8,7 +8,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 陷阱处理器
     /// </summary>
-    public abstract class TrapOperator : ChessmanOperator
+    public abstract class TrapOperator : CardOperator
     {
         /// <summary>
         /// 陷阱不会主动攻击
@@ -18,15 +18,14 @@ namespace Assets.System.WarModule
 
         protected override int OnHealConvert(CombatConduct conduct) => (int) conduct.Total;
 
-        protected override int OnBuffingConvert(CombatConduct conduct) => (int) conduct.Total;
+        protected override int OnBuffingConvert(CombatConduct conduct) => 0;
 
-        protected override bool DodgeOnAttack(IChessOperator<FightCardData> iChessOperator) => false;
+        protected override bool DodgeOnAttack(IChessOperator iChessOperator) => false;
         protected override int OnDamageConvert(CombatConduct conduct) => (int)conduct.Total;
     }
 
     public class BlankTrapOperator : TrapOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct) => null;
     }
 
     /// <summary>
@@ -39,16 +38,19 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="chess"></param>
         /// <returns></returns>
-        protected bool IsGongChengChe(IChessOperator<FightCardData> chess) => chess.Style.Military == 23;
+        protected bool IsGongChengChe(IChessOperator chess) => chess.Style.Military == 23;
+
         /// <summary>
         /// 非近战，非可反击目标，非武将
         /// </summary>
         /// <param name="offender"></param>
         /// <returns></returns>
-        protected bool MeleeHero(IChessOperator<FightCardData> offender) => offender.Style.ArmedType < 0 ||
-                                                                            offender.Style.CounterStyle == 0 || offender.Style.CombatStyle == 1;
+        protected bool MeleeHero(IChessOperator offender) => offender.Style.ArmedType < 0 ||
+                                                                            offender.Style.CounterStyle == 0 ||
+                                                                            offender.Style.CombatStyle ==
+                                                                            AttackStyle.CombatStyles.Range;
 
-        protected override void OnSufferConduct(IChessOperator<FightCardData> offender, CombatConduct[] damages)
+        protected override void OnSufferConduct(IChessOperator offender, CombatConduct[] damages)
         {
             if (Status.Hp <= 0 ||
                 IsGongChengChe(offender) ||
@@ -62,9 +64,9 @@ namespace Assets.System.WarModule
         /// <param name="conducts"></param>
         /// <param name="offender"></param>
         /// <returns></returns>
-        protected virtual void InstanceReflection(CombatConduct[] conducts, IChessOperator<FightCardData> offender)
+        protected virtual void InstanceReflection(CombatConduct[] conducts, IChessOperator offender)
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Chessman.Pos, offender.Chessman.IsPlayer),
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Pos, offender.IsChallenger),
                 Activity.OffendTrigger, CounterConducts);
         }
 
@@ -73,7 +75,6 @@ namespace Assets.System.WarModule
         /// </summary>
         protected abstract CombatConduct[] CounterConducts { get; }
 
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct) => null;
     }
     /// <summary>
     /// 拒马
@@ -86,11 +87,11 @@ namespace Assets.System.WarModule
         /// <param name="conducts"></param>
         /// <param name="offender"></param>
         /// <returns></returns>
-        protected override void InstanceReflection(CombatConduct[] conducts, IChessOperator<FightCardData> offender)
+        protected override void InstanceReflection(CombatConduct[] conducts, IChessOperator offender)
         {
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Chessman.Pos,offender.Chessman.IsPlayer), Activity.Counter, Singular(CombatConduct.InstanceDamage(reflectDamage)));
+            Chessboard.ActionRespondResult(this, Grid.GetChessPos(offender.Pos,offender.IsChallenger), Activity.Counter, Singular(CombatConduct.InstanceDamage(reflectDamage)));
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -100,13 +101,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GunMuOperator : TrapOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct)
+        protected override void OnDeadTrigger(CombatConduct conduct)
         {
-            var poses = Chessboard.Grid.GetRivalScope(Chessman).Where(c => c.Value.Chessman.IsAlive)
+            var poses = Chessboard.Grid.GetRivalScope(this).Where(c => c.Value.IsPostedAlive)
                 .OrderBy(c => c.Key).Select(c=>c.Value);
             var mapper = Grid.FrontRows.ToDictionary(i => i, _ => false); //init mapper
             var max = Grid.FrontRows.Length;
-            var targets = new List<IChessPos<FightCardData>>();
+            var targets = new List<IChessPos>();
             foreach (var pos in poses)
             {
                 var column = pos.Pos % max; //获取直线排数
@@ -114,11 +115,12 @@ namespace Assets.System.WarModule
                 targets.Add(pos);
             }
 
-            return targets.SelectMany(pos=>Chessboard.ActionRespondResult(this,pos,Activity.OffendTrigger,InstanceConduct()).Activities).ToArray();
+            targets.ForEach(pos =>
+                Chessboard.ActionRespondResult(this, pos, Activity.OffendTrigger, InstanceConduct()));
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Card.damage);
+                var basicDmg = CombatConduct.InstanceDamage(Style.Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(15))
                     return new[]
@@ -135,18 +137,19 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GunShiOperator : TrapOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct)
+        protected override void OnDeadTrigger(CombatConduct conduct)
         {
-            var verticalIndex = Card.PosIndex % 5;//后排直线
-            var targets = Grid.GetRivalScope(Chessman)
-                .Where(c => c.Value.Chessman.IsAlive && c.Key == verticalIndex)
-                .OrderBy(c => c.Key).Select(c=>c.Value);
+            var verticalIndex = Pos % 5;//后排直线
+            var targets = Grid.GetRivalScope(this)
+                .Where(c => c.Value.IsPostedAlive && c.Key == verticalIndex)
+                .OrderBy(c => c.Key).Select(c=>c.Value).ToList();
 
-            return targets.SelectMany(pos => Chessboard.ActionRespondResult(this,pos, Activity.OffendTrigger, InstanceConduct()).Activities).ToArray();
+            targets.ForEach(pos =>
+                Chessboard.ActionRespondResult(this, pos, Activity.OffendTrigger, InstanceConduct()));
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Card.damage);
+                var basicDmg = CombatConduct.InstanceDamage(Style.Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(16))
                     return new[]
@@ -163,7 +166,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Singular(CombatConduct.InstanceDamage(Card.damage * Chessboard.ConfigPercentage(9)));
+        protected override CombatConduct[] CounterConducts => Singular(CombatConduct.InstanceDamage(Style.Strength * Chessboard.ConfigPercentage(9)));
     }
     /// <summary>
     /// 石墙
@@ -221,10 +224,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TreasureOperator : TrapOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct)
+        protected override void OnDeadTrigger(CombatConduct conduct)
         {
-            Chessboard.RegGoldOnRoundEnd(this,-2, DataTable.EnemyUnit[Card.unitId].GoldReward);
-            return Activity.Empty;
+            Chessboard.RegGoldOnRoundEnd(this, -2, DataTable.EnemyUnit[CardId].GoldReward);
         }
     }
     /// <summary>
@@ -232,10 +234,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WarChestOperator : TrapOperator
     {
-        protected override IList<Activity> OnDeadTrigger(CombatConduct conduct)
+        protected override void OnDeadTrigger(CombatConduct conduct)
         {
-            Chessboard.RegWarChestOnRoundEnd(this,-2, DataTable.EnemyUnit[Card.unitId].WarChest);
-            return Activity.Empty;
+            Chessboard.RegWarChestOnRoundEnd(this,-2, DataTable.EnemyUnit[CardId].WarChest);
         }
     }
 }

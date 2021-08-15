@@ -10,8 +10,12 @@ namespace Assets.System.WarModule
     [Serializable]
     public class ChessPosProcess
     {
-        public static ChessPosProcess Instance(int id, PieceStatus status)
-            => new ChessPosProcess() {InstanceId = id, Status = status, Actions = new List<Activity>()};
+        public static ChessPosProcess Instance(int id, int pos, bool isChallenger, PieceStatus status)
+            => new ChessPosProcess()
+            {
+                InstanceId = id, Pos = pos, Scope = isChallenger ? 0 : 1, Status = status.Clone(),
+                Activities = new List<Activity>()
+            };
 
 
         [JsonProperty("I")] public int InstanceId { get; set; }
@@ -22,8 +26,9 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋子命令集
         /// </summary>
-        [JsonProperty("A")] public List<Activity> Actions { get; set; }
-
-        public override string ToString() => $"{InstanceId}.Sta[{Status}].Act[{Actions.Count}]";
+        [JsonProperty("A")] public List<Activity> Activities { get; set; }
+        [JsonProperty("P")] public int Pos { get; set; }
+        [JsonProperty("S")] public int Scope { get; set; }
+        public override string ToString() => $"{InstanceId}.Pos[{Pos}]({Scope}).Sta[{Status}].Act[{Activities.Count}]";
     }
 }

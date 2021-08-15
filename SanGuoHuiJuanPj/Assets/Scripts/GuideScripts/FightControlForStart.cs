@@ -240,7 +240,7 @@ public class FightControlForStart : MonoBehaviour
                 {
                     damage = DefDamageProcessFun(attackedUnit, attackUnit, damage);
                     attackUnit.Hp.Add(-(int)(damage * (DataTable.GetGameValue(8) / 100f)));
-                    GameObject effectObj = AttackToEffectShow(attackUnit, false, "7A");
+                    GameObject effectObj = AttackToEffectShow(attackUnit, false, Effect.ReflectDamage);
                     effectObj.transform.localScale = new Vector3(1, attackedUnit.isPlayerCard ? 1 : -1, 1);
                     AttackedAnimShow(attackUnit, damage, false);
                     PlayAudioForSecondClip(89, 0.2f);
@@ -257,7 +257,7 @@ public class FightControlForStart : MonoBehaviour
                     int dileiDamage = (int)(dmg * DataTable.GetGameValue(9) / 100f);
                     dileiDamage = DefDamageProcessFun(attackedUnit, attackUnit, dileiDamage);
                     attackUnit.Hp.Add(-dileiDamage);
-                    AttackToEffectShow(attackUnit, false, "201A");
+                    AttackToEffectShow(attackUnit, false, Effect.Explode);
                     AttackedAnimShow(attackUnit, dileiDamage, false);
                     PlayAudioForSecondClip(88, 0.2f);
                 }
@@ -341,7 +341,7 @@ public class FightControlForStart : MonoBehaviour
     {
         if (attackedUnit.Hp <= 0)
         {
-            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight("GetGold", 1.5f, attackedUnit.cardObj);
+            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight(Effect.GetGold, 1.5f, attackedUnit.cardObj);
             obj.GetComponentInChildren<Text>().text = string.Format(DataTable.GetStringText(8), DataTable.EnemyUnit[attackedUnit.unitId].GoldReward);
             PlayAudioForSecondClip(98, 0);
         }
@@ -408,7 +408,7 @@ public class FightControlForStart : MonoBehaviour
                             recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                         }
                     }
-                    AttackToEffectShow(fightCardDatas[cardIndex], false, "209A");
+                    AttackToEffectShow(fightCardDatas[cardIndex], false, Effect.Dropping);
                     ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(9), true, true);
                     AttackedAnimShow(fightCardDatas[cardIndex], nowDamage, false);
 
@@ -478,7 +478,7 @@ public class FightControlForStart : MonoBehaviour
                         recordWinner = attackUnit.isPlayerCard ? 1 : -1;
                     }
                 }
-                AttackToEffectShow(fightCardDatas[cardIndex], false, "209A");
+                AttackToEffectShow(fightCardDatas[cardIndex], false, Effect.Dropping);
                 ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(10), true, true);
                 AttackedAnimShow(fightCardDatas[cardIndex], nowDamage, false);
 
@@ -525,7 +525,7 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < attackedIndexList.Count; i++)
         {
             FightCardData attackedUnit = fightCardDatas[attackedIndexList[i]];
-            AttackToEffectShow(attackedUnit, false, "20A");
+            AttackToEffectShow(attackedUnit, false, Effect.LongBow);
 
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
             attackedUnit.Hp.Add(-nowDamage);
@@ -551,11 +551,11 @@ public class FightControlForStart : MonoBehaviour
                 {
                     case 3:
                         PlayAudioForSecondClip(3, 0);
-                        AttackToEffectShow(attackedUnit, false, "3A");
+                        AttackToEffectShow(attackedUnit, false, Effect.FeiJia);
                         break;
                     case 4:
                         ShowSpellTextObj(attackUnit.cardObj, "4", false);
-                        AttackToEffectShow(attackUnit, false, "4A");
+                        AttackToEffectShow(attackUnit, false, Effect.Shield);
                         if (attackUnit.fightState.Shield <= 0)
                         {
                             FightForManagerForStart.instance.CreateSateIcon(attackUnit.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
@@ -564,18 +564,18 @@ public class FightControlForStart : MonoBehaviour
                         PlayAudioForSecondClip(4, 0);
                         break;
                     case 6:
-                        AttackToEffectShow(attackedUnit, false, "6A");
+                        AttackToEffectShow(attackedUnit, false, Effect.SuckBlood);
                         PlayAudioForSecondClip(6, 0);
                         break;
                     case 8:
                         XiangBingTrampleAttAck(attackedUnit, attackUnit);
                         break;
                     case 9:
-                        AttackToEffectShow(attackedUnit, false, "9A");
+                        AttackToEffectShow(attackedUnit, false, Effect.CavalryCharge);
                         PlayAudioForSecondClip(9, 0);
                         break;
                     case 60:
-                        AttackToEffectShow(attackedUnit, false, "60A");
+                        AttackToEffectShow(attackedUnit, false, Effect.CavalryAssault);
                         PlayAudioForSecondClip(9, 0);
                         break;
                     case 10:
@@ -597,22 +597,22 @@ public class FightControlForStart : MonoBehaviour
                         JianBingHengSaoAttack(finalDamage, attackUnit, attackedUnit);
                         break;
                     case 16:
-                        AttackToEffectShow(attackedUnit, false, "16A");
+                        AttackToEffectShow(attackedUnit, false, Effect.CavalryGallop);
                         PlayAudioForSecondClip(16, 0);
                         break;
                     case 17:
-                        AttackToEffectShow(attackedUnit, false, "17A");
+                        AttackToEffectShow(attackedUnit, false, Effect.BladeCombo);
                         PlayAudioForSecondClip(17, 0);
                         break;
                     case 18:
                         finalDamage = FuBingTuLuAttack(finalDamage, attackedUnit, attackUnit);
                         break;
                     case 19:
-                        AttackToEffectShow(attackedUnit, false, "19A");
+                        AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
                         PlayAudioForSecondClip(19, 0);
                         break;
                     case 51:
-                        AttackToEffectShow(attackedUnit, false, "19A");
+                        AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
                         PlayAudioForSecondClip(19, 0);
                         break;
                     case 20:
@@ -721,11 +721,11 @@ public class FightControlForStart : MonoBehaviour
                         break;
                     case 49:
                         PlayAudioForSecondClip(49, 0);
-                        AttackToEffectShow(attackedUnit, false, "49A");
+                        AttackToEffectShow(attackedUnit, false, Effect.Crossbow);
                         break;
                     case 50:
                         PlayAudioForSecondClip(50, 0);
-                        AttackToEffectShow(attackedUnit, false, "50A");
+                        AttackToEffectShow(attackedUnit, false, Effect.MagicStrike);
                         break;
                     case 53:
                         YinShiSkill(DataTable.GetGameValue(29), attackUnit, 53, finalDamage);
@@ -743,7 +743,7 @@ public class FightControlForStart : MonoBehaviour
                         break;
                     case 57:
                         PlayAudioForSecondClip(57, 0);
-                        AttackToEffectShow(attackedUnit, false, "57A");
+                        AttackToEffectShow(attackedUnit, false, Effect.TengJiaAttack);
                         break;
                     case 58:
                         finalDamage = TieQiSkill(finalDamage, attackUnit, attackedUnit);
@@ -1071,7 +1071,7 @@ public class FightControlForStart : MonoBehaviour
                 yield return new WaitForSeconds(attackShakeTimeToGo);
 
                 FightCardData nextAttackedUnit = attackUnit.isPlayerCard ? FightForManagerForStart.instance.enemyFightCardsDatas[targetIndex] : FightForManagerForStart.instance.playerFightCardsDatas[targetIndex];
-                AttackToEffectShow(nextAttackedUnit, false, "17A");
+                AttackToEffectShow(nextAttackedUnit, false, Effect.BladeCombo);
                 PlayAudioForSecondClip(17, 0);
 
                 yield return StartCoroutine(PuTongGongji(damageBonus + DataTable.GetGameValue(41) / 100f, attackUnit, nextAttackedUnit, true));
@@ -1097,7 +1097,7 @@ public class FightControlForStart : MonoBehaviour
                     ShowSpellTextObj(attackUnit.cardObj, "12", false);
                     MoveToFightWay1(attackUnit);
                     yield return new WaitForSeconds(attackShakeTimeToGo);
-                    AttackToEffectShow(attackedUnit, false, "12A");
+                    AttackToEffectShow(attackedUnit, false, Effect.Stimulate);
                     PlayAudioForSecondClip(12, 0);
 
                     float propAttack = 1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate;
@@ -1166,7 +1166,7 @@ public class FightControlForStart : MonoBehaviour
                 ShowSpellTextObj(attackUnit.cardObj, "16", false);
                 MoveToFightWay1(attackUnit);
                 yield return new WaitForSeconds(attackShakeTimeToGo);
-                AttackToEffectShow(attackedUnit, false, "16A");
+                AttackToEffectShow(attackedUnit, false, Effect.CavalryGallop);
                 PlayAudioForSecondClip(16, 0);
 
                 yield return StartCoroutine(PuTongGongji(1f, attackUnit, attackedUnit, true));
@@ -1186,7 +1186,7 @@ public class FightControlForStart : MonoBehaviour
             yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
 
             ShowSpellTextObj(attackUnit.cardObj, "19", false);
-            AttackToEffectShow(attackedUnit, false, "19A");
+            AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
             PlayAudioForSecondClip(19, 0);
             //连射
             yield return StartCoroutine(PuTongGongji(1, attackUnit, attackedUnit, false));
@@ -1196,7 +1196,7 @@ public class FightControlForStart : MonoBehaviour
                 yield return new WaitForSeconds(waitTime);
                 MoveToFightWay0(attackUnit, yuanChengShakeTimeToGo);
                 yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
-                AttackToEffectShow(attackedUnit, false, "19A");
+                AttackToEffectShow(attackedUnit, false, Effect.CrossBowCombo);
                 PlayAudioForSecondClip(19, 0);
                 //连射
                 yield return StartCoroutine(PuTongGongji(1, attackUnit, attackedUnit, false));
@@ -1213,7 +1213,7 @@ public class FightControlForStart : MonoBehaviour
             ShowSpellTextObj(attackUnit.cardObj, "13", false);
             yield return new WaitForSeconds(0.2f);
             PlayAudioForSecondClip(13, 0);
-            AttackToEffectShow(attackedUnit, false, "13A");
+            AttackToEffectShow(attackedUnit, false, Effect.GuardCounter);
 
             int damage = DefDamageProcessFun(attackUnit, attackedUnit, attackUnit.damage);
             attackedUnit.Hp.Add(-damage);
@@ -1234,14 +1234,14 @@ public class FightControlForStart : MonoBehaviour
 
         PlayAudioForSecondClip(65, 0);
         ShowSpellTextObj(attackUnit.cardObj, "65", false);
-        AttackToEffectShow(attackedUnit, false, "65A");
+        AttackToEffectShow(attackedUnit, false, Effect.YellowBand);
 
         int sameTypeHeroNums = 0;
         for (int i = 0; i < fightCardDatas.Length; i++)
         {
             if (fightCardDatas[i] != null && fightCardDatas[i].Hp > 0 && fightCardDatas[i].cardType == 0 && DataTable.Hero[fightCardDatas[i].cardId].MilitaryUnitTableId == 65)
             {
-                AttackToEffectShow(fightCardDatas[i], false, "65B");
+                AttackToEffectShow(fightCardDatas[i], false, Effect.YellowBandB);
                 sameTypeHeroNums++;
             }
         }
@@ -1314,7 +1314,7 @@ public class FightControlForStart : MonoBehaviour
 
         PlayAudioForSecondClip(58, 0);
         ShowSpellTextObj(attackUnit.cardObj, "58", false);
-        AttackToEffectShow(attackedUnit, false, "58A");
+        AttackToEffectShow(attackedUnit, false, Effect.HeavyCavalry);
 
         float damageBonus = 0;
         if (tieQiCardsList.Count > 1)
@@ -1369,7 +1369,7 @@ public class FightControlForStart : MonoBehaviour
     {
         PlayAudioForSecondClip(56, 0);
         ShowSpellTextObj(attackUnit.cardObj, "56", false);
-        AttackToEffectShow(attackedUnit, false, "56A");
+        AttackToEffectShow(attackedUnit, false, Effect.Barbarians);
         if (attackedUnit.cardType == 0 && attackedUnit.Hp > 0)
         {
             if (TakeSpecialAttack(DataTable.GetGameValue(51)))
@@ -1394,7 +1394,7 @@ public class FightControlForStart : MonoBehaviour
         {
             PlayAudioForSecondClip(84, 0);
             ShowSpellTextObj(attackUnit.cardObj, "55_0", false);
-            AttackToEffectShow(attackedUnit, false, "55A0");
+            AttackToEffectShow(attackedUnit, false, Effect.FireShipExplode);
 
             takeBurnPro = DataTable.GetGameValue(53);
 
@@ -1409,7 +1409,7 @@ public class FightControlForStart : MonoBehaviour
                 FightCardData attackedUnits = fightCardDatas[FightForManagerForStart.instance.CardNearbyAdditionForeach[targetIndex][i]];
                 if (attackedUnits != null && attackedUnits.Hp > 0)
                 {
-                    AttackToEffectShow(attackedUnits, false, "55A");
+                    AttackToEffectShow(attackedUnits, false, Effect.FireShipAttack);
                     int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
                     attackedUnits.Hp.Add(-backDamage);
                     AttackedAnimShow(attackedUnits, backDamage, false);
@@ -1432,7 +1432,7 @@ public class FightControlForStart : MonoBehaviour
         {
             PlayAudioForSecondClip(55, 0);
             ShowSpellTextObj(attackUnit.cardObj, "55", false);
-            AttackToEffectShow(attackedUnit, false, "55A");
+            AttackToEffectShow(attackedUnit, false, Effect.FireShipAttack);
         }
         TakeToBurn(attackedUnit, takeBurnPro);
     }
@@ -1516,7 +1516,7 @@ public class FightControlForStart : MonoBehaviour
     //水兵卸甲技能
     private void ShuiBingXieJia(FightCardData attackUnit, FightCardData attackedUnit)
     {
-        AttackToEffectShow(attackedUnit, false, "44A");
+        AttackToEffectShow(attackedUnit, false, Effect.DisarmAttack);
         PlayAudioForSecondClip(44, 0);
         if (attackedUnit.cardType == 0)
         {
@@ -1556,7 +1556,7 @@ public class FightControlForStart : MonoBehaviour
             int addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(65) / 100f) / fightNums);
             for (int i = 0; i < fightNums; i++)
             {
-                AttackToEffectShow(fightCardDatas[canHuiFuUnits[i]], false, "40A");
+                AttackToEffectShow(fightCardDatas[canHuiFuUnits[i]], false, Effect.Mechanical);
                 ShowSpellTextObj(fightCardDatas[canHuiFuUnits[i]].cardObj, DataTable.GetStringText(15), true, false);
                 fightCardDatas[canHuiFuUnits[i]].Hp.Add(+addtionNums);
                 AttackedAnimShow(fightCardDatas[canHuiFuUnits[i]], addtionNums, true);
@@ -1584,12 +1584,12 @@ public class FightControlForStart : MonoBehaviour
             string effectStr = "";
             if (classType == 34)  //辩士
             {
-                effectStr = "34A";
+                effectStr = Effect.Debate;
                 PlayAudioForSecondClip(34, 0);
             }
             else
             {//大辩士
-                effectStr = "35A";
+                effectStr = Effect.Controversy;
                 PlayAudioForSecondClip(35, 0);
             }
             for (int i = 0; i < attackedIndexList.Count; i++)
@@ -1623,12 +1623,12 @@ public class FightControlForStart : MonoBehaviour
             string effectStr = "";
             if (classType == 47)  //说客
             {
-                effectStr = "47A";
+                effectStr = Effect.Persuade;
                 PlayAudioForSecondClip(47, 0);
             }
             else
             {//大说客
-                effectStr = "48A";
+                effectStr = Effect.Convince;
                 PlayAudioForSecondClip(48, 0);
             }
             for (int i = 0; i < attackedIndexList.Count; i++)
@@ -1670,7 +1670,7 @@ public class FightControlForStart : MonoBehaviour
         FightCardData attackedUnit = fightCardDatas[randTarget];
         if (attackedUnit != null && (!(attackedUnit.fightState.Invincible > 0 || OffsetWithStand(attackedUnit))))
         {
-            AttackToEffectShow(attackedUnit, false, "24A");
+            AttackToEffectShow(attackedUnit, false, Effect.ThrowRocks);
             if (attackedUnit.cardType == 522)   //如果目标是老巢，造成1.5倍伤害
             {
                 finalDamage = (int)(finalDamage * DataTable.GetGameValue(72) / 100f);
@@ -1697,7 +1697,7 @@ public class FightControlForStart : MonoBehaviour
         {
             //Debug.Log("----攻城车破城");
             ShowSpellTextObj(attackUnit.cardObj, "23", false);
-            AttackToEffectShow(attackedUnit, false, "23A");
+            AttackToEffectShow(attackedUnit, false, Effect.SiegeMachine);
             PlayAudioForSecondClip(23, 0);
             return (int)(damage * DataTable.GetGameValue(73) / 100f);
         }
@@ -1788,7 +1788,7 @@ public class FightControlForStart : MonoBehaviour
         for (int i = 0; i < attackedIndexList.Count; i++)
         {
             FightCardData attackedUnit = fightCardDatas[attackedIndexList[i]];
-            AttackToEffectShow(attackedUnit, false, "20A");
+            AttackToEffectShow(attackedUnit, false, Effect.LongBow);
             int nowDamage = DefDamageProcessFun(attackUnit, attackedUnit, damage);
             attackedUnit.Hp.Add(-nowDamage);
             AttackedAnimShow(attackedUnit, nowDamage, false);
@@ -1826,7 +1826,7 @@ public class FightControlForStart : MonoBehaviour
             AddOrCutShieldValue(finalDamage, fightCardDatas[addIndex], true);
             //Debug.Log("---辅佐技能");
             ShowSpellTextObj(attackUnit.cardObj, "39", false);
-            AttackToEffectShow(fightCardDatas[addIndex], false, "39A");
+            AttackToEffectShow(fightCardDatas[addIndex], false, Effect.Support);
             PlayAudioForSecondClip(39, 0);
         }
     }
@@ -1890,7 +1890,7 @@ public class FightControlForStart : MonoBehaviour
             //Debug.Log("---内政技能");
             ShowSpellTextObj(attackUnit.cardObj, "38", false);
             PlayAudioForSecondClip(38, 0);
-            AttackToEffectShow(fightCardDatas[cardIndex], false, "38A");
+            AttackToEffectShow(fightCardDatas[cardIndex], false, Effect.StateAffairs);
             ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
 
             if (TakeSpecialAttack(prop))
@@ -1904,7 +1904,7 @@ public class FightControlForStart : MonoBehaviour
             isNeedToAttack = false;
             ShowSpellTextObj(attackUnit.cardObj, "38", false);
             PlayAudioForSecondClip(38, 0);
-            AttackToEffectShow(fightCardDatas[cardIndex], false, "38A");
+            AttackToEffectShow(fightCardDatas[cardIndex], false, Effect.StateAffairs);
             ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
             if (TakeSpecialAttack(prop))
             {
@@ -1917,7 +1917,7 @@ public class FightControlForStart : MonoBehaviour
                 isNeedToAttack = false;
                 ShowSpellTextObj(attackUnit.cardObj, "38", false);
                 PlayAudioForSecondClip(38, 0);
-                AttackToEffectShow(fightCardDatas[cardIndex], false, "38A");
+                AttackToEffectShow(fightCardDatas[cardIndex], false, Effect.StateAffairs);
                 ShowSpellTextObj(fightCardDatas[cardIndex].cardObj, DataTable.GetStringText(14), true, false);
                 if (TakeSpecialAttack(prop))
                 {
@@ -1998,13 +1998,13 @@ public class FightControlForStart : MonoBehaviour
             string effectStr = "";
             if (classType == 42)  //医士
             {
-                effectStr = "42A";
+                effectStr = Effect.Heal;
                 PlayAudioForSecondClip(42, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(80) / 100f) / fightNums);
             }
             else
             {//大医士
-                effectStr = "43A";
+                effectStr = Effect.Cure;
                 PlayAudioForSecondClip(43, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(81) / 100f) / fightNums);
             }
@@ -2262,7 +2262,7 @@ public class FightControlForStart : MonoBehaviour
     {
         //Debug.Log("---刺客破甲");
         PlayAudioForSecondClip(25, 0);
-        AttackToEffectShow(attackedUnit, false, "25A");
+        AttackToEffectShow(attackedUnit, false, Effect.AssassinStrike);
         if (attackedUnit.cardType == 0)
         {
             ShowSpellTextObj(attackUnit.cardObj, "25", false);
@@ -2303,7 +2303,7 @@ public class FightControlForStart : MonoBehaviour
     {
         //使敌方武将和士兵单位往后退一格。当敌方单位无法再后退时，造成2.5倍伤害
         PlayAudioForSecondClip(21, 0);
-        AttackToEffectShow(attackedUnit, false, "21A");
+        AttackToEffectShow(attackedUnit, false, Effect.WarshipAttack);
         ShowSpellTextObj(attackUnit.cardObj, "21", false);
         if (attackedUnit.cardType == 0)
         {
@@ -2327,7 +2327,7 @@ public class FightControlForStart : MonoBehaviour
         //50%概率使敌方武将和士兵单位【眩晕】。对已经眩晕单位，造成2.5倍伤害
         PlayAudioForSecondClip(22, 0);
         ShowSpellTextObj(attackUnit.cardObj, "22", false);
-        AttackToEffectShow(attackedUnit, false, "22A");
+        AttackToEffectShow(attackedUnit, false, Effect.ChariotAttack);
         if (attackedUnit.fightState.Stunned > 0)
         {
             finalDamage = (int)(finalDamage * DataTable.GetGameValue(92) / 100f);
@@ -2340,7 +2340,7 @@ public class FightControlForStart : MonoBehaviour
     private int FuBingTuLuAttack(int finalDamage, FightCardData attackedUnit, FightCardData attackUnit)
     {
         PlayAudioForSecondClip(18, 0);
-        AttackToEffectShow(attackedUnit, false, "18A");
+        AttackToEffectShow(attackedUnit, false, Effect.AxeStrike);
 
         //破护盾
         if (attackedUnit.fightState.Shield > 0)
@@ -2362,7 +2362,7 @@ public class FightControlForStart : MonoBehaviour
     private void JianBingHengSaoAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         PlayAudioForSecondClip(15, 0);
-        AttackToEffectShow(attackedUnit, false, "15A");
+        AttackToEffectShow(attackedUnit, false, Effect.HalberdSweep);
         ShowSpellTextObj(attackUnit.cardObj, "15", false);
 
         //对目标周围的其他单位造成50%伤害
@@ -2434,7 +2434,7 @@ public class FightControlForStart : MonoBehaviour
             attackUnit.cardObj.transform.Find(StringNameStatic.StateIconPath_willFight + "Din").GetComponent<Image>().color = new Color(1, 1, 1, 0.4f + 0.6f * (attackUnit.fightState.Stimulate / 10f));
         }
         PlayAudioForSecondClip(12, 0);
-        AttackToEffectShow(attackedUnit, false, "12A");
+        AttackToEffectShow(attackedUnit, false, Effect.Stimulate);
         ShowSpellTextObj(attackUnit.cardObj, "12", false);
         finalDamage = (int)(finalDamage * (1 + DataTable.GetGameValue(97) / 100f * attackUnit.fightState.Stimulate));
         return finalDamage;
@@ -2444,7 +2444,7 @@ public class FightControlForStart : MonoBehaviour
     private int TieQiWuWeiAttack(int finalDamage, FightCardData attackUnit, FightCardData attackedUnit)
     {
         PlayAudioForSecondClip(11, 0);
-        AttackToEffectShow(attackedUnit, false, "11A");
+        AttackToEffectShow(attackedUnit, false, Effect.KnightAttack);
         //自身血量每降低10%，提高15%伤害
         float damageProp = (1f - attackUnit.Hp.Rate()) / (DataTable.GetGameValue(98) / 100f) * (DataTable.GetGameValue(99) / 100f);
         if (damageProp > 0)
@@ -2476,10 +2476,10 @@ public class FightControlForStart : MonoBehaviour
                     int backDamage = DefDamageProcessFun(attackUnit, attackedUnits, finalDamage);
                     attackedUnits.Hp.Add(-backDamage);
                     AttackedAnimShow(attackedUnits, backDamage, false);
-                    AttackToEffectShow(attackedUnits, false, "10A");
+                    AttackToEffectShow(attackedUnits, false, Effect.Daredevil);
                 }
             }
-            AttackToEffectShow(attackedUnit, false, "10A");
+            AttackToEffectShow(attackedUnit, false, Effect.Daredevil);
 
             return finalDamage;
         }
@@ -2498,7 +2498,7 @@ public class FightControlForStart : MonoBehaviour
         ShowSpellTextObj(attackUnit.cardObj, "8", false);
 
         PlayAudioForSecondClip(8, 0);
-        AttackToEffectShow(attackedUnit, false, "8A");
+        AttackToEffectShow(attackedUnit, false, Effect.ElephantAttack);
         TakeOneUnitDizzed(attackedUnit, DataTable.GetGameValue(102));
     }
 
@@ -2512,7 +2512,7 @@ public class FightControlForStart : MonoBehaviour
             finalDamage = DefDamageProcessFun(attackUnit, attackedUnit, finalDamage);
             attackedUnit.Hp.Add(-finalDamage);
             AttackedAnimShow(attackedUnit, finalDamage, false);
-            GameObject effectObj = AttackToEffectShow(attackedUnit, false, "7A");
+            GameObject effectObj = AttackToEffectShow(attackedUnit, false, Effect.ReflectDamage);
             effectObj.transform.localScale = new Vector3(1, attackUnit.isPlayerCard ? 1 : -1, 1);
         }
     }
@@ -3015,7 +3015,7 @@ public class FightControlForStart : MonoBehaviour
 
         if (isPuGong)
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("0A", 0.5f, attackedUnit.cardObj);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.BasicAttack, 0.5f, attackedUnit.cardObj);
             effectObj.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
         }
         else
@@ -3052,7 +3052,7 @@ public class FightControlForStart : MonoBehaviour
         GameObject effectObj = new GameObject();
         PlayerDataForGame.garbageStationObjs.Add(effectObj);
 
-        effectObj = EffectsPoolingControl.instance.GetEffectToFight("dropBlood", 1.5f, attackedUnit.cardObj);
+        effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f, attackedUnit.cardObj);
         if (isAdd)
         {
             effectObj.GetComponentInChildren<Text>().text = "+" + Mathf.Abs(cutHpNum);
@@ -3149,7 +3149,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextH", 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, ui);
             effectObj.GetComponentInChildren<Text>().text = showTextName;
             effectObj.GetComponentInChildren<Text>().color = isRed ? Color.red : ColorDataStatic.huiFu_green;
         }
@@ -3160,7 +3160,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight("spellTextV", 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, ui);
             effectObj.GetComponentsInChildren<Image>()[1].sprite = Resources.Load("Image/battle/" + showTextName, typeof(Sprite)) as Sprite;
         }
     }

@@ -32,7 +32,7 @@ using UnityEngine;
     }
 
     //战斗状态
-    [JsonIgnore]public FightState fightState;
+    [JsonIgnore]public FightState fightState = new FightState();
     //摆放位置记录
     public int posIndex = -1;
     //生命值回复
@@ -57,6 +57,7 @@ using UnityEngine;
     public int attackedBehavior;
 
     [SerializeField]private HitPoint hp;
+    private GameCardInfo info;
 
     public FightCardData()
     {
@@ -69,24 +70,30 @@ using UnityEngine;
 
     public FightCardData(GameCard card)
     {
-        var info = card.GetInfo();
+        info = card.GetInfo();
         unitId = 1;
         cardType = card.typeIndex;
         cardId = card.CardId;
         cardGrade = card.Level;
         damage = info.GetDamage(card.Level);
-        fightState = new FightState();
         hpr = info.GameSetRecovery;
         cardDamageType = info.DamageType;
         combatType = info.CombatType;
         hp = new HitPoint(info.GetHp(card.Level));
     }
 
-    [JsonIgnore]public int PosIndex => posIndex;
-    [JsonIgnore]public bool IsAlive => Hp > 0;
-    [JsonIgnore]public GameCardType CardType => cardObj.CardInfo.Type;
+    [JsonIgnore] public int PosIndex => posIndex;
+    public int CardId => cardId;
+    [JsonIgnore] public GameCardType CardType => (GameCardType) cardType;
+    public GameCardInfo Info => info;
+    public int HitPoint => hp.Max;
+    public int Level => cardGrade;
 
-    public void UpdatePos(int pos) => posIndex = pos;
+    public void UpdatePos(int pos)
+    {
+        posIndex = pos;
+    }
+
     //更新血条显示
     public void UpdateHpUi()
     {
@@ -103,13 +110,19 @@ using UnityEngine;
         void UpdateHp() => cardObj.War.SetHp(1f * Hp.Value / Hp.Max);
     }
 
-    public void ResetHp(int hp) => Hp = new HitPoint(hp);
+    public void ResetHp(int maxHp) => Hp = new HitPoint(maxHp);
     [JsonIgnore]public int Pos => PosIndex;
     [JsonIgnore]public bool IsPlayer => isPlayerCard;
     [JsonIgnore]public bool IsActed => isActionDone;
-    [JsonIgnore]public bool IsAvailable => !IsActed && IsAlive;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
-
+    public void UpdateActivity(PieceStatus status)
+    {
+        hp.Set(status.Hp, true);
+        fightState.SetStates(status.Buffs);
+        cardObj.War.SetHp(status.HpRate);
+        if(status.IsDeath)
+            cardObj.SetLose(true);
+    }
 }
 
 [Serializable]
