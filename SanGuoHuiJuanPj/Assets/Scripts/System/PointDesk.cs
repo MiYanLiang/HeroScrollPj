@@ -70,7 +70,8 @@ public class PointDesk : MonoBehaviour
 
     public void SelectCard(GameCard card)
     {
-        SelectedCard.Set(card, GameCardUi.CardModes.Desk);
+        SelectedCard.Init(card);
+        SelectedCard.Set(GameCardUi.CardModes.Desk);
         var info = card.GetInfo();
         Fullname.text = info.Name;
         Fullname.color = info.GetNameColor();

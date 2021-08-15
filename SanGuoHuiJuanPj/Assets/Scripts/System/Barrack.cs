@@ -80,7 +80,8 @@ public class Barrack : MonoBehaviour
     private void InstanceGameCardUi(GameCard card)
     {
         var ui = GetCardFromPool();
-        ui.Set(card, GameCardUi.CardModes.Desk);
+        ui.Init(card);
+        ui.Set(GameCardUi.CardModes.Desk);
         var state = card.level == 0 ? GameCardCityUiOperation.States.Disable :
             card.isFight > 0 ? GameCardCityUiOperation.States.Enlisted : GameCardCityUiOperation.States.None;
         ui.CityOperation.SetState(state);

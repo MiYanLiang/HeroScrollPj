@@ -22,7 +22,9 @@ public class IronSourceInitilizer
                 }
                 else
                 {
+#if !UNITY_EDITOR
                     IronSource.Agent.init(appKey);
+#endif
                 }
 
             }

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Beebyte.Obfuscator;
+using CorrelateLib;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Beebyte.Obfuscator;
-using CorrelateLib;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -12,31 +14,26 @@ using Random = UnityEngine.Random;
 public class FightForManager : MonoBehaviour
 {
     public static FightForManager instance;
-
-    [SerializeField]
-    Transform enemyChechBoard; //敌方棋盘
-    [SerializeField]
-    Transform playerChechBoard; //我方棋盘
-    [SerializeField]
+    [SerializeField] private Chessboard chessboard;//棋盘
     GameObject enemyCardPosPre;    //敌方卡牌位置预制件
     [SerializeField]
     GameObject playerCardPosPre;    //我方卡牌位置预制件
-    public Transform enemyCardsBox;    //敌方卡牌父级
-    public Transform playerCardsBox;    //我方卡牌父级
+    //public Transform enemyCardsBox;    //敌方卡牌父级
+    //public Transform playerCardsBox;    //我方卡牌父级
     [SerializeField]
     GameObject fightCardPre;    //战斗卡牌预制件
     [SerializeField]
     Text heroNumText;
     [SerializeField]
-    GameObject homeCardObj;
+    WarGameCardUi homeCardObj;
 
     public GameObject stateIconPre;
 
     public List<GameObject> enemyCardsPos; //敌方卡牌位置列表
     public List<GameObject> playerCardsPos; //我方卡牌位置列表
 
-    public FightCardData[] enemyFightCardsDatas; //敌方战斗卡牌信息集合
-    public FightCardData[] playerFightCardsDatas; //我方战斗卡牌信息集合
+    //public IReadOnlyList<FightCardData> EnemyCards => enemyCards; //敌方战斗卡牌信息集合
+    //public IReadOnlyList<FightCardData> PlayerCards => playerCards; //我方战斗卡牌信息集合
 
     [HideInInspector]
     public float floDisY;  //加成比
@@ -48,41 +45,15 @@ public class FightForManager : MonoBehaviour
 
     public int battleIdIndex;   //战役编号索引
 
-    public int nowHeroNums; //记录上战卡牌数量
-
-    //卡牌附近单位遍历次序
-    public int[][] CardNearbyAdditionForeach = new int[20][] {
-        new int[3]{ 2, 3, 5},           //0
-        new int[3]{ 2, 4, 6},           //1
-        new int[5]{ 0, 1, 5, 6, 7},     //2
-        new int[3]{ 0, 5, 8},           //3
-        new int[3]{ 1, 6, 9},           //4
-        new int[6]{ 0, 2, 3, 7, 8, 10}, //5
-        new int[6]{ 1, 2, 4, 7, 9, 11}, //6
-        new int[6]{ 2, 5, 6, 10,11,12}, //7
-        new int[4]{ 3, 5, 10,13},       //8
-        new int[4]{ 4, 6, 11,14},       //9
-        new int[6]{ 5, 7, 8, 12,13,15}, //10
-        new int[6]{ 6, 7, 9, 12,14,16}, //11
-        new int[6]{ 7, 10,11,15,16,17}, //12
-        new int[4]{ 8, 10,15,18},       //13
-        new int[4]{ 9, 11,16,19},       //14
-        new int[5]{ 10,12,13,17,18},    //15
-        new int[5]{ 11,12,14,17,19},    //16
-        new int[3]{ 12,15,16},          //17
-        new int[2]{ 13,15},             //18
-        new int[2]{ 14,16},             //19
-    };
-
     private void Awake()
     {
         if (instance == null)
         {
             instance = this;
         }
-        enemyFightCardsDatas = new FightCardData[20];
-        playerFightCardsDatas = new FightCardData[20];
-        nowHeroNums = 0;
+        //enemyCards = new FightCardData[20];
+        //playerCards = new FightCardData[20];
+        //nowHeroNums = 0;
         isNeedAutoHideInfo = true;
         Input.multiTouchEnabled = false;    //限制多指拖拽
     }
@@ -95,24 +66,31 @@ public class FightForManager : MonoBehaviour
 
         //玩家羁绊集合初始化
         CardManager.ResetJiBan(FightController.instance.playerJiBanAllTypes);
-
+        chessboard.Init();
         CreatePlayerHomeCard();
     }
     [SkipRename]
     private void CreatePlayerHomeCard()
     {
-        FightCardData playerHomeData = new FightCardData();
-        playerHomeData.cardObj = Instantiate(homeCardObj, playerCardsBox);
-        playerHomeData.cardObj.transform.position = playerCardsPos[17].transform.position;
-        playerHomeData.fullHp = playerHomeData.nowHp = DataTable.BaseLevel[WarsUIManager.instance.cityLevel].BaseHp + DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].BaseHpAddOn;
-        playerHomeData.hpr = 0;
-        playerHomeData.cardType = 522;
-        playerHomeData.posIndex = 17;
-        playerHomeData.isPlayerCard = true;
-        playerHomeData.activeUnit = false;
-        playerHomeData.fightState = new FightState();
-        playerFightCardsDatas[17] = playerHomeData;
+        var playerBase = new FightCardData();
+        playerBase.cardObj = Instantiate(homeCardObj);
+        playerBase.ResetHp(DataTable.BaseLevel[WarsUIManager.instance.cityLevel].BaseHp + DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].BaseHpAddOn);
+        playerBase.hpr = 0;
+        playerBase.cardType = 522;
+        playerBase.isPlayerCard = true;
+        playerBase.activeUnit = false;
+        playerBase.fightState = new FightState();
+        chessboard.PlaceCard(17, playerBase);
         UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+    }
+
+    public FightCardData ResetPlayerBaseHp()
+    {
+        var baseConfig = DataTable.BaseLevel[WarsUIManager.instance.cityLevel];
+        var playerLvlCfg = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level];
+        var playerBase = GetCard(17, true);
+        playerBase.ResetHp(baseConfig.BaseHp + playerLvlCfg.BaseHpAddOn);
+        return playerBase;
     }
 
     /// <summary>
@@ -125,75 +103,52 @@ public class FightForManager : MonoBehaviour
         CardManager.ResetJiBan(FightController.instance.enemyJiBanAllTypes);
 
         battleIdIndex = battleEventId;
-        var baseConfig = DataTable.BaseLevel[WarsUIManager.instance.cityLevel];
-        var playerLvlCfg = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level];
-        playerFightCardsDatas[17].fullHp = playerFightCardsDatas[17].nowHp = baseConfig.BaseHp + playerLvlCfg.BaseHpAddOn;
-        FightController.instance.UpdateUnitHpShow(playerFightCardsDatas[17]);
+        var playerBase = ResetPlayerBaseHp();
+        playerBase.UpdateHpUi();
         FightController.instance.ClearEmTieQiCardList();
-
-        for (int i = 0; i < enemyFightCardsDatas.Length; i++)
-        {
-            if (enemyFightCardsDatas[i] != null)
-            {
-                Destroy(enemyFightCardsDatas[i].cardObj);
-                enemyFightCardsDatas[i] = null;
-            }
-        }
+        chessboard.ClearEnemyCards();
         //对战势力名
         var battle = DataTable.BattleEvent[battleEventId];
-        string battleEnemyPowerName = battle.EnemyForce;
-
-        var index = Random.Range(0, battle.EnemyTableIndexes.Length); //敌人随机库抽取一个id
-        int enemyRandId = battle.EnemyTableIndexes[index];
+        var randomIndex = Random.Range(0, battle.EnemyTableIndexes.Length); //敌人随机库抽取一个id
+        var enemyRandId = battle.EnemyTableIndexes[randomIndex];
 
         //随机敌人卡牌
         if (battle.IsStaticEnemies == 0)
         {
             var enemies = DataTable.Enemy[enemyRandId].Poses();
-            for (int i = 0; i < 20; i++)
+            for (var i = 0; i < 20; i++)
             {
                 var enemyId = enemies[i];
                 if (enemyId == 0) continue;
-                FightCardData data = CreateEnemyFightUnit(enemyId, false);
-                data.posIndex = i;
-                data.isPlayerCard = false;
-                data.cardObj.transform.position = enemyCardsPos[i].transform.position;
-                enemyFightCardsDatas[i] = data;
-                CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
+                var card = CreateEnemyFightUnit(i, enemyId, false);
+                PlaceCardOnBoard(card, i, false);
             }
         }
         else
         {
             var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
             //固定敌人卡牌
-            for (int i = 0; i < 20; i++)
+            for (var i = 0; i < 20; i++)
             {
                 var chessman = enemies[i];
                 if (chessman == null) continue;
                 if (chessman.Star <= 0)
                     throw new InvalidOperationException(
                         $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
-                FightCardData data = CreateEnemyFightUnit(1, true, chessman);
-                data.posIndex = i;
-                data.isPlayerCard = false;
-                data.cardObj.transform.position = enemyCardsPos[i].transform.position;
-                enemyFightCardsDatas[i] = data;
-                CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
+                var card = CreateEnemyFightUnit(i, 1, true, chessman);
+                PlaceCardOnBoard(card, i, false);
             }
         }
 
-
-        FightCardData enemyHomeData = new FightCardData();
-        enemyHomeData.cardObj = Instantiate(homeCardObj, enemyCardsBox);
-        enemyHomeData.cardObj.transform.position = enemyCardsPos[17].transform.position;
-        enemyHomeData.fullHp = enemyHomeData.nowHp = DataTable.BattleEvent[battleEventId].BaseHp;
-        enemyHomeData.hpr = 0;
-        enemyHomeData.cardType = 522;
-        enemyHomeData.posIndex = 17;
-        enemyHomeData.isPlayerCard = false;
-        enemyHomeData.activeUnit = false;
-        enemyHomeData.fightState = new FightState();
-        enemyFightCardsDatas[17] = enemyHomeData;
+        var enemyBase = new FightCardData();
+        enemyBase.cardObj = Instantiate(homeCardObj, transform);
+        enemyBase.ResetHp(DataTable.BattleEvent[battleEventId].BaseHp);
+        enemyBase.hpr = 0;
+        enemyBase.cardType = 522;
+        enemyBase.isPlayerCard = false;
+        enemyBase.activeUnit = false;
+        enemyBase.fightState = new FightState();
+        PlaceCardOnBoard(enemyBase, 17, false);
 
         FightController.instance.InitStartFight();
 
@@ -201,161 +156,192 @@ public class FightForManager : MonoBehaviour
         var speed = GamePref.PrefWarSpeed;
         Time.timeScale = speed;
         speedBtnText.text = Multiply + speed;
+        //创建敌方卡牌战斗单位数据
+        FightCardData CreateEnemyFightUnit(int index, int unitId, bool isFixed, Chessman chessman = null)
+        {
+            var fCard = new FightCardData();
+            fCard.cardObj = PrefabManager.NewWarGameCardUi(transform); //Instantiate(fightCardPre, enemyCardsBox);
+            fCard.fightState = new FightState();
+            fCard.unitId = unitId;
+            var enemy = DataTable.EnemyUnit[unitId];
+            //是否是固定阵容
+            if (isFixed)
+            {
+                fCard.cardType = chessman.CardType;
+                fCard.cardId = chessman.CardId;
+                fCard.cardGrade = chessman.Star;
+            }
+            else
+            {
+                fCard.cardType = DataTable.EnemyUnit[unitId].CardType;
+                fCard.cardId = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity).Id;
+                fCard.cardGrade = enemy.Star;
+            }
+
+            var card = GameCard.Instance(fCard.cardId, fCard.cardType, fCard.cardGrade);
+            var info = card.GetInfo();
+            fCard.cardObj.Init(card);
+            fCard.cardObj.tag = GameSystem.UnTagged;
+            fCard.posIndex = index;
+            fCard.isPlayerCard = false;
+            fCard.damage = info.GetDamage(fCard.cardGrade);
+            fCard.hpr = info.GameSetRecovery;
+            fCard.ResetHp(info.GetHp(fCard.cardGrade));
+            fCard.activeUnit = info.Type == GameCardType.Hero || ((info.Type == GameCardType.Tower) &&
+                                                                (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
+                                                                 info.Id == 3 || info.Id == 6));
+            fCard.combatType = info.CombatType;
+            fCard.cardDamageType = info.DamageType;
+            GiveGameObjEventForHoldOn(fCard.cardObj, info.About);
+            return fCard;
+        }
     }
 
     //主动塔行动
-    public void ActiveTowerFight(FightCardData cardData, FightCardData[] cardsDatas)
+    public void ActiveTowerFight(FightCardData cardData, bool isPlayer)
     {
         switch (cardData.cardId)
         {
             case 0://营寨
-                YingZhaiFun(cardData, cardsDatas);
+                YingZhaiFun(cardData, isPlayer);
                 break;
             case 1://投石台
                 TouShiTaiAttackFun(cardData);
                 break;
             case 2://奏乐台
-                ZouYueTaiAddtionFun(cardData, cardsDatas);
+                ZouYueTaiAddtionFun(cardData, isPlayer);
                 break;
             case 3://箭楼
                 FightController.instance.JianLouYuanSheSkill(cardData, GetTowerAddValue(cardData.cardId, cardData.cardGrade));
                 break;
             case 6://轩辕台
-                XuanYuanTaiAddtionFun(cardData, cardsDatas);
+                XuanYuanTaiAddtionFun(cardData, isPlayer);
                 break;
             default:
                 break;
         }
     }
 
-    //营寨行动
-    private void YingZhaiFun(FightCardData cardData, FightCardData[] cardsDatas)
+    public void NeighborsLoop(int pos,UnityAction<int> function)
     {
-        if (cardData.nowHp > 1)
+        var neighbors = chessboard.GetNeighborIndexes(pos);
+        for (var i = 0; i < neighbors.Length; i++) function(neighbors[i]);
+    }
+
+    public FightCardData[] GetNeighbors(int pos, bool isPlayer, Func<FightCardData, bool> function = null)
+    {
+        if(function==null)return chessboard.GetNeighborIndexes(pos).Select(i => GetCard(i, isPlayer)).ToArray();
+        return chessboard.GetNeighborIndexes(pos).Where(i => function(GetCard(i, isPlayer)))
+            .Select(i => GetCard(i, isPlayer)).ToArray();
+    }
+
+    public FightCardData[] GetFriendlyNeighbors(int pos,FightCardData card, Func<FightCardData, bool> func = null) => GetNeighbors(pos, card.isPlayerCard, func);
+
+    //营寨行动
+    private void YingZhaiFun(FightCardData card, bool isPlayer)
+    {
+        if (card.Hp <= 1) return;
+        FightController.instance.indexAttackType = 0;
+        FightController.instance.PlayAudioForSecondClip(42, 0);
+
+        var mostHpRequest = 0;  //最多扣除血量
+        var needAddHpCard = new FightCardData();
+        //var neighbors = chessboard.GetNeighborIndexes(card.posIndex);
+        NeighborsLoop(card.PosIndex, i =>
         {
-            FightController.instance.indexAttackType = 0;
-            FightController.instance.PlayAudioForSecondClip(42, 0);
+            var target = GetCardList(isPlayer)[i];
+            if (target == null || target.cardType != 0 || target.Hp.Value <= 0) return;
+            if (target.Hp.Max - target.Hp.Value <= mostHpRequest) return;//找出最缺血的单位
+            mostHpRequest = target.Hp.Max - target.Hp.Value;
+            needAddHpCard = target;
+        });
 
-            int indexCutMaxHp = 0;  //最多扣除血量
-            FightCardData needAddHpCard = new FightCardData();
-
-            for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
-            {
-                FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-                if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                {
-                    if (addedFightCard.fullHp - addedFightCard.nowHp > indexCutMaxHp)
-                    {
-                        indexCutMaxHp = addedFightCard.fullHp - addedFightCard.nowHp;
-                        needAddHpCard = addedFightCard;
-                    }
-                }
-            }
-
-            if (indexCutMaxHp > 0)
-            {
-                int canAddHpNum = cardData.nowHp - 1;
-                if (canAddHpNum > indexCutMaxHp)
-                {
-                    canAddHpNum = indexCutMaxHp;
-                }
-                //自身减血
-                cardData.nowHp -= canAddHpNum;
-                FightController.instance.AttackedAnimShow(cardData, canAddHpNum, false);
-                //单位加血
-                FightController.instance.AttackToEffectShow(needAddHpCard, false, "42A");
-                needAddHpCard.nowHp += canAddHpNum;
-                FightController.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
-                FightController.instance.AttackedAnimShow(needAddHpCard, canAddHpNum, true);
-            }
-        }
+        if (mostHpRequest <= 0) return;//没有单位缺血
+        var maxAddingHp = card.Hp - 1;
+        if (maxAddingHp > mostHpRequest) maxAddingHp = mostHpRequest;
+        //自身减血
+        card.Hp.Add(-maxAddingHp);
+        FightController.instance.TargetAnimShow(card, maxAddingHp);
+        //单位加血
+        FightController.instance.AttackToEffectShow(needAddHpCard, false, Effect.Heal);
+        needAddHpCard.Hp.Add(maxAddingHp);
+        FightController.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
+        FightController.instance.TargetAnimShow(needAddHpCard, maxAddingHp);
     }
 
     //投石台攻击
     private void TouShiTaiAttackFun(FightCardData cardData)
     {
-        FightCardData[] attackedUnits = cardData.isPlayerCard ? enemyFightCardsDatas : playerFightCardsDatas;
-        int damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.cardGrade)); //造成的伤害
+        var targets = GetCardList(!cardData.isPlayerCard);
+        var damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.cardGrade)); //造成的伤害
         FightController.instance.indexAttackType = 0;
 
         FightController.instance.PlayAudioForSecondClip(24, 0);
 
-        List<GameObject> posListToThunder = cardData.isPlayerCard ? enemyCardsPos : playerCardsPos;
+        var posListToThunder = cardData.isPlayerCard ? enemyCardsPos : playerCardsPos;
         EffectsPoolingControl.instance.GetEffectToFight1("101A", 1f, posListToThunder[cardData.posIndex].transform);
 
-        if (attackedUnits[cardData.posIndex] != null && attackedUnits[cardData.posIndex].nowHp > 0)
+        if (targets[cardData.posIndex] != null && targets[cardData.posIndex].Hp > 0)
         {
-            int finalDamage = FightController.instance.DefDamageProcessFun(cardData, attackedUnits[cardData.posIndex], damage);
-            attackedUnits[cardData.posIndex].nowHp -= finalDamage;
-            FightController.instance.AttackedAnimShow(attackedUnits[cardData.posIndex], finalDamage, false);
-            if (attackedUnits[cardData.posIndex].cardType == 522)
+            var finalDamage = FightController.instance.DefDamageProcessFun(cardData, targets[cardData.posIndex], damage);
+            targets[cardData.posIndex].Hp.Add(-finalDamage);
+            FightController.instance.TargetAnimShow(targets[cardData.posIndex], finalDamage);
+            if (targets[cardData.posIndex].cardType == 522 && targets[cardData.posIndex].Hp <= 0)
             {
-                if (attackedUnits[cardData.posIndex].nowHp <= 0)
-                {
-                    FightController.instance.recordWinner = attackedUnits[cardData.posIndex].isPlayerCard ? -1 : 1;
-                }
+                FightController.instance.recordWinner = targets[cardData.posIndex].isPlayerCard ? -1 : 1;
             }
         }
-        for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
+        NeighborsLoop(cardData.PosIndex, i =>
         {
-            FightCardData attackedUnit = attackedUnits[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (attackedUnit != null && attackedUnit.nowHp > 0)
-            {
-                int finalDamage = FightController.instance.DefDamageProcessFun(cardData, attackedUnit, damage);
-                attackedUnit.nowHp -= finalDamage;
-                FightController.instance.AttackedAnimShow(attackedUnit, finalDamage, false);
-                if (attackedUnit.cardType == 522)
-                {
-                    if (attackedUnit.nowHp <= 0)
-                    {
-                        FightController.instance.recordWinner = attackedUnit.isPlayerCard ? -1 : 1;
-                    }
-                }
-            }
-        }
+            var target = targets[i];
+            if (target == null || target.Hp <= 0) return;
+            var finalDamage = FightController.instance.DefDamageProcessFun(cardData, target, damage);
+            target.Hp.Add(-finalDamage);
+            FightController.instance.TargetAnimShow(target, finalDamage);
+            if (target.cardType != 522 || target.Hp > 0) return;
+            FightController.instance.recordWinner = target.isPlayerCard ? -1 : 1;
+        });
     }
 
     //奏乐台血量回复
-    private void ZouYueTaiAddtionFun(FightCardData cardData, FightCardData[] cardsDatas)
+    private void ZouYueTaiAddtionFun(FightCardData cardData, bool isPlayer)
     {
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //回复血量基值
         addtionNums = (int)(addtionNums * DataTable.GetGameValue(123) / 100f);
         FightController.instance.indexAttackType = 0;
         FightController.instance.PlayAudioForSecondClip(42, 0);
-        for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
+        NeighborsLoop(cardData.PosIndex, i =>
         {
-            FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            FightCardData addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
-                FightController.instance.AttackToEffectShow(addedFightCard, false, "42A");
-                addedFightCard.nowHp += addtionNums;
+                FightController.instance.AttackToEffectShow(addedFightCard, false, Effect.Heal);
+                addedFightCard.Hp.Add(addtionNums);
                 FightController.instance.ShowSpellTextObj(addedFightCard.cardObj, DataTable.GetStringText(15), true, false);
-                FightController.instance.AttackedAnimShow(addedFightCard, addtionNums, true);
+                FightController.instance.TargetAnimShow(addedFightCard, addtionNums);
             }
-        }
+        });
+
     }
 
     //轩辕台护盾加成
-    private void XuanYuanTaiAddtionFun(FightCardData cardData, FightCardData[] cardsDatas)
+    private void XuanYuanTaiAddtionFun(FightCardData cardData, bool isPlayer)
     {
         FightController.instance.PlayAudioForSecondClip(4, 0);
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //添加护盾的单位最大数
-        for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
+        NeighborsLoop(cardData.PosIndex, i =>
         {
-            FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
-            if (addedFightCard != null && addedFightCard.nowHp > 0)
-            {
-                if (addedFightCard.cardType == 0 && addedFightCard.fightState.withStandNums <= 0)
-                {
-                    FightController.instance.AttackToEffectShow(addedFightCard, false, "4A");
-                    addedFightCard.fightState.withStandNums = 1;
-                    CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
-                    addtionNums--;
-                    if (addtionNums <= 0)
-                        break;
-                }
-            }
-        }
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null ||
+                addedFightCard.Hp <= 0 ||
+                addedFightCard.cardType != 0 ||
+                addedFightCard.fightState.Shield > 0 ||
+                addtionNums <= 0) return;
+            FightController.instance.AttackToEffectShow(addedFightCard, false, Effect.Shield);
+            addedFightCard.fightState.Shield = 1;
+            CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
+            addtionNums--;
+        });
     }
 
     //武将卡牌移动消除附加状态
@@ -363,51 +349,51 @@ public class FightForManager : MonoBehaviour
     {
         //奏乐台图标
         {
-            Transform tranZyt = cardData.cardObj.transform.GetChild(7).Find(StringNameStatic.StateIconPath_zouyuetaiAddtion);
+            Transform tranZyt = cardData.cardObj.War.StateContent.Find(StringNameStatic.StateIconPath_zouyuetaiAddtion);
             if (tranZyt != null)
                 DestroyImmediate(tranZyt.gameObject);
         }
         //战斗力图标
-        if (cardData.fightState.zhangutaiAddtion > 0)
+        if (cardData.fightState.ZhanGuTaiAddOn > 0)
         {
-            cardData.fightState.zhangutaiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
+            cardData.fightState.ZhanGuTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
         }
         //风神台图标
-        if (cardData.fightState.fengShenTaiAddtion > 0)
+        if (cardData.fightState.FengShenTaiAddOn > 0)
         {
-            cardData.fightState.fengShenTaiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
+            cardData.fightState.FengShenTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
         }
         //霹雳台图标
-        if (cardData.fightState.pilitaiAddtion > 0)
+        if (cardData.fightState.PiLiTaiAddOn > 0)
         {
-            cardData.fightState.pilitaiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
+            cardData.fightState.PiLiTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_pilitaiAddtion, false);
         }
         //霹雳台图标
-        if (cardData.fightState.pilitaiAddtion > 0)
+        if (cardData.fightState.PiLiTaiAddOn > 0)
         {
-            cardData.fightState.pilitaiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
+            cardData.fightState.PiLiTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_pilitaiAddtion, false);
         }
         //狼牙台图标
-        if (cardData.fightState.langyataiAddtion > 0)
+        if (cardData.fightState.LangYaTaiAddOn > 0)
         {
-            cardData.fightState.langyataiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
+            cardData.fightState.LangYaTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_langyataiAddtion, false);
         }
         //烽火台图标
-        if (cardData.fightState.fenghuotaiAddtion > 0)
+        if (cardData.fightState.FengHuoTaiAddOn > 0)
         {
-            cardData.fightState.fenghuotaiAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
+            cardData.fightState.FengHuoTaiAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
         }
         //迷雾阵图标
-        if (cardData.fightState.miWuZhenAddtion > 0)
+        if (cardData.fightState.MiWuZhenAddOn > 0)
         {
-            cardData.fightState.miWuZhenAddtion = 0;
-            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
+            cardData.fightState.MiWuZhenAddOn = 0;
+            DestroySateIcon(cardData.cardObj.War.StateContent, StringNameStatic.StateIconPath_miWuZhenAddtion, false);
         }
     }
 
@@ -416,10 +402,10 @@ public class FightForManager : MonoBehaviour
     /// </summary>
     /// <param name="cardData">行动卡牌</param>
     /// <param name="isAdd">是否上阵</param>
-    public void TryToActivatedBond(FightCardData cardData, bool isAdd)
+    public void UpdateActiveBond(FightCardData cardData, bool isAdd)
     {
         var jiBanIds = DataTable.Hero[cardData.cardId].JiBanIds;
-        if (jiBanIds == null || jiBanIds.Length == 0)return;
+        if (jiBanIds == null || jiBanIds.Length == 0) return;
         Dictionary<int, JiBanActivedClass> jiBanActivedClasses = cardData.isPlayerCard
             ? FightController.instance.playerJiBanAllTypes
             : FightController.instance.enemyJiBanAllTypes;
@@ -428,30 +414,30 @@ public class FightForManager : MonoBehaviour
         for (int i = 0; i < jiBanIds.Length; i++)
         {
             var jiBan = DataTable.JiBan[jiBanIds[i]];
-            if(jiBan.IsOpen == 0)continue;
-            JiBanActivedClass jiBanActivedClass = jiBanActivedClasses[jiBan.Id];
+            if (jiBan.IsOpen == 0) continue;
+            JiBanActivedClass jiban = jiBanActivedClasses[jiBan.Id];
             bool isActived = true;
-            for (int j = 0; j < jiBanActivedClass.cardTypeLists.Count; j++)
+            for (int j = 0; j < jiban.List.Count; j++)
             {
-                if (jiBanActivedClass.cardTypeLists[j].cardType == cardData.cardType
-                    && (jiBanActivedClass.cardTypeLists[j].cardId == cardData.cardId
-                        || (jiBanActivedClass.isHadBossId &&
-                            jiBanActivedClass.cardTypeLists[j].bossId == cardData.cardId)))
+                if (jiban.List[j].CardType == cardData.cardType
+                    && (jiban.List[j].CardId == cardData.cardId
+                        || (jiban.IsHadBossId &&
+                            jiban.List[j].BossId == cardData.cardId)))
                 {
                     if (isAdd)
                     {
-                        if (!jiBanActivedClass.cardTypeLists[j].cardLists.Exists(t => t == cardData))
+                        if (!jiban.List[j].Cards.Exists(t => t == cardData))
                         {
-                            jiBanActivedClass.cardTypeLists[j].cardLists.Add(cardData);
+                            jiban.List[j].Cards.Add(cardData);
                         }
                     }
                     else
                     {
-                        jiBanActivedClass.cardTypeLists[j].cardLists.Remove(cardData);
+                        jiban.List[j].Cards.Remove(cardData);
                     }
                 }
 
-                if (jiBanActivedClass.cardTypeLists[j].cardLists.Count <= 0)
+                if (jiban.List[j].Cards.Count <= 0)
                 {
                     isActived = false;
                 }
@@ -459,154 +445,157 @@ public class FightForManager : MonoBehaviour
 
             if (cardData.isPlayerCard)
             {
-                if (!jiBanActivedClass.isActived && isActived)
+                if (!jiban.IsActive && isActived)
                 {
-                    for (int k = 0; k < jiBanActivedClass.cardTypeLists.Count; k++)
+                    for (int k = 0; k < jiban.List.Count; k++)
                     {
-                        for (int s = 0; s < jiBanActivedClass.cardTypeLists[k].cardLists.Count; s++)
-                        {
-                            jiBanActivedClass.cardTypeLists[k].cardLists[s].cardObj.transform.GetChild(10)
-                                .gameObject.SetActive(false);
-                            jiBanActivedClass.cardTypeLists[k].cardLists[s].cardObj.transform.GetChild(10)
-                                .gameObject.SetActive(true);
-                        }
+                        for (int s = 0; s < jiban.List[k].Cards.Count; s++)
+                            jiban.List[k].Cards[s].cardObj.SetHighLight(true);
                     }
                 }
 
                 if (!isActived)
                 {
-                    for (int k = 0; k < jiBanActivedClass.cardTypeLists.Count; k++)
+                    for (int k = 0; k < jiban.List.Count; k++)
                     {
-                        for (int s = 0; s < jiBanActivedClass.cardTypeLists[k].cardLists.Count; s++)
-                        {
-                            jiBanActivedClass.cardTypeLists[k].cardLists[s].cardObj.transform.GetChild(10)
-                                .gameObject.SetActive(false);
-                        }
+                        for (int s = 0; s < jiban.List[k].Cards.Count; s++)
+                            jiban.List[k].Cards[s].cardObj.SetHighLight(true);
                     }
                 }
             }
 
-            jiBanActivedClass.isActived = isActived;
+            jiban.IsActive = isActived;
             //Debug.Log("羁绊: " + jiBanActivedClass.jiBanIndex+ ", isActived: " + jiBanActivedClass.isActived);
         }
     }
 
-    //上阵卡牌特殊相关处理
-    public void CardGoIntoBattleProcess(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd, bool isNeedRefresh = true)
+    public void RemoveCardFromBoard(FightCardData card, bool refresh = true)
     {
-        switch (cardData.cardType)
+        chessboard.RemoveCard(card.PosIndex, card.isPlayerCard);
+        OnBoardReactSet(card, card.posIndex, false, refresh);
+        UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+    }
+
+    public void PlaceCardOnBoard(FightCardData card, int posIndex, bool refresh = true)
+    {
+        OnBoardReactSet(card, posIndex, true, refresh);
+        chessboard.PlaceCard(posIndex, card);
+        UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+    }
+
+    //上阵卡牌特殊相关处理
+    public void OnBoardReactSet(FightCardData card, int posIndex, bool isAdd, bool refresh = true)
+    {
+        switch (card.cardType)
         {
             case 0:
-                if (isNeedRefresh)
-                {
-                    TryToActivatedBond(cardData, isAdd);
-                }
+                if (refresh) UpdateActiveBond(card, isAdd);
 
-                var military = MilitaryInfo.GetInfo(cardData.cardId).Id;
+                var military = MilitaryInfo.GetInfo(card.cardId).Id;
                 switch (military)
                 {
                     case 4://盾兵
                         if (isAdd)
                         {
-                            if (cardData.fightState.withStandNums <= 0)
+                            if (card.fightState.Shield <= 0)
                             {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
+                                CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                             }
-                            cardData.fightState.withStandNums = 1;
+                            card.fightState.Shield = 1;
                         }
                         else
                         {
-                            cardData.fightState.withStandNums = 0;
-                            DestroySateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_withStand, true);
+                            card.fightState.Shield = 0;
+                            DestroySateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_withStand, true);
                         }
                         break;
                     case 58://铁骑
-                        FightController.instance.UpdateTieQiStateIconShow(cardData, isAdd);
+                        FightController.instance.UpdateTieQiStateIconShow(card, isAdd);
                         break;
                     default:
                         break;
                 }
                 if (!isAdd)
                 {
-                    HeroCardRemoveStatus(cardData);
+                    HeroCardRemoveStatus(card);
                 }
                 else
                 {
-                    HeroSoldierAddtionFun(cardData, posIndex, cardDatas);
+                    HeroSoldierAddtionFun(card, posIndex);
                 }
                 break;
             case 1:
                 if (!isAdd)
                 {
-                    HeroCardRemoveStatus(cardData);
+                    HeroCardRemoveStatus(card);
                 }
                 else
                 {
-                    HeroSoldierAddtionFun(cardData, posIndex, cardDatas);
+                    HeroSoldierAddtionFun(card, posIndex);
                 }
                 break;
             case 2:
-                switch (cardData.cardId)
+                switch (card.cardId)
                 {
                     case 2://奏乐台
-                        ZouYueTaiAddIcon(posIndex, cardDatas, isAdd);
+                        ZouYueTaiAddIcon(posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 4://战鼓台
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 5://风神台
-                        FengShenTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        FengShenTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 7://霹雳台
-                        PiLiTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        PiLiTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 8://狼牙台
-                        LangYaTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        LangYaTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 9://烽火台
-                        FengHuoTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        FengHuoTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 10://号角台
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 11://瞭望台
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 12://七星坛
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 13://斗神台
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 14://曹魏旗
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 15://蜀汉旗
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 16://东吴旗
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 17://迷雾阵
-                        miWuZhenAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        miWuZhenAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 18://迷雾阵
-                        miWuZhenAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        miWuZhenAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 19://骑兵营
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 20://弓弩营
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 21://步兵营
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 22://长持营
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     case 23://战船营
-                        ZhanGuTaiAddtionFun(cardData, posIndex, cardDatas, isAdd);
+                        ZhanGuTaiAddtionFun(card, posIndex, card.isPlayerCard, isAdd);
                         break;
                     default:
                         break;
@@ -619,579 +608,431 @@ public class FightForManager : MonoBehaviour
     }
 
     //武将士兵卡牌加成效果
-    private void HeroSoldierAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas)
+    private void HeroSoldierAddtionFun(FightCardData card, int posIndex)
     {
-        var armed = MilitaryInfo.GetInfo(cardData.cardId).ArmedType;
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        var armed = MilitaryInfo.GetInfo(card.cardId).ArmedType;
+        NeighborsLoop(card.PosIndex, i =>
         {
-            FightCardData addtionCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addtionCard != null && addtionCard.cardType == 2 && addtionCard.nowHp > 0)
+            var addtionCard = GetCardList(card.isPlayerCard)[i];
+            if (addtionCard == null || addtionCard.cardType != 2 || addtionCard.Hp <= 0) return;
+            int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.cardGrade);
+            switch (addtionCard.cardId)
             {
-                int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.cardGrade);
-                switch (addtionCard.cardId)
-                {
-                    case 2://奏乐台
-                        if (cardData.cardObj.transform.GetChild(7).Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) == null)
+                case 2://奏乐台
+                    if (card.cardObj.War.StateContent.Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) == null)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zouyuetaiAddtion, false);
+                    }
+                    break;
+                case 4://战鼓台
+                    if (card.fightState.ZhanGuTaiAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
+                    }
+                    card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    break;
+                case 5://风神台
+                    if (card.fightState.FengShenTaiAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
+                    }
+                    card.fightState.FengShenTaiAddOn += addtionNums;
+                    break;
+                case 7://霹雳台
+                    if (card.fightState.PiLiTaiAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_pilitaiAddtion, false);
+                    }
+                    card.fightState.PiLiTaiAddOn += addtionNums;
+                    break;
+                case 8://狼牙台
+                    if (card.fightState.LangYaTaiAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_langyataiAddtion, false);
+                    }
+                    card.fightState.LangYaTaiAddOn += addtionNums;
+                    break;
+                case 9://烽火台
+                    if (card.fightState.FengHuoTaiAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
+                    }
+                    card.fightState.FengHuoTaiAddOn += addtionNums;
+                    break;
+                case 10://号角台
+                    if (card.combatType == 0)   //近战
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zouyuetaiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 4://战鼓台
-                        if (cardData.fightState.zhangutaiAddtion <= 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 11://瞭望台
+                    if (card.combatType == 1)   //远程
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.zhangutaiAddtion += addtionNums;
-                        break;
-                    case 5://风神台
-                        if (cardData.fightState.fengShenTaiAddtion <= 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 12://七星坛
+                    if (card.cardDamageType == 1) //法术
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.fengShenTaiAddtion += addtionNums;
-                        break;
-                    case 7://霹雳台
-                        if (cardData.fightState.pilitaiAddtion <= 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 13://斗神台
+                    if (card.cardDamageType == 0) //物理
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.pilitaiAddtion += addtionNums;
-                        break;
-                    case 8://狼牙台
-                        if (cardData.fightState.langyataiAddtion <= 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 14://曹魏旗
+                    if (DataTable.Hero[card.cardId].ForceTableId == 1)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.langyataiAddtion += addtionNums;
-                        break;
-                    case 9://烽火台
-                        if (cardData.fightState.fenghuotaiAddtion <= 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 15://蜀汉旗
+                    if (DataTable.Hero[card.cardId].ForceTableId == 0)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        cardData.fightState.fenghuotaiAddtion += addtionNums;
-                        break;
-                    case 10://号角台
-                        if (cardData.cardMoveType == 0)   //近战
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 16://东吴旗
+                    if (DataTable.Hero[card.cardId].ForceTableId == 2)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 11://瞭望台
-                        if (cardData.cardMoveType == 1)   //远程
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 17://迷雾阵
+                    if (card.fightState.MiWuZhenAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_miWuZhenAddtion, false);
+                    }
+                    card.fightState.MiWuZhenAddOn += addtionNums;
+                    break;
+                case 18://迷雾阵
+                    if (card.fightState.MiWuZhenAddOn <= 0)
+                    {
+                        CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_miWuZhenAddtion, false);
+                    }
+                    card.fightState.MiWuZhenAddOn += addtionNums;
+                    break;
+                case 19://骑兵营
+                    if (armed == 5)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 12://七星坛
-                        if (cardData.cardDamageType == 1) //法术
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 20://弓弩营
+                    if (armed == 9)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 13://斗神台
-                        if (cardData.cardDamageType == 0) //物理
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 21://步兵营
+                    if (armed == 2)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 14://曹魏旗
-                        if (DataTable.Hero[cardData.cardId].ForceTableId == 1)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 22://长持营
+                    if (armed == 3)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 15://蜀汉旗
-                        if (DataTable.Hero[cardData.cardId].ForceTableId == 0)
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                case 23://战船营
+                    if (armed == 8)
+                    {
+                        if (card.fightState.ZhanGuTaiAddOn <= 0)
                         {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
+                            CreateSateIcon(card.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
                         }
-                        break;
-                    case 16://东吴旗
-                        if (DataTable.Hero[cardData.cardId].ForceTableId == 2)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    case 17://迷雾阵
-                        if (cardData.fightState.miWuZhenAddtion <= 0)
-                        {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
-                        }
-                        cardData.fightState.miWuZhenAddtion += addtionNums;
-                        break;
-                    case 18://迷雾阵
-                        if (cardData.fightState.miWuZhenAddtion <= 0)
-                        {
-                            CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
-                        }
-                        cardData.fightState.miWuZhenAddtion += addtionNums;
-                        break;
-                    case 19://骑兵营
-                        if (armed == 5)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    case 20://弓弩营
-                        if (armed == 9)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    case 21://步兵营
-                        if (armed == 2)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    case 22://长持营
-                        if (armed == 3)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    case 23://战船营
-                        if (armed == 8)
-                        {
-                            if (cardData.fightState.zhangutaiAddtion <= 0)
-                            {
-                                CreateSateIcon(cardData.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
-                            }
-                            cardData.fightState.zhangutaiAddtion += addtionNums;
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                        card.fightState.ZhanGuTaiAddOn += addtionNums;
+                    }
+                    break;
+                default:
+                    break;
             }
-        }
+        });
     }
 
     //奏乐台状态栏添加
-    private void ZouYueTaiAddIcon(int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void ZouYueTaiAddIcon(int posIndex, bool isPlayer, bool isAdd)
     {
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        NeighborsLoop(posIndex, i =>
         {
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
+            if (isAdd)
             {
-                if (isAdd)
-                {
-                    if (addedFightCard.cardObj.transform.GetChild(7).Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) == null)
-                    {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zouyuetaiAddtion, false);
-                    }
-                }
-                else
-                {
-                    if (addedFightCard.cardObj.transform.GetChild(7).Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) != null)
-                    {
-                        DestroyImmediate(addedFightCard.cardObj.transform.GetChild(7).Find(StringNameStatic.StateIconPath_zouyuetaiAddtion).gameObject);
-                    }
-                }
+                if (addedFightCard.cardObj.War.StateContent.Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) !=
+                    null) return;
+                CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_zouyuetaiAddtion, false);
+                return;
             }
-        }
+
+            if (addedFightCard.cardObj.War.StateContent.Find(StringNameStatic.StateIconPath_zouyuetaiAddtion) ==
+                null) return;
+            DestroyImmediate(addedFightCard.cardObj.War.StateContent.Find(StringNameStatic.StateIconPath_zouyuetaiAddtion).gameObject);
+
+        });
     }
 
     //烽火台加成技能
-    private void FengHuoTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void FengHuoTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
-
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        NeighborsLoop(posIndex, i =>
         {
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
+            if (isAdd)
             {
-                if (isAdd)
+                if (addedFightCard.fightState.FengHuoTaiAddOn <= 0)
                 {
-                    if (addedFightCard.fightState.fenghuotaiAddtion <= 0)
-                    {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
-                    }
-                    addedFightCard.fightState.fenghuotaiAddtion += addtionNums;
+                    CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
                 }
-                else
-                {
-                    addedFightCard.fightState.fenghuotaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.fenghuotaiAddtion <= 0)
-                    {
-                        addedFightCard.fightState.fenghuotaiAddtion = 0;
-                        DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
-                    }
-                }
+                addedFightCard.fightState.FengHuoTaiAddOn += addtionNums;
+                return;
             }
-        }
+
+            addedFightCard.fightState.FengHuoTaiAddOn -= addtionNums;
+            if (addedFightCard.fightState.FengHuoTaiAddOn > 0) return;
+            addedFightCard.fightState.FengHuoTaiAddOn = 0;
+            DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_fenghuotaiAddtion, false);
+        });
     }
 
     //狼牙台加成技能
-    private void LangYaTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void LangYaTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
-
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        NeighborsLoop(posIndex, i =>
         {
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
+            if (isAdd)
             {
-                if (isAdd)
+                if (addedFightCard.fightState.LangYaTaiAddOn <= 0)
                 {
-                    if (addedFightCard.fightState.langyataiAddtion <= 0)
-                    {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
-                    }
-                    addedFightCard.fightState.langyataiAddtion += addtionNums;
+                    CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_langyataiAddtion, false);
                 }
-                else
-                {
-                    addedFightCard.fightState.langyataiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.langyataiAddtion <= 0)
-                    {
-                        addedFightCard.fightState.langyataiAddtion = 0;
-                        DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_langyataiAddtion, false);
-                    }
-                }
+                addedFightCard.fightState.LangYaTaiAddOn += addtionNums;
+                return;
             }
-        }
+
+            addedFightCard.fightState.LangYaTaiAddOn -= addtionNums;
+            if (addedFightCard.fightState.LangYaTaiAddOn > 0) return;
+            addedFightCard.fightState.LangYaTaiAddOn = 0;
+            DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_langyataiAddtion, false);
+
+        });
     }
 
     //霹雳台加成技能
-    private void PiLiTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void PiLiTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
 
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        NeighborsLoop(posIndex, i =>
         {
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
+            if (isAdd)
             {
-                if (isAdd)
+                if (addedFightCard.fightState.PiLiTaiAddOn <= 0)
                 {
-                    if (addedFightCard.fightState.pilitaiAddtion <= 0)
-                    {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
-                    }
-                    addedFightCard.fightState.pilitaiAddtion += addtionNums;
+                    CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_pilitaiAddtion, false);
                 }
-                else
-                {
-                    addedFightCard.fightState.pilitaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.pilitaiAddtion <= 0)
-                    {
-                        addedFightCard.fightState.pilitaiAddtion = 0;
-                        DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_pilitaiAddtion, false);
-                    }
-                }
+                addedFightCard.fightState.PiLiTaiAddOn += addtionNums;
+                return;
             }
-        }
+
+            addedFightCard.fightState.PiLiTaiAddOn -= addtionNums;
+            if (addedFightCard.fightState.PiLiTaiAddOn > 0) return;
+            addedFightCard.fightState.PiLiTaiAddOn = 0;
+            DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_pilitaiAddtion, false);
+
+        });
     }
 
     //迷雾阵加成技能
-    private void miWuZhenAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void miWuZhenAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
         int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
 
-        List<GameObject> posListToSetMiWu = cardData.isPlayerCard ? playerCardsPos : enemyCardsPos;
+        var posListToSetMiWu = cardData.isPlayerCard ? playerCardsPos : enemyCardsPos;
 
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        NeighborsLoop(posIndex, i =>
         {
+            var obj = posListToSetMiWu[i];
             if (!cardData.isPlayerCard)
             {
                 //迷雾动画
                 GameObject stateDinObj = Instantiate(Resources.Load("Prefabs/stateDin/" + StringNameStatic.StateIconPath_miWuZhenAddtion, typeof(GameObject)) as GameObject, cardData.cardObj.transform);
                 stateDinObj.name = StringNameStatic.StateIconPath_miWuZhenAddtion + "Din";
-                stateDinObj.transform.position = posListToSetMiWu[CardNearbyAdditionForeach[posIndex][i]].transform.position;
+                stateDinObj.transform.position = obj.transform.position;
                 stateDinObj.GetComponent<Animator>().enabled = false;
             }
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            NeighborsLoop(posIndex, pos =>
             {
+                var addedFightCard = GetCardList(isPlayer)[pos];
+                if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
                 if (isAdd)
                 {
-                    if (addedFightCard.fightState.miWuZhenAddtion <= 0)
+                    if (addedFightCard.fightState.MiWuZhenAddOn <= 0)
                     {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
+                        CreateSateIcon(addedFightCard.cardObj.War.StateContent,
+                            StringNameStatic.StateIconPath_miWuZhenAddtion, false);
                     }
-                    addedFightCard.fightState.miWuZhenAddtion += addtionNums;
-                }
-                else
-                {
-                    addedFightCard.fightState.miWuZhenAddtion -= addtionNums;
-                    if (addedFightCard.fightState.miWuZhenAddtion <= 0)
-                    {
-                        addedFightCard.fightState.miWuZhenAddtion = 0;
-                        DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_miWuZhenAddtion, false);
-                    }
-                }
-            }
-        }
 
-        if (!isAdd && !cardData.isPlayerCard)
-        {
-            for (int i = 0; i < cardData.cardObj.transform.childCount; i++)
-            {
-                Transform tran = cardData.cardObj.transform.GetChild(i);
-                if (tran.name == StringNameStatic.StateIconPath_miWuZhenAddtion + "Din")
-                {
-                    tran.gameObject.SetActive(false);
+                    addedFightCard.fightState.MiWuZhenAddOn += addtionNums;
+                    return;
                 }
+
+                addedFightCard.fightState.MiWuZhenAddOn -= addtionNums;
+                if (addedFightCard.fightState.MiWuZhenAddOn > 0) return;
+                addedFightCard.fightState.MiWuZhenAddOn = 0;
+                DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_miWuZhenAddtion,
+                    false);
+            });
+        });
+
+        if (isAdd || cardData.isPlayerCard) return;
+        for (int i = 0; i < cardData.cardObj.transform.childCount; i++)
+        {
+            Transform tran = cardData.cardObj.transform.GetChild(i);
+            if (tran.name == StringNameStatic.StateIconPath_miWuZhenAddtion + "Din")
+            {
+                tran.gameObject.SetActive(false);
             }
         }
     }
 
     //风神台加成技能
-    private void FengShenTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void FengShenTaiAddtionFun(FightCardData card, int posIndex, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
-
-        for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
+        var towerAddValue = GetTowerAddValue(card.cardId, card.cardGrade);
+        NeighborsLoop(posIndex, i =>
         {
-            FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-            if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
+            var addedFightCard = GetCardList(isPlayer)[i];
+            if (addedFightCard == null || addedFightCard.cardType != 0 || addedFightCard.Hp <= 0) return;
+            if (isAdd)
             {
-                if (isAdd)
+                if (addedFightCard.fightState.FengShenTaiAddOn <= 0)
                 {
-                    if (addedFightCard.fightState.fengShenTaiAddtion <= 0)
-                    {
-                        CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
-                    }
-                    addedFightCard.fightState.fengShenTaiAddtion += addtionNums;
+                    CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
                 }
-                else
-                {
-                    addedFightCard.fightState.fengShenTaiAddtion -= addtionNums;
-                    if (addedFightCard.fightState.fengShenTaiAddtion <= 0)
-                    {
-                        addedFightCard.fightState.fengShenTaiAddtion = 0;
-                        DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
-                    }
-                }
+                addedFightCard.fightState.FengShenTaiAddOn += towerAddValue;
+                return;
             }
-        }
+
+            addedFightCard.fightState.FengShenTaiAddOn -= towerAddValue;
+            if (addedFightCard.fightState.FengShenTaiAddOn > 0) return;
+            addedFightCard.fightState.FengShenTaiAddOn = 0;
+            DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_fengShenTaiAddtion, false);
+        });
     }
 
     //战鼓台(10-13塔)加成技能
-    private void ZhanGuTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
+    private void ZhanGuTaiAddtionFun(FightCardData cardData, int targetPos, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        var addOn = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        void WhileNeighborsTrueAddOn(Func<FightCardData,bool> condition)
+        {
+            NeighborsLoop(targetPos, pos =>
+            {
+                var card = GetCard(pos, isPlayer);
+                if (card == null ||
+                    card.cardType != 0 ||
+                    card.Hp <= 0) return;
+                if(condition(card)) DamageTowerAdditionFun(card, isAdd, addOn);
+            });
+        }
 
         switch (cardData.cardId)
         {
             case 4://战鼓台
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                        DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                }
+                WhileNeighborsTrueAddOn(c => true);
                 break;
             case 10://号角台
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (addedFightCard.cardMoveType == 0)   //近战
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c=>c.combatType == 0);
                 break;
             case 11://瞭望台
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (addedFightCard.cardMoveType == 1)   //远程
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c=>c.combatType == 1);
                 break;
             case 12://七星坛
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (addedFightCard.cardDamageType == 1) //法术
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c=>c.cardDamageType == 1);
                 break;
             case 13://斗神台
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (addedFightCard.cardDamageType == 0) //物理
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c=>c.cardDamageType == 0);
                 break;
             case 14://曹魏旗
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 1) //魏势力
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => DataTable.Hero[c.cardId].ForceTableId == 1);
                 break;
             case 15://蜀汉旗
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 0) //蜀势力
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => DataTable.Hero[c.cardId].ForceTableId == 0);
                 break;
             case 16://东吴旗
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        if (DataTable.Hero[addedFightCard.cardId].ForceTableId == 2) //吴势力
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => DataTable.Hero[c.cardId].ForceTableId == 2);
                 break;
             case 19://骑兵营
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        var armed = MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType;
-                        if (armed == 5)
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => MilitaryInfo.GetInfo(c.cardId).ArmedType == 5);
                 break;
             case 20://弓弩营
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        var armed = MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType;
-                        if (armed == 9) 
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => MilitaryInfo.GetInfo(c.cardId).ArmedType == 9);
                 break;
             case 21://步兵营
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        var armed = MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType;
-                        if (armed == 2)
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => MilitaryInfo.GetInfo(c.cardId).ArmedType == 2);
                 break;
             case 22://长持营
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        var armed = MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType;
-                        if (armed == 3)
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
+                WhileNeighborsTrueAddOn(c => MilitaryInfo.GetInfo(c.cardId).ArmedType == 3);
                 break;
             case 23://战船营
-                for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
-                {
-                    FightCardData addedFightCard = cardDatas[CardNearbyAdditionForeach[posIndex][i]];
-                    if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.nowHp > 0)
-                    {
-                        var armed = MilitaryInfo.GetInfo(addedFightCard.cardId).ArmedType;
-                        if (armed == 8)
-                        {
-                            DamageTowerAdditionFun(addedFightCard, isAdd, addtionNums);
-                        }
-                    }
-                }
-                break;
-            default:
+                WhileNeighborsTrueAddOn(c => MilitaryInfo.GetInfo(c.cardId).ArmedType == 8);
                 break;
         }
 
@@ -1202,19 +1043,19 @@ public class FightForManager : MonoBehaviour
     {
         if (isAdd)
         {
-            if (addedFightCard.fightState.zhangutaiAddtion <= 0)
+            if (addedFightCard.fightState.ZhanGuTaiAddOn <= 0)
             {
-                CreateSateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
+                CreateSateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
             }
-            addedFightCard.fightState.zhangutaiAddtion += addtionNums;
+            addedFightCard.fightState.ZhanGuTaiAddOn += addtionNums;
         }
         else
         {
-            addedFightCard.fightState.zhangutaiAddtion -= addtionNums;
-            if (addedFightCard.fightState.zhangutaiAddtion <= 0)
+            addedFightCard.fightState.ZhanGuTaiAddOn -= addtionNums;
+            if (addedFightCard.fightState.ZhanGuTaiAddOn <= 0)
             {
-                addedFightCard.fightState.zhangutaiAddtion = 0;
-                DestroySateIcon(addedFightCard.cardObj.transform.GetChild(7), StringNameStatic.StateIconPath_zhangutaiAddtion, false);
+                addedFightCard.fightState.ZhanGuTaiAddOn = 0;
+                DestroySateIcon(addedFightCard.cardObj.War.StateContent, StringNameStatic.StateIconPath_zhangutaiAddtion, false);
             }
         }
     }
@@ -1257,135 +1098,12 @@ public class FightForManager : MonoBehaviour
         }
     }
 
-    //创建敌方卡牌战斗单位数据
-    private FightCardData CreateEnemyFightUnit(int unitId, bool isFixed, Chessman chessman = null)
-    {
-        FightCardData data = new FightCardData();
-        data.cardObj = Instantiate(fightCardPre, enemyCardsBox);
-        data.fightState = new FightState();
-        data.unitId = unitId;
-        var enemy = DataTable.EnemyUnit[unitId];
-        //是否是固定阵容
-        if (isFixed)
-        {
-            data.cardType = chessman.CardType;
-            data.cardId = chessman.CardId;
-            data.cardGrade = chessman.Star;
-        }
-        else
-        {
-            data.cardType = DataTable.EnemyUnit[unitId].CardType;
-            data.cardId = GameCardInfo.RandomPick((GameCardType) enemy.CardType, enemy.Rarity).Id;
-            data.cardGrade = enemy.Star;
-        }
-
-        var info = GameCardInfo.GetInfo((GameCardType) data.cardType, data.cardId);
-        var resources = GameSystem.GameResources;
-        //兵种
-        data.cardObj.transform.GetChild(1).GetComponent<Image>().sprite = info.Type == GameCardType.Hero
-            ? resources.HeroImg[data.cardId]
-            : resources.FuZhuImg[info.ImageId];
-        //血量
-        data.cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
-        //名字
-        WarsUIManager.instance.ShowNameTextRules(data.cardObj.transform.GetChild(3).GetComponent<Text>(),info.Name);
-        //名字颜色
-        data.cardObj.transform.GetChild(3).GetComponent<Text>().color = NameColorChoose(info.Rare);
-        //星级
-        data.cardObj.transform.GetChild(4).GetComponent<Image>().sprite = resources.GradeImg[data.cardGrade];
-        //兵种
-        data.cardObj.transform.GetChild(5).GetComponentInChildren<Text>().text = info.Short;
-        //边框
-        data.cardObj.transform.GetChild(5).GetComponent<Image>().sprite = resources.ClassImg[0];
-        WarsUIManager.instance.FrameChoose(info.Rare, data.cardObj.transform.GetChild(6).GetComponent<Image>());
-        data.damage = info.GetDamage(data.cardGrade);
-        data.hpr = info.GameSetRecovery;
-        data.fullHp = data.nowHp = info.GetHp(data.cardGrade);
-        data.activeUnit = info.Type == GameCardType.Hero || ((info.Type == GameCardType.Tower) &&
-                                                            (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
-                                                             info.Id == 3 || info.Id == 6));
-        data.cardMoveType = info.CombatType;
-        data.cardDamageType = info.DamageType;
-        GiveGameObjEventForHoldOn(data.cardObj, info.About);
-        return data;
-    }
-    /// <summary>
-    /// 匹配稀有度的颜色
-    /// </summary>
-    /// <returns></returns>
-    private Color NameColorChoose(int rarity)
-    {
-        Color color = new Color();
-        switch (rarity)
-        {
-            case 1:
-                color = ColorDataStatic.name_gray;
-                break;
-            case 2:
-                color = ColorDataStatic.name_green;
-                break;
-            case 3:
-                color = ColorDataStatic.name_blue;
-                break;
-            case 4:
-                color = ColorDataStatic.name_purple;
-                break;
-            case 5:
-                color = ColorDataStatic.name_orange;
-                break;
-            case 6:
-                color = ColorDataStatic.name_red;
-                break;
-            case 7:
-                color = ColorDataStatic.name_black;
-                break;
-            default:
-                color = ColorDataStatic.name_gray;
-                break;
-        }
-        return color;
-    }
-
     /// <summary>
     /// 更新上阵数量显示
     /// </summary>
-    public void UpdateFightNumTextShow(int maxCards)
-    {
-        heroNumText.text = string.Format(DataTable.GetStringText(24), nowHeroNums,maxCards);
-    }
+    public void UpdateFightNumTextShow(int maxCards) => heroNumText.text = string.Format(DataTable.GetStringText(24), chessboard.PlayerCardsOnBoard, maxCards);
 
-    //是否能成功上阵
-    public bool ChangeNumsSuccess(bool isAdd)
-    {
-        var maxCard = WarsUIManager.instance.maxHeroNums;
-        if (isAdd)
-        {
-            if (nowHeroNums < maxCard)
-            {
-                nowHeroNums++;
-                UpdateFightNumTextShow(maxCard);
-                return true;
-            }
-            else
-            {
-                nowHeroNums = maxCard;
-                return false;
-            }
-        }
-        else
-        {
-            if (nowHeroNums > 0)
-            {
-                nowHeroNums--;
-                UpdateFightNumTextShow(maxCard);
-            }
-            else
-            {
-                nowHeroNums = 0;
-            }
-            return true;
-        }
-    }
+    public bool IsPlayerAvailableToPlace(int index) => chessboard.PlayerCardsOnBoard < WarsUIManager.instance.maxHeroNums && chessboard.IsPlayerScopeAvailable(index);
 
     [SerializeField]
     Text speedBtnText;
@@ -1396,7 +1114,7 @@ public class FightForManager : MonoBehaviour
     {
         var warScale = GamePref.PrefWarSpeed;
         warScale *= 2;
-        if (warScale> 2)
+        if (warScale > 2)
             warScale = 1;
         GamePref.SetPrefWarSpeed(warScale);
         Time.timeScale = warScale;
@@ -1408,6 +1126,9 @@ public class FightForManager : MonoBehaviour
 
     [HideInInspector]
     public bool isNeedAutoHideInfo;  //是否需要自动隐藏卡牌详情
+
+    //private FightCardData[] enemyCards;
+    //private FightCardData[] playerCards;
 
     //展示卡牌详细信息
     private void ShowInfoOfCardOrArms(string infoStr)
@@ -1426,25 +1147,158 @@ public class FightForManager : MonoBehaviour
         bZCardInfoObj.SetActive(false);
     }
 
-    IEnumerator ShowOrHideCardInfoWin()
+    //卡牌附加按下抬起方法
+    public void GiveGameObjEventForHoldOn(WarGameCardUi obj, string str)
     {
-        yield return new WaitForSeconds(4f);
-        if (isNeedAutoHideInfo)
+        EventTriggerListener.Get(obj.gameObject).onDown += _ => ShowInfoOfCardOrArms(str);
+        EventTriggerListener.Get(obj.gameObject).onUp += _ => HideInfoOfCardOrArms();
+    }
+
+    public IReadOnlyList<FightCardData> GetCardList(bool isPlayer) =>
+        chessboard.GetScope(isPlayer).Where(o => o.Card != null).Select(o => o.Card).ToArray();
+
+    public FightCardData GetCard(int index, bool isPlayer) => chessboard.GetChessPos(index, isPlayer).Card;
+
+    /// <summary>
+    /// ////////////////战斗主线逻辑//////////////////////////////////////////////////
+    /// </summary>
+    //位置列攻击目标选择次序
+    private int[][] AttackSelectionOrder = new int[5][]
+    {
+        new int[11]{ 0, 2, 3, 5, 7, 8, 10,12,13,15,17},     //0列
+        new int[11]{ 1, 2, 4, 6, 7, 9, 11,12,14,16,17},     //1列
+        new int[12]{ 0, 1, 2, 5, 6, 7, 10,11,12,15,16,17},  //2列
+        new int[8] { 0, 3, 5, 8, 10,13,15,17},              //3列
+        new int[8] { 1, 4, 6, 9, 11,14,16,17},              //4列
+    };
+
+    //锁定目标卡牌
+    public int FindOpponentIndex(FightCardData attackUnit)
+    {
+        if (attackUnit.fightState.Imprisoned <= 0)//攻击者没有禁锢状态
         {
-            HideInfoOfCardOrArms();
+            switch (DataTable.Hero[attackUnit.cardId].MilitaryUnitTableId)
+            {
+                //刺客
+                case 25:
+                    int chooseIndex = CiKeOpponentChoose(attackUnit);
+                    if (chooseIndex != -1)
+                        return chooseIndex;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        var enemyCards = GetCardList(false);
+        var playerCards = GetCardList(true);
+        int index = 0;
+        int arrIndex = FightController.instance.ChessPosIndex % 5;
+        if (attackUnit.isPlayerCard)
+        {
+            for (; index < AttackSelectionOrder[arrIndex].Length; index++)
+            {
+                if (enemyCards[AttackSelectionOrder[arrIndex][index]] != null
+                    && enemyCards[AttackSelectionOrder[arrIndex][index]].Hp > 0)
+                {
+                    break;
+                }
+            }
+            if (index >= AttackSelectionOrder[arrIndex].Length)
+            {
+                //Debug.Log("敌方无存活单位");
+                return -1;
+            }
+        }
+        else
+        {
+            for (; index < AttackSelectionOrder[arrIndex].Length; index++)
+            {
+                if (playerCards[AttackSelectionOrder[arrIndex][index]] != null
+                    && playerCards[AttackSelectionOrder[arrIndex][index]].Hp > 0)
+                {
+                    break;
+                }
+            }
+            if (index >= AttackSelectionOrder[arrIndex].Length)
+            {
+                //Debug.Log("我方无存活单位");
+                return -1;
+            }
+        }
+        return AttackSelectionOrder[arrIndex][index];
+    }
+
+    //刺客目标选择
+    private int CiKeOpponentChoose(FightCardData attackUnit)
+    {
+        int index = -1;
+        int maxDamage = 0;
+        var cardList = GetCardList(!attackUnit.isPlayerCard);
+        for (int i = 0; i < cardList.Count; i++)
+        {
+            if (cardList[i] != null && cardList[i].cardType == 0 && cardList[i].Hp > 0)
+            {
+                if (cardList[i].combatType == 1)
+                {
+                    if (cardList[i].damage > maxDamage)
+                    {
+                        index = i;
+                        maxDamage = cardList[i].damage;
+                    }
+                }
+            }
+        }
+        return index;
+    }
+
+    public void StartPushCardBackward(FightCardData card, int nextPos, float sec)
+    {
+        StartCoroutine(PushCardBackward());
+        IEnumerator PushCardBackward()
+        {
+            yield return new WaitForSeconds(sec);
+            RemoveCardFromBoard(card, false);
+            var nextChessPos = chessboard.GetScope(card.isPlayerCard)[nextPos];
+            FightController.instance.ShowSpellTextObj(card.cardObj, DataTable.GetStringText(17), true);
+            card.cardObj.transform.DOMove(nextChessPos.transform.position, sec).SetEase(Ease.Unset).OnComplete(() =>
+                PlaceCardOnBoard(card, nextPos));
         }
     }
 
-    //卡牌附加按下抬起方法
-    public void GiveGameObjEventForHoldOn(GameObject obj, string str)
+    public bool MeleeReturnOrigin(FightCardData card)
     {
-        EventTriggerListener.Get(obj).onDown += (go) =>
-        {
-            ShowInfoOfCardOrArms(str);
-        };
-        EventTriggerListener.Get(obj).onUp += (go) =>
-        {
-            HideInfoOfCardOrArms();
-        };
+        card.cardObj.transform.DOLocalMove(Vector3.zero, FightController.instance.attackShakeTimeToBack).SetEase(Ease.Unset);
+        return true;
     }
+
+    public float forward = 0.2f;   //去
+    public float back = 0.3f;   //回
+    public float wait = 0.4f; //等
+    public float go = 0.1f;  //去
+    public float posFloat;
+    //近战移动方式
+    //public bool MeleeMoveToTarget(FightCardData card, int targetIndex)
+    //{
+    //    var ui = card.cardObj;
+    //    var targetPos = GetCard(targetIndex, !card.isPlayerCard).cardObj.transform.position;
+    //    var targetHalfPos = new Vector3(targetPos.x, targetPos.y - floDisY, targetPos.z);
+    //    var vec = new Vector3(
+    //        targetHalfPos.x,
+    //        targetHalfPos.y + (card.isPlayerCard ? (-1 * posFloat) : posFloat) * oneDisY,
+    //        targetHalfPos.z
+    //    );
+    //    ui.transform.DOMove(targetHalfPos, FightController.instance.attackShakeTimeToGo * forward).SetEase(Ease.Unset)
+    //        .OnComplete(() => ui.transform.DOMove(ui.transform.position, FightController.instance.attackShakeTimeToGo * back)
+    //            .SetEase(Ease.Unset)
+    //            .OnComplete(() => ui.transform.DOMove(vec, FightController.instance.attackShakeTimeToGo * wait).SetEase(Ease.Unset)
+    //                .OnComplete(() =>
+    //                    ui.transform.DOMove(targetHalfPos, FightController.instance.attackShakeTimeToGo * go).SetEase(Ease.Unset))));
+    //    return true;
+    //}
+
+    public Transform GetChessPos(int posIndex, bool isPlayer) => chessboard.GetChessPos(posIndex, isPlayer).transform;
+
+    public void DestroyCard(FightCardData playerCard) => chessboard.DestroyCard(playerCard);
+
 }

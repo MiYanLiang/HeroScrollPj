@@ -21,7 +21,6 @@ public class EffectsPoolingControl : MonoBehaviour
 
     List<List<GameObject>> iconPoolingList = new List<List<GameObject>>();   //状态特效池
 
-    private GameResources GameResources => GameResources.Instance;
     public bool IsInit { get; private set; }
 
     private void Awake()
@@ -47,7 +46,7 @@ public class EffectsPoolingControl : MonoBehaviour
             List<GameObject> effectList = new List<GameObject>();
             for (int j = 0; j < maxCount; j++)
             {
-                GameObject effectObj = Instantiate(GameResources.Effects[effectsNameStr[i]], effectContentTran);
+                GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectsNameStr[i]], effectContentTran);
                 effectObj.SetActive(false);
                 effectList.Add(effectObj);
             }
@@ -63,7 +62,7 @@ public class EffectsPoolingControl : MonoBehaviour
             List<GameObject> iconList = new List<GameObject>();
             for (int j = 0; j < maxCount; j++)
             {
-                GameObject iconObj = Instantiate(GameResources.StateDin[iconNameStr[i]], effectContentTran);
+                GameObject iconObj = Instantiate(GameResources.Instance.StateDin[iconNameStr[i]], effectContentTran);
                 iconObj.SetActive(false);
                 iconList.Add(iconObj);
             }
@@ -71,16 +70,11 @@ public class EffectsPoolingControl : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 获取技能特效,跟随卡牌动
-    /// </summary>
-    /// <param name="effectName">特效名</param>
-    /// <param name="takeBackTime">回收时间</param>
-    /// <param name="usedTran">使用者</param>
-    /// <returns></returns>
-    public GameObject GetEffectToFight(string effectName, float takeBackTime, Transform usedTran)
+    public GameObject GetEffectToFight(string effectName, float takeBackTime, WarGameCardUi ui) =>
+        GetEffectToFight(effectName, takeBackTime, ui.transform);
+    public GameObject GetEffectToFight(string effectName, float takeBackTime, Transform trans)
     {
-        int index = -1;
+        var index = -1;
         for (int i = 0; i < effectsNameStr.Length; i++)
         {
             if (effectsNameStr[i] == effectName)
@@ -97,29 +91,24 @@ public class EffectsPoolingControl : MonoBehaviour
                     continue;
                 if (!go.activeSelf)
                 {
-                    go.transform.position = usedTran.position;
-                    go.transform.SetParent(usedTran);
+                    go.transform.localPosition = Vector3.zero;
+                    go.transform.position = trans.position;
+                    go.transform.SetParent(trans);
                     go.SetActive(true);
-                    //if (go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0]!=null)
-                    //    takeBackTime = go.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
                     StartCoroutine(TakeBackEffect(go, takeBackTime));
                     return go;
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Effects[effectName], usedTran);
-            effectObj.transform.position = usedTran.position;
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], trans);
+            effectObj.transform.position = trans.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
-            //if (effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0] != null)
-            //    takeBackTime = effectObj.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips[0].length;
             StartCoroutine(TakeBackEffect(effectObj, takeBackTime));
             return effectObj;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>
@@ -158,7 +147,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Effects[effectName], effectContentTran);
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], effectContentTran);
             effectObj.transform.position = usedTran.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
@@ -167,10 +156,8 @@ public class EffectsPoolingControl : MonoBehaviour
             StartCoroutine(TakeBackEffect(effectObj, tekeBackTime));
             return effectObj;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>
@@ -202,7 +189,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject iconObj = Instantiate(GameResources.StateDin[iconName], usedTran);
+            GameObject iconObj = Instantiate(GameResources.Instance.StateDin[iconName], usedTran);
             iconObj.transform.position = usedTran.position;
             iconObj.SetActive(true);
             iconPoolingList[index].Add(iconObj);
@@ -229,12 +216,62 @@ public class EffectsPoolingControl : MonoBehaviour
         yield return new WaitForSeconds(takeBackTime);
         if (go != null)
         {
-            if (go.transform.localScale.x != 1)
-            {
-                go.transform.localScale = new Vector3(1, 1, 1);
-            }
+            go.transform.localScale = Vector3.one;
             go.transform.SetParent(effectContentTran);
             go.SetActive(false);
         }
     }
+}
+
+public class Effect
+{
+    public const string GetGold = "GetGold";
+    public const string DropBlood = "dropBlood";
+    public const string SpellTextH = "spellTextH";
+    public const string SpellTextV = "spellTextV";
+    
+    public const string BasicAttack = "0A";
+    public const string ReflectDamage = "7A";
+    public const string Explode = "201A";
+    public const string Dropping = "209A";
+    public const string LongBow = "20A";
+    public const string FeiJia = "3A";
+    public const string Shield = "4A";
+    public const string SuckBlood = "6A";
+    public const string CavalryCharge = "9A";
+    public const string CavalryAssault = "60A";
+    public const string CavalryGallop = "16A";
+    public const string BladeCombo = "17A";
+    public const string CrossBowCombo = "19A";
+    public const string Crossbow = "49A";
+    public const string MagicStrike = "50A";
+    public const string TengJiaAttack = "57A";
+    public const string Stimulate = "12A";
+    public const string GuardCounter = "13A";
+    public const string YellowBand = "65A";
+    public const string YellowBandB = "65B";
+    public const string HeavyCavalry = "58A";
+    public const string Barbarians = "56A";
+    public const string FireShipExplode = "55A0";
+    public const string FireShipAttack = "55A";
+    public const string DisarmAttack = "44A";
+    public const string Mechanical = "40A";
+    public const string Debate = "34A";
+    public const string Controversy = "35A";
+    public const string Persuade = "47A";
+    public const string Convince = "48A";
+    public const string ThrowRocks = "24A";
+    public const string SiegeMachine = "23A";
+    public const string Support = "39A";
+    public const string StateAffairs = "38A";
+    public const string Heal = "42A";
+    public const string Cure = "43A";
+    public const string AssassinStrike = "25A";
+    public const string WarshipAttack = "21A";
+    public const string ChariotAttack = "22A";
+    public const string AxeStrike = "18A";
+    public const string HalberdSweep = "15A";
+    public const string KnightAttack = "11A";
+    public const string Daredevil = "10A";
+    public const string ElephantAttack = "8A";
 }

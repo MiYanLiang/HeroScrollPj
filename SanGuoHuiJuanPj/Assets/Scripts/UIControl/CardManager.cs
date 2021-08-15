@@ -16,20 +16,20 @@ public class CardManager
         {
             if (jiBan.IsOpen == 0) continue;
             JiBanActivedClass jiBanActivedClass = new JiBanActivedClass();
-            jiBanActivedClass.jiBanId = jiBan.Id;
-            jiBanActivedClass.isActived = false;
-            jiBanActivedClass.cardTypeLists = new List<JiBanCardTypeClass>();
-            jiBanActivedClass.isHadBossId = jiBan.BossCards.Length > 0;
+            jiBanActivedClass.JiBanId = jiBan.Id;
+            jiBanActivedClass.IsActive = false;
+            jiBanActivedClass.List = new List<JiBanCardTypeClass>();
+            jiBanActivedClass.IsHadBossId = jiBan.BossCards.Length > 0;
 
             for (int i = 0; i < jiBan.Cards.Length; i++)
             {
                 var card = jiBan.Cards[i];
-                jiBanActivedClass.cardTypeLists.Add(new JiBanCardTypeClass
+                jiBanActivedClass.List.Add(new JiBanCardTypeClass
                 {
-                    cardId = card.CardId,
-                    cardType = card.CardType,
-                    cardLists = new List<FightCardData>(),
-                    bossId = jiBan.BossCards.Length == 0 ? 0 : jiBan.BossCards[i].CardId
+                    CardId = card.CardId,
+                    CardType = card.CardType,
+                    Cards = new List<FightCardData>(),
+                    BossId = jiBan.BossCards.Length == 0 ? 0 : jiBan.BossCards[i].CardId
                 });
             }
             jiBanMap.Add(jiBan.Id, jiBanActivedClass);

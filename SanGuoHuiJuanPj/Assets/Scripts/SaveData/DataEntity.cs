@@ -224,153 +224,341 @@ public class Character : ICharacter
 }
 
 //战斗卡牌信息类
-public class FightCardData
-{
-    //单位id,为0表示null
-    public int unitId;
-    //卡牌obj
-    public GameObject cardObj;
-    //卡牌类型
-    public int cardType;
-    //卡牌id
-    public int cardId;
-    //等级
-    public int cardGrade;
-    //伤害
-    public int damage;
-    //满血
-    public int fullHp;
-    //当前血量
-    public int nowHp;
-    //战斗状态
-    public FightState fightState;
-    //摆放位置记录
-    public int posIndex;
-    //生命值回复
-    public int hpr;
-    //主被动单位
-    public bool activeUnit;
-    //此回合是否行动
-    public bool isActed;
-    //是否是玩家卡牌
-    public bool isPlayerCard;
-    /// <summary>
-    /// 单位伤害类型0物理，1法术
-    /// </summary>
-    public int cardDamageType;
-    /// <summary>
-    /// 单位行动类型0近战，1远程
-    /// </summary>
-    public int cardMoveType;
-    /// <summary>
-    /// 被攻击者的行为，0受击，1防护盾，2闪避，3护盾，4无敌
-    /// </summary>
-    public int attackedBehavior;
-}
-
+[Serializable]
 //战斗状态类
 public class FightState
 {
+    private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
+    public enum Cons
+    {
+        /// <summary>
+        /// 眩晕
+        /// </summary>
+        Stunned = 1,
+        /// <summary>
+        /// 护盾
+        /// </summary>
+        Shield = 2,
+        /// <summary>
+        /// 无敌
+        /// </summary>
+        Invincible = 3,
+        /// <summary>
+        /// 流血
+        /// </summary>
+        Bleed = 4,
+        /// <summary>
+        /// 毒
+        /// </summary>
+        Poison = 5,
+        /// <summary>
+        /// 灼烧
+        /// </summary>
+        Burn = 6,
+        /// <summary>
+        /// 战意
+        /// </summary>
+        Stimulate = 7,
+        /// <summary>
+        /// 禁锢
+        /// </summary>
+        Imprisoned = 8,
+        /// <summary>
+        /// 胆怯
+        /// </summary>
+        Cowardly = 9,
+        /// <summary>
+        /// 战鼓台
+        /// </summary>
+        ZhanGuTaiAddOn = 10,
+        /// <summary>
+        /// 风神台
+        /// </summary>
+        FengShenTaiAddOn = 11,
+        /// <summary>
+        /// 霹雳台
+        /// </summary>
+        PiLiTaiAddOn = 12,
+        /// <summary>
+        /// 琅琊台
+        /// </summary>
+        LangYaTaiAddOn = 13,
+        /// <summary>
+        /// 烽火台
+        /// </summary>
+        FengHuoTaiAddOn = 14,
+        /// <summary>
+        /// 死战
+        /// </summary>
+        DeathFight = 15,
+        /// <summary>
+        /// 卸甲
+        /// </summary>
+        Unarmed = 16,
+        /// <summary>
+        /// 内助
+        /// </summary>
+        Neizhu = 17,
+        /// <summary>
+        /// 神助
+        /// </summary>
+        ShenZhu = 18,
+        /// <summary>
+        /// 防护盾
+        /// </summary>
+        ExtendedHp = 19,
+        /// <summary>
+        /// 迷雾
+        /// </summary>
+        MiWuZhenAddOn = 20
+    }
 
+    public FightState() => data = _consInts.ToDictionary(s => s, _ => 0);
+    private Dictionary<int, int> data;
+    public IReadOnlyDictionary<int, int> Data => data;
     /// <summary>
     /// 眩晕回合数
     /// </summary>
-    public int dizzyNums { get; set; }
+    public int Stunned { get=>data[1]; set=>data[1] = value; }
 
     /// <summary>
     /// 护盾层数
     /// </summary>
-    public int withStandNums { get; set; }
+    public int Shield { get => data[2]; set => data[2] = value; }
 
     /// <summary>
     /// 无敌回合
     /// </summary>
-    public int invincibleNums { get; set; }
+    public int Invincible { get => data[3]; set => data[3] = value; }
 
     /// <summary>
     /// 流血层数
     /// </summary>
-    public int bleedNums { get; set; }
+    public int Bleed { get => data[4]; set => data[4] = value; }
 
     /// <summary>
     /// 中毒回合
     /// </summary>
-    public int poisonedNums { get; set; }
+    public int Poison { get => data[5]; set => data[5] = value; }
 
     /// <summary>
     /// 灼烧回合
     /// </summary>
-    public int burnedNums { get; set; }
+    public int Burn { get => data[6]; set => data[6] = value; }
 
     /// <summary>
     /// 战意层数
     /// </summary>
-    public int willFightNums { get; set; }
+    public int Stimulate { get => data[7]; set => data[7] = value; }
 
     /// <summary>
     /// 禁锢层数
     /// </summary>
-    public int imprisonedNums { get; set; }
+    public int Imprisoned { get => data[8]; set => data[8] = value; }
 
     /// <summary>
     /// 怯战层数
     /// </summary>
-    public int cowardlyNums { get; set; }
+    public int Cowardly { get => data[9]; set => data[9] = value; }
 
     /// <summary>
     /// 战鼓台-伤害加成
     /// </summary>
-    public int zhangutaiAddtion { get; set; }
+    public int ZhanGuTaiAddOn { get => data[10]; set => data[10] = value; }
 
     /// <summary>
     /// 风神台-闪避加成
     /// </summary>
-    public int fengShenTaiAddtion { get; set; }
+    public int FengShenTaiAddOn { get => data[11]; set => data[11] = value; }
 
     /// <summary>
     /// 霹雳台-暴击加成
     /// </summary>
-    public int pilitaiAddtion { get; set; }
+    public int PiLiTaiAddOn { get => data[12]; set => data[12] = value; }
 
     /// <summary>
     /// 狼牙台-会心加成
     /// </summary>
-    public int langyataiAddtion { get; set; }
+    public int LangYaTaiAddOn { get => data[13]; set => data[13] = value; }
 
     /// <summary>
     /// 烽火台-免伤加成
     /// </summary>
-    public int fenghuotaiAddtion { get; set; }
+    public int FengHuoTaiAddOn { get => data[14]; set => data[14] = value; }
 
     /// <summary>
     /// 死战回合
     /// </summary>
-    public int deathFightNums { get; set; }
+    public int DeathFight { get => data[15]; set => data[15] = value; }
 
     /// <summary>
     /// 卸甲回合
     /// </summary>
-    public int removeArmorNums { get; set; }
+    public int Unarmed { get => data[16]; set => data[16] = value; }
 
     /// <summary>
     /// 内助回合
     /// </summary>
-    public int neizhuNums { get; set; }
+    public int Neizhu { get => data[17]; set => data[17] = value; }
 
     /// <summary>
     /// 神助回合
     /// </summary>
-    public int shenzhuNums { get; set; }
+    public int ShenZhu { get => data[18]; set => data[18] = value; }
 
     /// <summary>
     /// 防护盾数值
     /// </summary>
-    public int shieldValue { get; set; }
-    
+    public int ExtendedHp { get => data[19]; set => data[19] = value; }
+
     /// <summary>
     /// 迷雾阵-远程闪避加成
     /// </summary>
-    public int miWuZhenAddtion { get; set; }
+    public int MiWuZhenAddOn { get => data[20]; set => data[20] = value; }
+
+    public void AddState(Cons con,int value)
+    {
+        switch (con)
+        {
+            case Cons.Stunned:
+                Stunned += MinZeroAlign(Stunned);
+                break;
+            case Cons.Shield:
+                Shield += MinZeroAlign(Shield);
+                break;
+            case Cons.Invincible:
+                Invincible += MinZeroAlign(Invincible);
+                break;
+            case Cons.Bleed:
+                Bleed += MinZeroAlign(Bleed);
+                break;
+            case Cons.Poison:
+                Poison += MinZeroAlign(Poison);
+                break;
+            case Cons.Burn:
+                Burn += MinZeroAlign(Burn);
+                break;
+            case Cons.Stimulate:
+                Stimulate += MinZeroAlign(Burn);
+                break;
+            case Cons.Imprisoned:
+                Imprisoned += MinZeroAlign(Imprisoned);
+                break;
+            case Cons.Cowardly:
+                Cowardly += MinZeroAlign(Cowardly);
+                break;
+            case Cons.ZhanGuTaiAddOn:
+                ZhanGuTaiAddOn += MinZeroAlign(ZhanGuTaiAddOn);
+                break;
+            case Cons.FengShenTaiAddOn:
+                FengShenTaiAddOn += MinZeroAlign(FengShenTaiAddOn);
+                break;
+            case Cons.PiLiTaiAddOn:
+                PiLiTaiAddOn += MinZeroAlign(PiLiTaiAddOn);
+                break;
+            case Cons.LangYaTaiAddOn:
+                LangYaTaiAddOn += MinZeroAlign(LangYaTaiAddOn);
+                break;
+            case Cons.FengHuoTaiAddOn:
+                FengHuoTaiAddOn += MinZeroAlign(FengShenTaiAddOn);
+                break;
+            case Cons.DeathFight:
+                DeathFight += MinZeroAlign(DeathFight);
+                break;
+            case Cons.Unarmed:
+                Unarmed += MinZeroAlign(Unarmed);
+                break;
+            case Cons.Neizhu:
+                Neizhu += MinZeroAlign(Neizhu);
+                break;
+            case Cons.ShenZhu:
+                ShenZhu += MinZeroAlign(ShenZhu);
+                break;
+            case Cons.ExtendedHp:
+                ExtendedHp += MinZeroAlign(ExtendedHp);
+                break;
+            case Cons.MiWuZhenAddOn:
+                MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+        int MinZeroAlign(int ori) => value < 0 && ori < value ? -ori : value; //最多是清0
+    }
+
+    public void ClearState(Cons con)
+    {
+        switch (con)
+        {
+            case Cons.Stunned:
+                Stunned = 0;
+                break;
+            case Cons.Shield:
+                Shield = 0;
+                break;
+            case Cons.Invincible:
+                Invincible = 0;
+                break;
+            case Cons.Bleed:
+                Bleed = 0;
+                break;
+            case Cons.Poison:
+                Poison = 0;
+                break;
+            case Cons.Burn:
+                Burn = 0;
+                break;
+            case Cons.Stimulate:
+                Stimulate = 0;
+                break;
+            case Cons.Imprisoned:
+                Imprisoned = 0;
+                break;
+            case Cons.Cowardly:
+                Cowardly = 0;
+                break;
+            case Cons.ZhanGuTaiAddOn:
+                ZhanGuTaiAddOn = 0;
+                break;
+            case Cons.FengShenTaiAddOn:
+                FengShenTaiAddOn = 0;
+                break;
+            case Cons.PiLiTaiAddOn:
+                PiLiTaiAddOn = 0;
+                break;
+            case Cons.LangYaTaiAddOn:
+                LangYaTaiAddOn = 0;
+                break;
+            case Cons.FengHuoTaiAddOn:
+                FengHuoTaiAddOn = 0;
+                break;
+            case Cons.DeathFight:
+                DeathFight = 0;
+                break;
+            case Cons.Unarmed:
+                Unarmed = 0;
+                break;
+            case Cons.Neizhu:
+                Neizhu = 0;
+                break;
+            case Cons.ShenZhu:
+                ShenZhu = 0;
+                break;
+            case Cons.ExtendedHp:
+                ExtendedHp = 0;
+                break;
+            case Cons.MiWuZhenAddOn:
+                MiWuZhenAddOn = 0;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+    }
+
+    public void SetStates(Dictionary<int, int> buffs)
+    {
+        data = buffs;
+    }
 }
 
 /// <summary>
@@ -378,10 +566,10 @@ public class FightState
 /// </summary>
 public class JiBanActivedClass
 {
-    public int jiBanId { get; set; }
-    public bool isActived { get; set; }
-    public bool isHadBossId { get; set; }
-    public List<JiBanCardTypeClass> cardTypeLists { get; set; }
+    public int JiBanId { get; set; }
+    public bool IsActive { get; set; }
+    public bool IsHadBossId { get; set; }
+    public List<JiBanCardTypeClass> List { get; set; }
 }
 
 /// <summary>
@@ -389,8 +577,8 @@ public class JiBanActivedClass
 /// </summary>
 public class JiBanCardTypeClass
 {
-    public int cardType { get; set; }
-    public int cardId { get; set; }
-    public int bossId { get; set; }
-    public List<FightCardData> cardLists { get; set; }
+    public int CardType { get; set; }
+    public int CardId { get; set; }
+    public int BossId { get; set; }
+    public List<FightCardData> Cards { get; set; }
 }
