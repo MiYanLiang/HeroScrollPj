@@ -12,6 +12,7 @@ namespace Assets.System.WarModule
 {
     public interface IChessOperator
     {
+        int InstanceId { get; }
         //IChessman Chessman { get; }
         /// <summary>
         /// 棋子攻击方式
@@ -28,26 +29,17 @@ namespace Assets.System.WarModule
         bool IsChallenger { get; }
         int Pos { get; }
 
-        /// <summary>
-        /// 棋子的反馈行动。
-        /// </summary>
-        /// <param name="activity"></param>
-        /// <param name="offender"></param>
-        /// <returns></returns>
-        ActivityResult Respond(Activity activity, IChessOperator offender);
-        /// <summary>
-        /// 更新状态
-        /// </summary>
-        ActivityResult UpdateConducts(Activity activity, IChessOperator offender);
-        /// <summary>
-        /// 棋子主进程的行动
-        /// </summary>
-        /// <returns></returns>
-        void StartActions();
+        
+        //ActivityResult Respond(Activity activity, IChessOperator offender);
+        //
+        //ActivityResult UpdateConducts(Activity activity, IChessOperator offender);
+        //
+        //void StartActions();
     }
     public abstract class ChessOperator : IChessOperator
     {
         //protected abstract IChessman Chessman { get; }
+        public int InstanceId { get; protected set; }
         public abstract AttackStyle Style { get; }
         public abstract PieceStatus Status { get; }
 
@@ -62,8 +54,18 @@ namespace Assets.System.WarModule
 
         public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd() => null;
 
+        /// <summary>
+        /// 棋子主进程的行动
+        /// </summary>
+        /// <returns></returns>
         public abstract void StartActions();
 
+        /// <summary>
+        /// 棋子的反馈行动。
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="offender"></param>
+        /// <returns></returns>
         public ActivityResult Respond(Activity activity, IChessOperator offender)
         {
             //处理行动
@@ -292,10 +294,11 @@ namespace Assets.System.WarModule
 
         protected override ChessGrid Grid => chessboard.Grid;
 
-        public virtual void Init(IChessman card, AttackStyle style, IChessboardOperator chessboardOp)
+        public virtual void Init(IChessman card, IChessboardOperator chessboardOp)
         {
+            InstanceId = card.InstanceId;
             chessman = card;
-            attackStyle = style;
+            attackStyle = card.Style;
             chessboard = chessboardOp;
             dynamicStatus = PieceStatus.Instance(card.HitPoint, card.HitPoint, card.Pos, new Dictionary<int, int>());
             if (card.CardType != GameCardType.Base)

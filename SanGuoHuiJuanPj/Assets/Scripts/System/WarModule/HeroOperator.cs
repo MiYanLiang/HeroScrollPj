@@ -27,10 +27,10 @@ namespace Assets.System.WarModule
         public static int HpDepletedRatioWithGap(PieceStatus status, int basicValue, int gap, int gapValue) =>
             HpDepletedRatioWithGap(status.Hp,status.MaxHp, basicValue, gap, gapValue);
 
-        public override void Init(IChessman card, AttackStyle style, IChessboardOperator chessboardOp)
+        public override void Init(IChessman card, IChessboardOperator chessboardOp)
         {
             combatInfo = HeroCombatInfo.GetInfo(card.CardId);
-            base.Init(card, style, chessboardOp);
+            base.Init(card, chessboardOp);
         }
 
         public override void StartActions()
@@ -44,11 +44,11 @@ namespace Assets.System.WarModule
             MilitaryPerforms();
         }
 
-        protected ActivityResult NoSkillAction()
+        protected void NoSkillAction()
         {
             var target = Grid.GetContraPositionInSequence(this);
-            if (target == null) return null;
-            return Chessboard.ActionRespondResult(this, target, Activity.Offensive, BasicDamage(), 0);
+            if (target == null) return;
+            Chessboard.ActionRespondResult(this, target, Activity.Offensive, BasicDamage(), 0);
         }
 
         private CombatConduct[] BasicDamage() => Singular(CombatConduct.InstanceDamage(Style.Strength, Style.Element));
@@ -226,6 +226,7 @@ namespace Assets.System.WarModule
     public class PiaoQiOperator : HeroOperator
     {
         protected virtual int ComboRatio => DataTable.GetGameValue(47);
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Grid.GetContraPositionInSequence(this);
@@ -236,7 +237,8 @@ namespace Assets.System.WarModule
             {
                 combo = false;
                 var hit = InstanceHeroPerformDamage();
-                var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(hit),skill);
+                var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(hit), skill);
+                if (result == null) break;
                 if (!result.IsDeath && result.Type != ActivityResult.Types.Friendly)
                     combo = hit.Critical > 0 || hit.Rouse > 0;
                 if (!combo) combo = Chessboard.RandomFromConfigTable(47);

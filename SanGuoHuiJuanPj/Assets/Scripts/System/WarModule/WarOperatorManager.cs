@@ -5,7 +5,7 @@ using CorrelateLib;
 
 namespace Assets.System.WarModule
 {
-    public class ChessOperatorManager : ChessboardOperator
+    public class ChessOperatorManager<TCard> : ChessboardOperator where TCard : IChessman
     {
         private const int TowerArmedType = -1;
         private const int TrapArmedType = -2;
@@ -15,8 +15,8 @@ namespace Assets.System.WarModule
         private const int NoCounter = 0;
         private const int BasicCounterStyle = 1;
 
-        private Dictionary<FightCardData, ChessOperator> OpMapper { get; }
-        public IReadOnlyDictionary<FightCardData, ChessOperator> Data => OpMapper;
+        private Dictionary<int, ChessOperator> OpMapper { get; }
+        public IReadOnlyDictionary<int , ChessOperator> Data => OpMapper;
         public int ChallengerGold { get; set; }
         public int OpponentGold { get; set; }
         public List<int> ChallengerChests { get; set; }
@@ -24,31 +24,31 @@ namespace Assets.System.WarModule
 
         public ChessOperatorManager(bool isChallengerFirst,ChessGrid grid) : base(isChallengerFirst,grid)
         {
-            OpMapper = new Dictionary<FightCardData, ChessOperator>();
+            OpMapper = new Dictionary<int, ChessOperator>();
         }
 
-        public ChessOperator RegOperator(FightCardData card)
+        public ChessOperator RegOperator(TCard card)
         {
-            if (OpMapper.ContainsKey(card))
+            if (OpMapper.ContainsKey(card.InstanceId))
                 throw new InvalidOperationException(
-                    $"Duplicated obj = Card.{card.cardId}:Type.{card.CardType} registered!");
+                    $"Duplicated obj = Card.{card.CardId}:Type.{card.CardType} registered!");
             var op = InstanceOperator(card);
-            OpMapper.Add(card,op);
+            OpMapper.Add(card.InstanceId,op);
             return op;
         }
 
-        public ChessOperator DropOperator(FightCardData card)
+        public ChessOperator DropOperator(TCard card)
         {
-            if (!OpMapper.ContainsKey(card))
-                throw new NullReferenceException($"Card[{card.cardId}]:Type.{card.CardType}");
-            var op = OpMapper[card];
-            OpMapper.Remove(card);
+            if (!OpMapper.ContainsKey(card.InstanceId))
+                throw new NullReferenceException($"Card[{card.CardId}]:Type.{card.CardType}");
+            var op = OpMapper[card.InstanceId];
+            OpMapper.Remove(card.InstanceId);
             return op;
         }
 
-        private ChessOperator InstanceOperator(FightCardData card)
+        private ChessOperator InstanceOperator(TCard card)
         {
-            switch ((GameCardType)card.cardType)
+            switch (card.CardType)
             {
                 case GameCardType.Hero:
                     return InstanceHero(card);
@@ -65,17 +65,17 @@ namespace Assets.System.WarModule
             }
         }
 
-        private ChessOperator InstanceBase(FightCardData card)
+        private ChessOperator InstanceBase(TCard card)
         {
             var op = new BlankTowerOperator();
-            op.Init(card, AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level), this);
+            op.Init(card, this);
             return op;
         }
 
-        private ChessOperator InstanceHero(FightCardData card)
+        private ChessOperator InstanceHero(TCard card)
         {
             HeroOperator op = null;
-            var military = MilitaryInfo.GetInfo(card.cardId);
+            var military = MilitaryInfo.GetInfo(card.CardId);
             switch (military.Id)
             {
                 case 1 : op = new JinZhanOperator(); break;//1   近战
@@ -146,21 +146,14 @@ namespace Assets.System.WarModule
                 default: op = new HeroOperator(); break;//0   普通
             }
 
-            op.Init(card, GetStyle(card), this);
+            op.Init(card, this);
             return op;
         }
 
-        private static AttackStyle GetStyle(FightCardData card)
-        {
-            var m = MilitaryInfo.GetInfo(card.cardId);
-            return AttackStyle.Instance(m.Id, m.ArmedType, card.combatType, card.combatType == 1 ? 1 : 0,
-                card.cardDamageType, card.damage,card.Level);
-        }
-
-        private ChessOperator InstanceTrap(FightCardData card)
+        private ChessOperator InstanceTrap(TCard card)
         {
             TrapOperator op = null;
-            switch (card.cardId)
+            switch (card.CardId)
             {
                 case 0: op = new JuMaOperator(); break;
                 case 1: op = new DiLeiOperator(); break;
@@ -178,16 +171,14 @@ namespace Assets.System.WarModule
                 default: op = new BlankTrapOperator(); break;
             }
 
-            op.Init(card,
-                AttackStyle.Instance(TrapArmedType, TrapArmedType, SpecialCombatStyle, NoCounter, 0, card.damage,card.Level),
-                this);
+            op.Init(card, this);
             return op;
         }
 
-    private ChessOperator InstanceTower(FightCardData card)
+    private ChessOperator InstanceTower(TCard card)
         {
             TowerOperator op = null;
-            switch (card.cardId)
+            switch (card.CardId)
             {
                 //营寨
                 case 0: op = new YingZhaiOperator(); break;
@@ -202,9 +193,7 @@ namespace Assets.System.WarModule
                 default: op = new BlankTowerOperator(); break;
             }
 
-            op.Init(card,
-                AttackStyle.Instance(TowerArmedType, TowerArmedType, RangeCombatStyle, NoCounter, 0, card.damage,card.Level),
-                this);
+            op.Init(card, this);
             return op;
         }
 
@@ -230,6 +219,8 @@ namespace Assets.System.WarModule
                 foreach (var activity in list) action(activity);
             }
         }
+
+        protected override ChessOperator GetOperator(int id) => Data[id];
 
         private void RoundActionBuffering(Activity activity) => ActionRespondResult(null, GetTarget(activity), activity.Intent, activity.Conducts,0);
 
@@ -470,17 +461,20 @@ namespace Assets.System.WarModule
                     Obj = p,
                     Weight = Chessboard.Randomize(3)
                 }).Pick(TargetAmount).ToArray();
-            foreach (var target in targets)
+            for (var i = 0; i < targets.Length; i++)
             {
+                var attackType = i == 0 ? Activity.Offensive : Activity.OffendAttach;
+                var target = targets[i];
                 var damage = InstanceHeroPerformDamage((int) (DamageRate * 0.01f * GetBasicDamage()));
                 var backPos = Grid.BackPos(target.Obj);
-                if (backPos!=null && backPos.Operator == null)
+                if (backPos != null && backPos.Operator == null)
                 {
-                    Chessboard.ActionRespondResult(this, target.Obj, Activity.Offensive, Singular(damage), 1,
+                    Chessboard.ActionRespondResult(this, target.Obj, attackType, Singular(damage), 1,
                         backPos.Pos);
                     continue;
                 }
-                Chessboard.ActionRespondResult(this, target.Obj, Activity.Offensive, Singular(damage), 0);
+
+                Chessboard.ActionRespondResult(this, target.Obj, attackType, Singular(damage), 0);
             }
         }
     }
@@ -1115,9 +1109,11 @@ namespace Assets.System.WarModule
             if (targets.Length == 0) return;
             var damage = DamageRate * GetBasicDamage() * 0.01f / targets.Length;
             var perform = InstanceHeroPerformDamage((int)damage);
-            foreach (var target in targets)
+            for (var i = 0; i < targets.Length; i++)
             {
-                Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(perform),1);
+                var target = targets[i];
+                Chessboard.ActionRespondResult(this, target, i == 0 ? Activity.Offensive : Activity.OffendAttach,
+                    Singular(perform), 1);
             }
         }
     }
@@ -1136,7 +1132,7 @@ namespace Assets.System.WarModule
             {
                 var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive,
                     Singular(InstanceHeroPerformDamage()), i);
-                if (result.IsDeath) return;
+                if (result == null || result.IsDeath) return;
                 if (!Chessboard.IsRandomPass(ComboRate))
                     break;
             }
@@ -1346,6 +1342,7 @@ namespace Assets.System.WarModule
         {
             var target = Grid.GetContraPositionInSequence(this);
             var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(InstanceHeroPerformDamage()),0);
+            if(result == null)return;
             var totalSuffer = result.Status.LastSuffers.Sum();
             Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
                 Singular(CombatConduct.InstanceHeal(totalSuffer)),1);

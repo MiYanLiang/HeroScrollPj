@@ -63,13 +63,15 @@ using UnityEngine;
     {
     }
 
-    public FightCardData(int maxHp)
+    public FightCardData(int instanceId,int maxHp)
     {
+        InstanceId = instanceId;
         Hp = new HitPoint(maxHp);
     }
 
-    public FightCardData(GameCard card)
+    public FightCardData(int instanceId, GameCard card)
     {
+        InstanceId = instanceId;
         info = card.GetInfo();
         unitId = 1;
         cardType = card.typeIndex;
@@ -81,6 +83,26 @@ using UnityEngine;
         combatType = info.CombatType;
         hp = new HitPoint(info.GetHp(card.Level));
         States = new Dictionary<int, EffectStateUi>();
+        switch (CardType)
+        {
+            case GameCardType.Hero:
+                var m = MilitaryInfo.GetInfo(card.CardId);
+                style = AttackStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.CombatType == 1 ? 1 : 0, info.DamageType, info.GetDamage(card.Level), card.Level);
+                break;
+            case GameCardType.Tower:
+                style = AttackStyle.Instance(-1, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level);
+                break;
+            case GameCardType.Trap:
+                style = AttackStyle.Instance(-2,-2,2,0,0,info.GetDamage(card.Level),card.Level);
+                break;
+            case GameCardType.Base:
+                style = AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level);
+                break;
+            case GameCardType.Soldier:
+            case GameCardType.Spell:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     [JsonIgnore] public int PosIndex => posIndex;
@@ -89,6 +111,12 @@ using UnityEngine;
     public GameCardInfo Info => info;
     public int HitPoint => hp.Max;
     public int Level => cardGrade;
+    private AttackStyle style;
+    public AttackStyle Style => style;
+    private PieceStatus status;
+    public PieceStatus Status => status;
+    public void UpdateStatus(PieceStatus ps) => status = ps.Clone();
+
     [JsonIgnore] public Dictionary<int, EffectStateUi> States { get; }
 
     public void UpdatePos(int pos)
@@ -113,6 +141,7 @@ using UnityEngine;
     }
 
     public void ResetHp(int maxHp) => Hp = new HitPoint(maxHp);
+    public int InstanceId { get; }
     [JsonIgnore]public int Pos => PosIndex;
     [JsonIgnore]public bool IsPlayer => isPlayerCard;
     [JsonIgnore]public bool IsActed => isActionDone;
