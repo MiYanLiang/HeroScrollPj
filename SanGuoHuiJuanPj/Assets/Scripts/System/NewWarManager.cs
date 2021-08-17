@@ -19,11 +19,11 @@ public class NewWarManager : MonoBehaviour
     #endregion
 
     public ChessGrid Grid;
-    public ChessOperatorManager ChessOperator;
+    public ChessOperatorManager<FightCardData> ChessOperator;
     void Start()
     {
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
-        ChessOperator = new ChessOperatorManager(true, Grid);
+        ChessOperator = new ChessOperatorManager<FightCardData>(true, Grid);
     }
 
     public void StartButtonShow(bool show)

@@ -177,8 +177,12 @@ public class GameCardInfo
                     c.IsProduce > 0, c.Short, c.GameSetRecovery, c.Damages, c.Hps, 0, 0, c.About);
             }
             case GameCardType.Base:
+                var addOn = PlayerDataForGame.instance.pyData == null
+                    ? 0
+                    : DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].BaseHpAddOn;
+                var bl = DataTable.BaseLevel.Values.ToArray();
                 return new GameCardInfo(0, GameCardType.Base, string.Empty, string.Empty, 1, 0, 0, false, string.Empty,
-                    0, null, null, 0, 0, string.Empty);
+                    0, new int[bl.Length], bl.Select(l => l.BaseHp + addOn).ToArray(), 0, 0, string.Empty);
             case GameCardType.Soldier:
             case GameCardType.Spell:
             default:

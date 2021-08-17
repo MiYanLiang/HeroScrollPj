@@ -157,7 +157,7 @@ public class CardAnimator
     /// <summary>
     /// 打击效果
     /// </summary>
-    public static Tween GetCombatStrikeEffect(Activity activity, IChessOperator op, FightCardData target)
+    public static Tween GetCombatStrikeEffect(Activity activity, IChessman op, FightCardData target)
     {
         return DOTween.Sequence().AppendInterval(0.01f).OnComplete(() =>
         {
@@ -447,18 +447,18 @@ public class CardAnimator
         effectObj.GetComponentInChildren<Text>().color = color;
     }
 
-    public static Tween SkillEffect(Activity activity,IChessOperator op,FightCardData obj, bool isOffense,IChessOperator targetOp)
+    public static Tween SkillEffect(Activity activity,FightCardData op, bool isOffense, IChessman target)
     {
         var tween = DOTween.Sequence();
         if (activity.Skill == 0) return tween;
         var value = string.Empty;
         var validEffect = isOffense;
         var style = op.Style;
-        var targetStyle = targetOp.Style;
+        var targetStyle = target.Style;
         switch (style.Military)
         {
             case 17: //刀兵
-                if (!targetOp.Status.IsDeath)//只有死亡才会有连斩效果
+                if (!target.Status.IsDeath)//只有死亡才会有连斩效果
                     return tween;
                 break;
             case 13: //禁卫
@@ -559,7 +559,7 @@ public class CardAnimator
         }
 
         if (value == string.Empty || !validEffect) return tween;
-        tween.OnComplete(() => GetVTextEffect(value, obj.cardObj.transform));
+        tween.OnComplete(() => GetVTextEffect(value, op.cardObj.transform));
         return tween;
     }
 }

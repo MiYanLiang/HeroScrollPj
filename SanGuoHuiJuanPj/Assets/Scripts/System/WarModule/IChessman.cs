@@ -266,7 +266,7 @@ namespace Assets.System.WarModule
         /// <param name="processId"></param>
         /// <param name="from"></param>
         /// <param name="isChallenger"></param>
-        /// <param name="to">正数为棋格，-1=玩家，-2=对手</param>
+        /// <param name="to">正数为棋子Id，-1=玩家，-2=对手</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill">技能值，普通攻击为0</param>
@@ -300,9 +300,12 @@ namespace Assets.System.WarModule
         /// </summary>
         [JsonProperty("K")] public int Intent { get; set; }
         /// <summary>
-        /// Target Pos, > 0 = ChessPos, -1 = Player, -2 = Opponent
+        /// Target Id, > 0 = InstanceId, -1 = Player, -2 = Opponent
         /// </summary>
         [JsonProperty("T")] public int To { get; set; }
+        /// <summary>
+        /// From InstanceId
+        /// </summary>
         [JsonProperty("F")] public int From { get; set; }
         /// <summary>
         /// 如果正数代表换位
@@ -315,7 +318,8 @@ namespace Assets.System.WarModule
         [JsonProperty("P")] public int ProcessId { get; set; }
         [JsonProperty("C")] public CombatConduct[] Conducts { get; set; }
         [JsonProperty("A")] public ActivityResult Result { get; set; }
-        [JsonProperty("O")] public int IsChallenger { get; set; }
+        [JsonProperty("O")]public PieceStatus OffenderStatus { get; set; }
+        [JsonProperty("IC")] public int IsChallenger { get; set; }
 
         public Intention GetIntensive()
         {
@@ -347,6 +351,7 @@ namespace Assets.System.WarModule
                     : isChallenger;
             }
         }
+
 
         public override string ToString() => $"{InstanceId}.Intent({GetIntensive()})[{Intent}].From[{From}({IsChallenger})].To[{To}].Com[{Conducts.Length}].Result[{Result.Result}]";
     }
@@ -583,6 +588,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public interface IChessman
     {
+        int InstanceId { get; }
         int Pos { get; }
         bool IsPlayer { get; }
         int CardId { get; }
@@ -590,8 +596,8 @@ namespace Assets.System.WarModule
         GameCardInfo Info { get; }
         int HitPoint { get; }
         int Level { get; }
-        bool IsActed { get; }
-        void SetActed(bool isActed = true);
+        AttackStyle Style { get; }
+        PieceStatus Status { get; }
     }
     /// <summary>
     /// 棋位接口规范

@@ -10,8 +10,11 @@ public class Chessboard : MonoBehaviour
 {
     [SerializeField] private ChessPos[] PlayerScope;
     [SerializeField] private ChessPos[] EnemyScope;
-    
+
+    public IReadOnlyDictionary<int, FightCardData> Data => data;
+
     private ChessGrid grid;
+    private Dictionary<int, FightCardData> data;
 
     public int PlayerCardsOnBoard => PlayerScope.Count(p => p.Card != null && p.Card.cardType != 522);
     public int EnemyCardsOnBoard => EnemyScope.Count(p => p.Card != null && p.Card.cardType != 522);
@@ -19,6 +22,7 @@ public class Chessboard : MonoBehaviour
     public void Init()
     {
         grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
+        data = new Dictionary<int, FightCardData>();
         for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
     }
@@ -32,10 +36,10 @@ public class Chessboard : MonoBehaviour
         return card;
     }
 
-    public void ResetPos(IChessOperator op,FightCardData card)
+    public void ResetPos(FightCardData card)
     {
         //注意这里是获取状态里的位置而不是原始位置。
-        PlaceCard(op.Pos, card);
+        PlaceCard(card.Pos , card);
     }
 
     public IEnumerable<ChessPos> GetData() => PlayerScope.Concat(EnemyScope);
@@ -45,6 +49,8 @@ public class Chessboard : MonoBehaviour
 
     public void PlaceCard(int index, FightCardData card)
     {
+        if (!data.ContainsKey(card.InstanceId))
+            data.Add(card.InstanceId, card);
         var scope = GetScope(card.isPlayerCard);
         var pos = scope.FirstOrDefault(p => p.Card == card);
         if (pos != null) RemoveCard(pos.Pos, card.IsPlayer);//移除卡牌前位置
