@@ -7,14 +7,6 @@ namespace Assets.System.WarModule
 {
     public class ChessOperatorManager<TCard> : ChessboardOperator where TCard : IChessman
     {
-        private const int TowerArmedType = -1;
-        private const int TrapArmedType = -2;
-        private const int RangeCombatStyle = 1;
-        private const int MeleeCombatStyle = 0;
-        private const int SpecialCombatStyle = 2;
-        private const int NoCounter = 0;
-        private const int BasicCounterStyle = 1;
-
         protected override Dictionary<ChessOperator, ChessStatus> StatusMap { get; }
         protected Dictionary<int, ChessOperator> ops = new Dictionary<int, ChessOperator>();
         protected override List<TerrainSprite> Sprites { get; }
