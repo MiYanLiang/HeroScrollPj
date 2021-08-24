@@ -18,16 +18,19 @@ public class ChessmanTester : MonoBehaviour
     public WarGameCardUi HomePrefab;
     public NewWarManager NewWar;
     public Chessboard Chessboard;
+    public GameObject RouseEffectObj;
     private bool IsBusy { get; set; }
     private static int CardSeed;
     private GameResources gameResources;
     private Dictionary<int, FightCardData> CardData;
+    private Dictionary<int,EffectStateUi>Sprites { get; set; }
 
     void Start()
     {
         DataTable.Init();
         PlayerData.Init();
         gameResources = new GameResources();
+        Sprites = new Dictionary<int, EffectStateUi>();
         CardData = new Dictionary<int, FightCardData>();
         gameResources.Init();
         EffectsPooling.Init();
@@ -83,22 +86,6 @@ public class ChessmanTester : MonoBehaviour
         for (int i = 0; i < round.Processes.Length; i++)
         {
             var process = round.Processes[i];
-
-            //var list = new List<List<Activity>> {new List<Activity>()};
-            //var getLast = false;
-            ////这样写为了把Processes中，如果非主活动被放置在主活动的前排，依然归到主活动下面来执行
-            //for (int j = 0; j < process.Activities.Count; j++)
-            //{
-            //    var act = process.Activities[j];
-            //    if (act.GetIntensive() != Activity.Intention.Major)
-            //    {
-            //        list.Last().Add(act);
-            //        continue;
-            //    }
-            //    if (getLast) list.Add(new List<Activity>());
-            //    list.Last().Insert(0, act);
-            //    getLast = true;
-            //}
             Chessboard.OnActivityBegin(process.Pos, process.Scope == 0);
             //列表配置应该是主活动在附列表最上端，然后附活动跟着在列表后面
             yield return ProceedActivitySet(process.Activities);
@@ -119,41 +106,60 @@ public class ChessmanTester : MonoBehaviour
         var tween = DOTween.Sequence();
         //每一个MajorActivity下面会有多个subActivity
         //整理出每一套行动的主行动内容与附属内容
+        var isInitialMove = false;
         foreach (var activity in actSet)
         {
-            var offense = CardData[activity.From];
             var target = CardData[activity.To];
-            offense.UpdateStatus(activity.OffenderStatus);
-            target.UpdateStatus(activity.Result.Status);
-            var intensive = activity.GetIntensive(); //获取行动意图类型
-            switch (intensive)
+            var intensive = activity.GetIntention(); //获取行动意图类型
+            if (intensive == Activity.Intention.Sprite)
             {
-                //主棋子执行演示 *注：已经包涵了附属附属演示了
-                case Activity.Intention.Major:
-                    yield return tween.WaitForCompletion();
-                    tween = DOTween.Sequence();
-                    major = offense;
-                    if (offense.Style.CombatStyle == 0) //如果近战需要预先移动到对面
-                        yield return CardAnimator.MeleeMoving(offense, target)?.WaitForCompletion();
-                    yield return MainActionBegin(offense.combatType, offense, target)?.WaitForCompletion();//执行主要活动(一般是进攻)
-                    tween.Join(OnMajorProcess(activity, offense, target));
-                    break;
-                //附属棋子执行演示
-                case Activity.Intention.Attach:
-                    tween.Join(SubPartiesProcess(activity, offense, target)); //加入附属活动(buff，效果类)
-                    break;
-                //如果有反馈式的活动(一般来说是反击，触发类的不属于反馈)
-                case Activity.Intention.Counter:
-                    yield return tween.WaitForCompletion();
-                    yield return new WaitForSeconds(CardAnimator.charge);
-                    yield return OnCounterAction(activity, offense, target).WaitForCompletion(); //加入反馈活动
-                    tween = DOTween.Sequence();
-                    break;
-                //如果是棋手维度的效果这里播放
-                case Activity.Intention.UnDefined:
-                default:
-                    break;
+                OnSpriteActivity(activity);
+                continue;
             }
+            target.UpdateStatus(activity.Result.Status);
+            //ClearCardStates(target);
+            tween.Join(CardAnimator.UpdateStateEffect(target));
+            if (activity.From < 0)
+            {
+                tween.Join(SubPartiesProcess(activity, null, target));
+                continue;
+            }
+
+            var offense = CardData[activity.From];
+            offense.UpdateStatus(activity.OffenderStatus);
+            tween.Join(CardAnimator.UpdateStateEffect(offense));
+            yield return tween.WaitForCompletion();
+            tween = DOTween.Sequence();
+            //ClearCardStates(offense);
+            if (!isInitialMove)
+            {
+                isInitialMove = true;
+                yield return tween.WaitForCompletion();
+                yield return new WaitForSeconds(0.3f);
+                tween = DOTween.Sequence();
+                major = offense;
+                if (offense.Style.CombatStyle == 0) //如果近战需要预先移动到对面
+                    yield return CardAnimator.MeleeMoving(offense, target)?.WaitForCompletion();
+                if (activity.Conducts.Any(c => c.Rouse > 0))
+                    yield return FullScreenRouse();
+                yield return
+                    MainActionBegin(offense.combatType, offense, target)?.WaitForCompletion(); //执行主要活动(一般是进攻)
+                tween.Join(OnMajorProcess(activity, offense, target));
+            }
+            else if (intensive == Activity.Intention.Counter)
+            {
+                yield return tween.WaitForCompletion();
+                if (activity.Conducts.Any(c => c.Rouse > 0))
+                    yield return FullScreenRouse();
+                else yield return new WaitForSeconds(CardAnimator.charge);
+                yield return OnCounterAction(activity, offense, target).WaitForCompletion(); //加入反馈活动
+                tween = DOTween.Sequence();
+            }
+            else
+            {
+                tween.Join(SubPartiesProcess(activity, offense, target)); //加入附属活动(buff，效果类)
+            }
+
             //击退一格
             if (!activity.IsRePos) continue;
             yield return tween.Join(CardAnimator.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])).WaitForCompletion();
@@ -174,12 +180,50 @@ public class ChessmanTester : MonoBehaviour
         }
     }
 
+    //private void ClearCardStates(FightCardData card)
+    //{
+    //    foreach (var map in card.States)
+    //    {
+    //        if (card.Status.GetBuff(map.Key) > 0 || map.Value == null) continue;
+    //        EffectsPoolingControl.instance.TakeBackStateIcon(map.Value);
+    //        card.States[map.Key] = null;
+    //    }
+    //}
+
+    private void OnSpriteActivity(Activity activity)
+    {
+        foreach (var conduct in activity.Conducts)
+        {
+            if (conduct.Total <= -1)//移除精灵
+            {
+                var sprite = Sprites[conduct.Kind];
+                Sprites.Remove(conduct.Kind);
+                Destroy(sprite.gameObject);
+                return;
+            }
+            //生成精灵
+            var pos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
+            var sp = EffectsPoolingControl.instance.GetPosState(conduct, pos);
+            if (sp == null) return;
+            Sprites.Add(conduct.Kind, sp);
+        }
+
+    }
+
+    private IEnumerator FullScreenRouse()
+    {
+        if(RouseEffectObj.activeSelf)
+            RouseEffectObj.SetActive(false);
+        RouseEffectObj.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+    }
+
     //主棋子执行演示
     private Tween OnMajorProcess(Activity activity, FightCardData offense, FightCardData target)
     {
         var tween = DOTween.Sequence();
         if (offense.Style.ArmedType >= 0 &&
-            offense.Status.GetBuff(FightState.Cons.Imprisoned) < 1) //武将有自己的攻击特效
+            offense.Status.GetBuff(CardState.Cons.Imprisoned) < 1) //武将有自己的攻击特效
             tween.Join(CardAnimator.SkillEffect(activity, offense, true, target));
 
         //添加附属方的演示
@@ -202,7 +246,7 @@ public class ChessmanTester : MonoBehaviour
 
         tween.Join(CardAnimator.DisplayTextEffect(target, activity));
         //如果是武将类兵种，将会执行兵种文字效果
-        if (target.Style.ArmedType >= 0)
+        if (offOp != null && target.Style.ArmedType >= 0)
             tween.Join(CardAnimator.SkillEffect(activity, target, false, offOp));
         foreach (var conduct in conducts)
         {
@@ -221,22 +265,23 @@ public class ChessmanTester : MonoBehaviour
                             tween.Join(CardAnimator.GenerateHealEffect(target, conduct));
                             break;
                     }
+
                     break;
                 }
                 case ActivityResult.Types.Dodge:
                     tween.Join(CardAnimator.SideDodge(target));
                     break;
                 case ActivityResult.Types.Shield:
-                    tween.Join(CardAnimator.UpdateStateEffect(target,FightState.Cons.Shield));
+                    tween.Join(CardAnimator.UpdateStateEffect(target, CardState.Cons.Shield));
                     break;
                 case ActivityResult.Types.Invincible:
-                    tween.Join(CardAnimator.UpdateStateEffect(target,FightState.Cons.Invincible));
+                    tween.Join(CardAnimator.UpdateStateEffect(target, CardState.Cons.Invincible));
                     break;
-                case ActivityResult.Types.ExtendedShield:
-                    tween.Join(CardAnimator.UpdateStateEffect(target,FightState.Cons.ExtendedHp));
+                case ActivityResult.Types.EaseShield:
+                    tween.Join(CardAnimator.UpdateStateEffect(target, CardState.Cons.EaseShield));
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    break;
             }
         }
 
@@ -258,7 +303,7 @@ public class ChessmanTester : MonoBehaviour
         var tween = DOTween.Sequence().Join(CardAnimator.GetCombatStrikeEffect(activity,offOp, target));
         foreach (var conduct in activity.Conducts)
             if (conduct.Kind == CombatConduct.BuffKind)
-                tween.Join(CardAnimator.UpdateStateEffect(target, (FightState.Cons) conduct.Element));
+                tween.Join(CardAnimator.UpdateStateEffect(target, (CardState.Cons) conduct.Element));
         return tween.Join(SufferAction(offOp, target, activity));
     }
 

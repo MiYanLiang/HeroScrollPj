@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.System.WarModule;
 using UnityEngine;
 
 public class EffectsPoolingControl : MonoBehaviour
@@ -256,6 +257,26 @@ public class EffectsPoolingControl : MonoBehaviour
             go.transform.SetParent(effectContentTran);
             go.SetActive(false);
         }
+    }
+
+    public EffectStateUi GetPosState(CombatConduct sp, ChessPos pos)
+    {
+        EffectStateUi prefab = null;
+        switch (sp.Element)
+        {
+            case TerrainSprite.YeHuo:
+                prefab = GameResources.Instance.StateDin[StringNameStatic.StateIconPath_burned];
+                break;
+            case TerrainSprite.Forge:
+                prefab = GameResources.Instance.StateDin[StringNameStatic.StateIconPath_miWuZhenAddtion];
+                break;
+        }
+
+        if (prefab == null) return null;
+        var effect = Instantiate(prefab, pos.transform);
+        effect.transform.localScale = Vector3.one;
+        effect.transform.localPosition = Vector3.zero;
+        return effect;
     }
 }
 

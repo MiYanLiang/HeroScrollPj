@@ -14,7 +14,8 @@ public enum ForceFlags
     吴 = 2,
     袁 = 3,
     吕 = 4,
-    其它 = 5
+    司马 = 5,
+    其它 = 6,
 }
 
 public class GameResources
