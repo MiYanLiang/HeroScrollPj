@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CorrelateLib;
 
 namespace Assets.System.WarModule
 {
     public class HeroOperator : CardOperator
     {
-        public const int HeroArmorLimit = 90;
-        public const int HeroDodgeLimit = 75;
-        public HeroCombatInfo CombatInfo => combatInfo;
-        private HeroCombatInfo combatInfo;
+        protected HeroCombatInfo CombatInfo { get; private set; }
 
         /// <summary>
         /// 根据当前血量损失的<see cref="gap"/>%，根据<see cref="gapValue"/>的值倍增
@@ -24,19 +24,18 @@ namespace Assets.System.WarModule
             return basicValue + addOn * gapValue;
         }
 
-        public static int HpDepletedRatioWithGap(PieceStatus status, int basicValue, int gap, int gapValue) =>
+        protected static int HpDepletedRatioWithGap(ChessStatus status, int basicValue, int gap, int gapValue) =>
             HpDepletedRatioWithGap(status.Hp,status.MaxHp, basicValue, gap, gapValue);
 
-        public override void Init(IChessman card, IChessboardOperator chessboardOp)
+        public override void Init(IChessman card, ChessboardOperator chessboardOp)
         {
-            combatInfo = HeroCombatInfo.GetInfo(card.CardId);
+            CombatInfo = HeroCombatInfo.GetInfo(card.CardId);
             base.Init(card, chessboardOp);
         }
 
-        public override void StartActions()
+        protected override void StartActions()
         {
-            if (Status.GetBuff(FightState.Cons.Stunned) > 0) return;
-            if (Status.GetBuff(FightState.Cons.Imprisoned) > 0)
+            if (!Chessboard.OnHeroPerformAvailable(this))
             {
                 NoSkillAction();
                 return;
@@ -46,137 +45,72 @@ namespace Assets.System.WarModule
 
         protected void NoSkillAction()
         {
-            var target = Grid.GetContraPositionInSequence(this);
+            var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-            Chessboard.ActionRespondResult(this, target, Activity.Offensive, BasicDamage(), 0);
+            Chessboard.AppendActivity(this, target, Activity.Offensive, BasicDamage(), 0);
         }
 
-        private CombatConduct[] BasicDamage() => Singular(CombatConduct.InstanceDamage(Style.Strength, Style.Element));
+        private CombatConduct[] BasicDamage() => Helper.Singular(CombatConduct.InstanceDamage(Style.Strength, Style.Element));
 
         /// <summary>
-        /// 兵种攻击
+        /// 兵种攻击，base攻击是基础英雄属性攻击
         /// </summary>
         /// <param name="skill">标记1以上为技能，如果超过1个技能才继续往上加</param>
         /// <returns></returns>
         protected virtual void MilitaryPerforms(int skill = 1)
         {
-            var target = Grid.GetContraPositionInSequence(this);
+            var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-            Chessboard.ActionRespondResult(this, target, Activity.Offensive, MilitaryDamages(target), skill);
+            Chessboard.AppendActivity(this, target, Activity.Offensive, MilitaryDamages(target), skill);
         }
 
-        protected virtual CombatConduct[] MilitaryDamages(IChessPos targetPos) => Singular(InstanceHeroPerformDamage());
+        protected virtual CombatConduct[] MilitaryDamages(IChessPos targetPos) => Helper.Singular(InstanceHeroGenericDamage());
 
-        /// <summary>
-        /// 当治疗的时候血量转化
-        /// </summary>
-        /// <param name="conduct"></param>
-        /// <returns></returns>
-        protected override int OnHealConvert(CombatConduct conduct) => (int)conduct.Total;
-        /// <summary>
-        /// 当被伤害的时候，伤害值转化
-        /// </summary>
-        /// <param name="conduct"></param>
-        /// <returns></returns>
-        protected override int OnDamageConvert(CombatConduct conduct)
-        {
-            var damage = conduct.Total;
-            if (conduct.Element == CombatConduct.UnResistDmg)
-            {
-                return (int) damage;
-            }
-
-            if (conduct.Element <= 0)
-            {
-                if (Status.GetBuff(FightState.Cons.Bleed) > 0)
-                    damage += GetRatio(damage, DataTable.GetGameValue(117));
-                if (Status.GetBuff(FightState.Cons.Disarmed) > 0) return (int) damage;
-            }
-
-            var armor = conduct.Element > 0 ? GetMagicArmor() : GetPhysicArmor();
-            if (armor > HeroArmorLimit) armor = HeroArmorLimit;
-            var finalDamage = (int) (damage + GetRatio(damage, -armor));
-            if (Status.GetBuff(FightState.Cons.DeathFight) > 0 && finalDamage < 0) 
-                return -finalDamage;//死战任何扣血的情况都会补血
-            return finalDamage;
-        }
         /// <summary>
         /// 法术免伤
         /// </summary>
         /// <returns></returns>
-        protected virtual int GetMagicArmor() => combatInfo.MagicResist;
+        public override int GetMagicArmor() => CombatInfo.MagicResist;
         /// <summary>
         /// 物理免伤
         /// </summary>
         /// <returns></returns>
-        protected virtual int GetPhysicArmor() => combatInfo.PhysicalResist;
-
-        protected override int OnBuffingConvert(CombatConduct conduct) => (int) conduct.Total;
+        public override int GetPhysicArmor() => CombatInfo.PhysicalResist;
 
         /// <summary>
         /// 根据武将属性生成伤害
         /// </summary>
         /// <returns></returns>
-        protected CombatConduct InstanceHeroPerformDamage(int damage = -1)
+        protected CombatConduct InstanceHeroGenericDamage(int damage = -1)
         {
             if (damage < 0)
                 damage = GetBasicDamage();
-            //胆怯不暴击和会心
-            if (Status.GetBuff(FightState.Cons.Cowardly) <= 0)
+            damage = Chessboard.ConvertHeroDamage(this, damage);
+            if(Chessboard.IsRouseDamagePass(this))
             {
-                var critical = TryGenerateCritical();
-                if (critical > 0) return CombatConduct.InstanceDamage(damage, critical, Style.Element);
-                var rouse = TryGenerateRouseDamage();
+                var rouse = RouseDamage();
                 if (rouse > 0)
                     return CombatConduct.Instance(damage, 0, rouse, Style.Element, CombatConduct.DamageKind);
             }
+
+            if (Chessboard.IsCriticalDamagePass(this))
+            {
+                var critical = CriticalDamage();
+                if (critical > 0) return CombatConduct.InstanceDamage(damage, critical, Style.Element);
+            }
+
             return CombatConduct.InstanceDamage(damage, Style.Element);
         }
 
         protected virtual int GetBasicDamage() => Style.Strength;
 
         //跟据会心率获取会心伤害
-        private float TryGenerateRouseDamage()
-        {
-            var rouse = Style.Strength - combatInfo.GetRouseDamage(Style.Strength);
-            if (Status.TryDeplete(FightState.Cons.ShenZhu))
-                return rouse;
-            if (Chessboard.RandomFromHeroTable(CardId, 2))
-                return rouse;
-            return 0;
-        }
+        private float RouseDamage() => Style.Strength - CombatInfo.GetRouseDamage(Style.Strength);
+
         //根据暴击率获取暴击伤害
-        private float TryGenerateCritical()
-        {
-            var critical = Style.Strength - combatInfo.GetCriticalDamage(Style.Strength);
-            if (Status.TryDeplete(FightState.Cons.Neizhu))
-                return critical;
-            if (Chessboard.RandomFromHeroTable(CardId, 1))
-                return critical;
-            return 0;
-        }
+        private float CriticalDamage() => Style.Strength - CombatInfo.GetCriticalDamage(Style.Strength);
 
-        protected override bool DodgeOnAttack(IChessOperator offender)
-        {
-            var dodgeRate = GetDodgeRate();
-            var buffAddOn = Status.GetBuff(FightState.Cons.FengShenTaiAddOn);
-            if (offender != null && offender.Style.CombatStyle == AttackStyle.CombatStyles.Range)
-                buffAddOn += Status.GetBuff(FightState.Cons.MiWuZhenAddOn);
-            var value = dodgeRate + buffAddOn;
-            if (value > HeroDodgeLimit)
-                value = HeroDodgeLimit;
-            return Chessboard.IsRandomPass(value);
-        }
-
-        protected virtual int GetDodgeRate() => combatInfo.DodgeRatio;
-
-        /// <summary>
-        /// 计算比率值(不包括原来的值)
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="ratio"></param>
-        /// <returns></returns>
-        private static float GetRatio(float value, int ratio) => ratio * 0.01f * value;
+        public override int GetDodgeRate() => CombatInfo.DodgeRatio;
     }
 
     /// <summary>
@@ -184,10 +118,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class JinZhanOperator : HeroOperator
     {
-        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
-            Chessboard.ActionRespondResult(this, Grid.GetChessPos(this), Activity.Self,
-                Singular(CombatConduct.InstanceBuff(FightState.Cons.Shield)),1);
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)),1);
         }
     }
 
@@ -201,12 +134,12 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Grid.GetContraPositionInSequence(this);
+            var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
 
             for (int i = 0; i < ComboTimes; i++)
             {
-                Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(InstanceHeroPerformDamage()), skill);
+                Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), skill);
                 if (!Chessboard.IsRandomPass(ComboRatio))
                     break;//如果不触发，就直接停止
             }
@@ -229,15 +162,15 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Grid.GetContraPositionInSequence(this);
+            var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
             //var tOp = Chessboard.GetOperator(target);
             bool combo;
             do
             {
                 combo = false;
-                var hit = InstanceHeroPerformDamage();
-                var result = Chessboard.ActionRespondResult(this, target, Activity.Offensive, Singular(hit), skill);
+                var hit = InstanceHeroGenericDamage();
+                var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(hit), skill);
                 if (result == null) break;
                 if (!result.IsDeath && result.Type != ActivityResult.Types.Friendly)
                     combo = hit.Critical > 0 || hit.Rouse > 0;
@@ -245,5 +178,1136 @@ namespace Assets.System.WarModule
             } while (combo);
         }
 
+    }
+
+    /// <summary>
+    /// 58  铁骑 - 多铁骑上阵发动【连环战马】。所有铁骑分担伤害，并按铁骑数量提升伤害。
+    /// </summary>
+    public class TieJiOperator : HeroOperator
+    {
+        protected virtual int ShareRate => DataTable.GetGameValue(50);
+        protected virtual int DamageStackRate => DataTable.GetGameValue(50);
+
+        protected IEnumerable<IChessPos> GetComrades() => Chessboard.GetFriendly(this, p =>
+            p.Operator != null &&
+            p.Operator != this &&
+            p.Operator.IsAlive &&
+            p.Operator.CardType == GameCardType.Hero &&
+            p.Operator.Style.Military == 58);
+
+        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
+        {
+            var comrades = GetComrades().ToArray();
+            var finalDamage = conduct.Total / (comrades.Length + 1);
+            //铁骑要非常注意，如果不用固伤，它将会进入死循环
+            foreach (var comrade in comrades)
+            {
+                Chessboard.AppendActivity(this, comrade, Activity.FriendlyAttach, Helper.Singular(CombatConduct.InstanceDamage((int)finalDamage, CombatConduct.FixedDmg)), 1);
+            }
+            return (int)finalDamage;
+        }
+
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var stacks = GetComrades().Count();
+            if (stacks <= 0) return base.MilitaryDamages(targetPos);
+            var damage = 0.01f * GetBasicDamage() * DamageStackRate * stacks;
+            return Helper.Singular(InstanceHeroGenericDamage((int)damage));
+        }
+    }
+
+    /// <summary>
+    /// 65  黄巾 - 水能载舟，亦能覆舟。场上黄巾数量越多，攻击越高。
+    /// </summary>
+    public class HuangJinOperator : HeroOperator
+    {
+        protected virtual int DamageRate => DataTable.GetGameValue(146);
+
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var cluster = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero &&
+                         p.Operator.Style.Military == 65)
+                .Count();
+            return Helper.Singular(InstanceHeroGenericDamage((int)(0.01f * GetBasicDamage() * cluster * DamageRate)));
+        }
+    }
+
+    /// <summary>
+    /// 57  藤甲 - 藤甲护体，刀枪不入。高度免疫物理伤害。
+    /// </summary>
+    public class TengJiaOperator : HeroOperator
+    {
+        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
+        {
+            if (conduct.Element == CombatConduct.FireDmg) return (int)(conduct.Total * 3);
+            return base.OnMilitaryDamageConvert(conduct);
+        }
+    }
+
+    /// <summary>
+    /// 59  短枪 - 手持短枪，攻击时，可穿刺攻击目标身后1个单位。
+    /// </summary>
+    public class QiangOperator : ExtendedDamageHero
+    {
+        /// <summary>
+        /// 刺穿单位数
+        /// </summary>
+        protected virtual int PenetrateUnits => 1;
+
+        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
+        {
+            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(96) * 0.01f;
+            return CombatConduct.InstanceDamage(penetrateDmg);
+        }
+
+        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target)
+        {
+            var tPoss = new List<int>();
+            for (var i = 1; i < PenetrateUnits + 1; i++)
+            {
+                var pos = i * 5 * target.Pos;
+                tPoss.Add(pos);
+            }
+
+            return Chessboard.GetRivals(this, p => tPoss.Contains(p.Pos) && p != target && p.IsPostedAlive)
+                .OrderBy(p => p.Pos)
+                .Take(PenetrateUnits);
+        }
+    }
+
+    /// <summary>
+    /// 56  蛮族 - 剧毒粹刃，攻击时有概率使敌方武将【中毒】。
+    /// </summary>
+    public class ManZuOperator : HeroOperator
+    {
+        protected virtual int PoisonRate => DataTable.GetGameValue(51);
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
+            if (Chessboard.IsRandomPass(PoisonRate))
+                combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Poison));
+            return combat.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// 55  火船 - 驱动火船，可引燃敌方武将，或自爆对敌方造成大范围伤害及【灼烧】。
+    /// </summary>
+    public class HuoChuanOperator : HeroOperator
+    {
+        protected virtual int BurnRate => DataTable.GetGameValue(52);
+        protected virtual int BurnExplodeRatio => DataTable.GetGameValue(53);
+        protected virtual int ExplodeRatio => DataTable.GetGameValue(55);
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            if (Chessboard.GetStatus(this).HpRate < 0.5)
+            {
+                var explode = new List<CombatConduct>
+                {
+                    InstanceHeroGenericDamage((int)
+                        (GetBasicDamage() * ExplodeRatio * 0.01f))
+                };
+                var surrounded = Chessboard.GetNeighbors(target, false).ToList();
+                surrounded.Insert(0, target);
+                foreach (var chessPos in surrounded)
+                {
+                    if (Chessboard.IsRandomPass(BurnExplodeRatio))
+                        explode.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
+                    Chessboard.AppendActivity(this, chessPos, Activity.OffendAttach, explode.ToArray(), 2);
+                }
+
+                Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling()), 2);
+                return;
+            }
+
+            var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
+            if (Chessboard.IsRandomPass(BurnRate))
+                combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
+            Chessboard.AppendActivity(this, target, Activity.Offensive, combat.ToArray(), 1);
+        }
+    }
+
+    /// <summary>
+    /// 54  大隐士 - 召唤水龙，攻击敌方5个武将，造成伤害并将其击退。
+    /// </summary>
+    public class DaYinShiOperator : YinShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(30);
+    }
+
+    /// <summary>
+    /// 53  隐士 - 召唤激流，攻击敌方3个武将，造成伤害并将其击退。
+    /// </summary>
+    public class YinShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(29);
+        protected virtual int DamageRate => DataTable.GetGameValue(75);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero)
+                .Select(p => new WeightElement<IChessPos>
+                {
+                    Obj = p,
+                    Weight = Chessboard.Randomize(3) + 1
+                }).Pick(TargetAmount).ToArray();
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var attackType = i == 0 ? Activity.Offensive : Activity.OffendAttach;
+                var target = targets[i];
+                var damage = InstanceHeroGenericDamage((int)(DamageRate * 0.01f * GetBasicDamage()));
+                var backPos = Chessboard.BackPos(target.Obj);
+                if (backPos != null && backPos.Operator == null)
+                {
+                    Chessboard.AppendActivity(this, target.Obj, attackType, Helper.Singular(damage), 1,
+                        backPos.Pos);
+                    continue;
+                }
+
+                Chessboard.AppendActivity(this, target.Obj, attackType, Helper.Singular(damage), 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 48  大说客 - 随机选择5个敌方武将进行游说，有概率对其造成【怯战】，无法暴击和会心一击。
+    /// </summary>
+    public class DaShuiKeOperator : ShuiKeOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(28);
+    }
+
+    /// <summary>
+    /// 47  说客 - 随机选择3个敌方武将进行游说，有概率对其造成【怯战】，无法暴击和会心一击。
+    /// </summary>
+    public class ShuiKeOperator : CounselorOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(27);
+        protected override int LevelRate => DataTable.GetGameValue(71);
+        protected override int BasicRate => DataTable.GetGameValue(70);
+        protected override int MaxRate => DataTable.GetGameValue(69);
+        protected override CombatConduct[] Skills() => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Cowardly));
+    }
+
+    /// <summary>
+    /// 46  大美人 - 以倾国之姿激励友方武将，有概率使其获得【神助】，下次攻击时必定会心一击。
+    /// </summary>
+    public class DaMeiRenOperator : MeiRenOperator
+    {
+        protected override CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(CardState.Cons.ShenZhu);
+    }
+
+    /// <summary>
+    /// 45  美人 - 以倾城之姿激励友方武将，有概率使其获得【内助】，下次攻击时必定暴击。
+    /// </summary>
+    public class MeiRenOperator : HeroOperator
+    {
+        protected virtual CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(CardState.Cons.Neizhu);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero)
+                .FirstOrDefault();
+            if (target == null)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+            Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(BuffToFriendly), 1);
+        }
+    }
+
+    /// <summary>
+    /// 44  巾帼 - 巾帼不让须眉，攻击同时对目标造成【卸甲】，大幅降低其攻击和防御。
+    /// </summary>
+    public class JingGuoOperator : HeroOperator
+    {
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            return new CombatConduct[]
+            {
+                CombatConduct.InstanceBuff(CardState.Cons.Disarmed),
+                InstanceHeroGenericDamage()
+            };
+        }
+    }
+
+    /// <summary>
+    /// 43  大医师 - 分发神药，最多治疗3个友方武将。治疗单位越少，治疗量越高。
+    /// </summary>
+    public class DaYiShiOperator : YiShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(26);
+        protected override int HealingRate => DataTable.GetGameValue(81);
+    }
+
+    /// <summary>
+    /// 42  医师 - 分发草药，治疗1个友方武将。
+    /// </summary>
+    public class YiShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(25);
+        protected virtual int HealingRate => DataTable.GetGameValue(80);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero &&
+                         Chessboard.GetStatus(p.Operator).HpRate < 1)
+                .OrderBy(p => Chessboard.GetStatus(p.Operator).HpRate)
+                .Take(TargetAmount).ToArray();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
+            var basicHeal = GetBasicDamage() * HealingRate * 0.01f / targets.Length;
+            var heal = CombatConduct.InstanceHeal(basicHeal);
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var target = targets[i];
+                Chessboard.AppendActivity(this, target, i == 0 ? Activity.Friendly : Activity.FriendlyAttach, Helper.Singular(heal), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 41  敢死 - 武将陷入危急之时进入【死战】状态，将受到的伤害转化为自身血量数。
+    /// </summary>
+    public class GanSiOperator : HeroOperator
+    {
+        protected virtual int TriggerRate => DataTable.GetGameValue(103);
+        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        {
+            if (Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f) return;
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.DeathFight)), 1);
+        }
+
+        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
+        {
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                Helper.Singular(CombatConduct.InstanceHeal(conduct.Total)), 1);
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// 40  器械 - 神斧天工，最多选择3个建筑（包括大营）进行修复。修复单位越少，修复量越高。
+    /// </summary>
+    public class QiXieOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(132);
+        protected virtual int RecoverRate => DataTable.GetGameValue(65);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive
+                         && p.Operator.CardType != GameCardType.Hero)
+                .OrderBy(p => Chessboard.GetStatus(p.Operator).HpRate)
+                .Take(TargetAmount).ToArray();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+
+            var recover = GetBasicDamage() * RecoverRate * 0.01f / targets.Length;
+            foreach (var target in targets)
+            {
+                Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(recover)), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 39  辅佐 - 为血量数最低的友方武将添加【防护盾】，可持续抵挡伤害。
+    /// </summary>
+    public class FuZuoOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero)
+                .OrderBy(p =>
+                {
+                    var status = Chessboard.GetStatus(p.Operator);
+                    return (status.Hp + status.GetBuff(CardState.Cons.EaseShield)) /
+                           status.MaxHp;
+                })
+                .FirstOrDefault();
+            if (target == null)
+            {
+                target = Chessboard.GetContraTarget(this);
+                Chessboard.AppendActivity(this, target, Activity.Offensive,
+                    Helper.Singular(InstanceHeroGenericDamage()), 0);
+                return;
+            }
+            var basicDamage = InstanceHeroGenericDamage();
+            Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.EaseShield, basicDamage.Total)), 1);
+        }
+    }
+
+    /// <summary>
+    /// 38  内政 - 稳定军心，选择有减益的友方武将，有概率为其清除减益状态。
+    /// </summary>
+    public class NeiZhengOperator : HeroOperator
+    {
+        private CardState.Cons[] NegativeBuffs { get; } = new[]
+        {
+            CardState.Cons.Stunned,
+            CardState.Cons.Bleed,
+            CardState.Cons.Poison,
+            CardState.Cons.Burn,
+            CardState.Cons.Imprisoned,
+            CardState.Cons.Cowardly,
+            CardState.Cons.Disarmed
+        };
+
+        protected virtual int BasicRate => DataTable.GetGameValue(126);
+        protected virtual int LevelingIncrease => DataTable.GetGameValue(127);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var rate = BasicRate + LevelingIncrease * Style.Level;
+            var targets = Chessboard.GetFriendly(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero)
+                .Select(pos => new
+                {
+                    pos.Operator, Buffs = NegativeBuffs.Sum(n => Chessboard.GetCondition(pos.Operator, n))
+                }) //找出所有武将的负面数
+                .Where(o => o.Buffs > 0)
+                .OrderByDescending(b => b.Buffs).Take(3).ToArray();
+            var basicDamage = InstanceHeroGenericDamage();
+
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms();
+                return;
+            }
+
+            for (var i = 0; i < targets.Length; i++)
+            {
+                if (Chessboard.IsRandomPass(rate))
+                {
+                    var target = targets[i];
+                    var tarStat = Chessboard.GetStatus(target.Operator);
+                    var keys = tarStat.Buffs.Where(p => p.Value > 0)
+                        .Join(NegativeBuffs, p => p.Key, n => (int)n, (p, n) => new { key = n, buffValue = p.Value })
+                        .ToArray();
+                    var con = keys[Chessboard.Randomize(keys.Length)];
+                    Chessboard.AppendActivity(this, Chessboard.GetChessPos(target.Operator), Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(con.key, -con.buffValue)), 1);
+                }
+                if (basicDamage.Rouse > 0 && i < 2)
+                    continue;
+                if (basicDamage.Critical > 0 && i < 1)
+                    continue;
+                break;
+            }
+
+        }
+    }
+
+    /// <summary>
+    /// 37  大谋士 - 善用诡计，随机选择5个敌方武将，有概率对其造成【眩晕】，无法行动。
+    /// </summary>
+    public class DaMouShiOperator : MouShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(24);
+    }
+
+    /// <summary>
+    /// 36  谋士 - 善用诡计，随机选择3个敌方武将，有概率对其造成【眩晕】，无法行动。
+    /// </summary>
+    public class MouShiOperator : CounselorOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(23);
+        protected override int LevelRate => DataTable.GetGameValue(83);
+        protected override int BasicRate => DataTable.GetGameValue(82);
+        protected override CombatConduct[] Skills() => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
+    }
+
+    /// <summary>
+    /// 35  大辩士 - 厉声呵斥，随机选择5个敌方武将，有概率对其造成【禁锢】，无法使用兵种特技。
+    /// </summary>
+    public class DaBianShiOperator : BianShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(35);
+    }
+
+    /// <summary>
+    /// 34  辩士 - 厉声呵斥，随机选择3个敌方武将，有概率对其造成【禁锢】，无法使用兵种特技。
+    /// </summary>
+    public class BianShiOperator : CounselorOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(21);
+        protected override int MaxRate => DataTable.GetGameValue(66);
+        protected override int LevelRate => DataTable.GetGameValue(68);
+        protected override int BasicRate => DataTable.GetGameValue(67);
+        protected override CombatConduct[] Skills() => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Imprisoned));
+    }
+    /// <summary>
+    /// 参军/谋士，主要技能是获取一定数量的对方武将类逐一对其发出武将技
+    /// </summary>
+    public abstract class CounselorOperator : HeroOperator
+    {
+        protected abstract int TargetAmount { get; }
+        /// <summary>
+        /// 暴击增率
+        /// </summary>
+        protected virtual int CriticalRate => DataTable.GetGameValue(84);
+        /// <summary>
+        /// 会心增率
+        /// </summary>
+        protected virtual int RouseRate => DataTable.GetGameValue(85);
+        /// <summary>
+        /// buff最大率
+        /// </summary>
+        protected virtual int MaxRate => 100;
+        /// <summary>
+        /// 根据等级递增率
+        /// </summary>
+        protected abstract int LevelRate { get; }
+        /// <summary>
+        /// 基础值
+        /// </summary>
+        protected abstract int BasicRate { get; }
+        protected abstract CombatConduct[] Skills();
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    p => p.IsPostedAlive && p.Operator.CardType == GameCardType.Hero)
+                .Select(c => new WeightElement<IChessPos> { Obj = c, Weight = Chessboard.Randomize(3)+1 })
+                .Pick(TargetAmount).Select(c => c.Obj).ToArray();
+            var damage = InstanceHeroGenericDamage();
+            var rate = BasicRate + Style.Level * LevelRate;
+            if (damage.Rouse > 0)
+                rate += RouseRate;
+            else if (damage.Critical > 0)
+                rate += CriticalRate;
+            if (rate > MaxRate)
+                rate = MaxRate;
+            foreach (var target in targets)
+            {
+                if (Chessboard.IsRandomPass(rate))
+                    Chessboard.AppendActivity(this, target, Activity.Offensive,
+                        Skills(), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 33  大统帅 - 在敌阵中心纵火，火势每回合向外扩展一圈。多个统帅可接力纵火。
+    /// </summary>
+    public class DaTongShuaiOperator : TongShuaiOperator
+    {
+        protected override int BurnRatio => DataTable.GetGameValue(36);
+    }
+
+    /// <summary>
+    /// 32  统帅 - 在敌阵中心纵火，火势每回合向外扩展一圈。多个统帅可接力纵火。
+    /// </summary>
+    public class TongShuaiOperator : HeroOperator
+    {
+        //统帅回合攻击目标
+        private int[][] FireRings { get; } = new int[3][] {
+            new int[1] { 7},
+            new int[6] { 2, 5, 6,10,11,12},
+            new int[11]{ 0, 1, 3, 4, 8, 9,13,14,15,16,17},
+        };
+        //统帅触发灼烧的概率
+        protected virtual int BurnRatio => DataTable.GetGameValue(35);
+        /// <summary>
+        /// 统帅外圈伤害递减
+        /// </summary>
+        protected virtual int DamageRatio => DataTable.GetGameValue(34);
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var scope = Chessboard.GetRivals(this, _ => true).ToArray();
+            var ringIndex = -1;
+            for (int i = 0; i < FireRings.Length; i++)
+            {
+                if (scope[FireRings[i][0]].Terrain.Sprites.All(s => s.TypeId != TerrainSprite.YeHuo)) continue;
+                ringIndex = i;
+                break;
+            }
+            ringIndex++;
+            if (ringIndex >= FireRings.Length)
+                ringIndex = 0;
+            var outRingDamageDecrease = GetBasicDamage() * DamageRatio * ringIndex * 0.01f;
+            var basicDamage = InstanceHeroGenericDamage((int)(GetBasicDamage() - outRingDamageDecrease));
+            var burnBuff = CombatConduct.InstanceBuff(CardState.Cons.Burn);
+            foreach (var chessPos in scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p))
+            {
+                var combat = new List<CombatConduct> { basicDamage };
+                if (Chessboard.IsRandomPass(BurnRatio))
+                    combat.Add(burnBuff);
+                Chessboard.InstanceSprite<FireSprite>(chessPos, InstanceId, TerrainSprite.LastingType.Round, value: 2,
+                    typeId: TerrainSprite.YeHuo);
+                if (chessPos.Operator == null || !Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
+                Chessboard.AppendActivity(this, chessPos, Activity.Offensive, combat.ToArray(), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 31  大毒士 - 暗中作祟，随机攻击5个敌方武将，有概率对其造成【中毒】。
+    /// </summary>
+    public class DaDuShiOperator : DuShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(20);
+    }
+
+    /// <summary>
+    /// 30  毒士 - 暗中作祟，随机攻击3个敌方武将，有概率对其造成【中毒】。
+    /// </summary>
+    public class DuShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(19);
+        protected virtual int DamageRate => DataTable.GetGameValue(86);
+        protected virtual int PoisonRateLimit => DataTable.GetGameValue(87);
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    p => p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Hero)
+                .Select(p => new WeightElement<IChessPos>
+                {
+                    Obj = p,
+                    Weight = WeightElement<IChessPos>.Random.Next(1, 4)
+                }).Pick(TargetAmount);
+            foreach (var target in targets)
+            {
+                var basicConduct = InstanceHeroGenericDamage((int)(GetBasicDamage() * DamageRate * 0.01f));
+                var poisonRate = (int)(Chessboard.ConfigValue(88) + (Chessboard.ConfigValue(89) * Style.Level - 1));
+
+                if (basicConduct.Rouse > 0)
+                    poisonRate += DataTable.GetGameValue(125);
+                else if (basicConduct.Critical > 0)
+                    poisonRate += DataTable.GetGameValue(124);
+                if (poisonRate > PoisonRateLimit) poisonRate = PoisonRateLimit;
+
+                var poison = CombatConduct.InstanceBuff(CardState.Cons.Poison);
+                var combats = new List<CombatConduct> { basicConduct };
+                if (Chessboard.IsRandomPass(poisonRate))
+                    combats.Add(poison);
+                Chessboard.AppendActivity(this, target.Obj, Activity.Offensive, combats.ToArray(), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 29  大术士 - 洞察天机，召唤5次天雷，随机落在敌阵中，并有几率造成【眩晕】。
+    /// </summary>
+    public class DaShuShiOperator : ShuShiOperator
+    {
+        protected override int AttackTimes => DataTable.GetGameValue(32);
+        protected override int TargetLimit => DataTable.GetGameValue(39) - 1;
+    }
+
+    /// <summary>
+    /// 28  术士 - 洞察天机，召唤3次天雷，随机落在敌阵中，并有几率造成【眩晕】。
+    /// </summary>
+    public class ShuShiOperator : HeroOperator
+    {
+        protected virtual int AttackTimes => DataTable.GetGameValue(31);
+        protected virtual int TargetLimit => DataTable.GetGameValue(38) - 1;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            for (var i = 0; i <= AttackTimes; i++)
+            {
+                var pick = Chessboard.Randomize(TargetLimit) + 1;
+                var targets = Chessboard.GetRivals(this,
+                        p => p.IsPostedAlive)
+                    .Select(p => new WeightElement<IChessPos>
+                    {
+                        Obj = p,
+                        Weight = WeightElement<IChessPos>.Random.Next(1, 4)
+                    }).Pick(pick).ToArray();
+                foreach (var target in targets)
+                {
+                    var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
+                    if (Chessboard.RandomFromConfigTable(40))
+                        combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
+                    Chessboard.AppendActivity(this, target.Obj, Activity.Offensive,
+                        combat.ToArray(), 1);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 27  大军师 - 借助东风，攻击血量剩余百分比最少的5个敌方武将，有概率将其绝杀。
+    /// </summary>
+    public class DaJunShiOperator : JunShiOperator
+    {
+        protected override int TargetAmount => DataTable.GetGameValue(61);
+        protected override int KillingRate => DataTable.GetGameValue(18);
+    }
+
+    /// <summary>
+    /// 26  军师 - 借助东风，攻击血量剩余百分比最少的3个敌方武将，有小概率将其绝杀。
+    /// </summary>
+    public class JunShiOperator : HeroOperator
+    {
+        protected virtual int TargetAmount => DataTable.GetGameValue(59);
+        protected virtual int KillingRate => DataTable.GetGameValue(60);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    c => c.IsPostedAlive &&
+                         c.Operator.CardType == GameCardType.Hero)
+                .OrderBy(p => Chessboard.GetStatus(p.Operator).HpRate)
+                .Take(TargetAmount).ToArray();
+            var baseDamage = InstanceHeroGenericDamage();
+            var killingLineRatio = DataTable.GetGameValue(56);
+            if (baseDamage.Critical > 0)
+                killingLineRatio = DataTable.GetGameValue(57);
+            if (baseDamage.Rouse > 0)
+                killingLineRatio = DataTable.GetGameValue(58);
+            var killingLine = killingLineRatio * GetBasicDamage();
+            foreach (var target in targets)
+            {
+                var combat = Helper.Singular(baseDamage);
+                if (Chessboard.GetStatus(target.Operator).Hp < killingLine &&
+                    Chessboard.IsRandomPass(KillingRate))
+                    combat = Helper.Singular(CombatConduct.InstanceKilling());
+                Chessboard.AppendActivity(this, target, Activity.Offensive, combat, 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 25  刺客 - 深入敌方，选择远程单位中攻击最高的目标进行攻击。造成伤害，并为其添加【流血】效果。
+    /// </summary>
+    public class ChiKeOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetRivals(this,
+                    p => p.IsPostedAlive)
+                .OrderByDescending(p => p.Operator.Style.CombatStyle)
+                .ThenByDescending(p => p.Operator.Style.Strength)
+                .ThenByDescending(p => p.Pos).FirstOrDefault();
+            var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
+            if (Chessboard.RandomFromConfigTable(147))
+                combats.Add(CombatConduct.InstanceBuff(CardState.Cons.Bleed));
+            Chessboard.AppendActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
+        }
+    }
+
+    /// <summary>
+    /// 24  投石车 - 发射巨石，随机以敌方大营及大营周围单位为目标，进行攻击。
+    /// </summary>
+    public class TouShiCheOperator : HeroOperator
+    {
+        private int[] TargetPoses = new[] { 12, 15, 16, 17 };
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    p => p.IsPostedAlive)
+                .Join(TargetPoses, t => t.Pos, p => p, (t, _) => t).ToArray();
+            foreach (var target in targets)
+            {
+                var damage = GetBasicDamage();
+                if (target.Operator.CardType == GameCardType.Base)
+                    damage = (int)(damage * 0.01f * DataTable.GetGameValue(72));
+                Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage(damage)), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 23  攻城车 - 驱动冲车，对武将造成少量伤害，对塔和陷阱造成高额伤害。
+    /// </summary>
+    public class GongChengCheOperator : HeroOperator
+    {
+        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var damage = GetBasicDamage();
+            damage = (int)(damage * 0.01f *
+                            (target.Operator.CardType != GameCardType.Hero
+                                ? DataTable.GetGameValue(73)
+                                : DataTable.GetGameValue(74)));
+            return Helper.Singular(CombatConduct.InstanceDamage(damage, CombatConduct.NonHumanDmg));
+        }
+    }
+
+    /// <summary>
+    /// 22  战车 - 战车攻击时，有概率对目标造成【眩晕】。对已【眩晕】目标造成高额伤害。
+    /// </summary>
+    public class ZhanCheOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var status = Chessboard.GetStatus(target.Operator);
+            var basicDamage = GetBasicDamage();
+            if (status.GetBuff(CardState.Cons.Stunned) > 0)
+                basicDamage = (int)(DataTable.GetGameValue(92) * 0.01f * basicDamage);
+            var combats = new List<CombatConduct> { CombatConduct.InstanceDamage(basicDamage) };
+            if (Chessboard.RandomFromConfigTable(91))
+                combats.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
+            Chessboard.AppendActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
+        }
+    }
+
+    /// <summary>
+    /// 21  战船 - 驾驭战船，攻击时可击退敌方武将。否则对其造成双倍伤害。
+    /// </summary>
+    public class ZhanChuanOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var combatConducts = new List<CombatConduct>();
+            var backPos = Chessboard.BackPos(target);
+            var rePos = backPos != null && backPos.Operator == null ? backPos.Pos : -1;
+            combatConducts.Add(
+                rePos < 0
+                    ? InstanceHeroGenericDamage((int)(GetBasicDamage() * DataTable.GetGameValue(90) * 0.01f))
+                    : InstanceHeroGenericDamage());
+
+            Chessboard.AppendActivity(this, target, Activity.Offensive, combatConducts.ToArray(), 1, rePos);
+        }
+    }
+
+    /// <summary>
+    /// 52 大弓 - 乱箭齐发，最多攻击5个目标。目标数量越少，造成伤害越高。
+    /// </summary>
+    public class DaGongOperator : GongBingOperator
+    {
+        protected override int TargetsPick => DataTable.GetGameValue(78) + 1;
+        protected override int DamageRate => DataTable.GetGameValue(79);
+    }
+
+    /// <summary>
+    /// 20  弓兵 - 乱箭齐发，最多攻击3个目标。目标数量越少，造成伤害越高。
+    /// </summary>
+    public class GongBingOperator : HeroOperator
+    {
+        protected virtual int TargetsPick => DataTable.GetGameValue(76) + 1;
+        protected virtual int DamageRate => DataTable.GetGameValue(77);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this).Take(TargetsPick).ToArray();
+            if (targets.Length == 0) return;
+            var damage = DamageRate * GetBasicDamage() * 0.01f / targets.Length;
+            var perform = InstanceHeroGenericDamage((int)damage);
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var target = targets[i];
+                Chessboard.AppendActivity(this, target, i == 0 ? Activity.Offensive : Activity.OffendAttach, Helper.Singular(perform), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 19  连弩 - 武将攻击时，有几率连续射击2次。
+    /// </summary>
+    public class LianNuOperator : HeroOperator
+    {
+        protected virtual int Combo => 2;
+        protected virtual int ComboRate => DataTable.GetGameValue(48);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            for (int i = 0; i < Combo; i++)
+            {
+                var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), i);
+                if (result == null || result.IsDeath) return;
+                if (!Chessboard.IsRandomPass(ComboRate))
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 51  强弩 - 武将攻击时，有几率连续射击3次。
+    /// </summary>
+    public class QiangNuOperator : LianNuOperator
+    {
+        protected override int Combo => 3;
+        protected override int ComboRate => DataTable.GetGameValue(48);
+    }
+
+    /// <summary>
+    /// 18  大斧 - 挥动大斧，攻击时，可破除敌方护盾。受击目标血量越低，造成的伤害越高。
+    /// </summary>
+    public class DaFuOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var status = Chessboard.GetStatus(target.Operator);
+            var damageRate = HpDepletedRatioWithGap(status, 0, DataTable.GetGameValue(93), DataTable.GetGameValue(94));
+            var performDamage = InstanceHeroGenericDamage(GetBasicDamage() * (int)(damageRate * 0.01f));
+            Chessboard.AppendActivity(this, target, Activity.Offensive, new[]
+            {
+                CombatConduct.InstanceBuff(CardState.Cons.Shield, -1),
+                performDamage
+            }, 1);
+        }
+    }
+
+    /// <summary>
+    /// 17  大刀 - 斩杀当前目标后，武将继续攻击下一个目标。每次连斩后攻击提升。
+    /// </summary>
+    public class DaDaoOperator : HeroOperator
+    {
+        protected virtual int DamageIncreaseRate => DataTable.GetGameValue(41);
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var paths = Chessboard.GetAttackPath(this);
+            var targets = paths.Where(p => p.IsPostedAlive);
+            var addOnDmg = 0;
+            foreach (var target in targets)
+            {
+                var damage = GetBasicDamage() + addOnDmg;
+                if (!Chessboard
+                    .AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 1)
+                    .IsDeath)
+                    break;
+                addOnDmg += (int)(damage * DamageIncreaseRate * 0.01f);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 15  大戟 - 挥动大戟，攻击时，可横扫攻击目标周围全部单位。横扫伤害比攻击伤害略低。
+    /// </summary>
+    public class DaJiOperator : ExtendedDamageHero
+    {
+        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
+        {
+            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(95) * 0.01f;
+            return CombatConduct.InstanceDamage(penetrateDmg);
+        }
+
+        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target) =>
+            Chessboard.GetNeighbors(target, false);
+    }
+
+    /// <summary>
+    /// 14  长枪 - 手持长枪，攻击时，可穿刺攻击目标身后2个单位。穿刺伤害比攻击伤害略低。
+    /// </summary>
+    public class ChangQiangOperator : QiangOperator
+    {
+        protected override int PenetrateUnits => 2;
+    }
+
+    /// <summary>
+    /// 给予散列伤害的武将类型
+    /// </summary>
+    public abstract class ExtendedDamageHero : HeroOperator
+    {
+        protected abstract CombatConduct GetExtendedDamage(CombatConduct currentDamage);
+
+        protected abstract IEnumerable<IChessPos> ExtendedTargets(IChessPos target);
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var penetrates = ExtendedTargets(target);
+            var damage = InstanceHeroGenericDamage();
+            var penetrateDmg = GetExtendedDamage(damage);
+            Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(damage), 1);
+            foreach (var penetrate in penetrates)
+            {
+                Chessboard.AppendActivity(this, penetrate, Activity.OffendAttach, Helper.Singular(penetrateDmg), 1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 13  禁卫 - 持剑而待，武将受到攻击时，即刻进行反击。
+    /// </summary>
+    /// 
+    public class JinWeiOperator : HeroOperator
+    {
+        protected override void OnCounter(Activity activity, IChessOperator offender)
+        {
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
+        }
+    }
+    /// <summary>
+    /// 12  神武 - 每次攻击时，获得1层【战意】，【战意】可提升伤害。
+    /// </summary>
+    public class ShenWuOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct), 1);
+            var target = Chessboard.GetContraTarget(this);
+            var stimulate = Chessboard.GetCondition(this, CardState.Cons.Stimulate);
+            var finalDamage = (int)(DataTable.GetGameValue(97) * 0.01f * stimulate + GetBasicDamage());
+            var result = Chessboard.AppendActivity(this, target, Activity.Offensive,
+                Helper.Singular(InstanceHeroGenericDamage(finalDamage)), 1);
+            if (result.Type == ActivityResult.Types.Dodge ||
+                result.Type == ActivityResult.Types.Shield)
+                MilitaryPerforms(skill);
+        }
+
+        private CombatConduct StimulateConduct => CombatConduct.InstanceBuff(CardState.Cons.Stimulate);
+        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        {
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct),
+                1);
+        }
+    }
+
+    /// <summary>
+    /// 11  白马 - 攻防兼备。武将血量越少，攻击和防御越高。
+    /// </summary>
+    public class BaiMaOperator : HeroOperator
+    {
+        private int ConfigGap => DataTable.GetGameValue(98);
+        private int ConfigMultipleRate => DataTable.GetGameValue(99);
+
+        public override int GetPhysicArmor() =>
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.PhysicalResist, ConfigGap, ConfigMultipleRate);
+
+        protected override int GetBasicDamage() =>
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, ConfigGap, ConfigMultipleRate);
+    }
+
+    /// <summary>
+    /// 10  先登 - 武将血量越少，闪避越高。即将覆灭之时，下次攻击对敌方全体造成伤害。
+    /// </summary>
+    public class XianDengOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            if (Chessboard.GetStatus(this).HpRate * 100 > DataTable.GetGameValue(100))
+            {
+                base.MilitaryPerforms(skill);
+                return;
+            }
+
+            var damage = InstanceHeroGenericDamage((int)(Style.Strength * DataTable.GetGameValue(101) / 100f));
+            foreach (var pos in Chessboard.GetRivals(this))
+            {
+                Chessboard.AppendActivity(this, pos, Activity.OffendAttach, Helper.Singular(damage), 1);
+            }
+
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling()), 1);
+        }
+
+        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.DodgeRatio,
+            DataTable.GetGameValue(108),
+            DataTable.GetGameValue(109));
+    }
+
+    /// <summary>
+    /// (8)象兵 - 践踏战场。攻击时可让敌方武将【眩晕】。
+    /// </summary>
+    public class XiangBingOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var list = new List<CombatConduct> { InstanceHeroGenericDamage() };
+            if (Chessboard.IsRandomPass(DataTable.GetGameValue(102)))
+                list.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
+            Chessboard.AppendActivity(this, target, Activity.Offensive, list.ToArray(), 1);
+        }
+    }
+
+    /// <summary>
+    /// (7)刺甲 - 装备刺甲，武将受到近战伤害时，可将伤害反弹。
+    /// </summary>
+    public class ChiJiaOperator : HeroOperator
+    {
+        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        {
+            if (offender.IsRangeHero) return;
+            var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind).Sum(c => c.Total);
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender), Activity.OffendAttach, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
+        }
+    }
+
+    /// <summary>
+    /// (6)虎卫 - 横行霸道，武将进攻时，可吸收血量。
+    /// </summary>
+    public class HuWeiOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetContraTarget(this);
+            var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 0);
+            if (result == null) return;
+            var totalSuffer = result.Status.LastSuffers.Sum();
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceHeal(totalSuffer)), 1);
+        }
+    }
+
+    /// <summary>
+    /// (5)陷阵 - 武将陷入危急之时，进入【无敌】状态。
+    /// </summary>
+    public class XianZhenOperator : HeroOperator
+    {
+        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        {
+            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible)), 1);
+        }
+
+        public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd()
+        {
+            if (Chessboard.GetCondition(this, CardState.Cons.Invincible) > 0)
+                return Helper.Singular(new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing,
+                    Helper.Singular(Chessboard.InstanceRoundAction(this, Chessboard.GetStatus(this).Pos, Activity.Self,
+                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible, -1))))));
+            return base.OnRoundEnd();
+        }
+    }
+
+    /// <summary>
+    /// (4)大盾 - 战斗前装备1层【护盾】。每次进攻后装备1层【护盾】。
+    /// </summary>
+    public class DaDunOperator : HeroOperator
+    {
+        public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() => Helper.Singular(new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing, Helper.Singular(Chessboard.InstanceRoundAction(this, Chessboard.GetStatus(this).Pos, Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield))))));
+    }
+
+    /// <summary>
+    /// (3)飞甲 - 有几率闪避攻击。武将剩余血量越少，闪避率越高。
+    /// </summary>
+    public class FeiJiaOperator : HeroOperator
+    {
+        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.DodgeRatio,
+            DataTable.GetGameValue(106), DataTable.GetGameValue(107));
+    }
+
+    /// <summary>
+    /// (2)铁卫 - 武将剩余血量越少，防御越高。
+    /// </summary>
+    public class TeiWeiOperator : HeroOperator
+    {
+        public override int GetPhysicArmor()
+        {
+            var armor = CombatInfo.PhysicalResist;
+            var gap = DataTable.GetGameValue(110);
+            var status = Chessboard.GetStatus(this);
+            var addOn = gap - (status.Hp / status.MaxHp * 100) % gap;
+            return armor + addOn * DataTable.GetGameValue(111);
+        }
+    }
+
+    public class WeightElement<T> : IWeightElement
+    {
+        public static Random Random { get; } = new Random();
+        public int Weight { get; set; }
+        public T Obj { get; set; }
     }
 }

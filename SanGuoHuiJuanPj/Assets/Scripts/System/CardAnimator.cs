@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using Assets.System.WarModule;
-using CorrelateLib;
 using DG.Tweening;
-using DG.Tweening.Core;
-using DG.Tweening.Plugins.Options;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -18,6 +11,7 @@ public class CardAnimator
     static float RangeHeroPreActionBegin = 0.5f;
     static float RangeHeroPreActionFinalize = 0.5f;
     static float yuanChengShakeTime = 0.1f;
+    private static CardState.Cons[] CardStates = Enum.GetValues(typeof(CardState.Cons)).Cast<CardState.Cons>().ToArray();
 
     //攻击行动方式0-适用于-主动塔,远程兵
     public static Tween RangeActivity(FightCardData card)
@@ -181,43 +175,48 @@ public class CardAnimator
     }
 
     /// <summary>
-    /// 更新状态效果
+    /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStateEffect(FightCardData target,FightState.Cons con)
+    public static Tween UpdateStateEffect(FightCardData target, int con = -1)
     {
-        return DOTween.Sequence().AppendInterval(0.01f).OnComplete(() =>
+        return DOTween.Sequence().OnComplete(() =>
         {
-            var key = (int) con;
-            var status = target.fightState.Data;
-            var stateValue = status.ContainsKey(key) ? status[key] : 0;
-            if (stateValue < 0)
-            {
-                if (target.States.ContainsKey(key))
-                {
-                    var e = target.States[key];
-                    target.States.Remove(key);
-                    EffectsPoolingControl.instance.TakeBackStateIcon(e);
-                }
-
-                return;
-            }
-
-            EffectStateUi effect;
-            if (!target.States.ContainsKey(key))
-            {
-                effect = EffectsPoolingControl.instance.GetStateIconToFight(FightState.StateIconName(con),
-                    target.cardObj.transform);
-                target.States.Add(key, effect);
-            }
-            else
-                effect = target.States[key];
-
-            if (con == FightState.Cons.ExtendedHp)
-            {
-                var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
-                effect.Image.color = new Color(1, 1, 1, fade);
-            }
+            if (con == -1)
+                foreach (var state in CardStates)
+                    UpdateSingleStateEffect(target, (int)state);
+            else UpdateSingleStateEffect(target, con);
         });
+    }
+
+    public static Tween UpdateStateEffect(FightCardData target, CardState.Cons con) =>
+        UpdateStateEffect(target, (int)con);
+
+    private static void UpdateSingleStateEffect(FightCardData target, int key)
+    {
+        var con = (CardState.Cons)key;
+        var status = target.CardState.Data;
+        var stateValue = status.ContainsKey(key) ? status[key] : 0;
+        if (stateValue <= 0)
+        {
+            if (target.States.ContainsKey(key))
+            {
+                var e = target.States[key];
+                target.States.Remove(key);
+                EffectsPoolingControl.instance.TakeBackStateIcon(e);
+            }
+
+            return;
+        }
+
+        if (target.States.ContainsKey(key))
+            return;
+        var effect = EffectsPoolingControl.instance.GetStateIconToFight(CardState.IconName(con),
+            target.cardObj.transform);
+        target.States.Add(key, effect);
+
+        if (con != CardState.Cons.EaseShield) return;
+        var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
+        effect.Image.color = new Color(1, 1, 1, fade);
     }
 
     private static string GetEffectByStyle(AttackStyle style,CombatConduct conduct)
@@ -286,8 +285,8 @@ public class CardAnimator
             case 52: value = Effect.LongBow52A;break;// "52A";大弓
             case 53: value = Effect.Anchorite53A;break;//"53"	隐士
             case 54: value = Effect.Anchorite54A;break;//"54"  大隐士
-            case 55: value = Effect.FireShip55A0;break; // "55A0";火船
-            case 551: value = Effect.FireShip55A;break; // "55A";火船
+            case 55: value = Effect.FireShip55A;break; // "55A";火船
+            case 551: value = Effect.FireShip55A0;break; // "55A0";火船
             case 56: value = Effect.Barbarians56A;break; // "56A";蛮族
             case 57: value = Effect.TengJia57A;break; // "57A";藤甲
             case 58: value = Effect.HeavyCavalry58A;break; // "58A";铁骑
@@ -337,11 +336,11 @@ public class CardAnimator
             case ActivityResult.Types.Dodge:
             case ActivityResult.Types.Shield:
             case ActivityResult.Types.Invincible:
-            case ActivityResult.Types.ExtendedShield:
+            case ActivityResult.Types.EaseShield:
                 tween.OnComplete(()=>TextEffectByResult(activity.Result.Type,target));
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                break;
         }
 
         foreach (var conduct in activity.Conducts)
@@ -351,46 +350,45 @@ public class CardAnimator
             switch (conduct.Kind)
             {
                 case CombatConduct.BuffKind:
-                    if (conduct.Total > 0)
+                    switch ((CardState.Cons)conduct.Element)
                     {
-                        switch ((FightState.Cons) conduct.Element)
-                        {
-                            case FightState.Cons.Bleed:
-                                tableId = 16;
-                                break;
-                            case FightState.Cons.Poison:
-                                tableId = 12;
-                                break;
-                            case FightState.Cons.Burn:
-                                tableId = 20;
-                                break;
-                            case FightState.Cons.Imprisoned:
-                                tableId = 11;
-                                break;
-                            case FightState.Cons.Cowardly:
-                                tableId = 21;
-                                break;
-                            case FightState.Cons.ExtendedHp:
-                            case FightState.Cons.Disarmed:
-                            case FightState.Cons.Shield:
-                            case FightState.Cons.Invincible:
-                            case FightState.Cons.Stimulate:
-                            case FightState.Cons.ZhanGuTaiAddOn:
-                            case FightState.Cons.FengShenTaiAddOn:
-                            case FightState.Cons.PiLiTaiAddOn:
-                            case FightState.Cons.LangYaTaiAddOn:
-                            case FightState.Cons.FengHuoTaiAddOn:
-                            case FightState.Cons.DeathFight:
-                            case FightState.Cons.Stunned:
-                            case FightState.Cons.ShenZhu:
-                            case FightState.Cons.Neizhu:
-                            case FightState.Cons.MiWuZhenAddOn:
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
+                        case CardState.Cons.Bleed:
+                            tableId = 16;
+                            break;
+                        case CardState.Cons.Poison:
+                            tableId = 12;
+                            break;
+                        case CardState.Cons.Burn:
+                            tableId = 20;
+                            break;
+                        case CardState.Cons.Imprisoned:
+                            tableId = 11;
+                            break;
+                        case CardState.Cons.Cowardly:
+                            tableId = 21;
+                            break;
+                        case CardState.Cons.Stunned:
+                            if (conduct.Total < 0 && target.Status.GetBuff(CardState.Cons.Stunned) <= 0)
+                                tableId = 14; //如果buff值是负数，判定为镇定效果(移除buff)
+                            break;
+                        case CardState.Cons.EaseShield:
+                        case CardState.Cons.Disarmed:
+                        case CardState.Cons.Shield:
+                        case CardState.Cons.Invincible:
+                        case CardState.Cons.Stimulate:
+                        case CardState.Cons.StrengthUp:
+                        case CardState.Cons.DodgeUp:
+                        case CardState.Cons.CriticalUp:
+                        case CardState.Cons.RouseUp:
+                        case CardState.Cons.DefendUp:
+                        case CardState.Cons.DeathFight:
+                        case CardState.Cons.ShenZhu:
+                        case CardState.Cons.Neizhu:
+                        case CardState.Cons.Forge:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
-                    else tableId = 14;//如果buff值是负数，判定为镇定效果(移除buff)
                     break;
                 case CombatConduct.KillingKind:
                     tableId = 13;
@@ -425,7 +423,7 @@ public class CardAnimator
                 break;
             case ActivityResult.Types.Shield:
             case ActivityResult.Types.Invincible:
-                case ActivityResult.Types.ExtendedShield:
+                case ActivityResult.Types.EaseShield:
                 effectName = DataTable.GetStringText(18);
                 break;
             default:
@@ -481,7 +479,7 @@ public class CardAnimator
                 break;
             case 41: //敢死
                 validEffect = !isOffense;
-                if (op.Status.GetBuff(FightState.Cons.DeathFight) <= 0 &&
+                if (op.Status.GetBuff(CardState.Cons.DeathFight) <= 0 &&
                     op.Status.HpRate * 100 < DataTable.GetGameValue(103))
                     break;
                 return tween;
@@ -562,4 +560,5 @@ public class CardAnimator
         tween.OnComplete(() => GetVTextEffect(value, op.cardObj.transform));
         return tween;
     }
+
 }

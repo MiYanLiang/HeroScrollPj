@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Assets;
+using Assets.System.WarModule;
 using Beebyte.Obfuscator;
 using CorrelateLib;
 using UnityEngine;
@@ -975,7 +976,7 @@ public class WarsUIManager : MonoBehaviour
         fightCard.cardId = card.id;
         fightCard.posIndex = -1;
         fightCard.cardGrade = card.level;
-        fightCard.fightState = new FightState();
+        fightCard.CardState = new CardState();
         fightCard.damage = info.GetDamage(fightCard.cardGrade);
         fightCard.hpr = info.GameSetRecovery;
         fightCard.ResetHp(info.GetHp(fightCard.cardGrade));

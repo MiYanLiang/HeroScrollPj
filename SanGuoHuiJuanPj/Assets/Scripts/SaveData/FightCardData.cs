@@ -32,7 +32,7 @@ using UnityEngine;
     }
 
     //战斗状态
-    [JsonIgnore]public FightState fightState = new FightState();
+    [JsonIgnore]public CardState CardState = new CardState();
     //摆放位置记录
     public int posIndex = -1;
     //生命值回复
@@ -83,20 +83,34 @@ using UnityEngine;
         combatType = info.CombatType;
         hp = new HitPoint(info.GetHp(card.Level));
         States = new Dictionary<int, EffectStateUi>();
+        var force = -1;
+        switch (card.typeIndex)
+        {
+            case 0:
+                force = DataTable.Hero[card.id].ForceTableId;
+                break;
+            case 2:
+                force = DataTable.Tower[card.id].ForceId;
+                break;
+            case 3:
+                force = DataTable.Trap[card.id].ForceId;
+                break;
+        }
+
         switch (CardType)
         {
             case GameCardType.Hero:
                 var m = MilitaryInfo.GetInfo(card.CardId);
-                style = AttackStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.CombatType == 1 ? 1 : 0, info.DamageType, info.GetDamage(card.Level), card.Level);
+                style = AttackStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.CombatType == 1 ? 1 : 0, info.DamageType, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Tower:
-                style = AttackStyle.Instance(-1, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level);
+                style = AttackStyle.Instance(-1, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Trap:
-                style = AttackStyle.Instance(-2,-2,2,0,0,info.GetDamage(card.Level),card.Level);
+                style = AttackStyle.Instance(-2,-2,2,0,0,info.GetDamage(card.Level),card.Level,force);
                 break;
             case GameCardType.Base:
-                style = AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level);
+                style = AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level, force);
                 break;
             case GameCardType.Soldier:
             case GameCardType.Spell:
@@ -113,9 +127,9 @@ using UnityEngine;
     public int Level => cardGrade;
     private AttackStyle style;
     public AttackStyle Style => style;
-    private PieceStatus status;
-    public PieceStatus Status => status;
-    public void UpdateStatus(PieceStatus ps) => status = ps.Clone();
+    private ChessStatus status;
+    public ChessStatus Status => status;
+    public void UpdateStatus(ChessStatus ps) => status = ps.Clone();
 
     [JsonIgnore] public Dictionary<int, EffectStateUi> States { get; }
 
@@ -146,10 +160,10 @@ using UnityEngine;
     [JsonIgnore]public bool IsPlayer => isPlayerCard;
     [JsonIgnore]public bool IsActed => isActionDone;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
-    public void UpdateActivity(PieceStatus status)
+    public void UpdateActivity(ChessStatus status)
     {
         hp.Set(status.Hp, true);
-        fightState.SetStates(status.Buffs);
+        CardState.SetStates(status.Buffs);
         cardObj.War.SetHp(status.HpRate);
         if(status.IsDeath)
             cardObj.SetLose(true);
