@@ -19,6 +19,13 @@ public class ChessmanTester : MonoBehaviour
     public NewWarManager NewWar;
     public Chessboard Chessboard;
     public GameObject RouseEffectObj;
+    [SerializeField]
+    GameObject fireUIObj;
+    [SerializeField]
+    GameObject boomUIObj;
+    [SerializeField]
+    GameObject gongKeUIObj;
+
     private bool IsBusy { get; set; }
     private static int CardSeed;
     private GameResources gameResources;
@@ -75,10 +82,74 @@ public class ChessmanTester : MonoBehaviour
     private void InvokeCard()
     {
         if(IsBusy)return;
+        var chess = NewWar.ChessOperator;
         NewWar.StartButtonShow(false);
-        var round = NewWar.ChessOperator.StartRound();
+        var round = chess.StartRound();
         StartCoroutine(AnimateRound(round));
+
+        if (!chess.IsGameOver) return;
+        //ClearStates();
+        if (chess.IsChallengerWin)
+        {
+            StartCoroutine(ChallengerWinFinalize());
+            return;
+        }
+        WarsUIManager.instance.ExpeditionFinalize(false);
     }
+
+    //战斗结算
+    IEnumerator ChallengerWinFinalize()
+    {
+        boomUIObj.transform.position = FightForManager.instance.enemyCardsPos[17].transform.position;
+        fireUIObj.transform.position = gongKeUIObj.transform.position = FightForManager.instance.enemyCardsPos[7].transform.position;
+        yield return new WaitForSeconds(0.5f);
+        //PlayAudioForSecondClip(91, 0);
+        boomUIObj.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        boomUIObj.SetActive(false);
+        //欢呼声
+        //PlayAudioForSecondClip(90, 0);
+
+        //火焰
+        fireUIObj.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        gongKeUIObj.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        fireUIObj.SetActive(false);
+        gongKeUIObj.SetActive(false);
+        yield return new WaitForSeconds(0.1f);
+
+        Time.timeScale = 1;
+        //var enemyCards = FightForManager.instance.GetCardList(false);
+        //for (int i = 0; i < enemyCards.Count; i++)
+        //{
+        //    FightCardData cardData = enemyCards[i];
+        //    if (i != 17 && cardData != null && cardData.Hp <= 0)
+        //    {
+        //        totalGold += DataTable.EnemyUnit[cardData.unitId].GoldReward;
+        //        var chests = DataTable.EnemyUnit[cardData.unitId].WarChest;
+        //        //暂时关闭打死单位获得的战役宝箱
+        //        if (chests != null && chests.Length > 0)
+        //        {
+        //            for (int j = 0; j < chests.Length; j++)
+        //            {
+        //                this.chests.Add(chests[j]);
+        //            }
+        //        }
+        //    }
+        //}
+        //totalGold += DataTable.BattleEvent[FightForManager.instance.battleIdIndex].GoldReward;
+        //var warChests = DataTable.BattleEvent[FightForManager.instance.battleIdIndex].WarChestTableIds;
+        //for (int k = 0; k < warChests.Length; k++)
+        //{
+        //    chests.Add(warChests[k]);
+        //}
+
+        //WarsUIManager.instance.FinalizeWar(totalGold, chests);
+        //totalGold = 0;
+        //chests.Clear();
+    }
+
 
     private IEnumerator AnimateRound(ChessRound round)
     {

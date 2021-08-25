@@ -22,17 +22,9 @@ namespace Assets.System.WarModule
         public IEnumerable<TerrainSprite> ChessSprites => Sprites;
         protected abstract List<TerrainSprite> Sprites { get; }
         public bool IsInit => ProcessSeed > 0;
-        #region Static Fields
+        
         private static Random random = new Random();
-        private static readonly ChessPosProcess[] EmptyProcess = new ChessPosProcess[0];
-        private readonly bool _isChallengerOdd;
-        private readonly List<ChessRound> rounds;
-        private static int ProcessSeed = 0;
-        private static int ActivitySeed = 0;
-        private static int ChessSpriteSeed = 0;
-        private static int _recursiveActionCount;
-        private const int RecursiveActionsLimit = 99999;
-        private static int RecursiveActionCount
+        private int RecursiveActionCount
         {
             get => _recursiveActionCount;
             set
@@ -42,6 +34,18 @@ namespace Assets.System.WarModule
                 _recursiveActionCount = value;
             }
         }
+        private const int RecursiveActionsLimit = 99999;
+
+        private readonly ChessPosProcess[] EmptyProcess = new ChessPosProcess[0];
+        private readonly bool _isChallengerOdd;
+        private readonly List<ChessRound> rounds;
+        private int ProcessSeed = 0;
+        private int ActivitySeed = 0;
+        private int ChessSpriteSeed = 0;
+        private int _recursiveActionCount;
+        public bool IsGameOver => IsChallengerWin || IsOppositeWin;
+        public bool IsChallengerWin { get; private set; }
+        public bool IsOppositeWin { get; private set; }
 
         /// <summary>
         /// 单体 一列
@@ -50,7 +54,6 @@ namespace Assets.System.WarModule
         /// <param name="t"></param>
         /// <returns></returns>
         protected static T[] Singular<T>(T t) => new[] {t};
-        #endregion
 
         #region Helper
         /// <summary>
@@ -87,6 +90,7 @@ namespace Assets.System.WarModule
 
         public ChessRound StartRound()
         {
+            if (IsGameOver) return null;
             //instance Round
             //invoke pre-action
             //Get all sorted this operators
@@ -138,7 +142,8 @@ namespace Assets.System.WarModule
 
                 roundProcesses.Add(CurrentProcess);
                 currentOps.Remove(op);
-
+                CheckIsGameOver();
+                if(IsGameOver) break;
                 //移除死亡的棋子
                 foreach (var death in StatusMap.Where(o => o.Value.IsDeath && o.Value.Pos >= 0))
                 {
@@ -158,6 +163,18 @@ namespace Assets.System.WarModule
 
             //UpdatePosesBuffs(currentRound.FinalAction, true);
             return currentRound;
+        }
+
+        private void CheckIsGameOver()
+        {
+            var l = Grid.Challenger.Values
+                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).ToArray();
+            var oo = l.All(p => GetStatus(p.Operator).IsDeath);
+            IsOppositeWin = oo;
+            var g = Grid.Challenger.Values
+                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).ToArray();
+            var pp = g.All(p => GetStatus(p.Operator).IsDeath);
+            IsChallengerWin = pp;
         }
 
         #region RoundActivities

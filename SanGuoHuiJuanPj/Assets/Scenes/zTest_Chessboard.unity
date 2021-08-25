@@ -1198,30 +1198,6 @@ MonoBehaviour:
     Pos: 6
     Type: 0
     Level: 1
-  - Id: 17
-    Pos: 8
-    Type: 2
-    Level: 1
-  - Id: 203
-    Pos: 10
-    Type: 0
-    Level: 1
-  - Id: 85
-    Pos: 2
-    Type: 0
-    Level: 1
-  - Id: 52
-    Pos: 16
-    Type: 0
-    Level: 1
-  - Id: 22
-    Pos: 15
-    Type: 0
-    Level: 1
-  - Id: 13
-    Pos: 0
-    Type: 0
-    Level: 1
   Enemy:
   - Id: 0
     Pos: 17
@@ -1229,18 +1205,6 @@ MonoBehaviour:
     Level: 1
   - Id: 32
     Pos: 1
-    Type: 0
-    Level: 1
-  - Id: 15
-    Pos: 2
-    Type: 0
-    Level: 2
-  - Id: 47
-    Pos: 3
-    Type: 0
-    Level: 1
-  - Id: 110
-    Pos: 12
     Type: 0
     Level: 1
 --- !u!4 &413234022
@@ -5532,6 +5496,9 @@ MonoBehaviour:
   NewWar: {fileID: 413234021}
   Chessboard: {fileID: 1894831812}
   RouseEffectObj: {fileID: 638022218}
+  fireUIObj: {fileID: 1695652139}
+  boomUIObj: {fileID: 102819958}
+  gongKeUIObj: {fileID: 600486145}
 --- !u!1 &2118999410
 GameObject:
   m_ObjectHideFlags: 0
