@@ -184,14 +184,27 @@ public class LoginUiController : MonoBehaviour
 
     private async Task RegisterAccountApi()
     {
-        if(!IsPassPasswordLogic(register.password,register.rePassword,register.message))
+        if (!IsPassPasswordLogic(register.password, register.rePassword, register.message))
             return;
-        var userInfo = await Http.PostAsync<UserInfo>(Server.PLAYER_REG_ACCOUNT_API,Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)));
-        if(userInfo==null)
+        UserInfo userInfo = null;
+        try
+        {
+            userInfo = await Http.PostAsync<UserInfo>(Server.PLAYER_REG_ACCOUNT_API,
+                Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)));
+        }
+        catch (Exception)//为了防止任务报错
+        {
+            register.message.text = "注册失败!";
+            return;
+
+        }
+
+        if (userInfo == null)
         {
             register.message.text = "注册失败!";
             return;
         }
+
         UnityMainThread.thread.RunNextFrame(() =>
         {
             PlayerDataForGame.instance.ShowStringTips("注册成功!");
