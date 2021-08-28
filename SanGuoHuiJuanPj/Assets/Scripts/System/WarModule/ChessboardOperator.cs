@@ -14,13 +14,14 @@ namespace Assets.System.WarModule
         public const int HeroArmorLimit = 90;
         public ChessGrid Grid { get; }
 
-        private bool IsChallengerOdd => _isChallengerOdd;
-
         public IReadOnlyList<ChessRound> Rounds => rounds;
         private ChessRound currentRound;
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
         public IEnumerable<TerrainSprite> ChessSprites => Sprites;
         protected abstract List<TerrainSprite> Sprites { get; }
+
+        protected abstract BondOperator[] JiBan { get; }
+
         public bool IsInit => ProcessSeed > 0;
         
         private static Random random = new Random();
@@ -36,8 +37,8 @@ namespace Assets.System.WarModule
         }
         private const int RecursiveActionsLimit = 99999;
 
-        private readonly ChessPosProcess[] EmptyProcess = new ChessPosProcess[0];
-        private readonly bool _isChallengerOdd;
+        private readonly ChessPosProcess[] EmptyProcess = Array.Empty<ChessPosProcess>();
+
         private readonly List<ChessRound> rounds;
         private int ProcessSeed = 0;
         private int ActivitySeed = 0;
@@ -65,9 +66,8 @@ namespace Assets.System.WarModule
         private static float GetRatio(float value, int ratio) => ratio * 0.01f * value;
         #endregion
 
-        protected ChessboardOperator(bool isChallengerFirst, ChessGrid grid)
+        protected ChessboardOperator(ChessGrid grid)
         {
-            _isChallengerOdd = isChallengerFirst;
             rounds = new List<ChessRound>();
             Grid = grid;
         }
@@ -106,7 +106,8 @@ namespace Assets.System.WarModule
 
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             var roundProcesses = new List<ChessPosProcess>();
-            var preActionFlag = true;
+            RefreshChessPosses();
+            PreRoundAction();
             do
             {
                 var op = GetSortedOperator(currentOps); //根据排列逻辑获取执行代理
@@ -116,27 +117,8 @@ namespace Assets.System.WarModule
                     currentOps.Remove(op);
                     continue;
                 }
-                CurrentProcess = ChessPosProcess.Instance(ProcessSeed, GetStatus(op).Pos, op.IsChallenger);
 
-                if (CurrentProcess.InstanceId == 0) //第一次需要更新所有棋位上的预设计算
-                {
-                    foreach (var pos in Grid.Challenger.Concat(Grid.Opposite).Select(c => c.Value))
-                    {
-                        if (!pos.IsPostedAlive) continue;
-                        var o = GetOperator(pos.Operator.InstanceId);
-                        o.OnPosting(pos);
-                        UpdateTerrain(pos);
-                    }
-                }
-
-                if (preActionFlag)//如果第一次循环预先执行预设行动
-                {
-                    var preRoundAction = GetPreRoundTriggerByOperators();
-                    currentRound.PreAction.ConcatAction(preRoundAction);
-                    preActionFlag = false;
-                    foreach (var activity in currentRound.PreAction.Activities)
-                        RoundActionInvocation(activity.Key, activity.Value);
-                }
+                CurrentProcess = InstanceProcess(GetStatus(op).Pos, op.IsChallenger);
 
                 op.MainActivity();
 
@@ -151,7 +133,6 @@ namespace Assets.System.WarModule
                     PosOperator(deathOp, -1);
                 }
 
-                ProcessSeed++;
             } while (currentOps.Count > 0);
 
             currentRound.Processes = roundProcesses.ToArray();
@@ -161,20 +142,41 @@ namespace Assets.System.WarModule
             foreach (var activity in currentRound.FinalAction.Activities)
                 RoundActionInvocation(activity.Key, activity.Value);
 
-            //UpdatePosesBuffs(currentRound.FinalAction, true);
             return currentRound;
+        }
+
+        private void RefreshChessPosses()
+        {
+            foreach (var pos in Grid.Challenger.Concat(Grid.Opposite).Select(c => c.Value))
+            {
+                if (!pos.IsPostedAlive) continue;
+                var o = GetOperator(pos.Operator.InstanceId);
+                o.OnPosting(pos);
+                UpdateTerrain(pos);
+            }
+        }
+
+        void PreRoundAction()
+        {
+            var preRoundAction = GetPreRoundTriggerByOperators();
+            currentRound.PreAction.ConcatAction(preRoundAction);
+            foreach (var activity in currentRound.PreAction.Activities)
+                RoundActionInvocation(activity.Key, activity.Value);
+        }
+
+        private ChessPosProcess InstanceProcess(int pos, bool isChallenger)
+        {
+            var process = ChessPosProcess.Instance(ProcessSeed, pos, isChallenger);
+            ProcessSeed++;
+            return process;
         }
 
         private void CheckIsGameOver()
         {
-            var l = Grid.Challenger.Values
-                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).ToArray();
-            var oo = l.All(p => GetStatus(p.Operator).IsDeath);
-            IsOppositeWin = oo;
-            var g = Grid.Challenger.Values
-                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).ToArray();
-            var pp = g.All(p => GetStatus(p.Operator).IsDeath);
-            IsChallengerWin = pp;
+            IsOppositeWin = Grid.Challenger.Values
+                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).All(p => GetStatus(p.Operator).IsDeath);
+            IsChallengerWin = Grid.Opposite.Values
+                .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).All(p => GetStatus(p.Operator).IsDeath);
         }
 
         #region RoundActivities
@@ -243,14 +245,31 @@ namespace Assets.System.WarModule
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
             list.Where(o => !GetStatus(o).IsDeath)
                 .OrderBy(o => GetStatus(o).Pos)
-                .ThenBy(o => o.IsChallenger != IsChallengerOdd)
+                .ThenByDescending(o => o.IsChallenger)
                 .FirstOrDefault();
 
-
-        public ActivityResult AppendActivityWithoutOffender(ChessOperator target,int intent,CombatConduct[] conducts,int skill=0,int rePos = -1) => AppendActivity(null, GetChessPos(target), intent, conducts, skill, rePos);
+        /// <summary>
+        /// 棋盘指令，非棋子执行类，一般用于羁绊，buff
+        /// </summary>
+        /// <param name="fromChallenger"></param>
+        /// <param name="target"></param>
+        /// <param name="intent"></param>
+        /// <param name="conducts"></param>
+        /// <param name="skill"></param>
+        /// <param name="rePos"></param>
+        public void InstanceChessboardActivity(bool fromChallenger,IChessOperator target, int intent, CombatConduct[] conducts,
+            int skill = 0, int rePos = -1)
+        {
+            if(CurrentProcess.Pos>0)
+            {
+                var pos = fromChallenger ? -1 : -2;
+                CurrentProcess = InstanceProcess(pos, fromChallenger);
+            }
+            AppendChessOpActivity(null, GetChessPos(target), intent, conducts, skill, rePos);
+        }
 
         /// <summary>
-        /// 为当前的行动添加上一个行动指令
+        /// 棋子指令，为当前的行动添加上一个行动指令
         /// </summary>
         /// <param name="offender"></param>
         /// <param name="target"></param>
@@ -259,7 +278,7 @@ namespace Assets.System.WarModule
         /// <param name="skill">如果是普通攻击，标记0，大于0将会是技能值</param>
         /// <param name="rePos"></param>
         /// <returns></returns>
-        public ActivityResult AppendActivity(ChessOperator offender, IChessPos target, int intent,
+        public ActivityResult AppendChessOpActivity(ChessOperator offender, IChessPos target, int intent,
             CombatConduct[] conducts,int skill ,int rePos = -1)
         {
             if (target == null) return null;
@@ -339,12 +358,11 @@ namespace Assets.System.WarModule
         /// 执行进攻方伤害转化
         /// </summary>
         /// <param name="op"></param>
-        /// <param name="damage"></param>
         /// <returns></returns>
-        public int ConvertHeroDamage(ChessOperator op,int damage)
+        public int ConvertHeroDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
-            return (int)(damage * (1 - 0.01f * ratio));
+            return (int)(op.GetStrength + op.GetStrength * 0.01f * ratio);
         }
 
         private void UpdateTerrain(IChessPos pos)
@@ -383,6 +401,7 @@ namespace Assets.System.WarModule
 
         public bool OnDodgeTriggerPass(ChessOperator op, ChessOperator offender)
         {
+            if (op.CardType != GameCardType.Hero) return false;
             var rate = op.GetDodgeRate() + GetCondition(op, CardState.Cons.DodgeUp);
             foreach (var bo in GetBuffOperator(o=>o.IsDodgeRateTrigger(op))) 
                 rate += bo.OnAppendDodgeRate(op, offender);

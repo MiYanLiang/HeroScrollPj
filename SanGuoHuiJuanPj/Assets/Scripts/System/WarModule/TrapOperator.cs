@@ -42,7 +42,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender),
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(offender),
                 Activity.OffendAttach, CounterConducts,1);
         }
 
@@ -67,7 +67,7 @@ namespace Assets.System.WarModule
         {
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(CombatConduct.InstanceDamage(reflectDamage)),1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(CombatConduct.InstanceDamage(reflectDamage)),1);
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -92,11 +92,11 @@ namespace Assets.System.WarModule
             }
 
             targets.ForEach(pos =>
-                Chessboard.AppendActivity(this, pos, Activity.OffendAttach, InstanceConduct(),1));
+                Chessboard.AppendChessOpActivity(this, pos, Activity.OffendAttach, InstanceConduct(),1));
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Style.Strength);
+                var basicDmg = CombatConduct.InstanceDamage(GetStrength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(15))
                     return new[]
@@ -120,11 +120,11 @@ namespace Assets.System.WarModule
                 .OrderBy(p => p.Pos).ToList();
 
             targets.ForEach(pos =>
-                Chessboard.AppendActivity(this, pos, Activity.OffendAttach, InstanceConduct(),1));
+                Chessboard.AppendChessOpActivity(this, pos, Activity.OffendAttach, InstanceConduct(),1));
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Style.Strength);
+                var basicDmg = CombatConduct.InstanceDamage(GetStrength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(16))
                     return new[]
@@ -141,7 +141,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceDamage(Style.Strength * Chessboard.ConfigPercentage(9)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceDamage(GetStrength * Chessboard.ConfigPercentage(9)));
     }
     /// <summary>
     /// 石墙

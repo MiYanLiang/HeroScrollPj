@@ -32,7 +32,7 @@ namespace Assets.System.WarModule
     {
         public int InstanceId { get; protected set; }
         public abstract AttackStyle Style { get; }
-
+        public virtual int GetStrength => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
@@ -42,7 +42,7 @@ namespace Assets.System.WarModule
         public bool IsRangeHero => Style!=null && Style.ArmedType >= 0 && Style.CombatStyle == AttackStyle.CombatStyles.Melee;
 
         protected abstract ChessboardOperator Chessboard { get; }
-
+        public abstract int GeneralDamage();
         public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() => null;
 
         public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd() => null;
@@ -255,7 +255,8 @@ namespace Assets.System.WarModule
         public override int CardId => chessman.CardId;
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
-        //protected override ChessGrid Grid => chessboard.Grid;
+
+        public override int GeneralDamage() => Style.Strength;
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {
@@ -271,5 +272,6 @@ namespace Assets.System.WarModule
         public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint, chessman.Pos,
             chessman.Pos,
             new Dictionary<int, int>());
+
     }
 }

@@ -1195,7 +1195,11 @@ MonoBehaviour:
     Type: 522
     Level: 1
   - Id: 11
-    Pos: 6
+    Pos: 1
+    Type: 0
+    Level: 1
+  - Id: 12
+    Pos: 3
     Type: 0
     Level: 1
   Enemy:
@@ -4314,7 +4318,7 @@ GameObject:
   - component: {fileID: 1882509702}
   - component: {fileID: 1882509704}
   m_Layer: 5
-  m_Name: BackImage
+  m_Name: BackgroundBoard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5496,6 +5500,7 @@ MonoBehaviour:
   NewWar: {fileID: 413234021}
   Chessboard: {fileID: 1894831812}
   RouseEffectObj: {fileID: 638022218}
+  audioSource: {fileID: 1882509704}
   fireUIObj: {fileID: 1695652139}
   boomUIObj: {fileID: 102819958}
   gongKeUIObj: {fileID: 600486145}

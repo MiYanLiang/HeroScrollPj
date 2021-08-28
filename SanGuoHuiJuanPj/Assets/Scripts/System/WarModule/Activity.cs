@@ -42,18 +42,20 @@ namespace Assets.System.WarModule
         /// 对自己的行动
         /// </summary>
         public const int Self = 4;
+        public const int SelfAttach = 5;
         /// <summary>
         /// 攻击触发器
         /// </summary>
-        public const int OffendAttach = 5;
+        public const int OffendAttach = 6;
+
         /// <summary>
         /// 同阵营触发器
         /// </summary>
-        public const int FriendlyAttach = 6;
+        public const int FriendlyAttach = 7;
         /// <summary>
         /// 精灵类型
         /// </summary>
-        public const int Sprite = 7;
+        public const int Sprite = 8;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -75,7 +77,7 @@ namespace Assets.System.WarModule
                 InstanceId = id,
                 ProcessId = processId,
                 From = from,
-                IsChallenger = isChallenger,
+                Initiator = isChallenger,
                 To = to,
                 Conducts = conducts,
                 Intent = intent,
@@ -115,7 +117,10 @@ namespace Assets.System.WarModule
         [JsonProperty("C")] public CombatConduct[] Conducts { get; set; }
         [JsonProperty("A")] public ActivityResult Result { get; set; }
         [JsonProperty("O")]public ChessStatus OffenderStatus { get; set; }
-        [JsonProperty("IC")] public int IsChallenger { get; set; }
+        /// <summary>
+        /// 发起方 0 = Challenger, 1 = Opposite
+        /// </summary>
+        [JsonProperty("IC")] public int Initiator { get; set; }
 
         public Intention GetIntention() => GetIntention(Intent);
         public static Intention GetIntention(int intent)
@@ -126,6 +131,7 @@ namespace Assets.System.WarModule
                 case Friendly: 
                 case Self: return Intention.Major;
                 case Counter: return Intention.Counter;
+                case SelfAttach:
                 case OffendAttach: 
                 case FriendlyAttach: return Intention.Attach;
                 case PlayerResource: return Intention.UnDefined;
@@ -136,21 +142,8 @@ namespace Assets.System.WarModule
         }
 
         [JsonIgnore] public bool IsRePos => RePos >= 0;
-        [JsonIgnore] public bool TargetIsChallenger
-        {
-            get
-            {
-                var isChallenger = IsChallenger == 0;
-                return (Intent == Offensive ||
-                        Intent == OffendAttach ||
-                        Intent == Counter)
-                    ? !isChallenger
-                    : isChallenger;
-            }
-        }
 
-
-        public override string ToString() => $"{InstanceId}.Intent({GetIntention()})[{Intent}].From[{From}({IsChallenger})].To[{To}].Com[{Conducts.Length}].Result[{Result.Result}]";
+        public override string ToString() => $"{InstanceId}.Intent({GetIntention()})[{Intent}].From[{From}({Initiator})].To[{To}].Com[{Conducts.Length}].Result[{Result.Result}]";
     }
 
     public class ActivityResult

@@ -26,14 +26,17 @@ public class Chessboard : MonoBehaviour
         for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
     }
-
-    public FightCardData OnActivityBegin(int pos, bool isPlayer)
+    /// <summary>
+    /// 棋子控件置高，避免被其它UI挡到
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="isPlayer"></param>
+    public void OnActivityBeginTransformSibling(int pos, bool isPlayer)
     {
         var card = GetChessPos(pos, isPlayer).Card;
         var trans = card.cardObj.transform;
         trans.SetParent(transform,true);
         trans.SetAsLastSibling();
-        return card;
     }
 
     public void ResetPos(FightCardData card)
@@ -42,7 +45,6 @@ public class Chessboard : MonoBehaviour
         PlaceCard(card.Pos , card);
     }
 
-    public IEnumerable<ChessPos> GetData() => PlayerScope.Concat(EnemyScope);
     public ChessPos[] GetScope(bool isPlayer) => isPlayer ? PlayerScope : EnemyScope;
     public ChessPos GetChessPos(int index, bool isPlayer) => GetScope(isPlayer)[index];
     public ChessPos GetChessPos(FightCardData card) => GetScope(card.IsPlayer)[card.Pos];

@@ -102,7 +102,7 @@ namespace Assets.System.WarModule
         /// </summary>
         public int ArmedType { get; set; }
         /// <summary>
-        /// 兵种
+        /// 武将类 = 兵种, 塔/陷阱 = id
         /// </summary>
         public int Military { get; set; }
         /// <summary>

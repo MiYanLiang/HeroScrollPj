@@ -96,9 +96,7 @@ namespace Assets.System.WarModule
     {
         public override int TypeId { get; set; } = 6;
     }
-    /// <summary>
-    /// 依赖型精灵
-    /// </summary>
+    // 依赖型精灵
     public abstract class RelationSprite : TerrainSprite
     {
         //依赖类不执行(回合)消耗

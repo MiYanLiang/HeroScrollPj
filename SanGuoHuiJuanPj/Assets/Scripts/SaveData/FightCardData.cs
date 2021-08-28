@@ -104,10 +104,10 @@ using UnityEngine;
                 style = AttackStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.CombatType == 1 ? 1 : 0, info.DamageType, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Tower:
-                style = AttackStyle.Instance(-1, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level,force);
+                style = AttackStyle.Instance(cardId, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Trap:
-                style = AttackStyle.Instance(-2,-2,2,0,0,info.GetDamage(card.Level),card.Level,force);
+                style = AttackStyle.Instance(cardId,-2,2,0,0,info.GetDamage(card.Level),card.Level,force);
                 break;
             case GameCardType.Base:
                 style = AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level, force);

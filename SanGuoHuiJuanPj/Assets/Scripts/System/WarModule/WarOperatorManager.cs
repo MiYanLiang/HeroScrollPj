@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CorrelateLib;
 
 namespace Assets.System.WarModule
@@ -10,13 +11,14 @@ namespace Assets.System.WarModule
         protected override Dictionary<ChessOperator, ChessStatus> StatusMap { get; }
         protected Dictionary<int, ChessOperator> ops = new Dictionary<int, ChessOperator>();
         protected override List<TerrainSprite> Sprites { get; }
+        protected override BondOperator[] JiBan { get; }
         public int ChallengerGold { get; set; }
         public int OpponentGold { get; set; }
         public List<int> ChallengerChests { get; set; }
         public List<int> OpponentChests { get; set; }
         private BuffOperator[] BuffOps { get; }
 
-        public ChessOperatorManager(bool isChallengerFirst, ChessGrid grid) : base(isChallengerFirst, grid)
+        public ChessOperatorManager(ChessGrid grid) : base(grid)
         {
             StatusMap = new Dictionary<ChessOperator, ChessStatus>();
             Sprites = new List<TerrainSprite>();
@@ -33,6 +35,19 @@ namespace Assets.System.WarModule
                 new DisarmedBuff(this), //16 卸甲
                 new ExtendedShieldBuff(this), // 19 缓冲盾
             };
+            JiBan = GetJiBan();
+        }
+
+        private BondOperator[] GetJiBan() => DataTable.JiBan.Values.Where(j => j.IsOpen > 0).Select(GetBondOperator).Where(b=>b!=null).ToArray();
+
+        private BondOperator GetBondOperator(JiBanTable jb)
+        {
+            switch (jb.Id)
+            {
+                case 0: return new TaoYuanJieYi(this, jb.Cards.Select(c => c.CardId).ToArray());
+                case 1: return new 
+                default: return null;
+            }
         }
 
         public ChessOperator RegOperator(TCard card)
@@ -456,6 +471,9 @@ namespace Assets.System.WarModule
 
         protected override RoundAction GetPreRoundTriggerByOperators()
         {
+            OnRoundStartJiBan(Grid.Challenger.Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
+            OnRoundStartJiBan(Grid.Opposite.Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
+            
             //每个回合开始先计算回合制精灵
             foreach (var sprite in ChessSprites.Where(s => s.Lasting == TerrainSprite.LastingType.Round).ToArray())
             {
@@ -471,6 +489,12 @@ namespace Assets.System.WarModule
             ProceedRoundCondition(o => o.OnRoundStart(), ra);
             return ra;
         }
+
+        private void OnRoundStartJiBan(ChessOperator[] chessOperators)
+        {
+            foreach (var jb in JiBan) jb.OnRoundStart(chessOperators);
+        }
+
 
         protected override void RoundActionInvocation(int roundKey, IEnumerable<Activity> activities)
         {
@@ -498,7 +522,7 @@ namespace Assets.System.WarModule
             BuffOps.Where(func);
 
         private void RoundActionBuffering(Activity activity) =>
-            AppendActivityWithoutOffender(GetOperator(activity.To), activity.Intent, activity.Conducts, 0);
+            InstanceChessboardActivity(activity.Initiator == 0, GetOperator(activity.To), activity.Intent, activity.Conducts);
 
         private void RoundActionPlayerResources(Activity activity)
         {

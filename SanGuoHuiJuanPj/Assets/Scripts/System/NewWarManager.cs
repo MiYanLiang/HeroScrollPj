@@ -23,7 +23,7 @@ public class NewWarManager : MonoBehaviour
     void Start()
     {
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
-        ChessOperator = new ChessOperatorManager<FightCardData>(true, Grid);
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid);
     }
 
     public void StartButtonShow(bool show)

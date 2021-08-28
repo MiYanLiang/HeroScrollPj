@@ -23,6 +23,10 @@ namespace Assets.System.WarModule
         /// 棋子命令集
         /// </summary>
         [JsonProperty("A")] public List<Activity> Activities { get; set; }
+        /// <summary>
+        /// 棋格，-1 = Challenger, -2 = Opposite，
+        /// 正数 = 棋位
+        /// </summary>
         [JsonProperty("P")] public int Pos { get; set; }
         [JsonProperty("S")] public int Scope { get; set; }
         public override string ToString() => $"{InstanceId}.Pos[{Pos}]({Scope}).Act[{Activities.Count}]";

@@ -47,10 +47,10 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-            Chessboard.AppendActivity(this, target, Activity.Offensive, BasicDamage(), 0);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, BasicDamage(), 0);
         }
 
-        private CombatConduct[] BasicDamage() => Helper.Singular(CombatConduct.InstanceDamage(Style.Strength, Style.Element));
+        private CombatConduct[] BasicDamage() => Helper.Singular(CombatConduct.InstanceDamage(GetStrength, Style.Element));
 
         /// <summary>
         /// 兵种攻击，base攻击是基础英雄属性攻击
@@ -61,7 +61,7 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-            Chessboard.AppendActivity(this, target, Activity.Offensive, MilitaryDamages(target), skill);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, MilitaryDamages(target), skill);
         }
 
         protected virtual CombatConduct[] MilitaryDamages(IChessPos targetPos) => Helper.Singular(InstanceHeroGenericDamage());
@@ -81,11 +81,9 @@ namespace Assets.System.WarModule
         /// 根据武将属性生成伤害
         /// </summary>
         /// <returns></returns>
-        protected CombatConduct InstanceHeroGenericDamage(int damage = -1)
+        protected CombatConduct InstanceHeroGenericDamage(float additionDamage = 0)
         {
-            if (damage < 0)
-                damage = GetBasicDamage();
-            damage = Chessboard.ConvertHeroDamage(this, damage);
+            var damage = GeneralDamage() + additionDamage;
             if(Chessboard.IsRouseDamagePass(this))
             {
                 var rouse = RouseDamage();
@@ -101,14 +99,28 @@ namespace Assets.System.WarModule
 
             return CombatConduct.InstanceDamage(damage, Style.Element);
         }
+        /// <summary>
+        /// 武力值
+        /// </summary>
+        public override int GetStrength => Style.Strength;
 
-        protected virtual int GetBasicDamage() => Style.Strength;
+        /// <summary>
+        /// 根据状态算出基础伤害
+        /// </summary>
+        /// <returns></returns>
+        public override int GeneralDamage() => Chessboard.ConvertHeroDamage(this);
 
-        //跟据会心率获取会心伤害
-        private float RouseDamage() => Style.Strength - CombatInfo.GetRouseDamage(Style.Strength);
+        /// <summary>
+        /// 跟据会心率获取会心伤害
+        /// </summary>
+        /// <returns></returns>
+        private float RouseDamage() => GetStrength - CombatInfo.GetRouseDamage(GetStrength);
 
-        //根据暴击率获取暴击伤害
-        private float CriticalDamage() => Style.Strength - CombatInfo.GetCriticalDamage(Style.Strength);
+        /// <summary>
+        /// 根据暴击率获取暴击伤害
+        /// </summary>
+        /// <returns></returns>
+        private float CriticalDamage() => GetStrength - CombatInfo.GetCriticalDamage(GetStrength);
 
         public override int GetDodgeRate() => CombatInfo.DodgeRatio;
     }
@@ -120,7 +132,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)),1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)),1);
         }
     }
 
@@ -139,7 +151,7 @@ namespace Assets.System.WarModule
 
             for (int i = 0; i < ComboTimes; i++)
             {
-                Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), skill);
+                Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), skill);
                 if (!Chessboard.IsRandomPass(ComboRatio))
                     break;//如果不触发，就直接停止
             }
@@ -170,7 +182,7 @@ namespace Assets.System.WarModule
             {
                 combo = false;
                 var hit = InstanceHeroGenericDamage();
-                var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(hit), skill);
+                var result = Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(hit), skill);
                 if (result == null) break;
                 if (!result.IsDeath && result.Type != ActivityResult.Types.Friendly)
                     combo = hit.Critical > 0 || hit.Rouse > 0;
@@ -202,17 +214,19 @@ namespace Assets.System.WarModule
             //铁骑要非常注意，如果不用固伤，它将会进入死循环
             foreach (var comrade in comrades)
             {
-                Chessboard.AppendActivity(this, comrade, Activity.FriendlyAttach, Helper.Singular(CombatConduct.InstanceDamage((int)finalDamage, CombatConduct.FixedDmg)), 1);
+                Chessboard.AppendChessOpActivity(this, comrade, Activity.FriendlyAttach, Helper.Singular(CombatConduct.InstanceDamage((int)finalDamage, CombatConduct.FixedDmg)), 1);
             }
             return (int)finalDamage;
         }
 
-        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
+        public override int GetStrength
         {
-            var stacks = GetComrades().Count();
-            if (stacks <= 0) return base.MilitaryDamages(targetPos);
-            var damage = 0.01f * GetBasicDamage() * DamageStackRate * stacks;
-            return Helper.Singular(InstanceHeroGenericDamage((int)damage));
+            get
+            {
+                var stacks = GetComrades().Count();
+                if (stacks <= 0) return base.GetStrength;
+                return base.GetStrength + (int)(0.01f * base.GetStrength * DamageStackRate * stacks);
+            }
         }
     }
 
@@ -223,15 +237,10 @@ namespace Assets.System.WarModule
     {
         protected virtual int DamageRate => DataTable.GetGameValue(146);
 
-        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
-        {
-            var cluster = Chessboard.GetFriendly(this,
-                    p => p.IsPostedAlive &&
-                         p.Operator.CardType == GameCardType.Hero &&
-                         p.Operator.Style.Military == 65)
-                .Count();
-            return Helper.Singular(InstanceHeroGenericDamage((int)(0.01f * GetBasicDamage() * cluster * DamageRate)));
-        }
+        public override int GetStrength => (int)(Chessboard.GetFriendly(this,
+                p => p.IsPostedAlive &&
+                     p.Operator.CardType == GameCardType.Hero &&
+                     p.Operator.Style.Military == 65).Count() * base.GetStrength * DamageRate * 0.01f);
     }
 
     /// <summary>
@@ -306,28 +315,24 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             if (Chessboard.GetStatus(this).HpRate < 0.5)
             {
-                var explode = new List<CombatConduct>
-                {
-                    InstanceHeroGenericDamage((int)
-                        (GetBasicDamage() * ExplodeRatio * 0.01f))
-                };
+                var explode = new List<CombatConduct> { CombatConduct.InstanceDamage((int)(GeneralDamage() * ExplodeRatio * 0.01f), Style.Element) };
                 var surrounded = Chessboard.GetNeighbors(target, false).ToList();
                 surrounded.Insert(0, target);
                 foreach (var chessPos in surrounded)
                 {
                     if (Chessboard.IsRandomPass(BurnExplodeRatio))
                         explode.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
-                    Chessboard.AppendActivity(this, chessPos, Activity.OffendAttach, explode.ToArray(), 2);
+                    Chessboard.AppendChessOpActivity(this, chessPos, Activity.OffendAttach, explode.ToArray(), 2);
                 }
 
-                Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling()), 2);
+                Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.SelfAttach, Helper.Singular(CombatConduct.InstanceKilling()), 2);
                 return;
             }
 
             var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.IsRandomPass(BurnRate))
                 combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
-            Chessboard.AppendActivity(this, target, Activity.Offensive, combat.ToArray(), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, combat.ToArray(), 1);
         }
     }
 
@@ -346,6 +351,9 @@ namespace Assets.System.WarModule
     {
         protected virtual int TargetAmount => DataTable.GetGameValue(29);
         protected virtual int DamageRate => DataTable.GetGameValue(75);
+
+        public override int GetStrength => (int)(DamageRate * 0.01f + base.GetStrength);
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -360,16 +368,16 @@ namespace Assets.System.WarModule
             {
                 var attackType = i == 0 ? Activity.Offensive : Activity.OffendAttach;
                 var target = targets[i];
-                var damage = InstanceHeroGenericDamage((int)(DamageRate * 0.01f * GetBasicDamage()));
+                var damage = InstanceHeroGenericDamage();
                 var backPos = Chessboard.BackPos(target.Obj);
                 if (backPos != null && backPos.Operator == null)
                 {
-                    Chessboard.AppendActivity(this, target.Obj, attackType, Helper.Singular(damage), 1,
+                    Chessboard.AppendChessOpActivity(this, target.Obj, attackType, Helper.Singular(damage), 1,
                         backPos.Pos);
                     continue;
                 }
 
-                Chessboard.AppendActivity(this, target.Obj, attackType, Helper.Singular(damage), 0);
+                Chessboard.AppendChessOpActivity(this, target.Obj, attackType, Helper.Singular(damage), 0);
             }
         }
     }
@@ -419,7 +427,7 @@ namespace Assets.System.WarModule
                 base.MilitaryPerforms();
                 return;
             }
-            Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(BuffToFriendly), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Friendly, Helper.Singular(BuffToFriendly), 1);
         }
     }
 
@@ -467,12 +475,12 @@ namespace Assets.System.WarModule
                 base.MilitaryPerforms(0);
                 return;
             }
-            var basicHeal = GetBasicDamage() * HealingRate * 0.01f / targets.Length;
+            var basicHeal = GeneralDamage() * HealingRate * 0.01f / targets.Length;
             var heal = CombatConduct.InstanceHeal(basicHeal);
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                Chessboard.AppendActivity(this, target, i == 0 ? Activity.Friendly : Activity.FriendlyAttach, Helper.Singular(heal), 1);
+                Chessboard.AppendChessOpActivity(this, target, i == 0 ? Activity.Friendly : Activity.FriendlyAttach, Helper.Singular(heal), 1);
             }
         }
     }
@@ -486,12 +494,12 @@ namespace Assets.System.WarModule
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
             if (Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f) return;
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.DeathFight)), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.DeathFight)), 1);
         }
 
         protected override int OnMilitaryDamageConvert(CombatConduct conduct)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceHeal(conduct.Total)), 1);
             return 0;
         }
@@ -517,10 +525,10 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var recover = GetBasicDamage() * RecoverRate * 0.01f / targets.Length;
+            var recover = GeneralDamage() * RecoverRate * 0.01f / targets.Length;
             foreach (var target in targets)
             {
-                Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(recover)), 1);
+                Chessboard.AppendChessOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(recover)), 1);
             }
         }
     }
@@ -545,12 +553,12 @@ namespace Assets.System.WarModule
             if (target == null)
             {
                 target = Chessboard.GetContraTarget(this);
-                Chessboard.AppendActivity(this, target, Activity.Offensive,
+                Chessboard.AppendChessOpActivity(this, target, Activity.Offensive,
                     Helper.Singular(InstanceHeroGenericDamage()), 0);
                 return;
             }
             var basicDamage = InstanceHeroGenericDamage();
-            Chessboard.AppendActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.EaseShield, basicDamage.Total)), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.EaseShield, basicDamage.Total)), 1);
         }
     }
 
@@ -602,7 +610,7 @@ namespace Assets.System.WarModule
                         .Join(NegativeBuffs, p => p.Key, n => (int)n, (p, n) => new { key = n, buffValue = p.Value })
                         .ToArray();
                     var con = keys[Chessboard.Randomize(keys.Length)];
-                    Chessboard.AppendActivity(this, Chessboard.GetChessPos(target.Operator), Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(con.key, -con.buffValue)), 1);
+                    Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(target.Operator), Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(con.key, -con.buffValue)), 1);
                 }
                 if (basicDamage.Rouse > 0 && i < 2)
                     continue;
@@ -697,7 +705,7 @@ namespace Assets.System.WarModule
             foreach (var target in targets)
             {
                 if (Chessboard.IsRandomPass(rate))
-                    Chessboard.AppendActivity(this, target, Activity.Offensive,
+                    Chessboard.AppendChessOpActivity(this, target, Activity.Offensive,
                         Skills(), 1);
             }
         }
@@ -742,18 +750,18 @@ namespace Assets.System.WarModule
             ringIndex++;
             if (ringIndex >= FireRings.Length)
                 ringIndex = 0;
-            var outRingDamageDecrease = GetBasicDamage() * DamageRatio * ringIndex * 0.01f;
-            var basicDamage = InstanceHeroGenericDamage((int)(GetBasicDamage() - outRingDamageDecrease));
+            var outRingDamageDecrease = GeneralDamage() * DamageRatio * ringIndex * 0.01f;
+            var basicDamage = (int)(GeneralDamage() - outRingDamageDecrease);
             var burnBuff = CombatConduct.InstanceBuff(CardState.Cons.Burn);
             foreach (var chessPos in scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p))
             {
-                var combat = new List<CombatConduct> { basicDamage };
+                var combat = new List<CombatConduct> { CombatConduct.InstanceDamage(basicDamage, Style.Element) };
                 if (Chessboard.IsRandomPass(BurnRatio))
                     combat.Add(burnBuff);
                 Chessboard.InstanceSprite<FireSprite>(chessPos, InstanceId, TerrainSprite.LastingType.Round, value: 2,
                     typeId: TerrainSprite.YeHuo);
                 if (chessPos.Operator == null || !Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
-                Chessboard.AppendActivity(this, chessPos, Activity.Offensive, combat.ToArray(), 1);
+                Chessboard.AppendChessOpActivity(this, chessPos, Activity.Offensive, combat.ToArray(), 1);
             }
         }
     }
@@ -774,6 +782,7 @@ namespace Assets.System.WarModule
         protected virtual int TargetAmount => DataTable.GetGameValue(19);
         protected virtual int DamageRate => DataTable.GetGameValue(86);
         protected virtual int PoisonRateLimit => DataTable.GetGameValue(87);
+        public override int GetStrength => (int)(base.GetStrength * DamageRate * 0.01f) + base.GetStrength;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -787,7 +796,7 @@ namespace Assets.System.WarModule
                 }).Pick(TargetAmount);
             foreach (var target in targets)
             {
-                var basicConduct = InstanceHeroGenericDamage((int)(GetBasicDamage() * DamageRate * 0.01f));
+                var basicConduct = InstanceHeroGenericDamage();
                 var poisonRate = (int)(Chessboard.ConfigValue(88) + (Chessboard.ConfigValue(89) * Style.Level - 1));
 
                 if (basicConduct.Rouse > 0)
@@ -800,7 +809,7 @@ namespace Assets.System.WarModule
                 var combats = new List<CombatConduct> { basicConduct };
                 if (Chessboard.IsRandomPass(poisonRate))
                     combats.Add(poison);
-                Chessboard.AppendActivity(this, target.Obj, Activity.Offensive, combats.ToArray(), 1);
+                Chessboard.AppendChessOpActivity(this, target.Obj, Activity.Offensive, combats.ToArray(), 1);
             }
         }
     }
@@ -839,7 +848,7 @@ namespace Assets.System.WarModule
                     var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
                     if (Chessboard.RandomFromConfigTable(40))
                         combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
-                    Chessboard.AppendActivity(this, target.Obj, Activity.Offensive,
+                    Chessboard.AppendChessOpActivity(this, target.Obj, Activity.Offensive,
                         combat.ToArray(), 1);
                 }
             }
@@ -875,14 +884,19 @@ namespace Assets.System.WarModule
                 killingLineRatio = DataTable.GetGameValue(57);
             if (baseDamage.Rouse > 0)
                 killingLineRatio = DataTable.GetGameValue(58);
-            var killingLine = killingLineRatio * GetBasicDamage();
+            var killingLine = killingLineRatio * GeneralDamage();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
             foreach (var target in targets)
             {
                 var combat = Helper.Singular(baseDamage);
                 if (Chessboard.GetStatus(target.Operator).Hp < killingLine &&
                     Chessboard.IsRandomPass(KillingRate))
                     combat = Helper.Singular(CombatConduct.InstanceKilling());
-                Chessboard.AppendActivity(this, target, Activity.Offensive, combat, 1);
+                Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, combat, 1);
             }
         }
     }
@@ -902,7 +916,7 @@ namespace Assets.System.WarModule
             var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.RandomFromConfigTable(147))
                 combats.Add(CombatConduct.InstanceBuff(CardState.Cons.Bleed));
-            Chessboard.AppendActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
         }
     }
 
@@ -912,6 +926,7 @@ namespace Assets.System.WarModule
     public class TouShiCheOperator : HeroOperator
     {
         private int[] TargetPoses = new[] { 12, 15, 16, 17 };
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -919,10 +934,10 @@ namespace Assets.System.WarModule
                 .Join(TargetPoses, t => t.Pos, p => p, (t, _) => t).ToArray();
             foreach (var target in targets)
             {
-                var damage = GetBasicDamage();
+                var addOn = 0f;
                 if (target.Operator.CardType == GameCardType.Base)
-                    damage = (int)(damage * 0.01f * DataTable.GetGameValue(72));
-                Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage(damage)), 1);
+                    addOn = GeneralDamage() * 0.01f * DataTable.GetGameValue(72);
+                Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage(addOn)), 1);
             }
         }
     }
@@ -935,7 +950,7 @@ namespace Assets.System.WarModule
         protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
         {
             var target = Chessboard.GetContraTarget(this);
-            var damage = GetBasicDamage();
+            var damage = GeneralDamage();
             damage = (int)(damage * 0.01f *
                             (target.Operator.CardType != GameCardType.Hero
                                 ? DataTable.GetGameValue(73)
@@ -953,13 +968,13 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
             var status = Chessboard.GetStatus(target.Operator);
-            var basicDamage = GetBasicDamage();
+            var basicDamage = GeneralDamage();
             if (status.GetBuff(CardState.Cons.Stunned) > 0)
                 basicDamage = (int)(DataTable.GetGameValue(92) * 0.01f * basicDamage);
             var combats = new List<CombatConduct> { CombatConduct.InstanceDamage(basicDamage) };
             if (Chessboard.RandomFromConfigTable(91))
                 combats.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
-            Chessboard.AppendActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, combats.ToArray(), 1);
         }
     }
 
@@ -976,10 +991,10 @@ namespace Assets.System.WarModule
             var rePos = backPos != null && backPos.Operator == null ? backPos.Pos : -1;
             combatConducts.Add(
                 rePos < 0
-                    ? InstanceHeroGenericDamage((int)(GetBasicDamage() * DataTable.GetGameValue(90) * 0.01f))
+                    ? InstanceHeroGenericDamage((int)(GeneralDamage() * DataTable.GetGameValue(90) * 0.01f))
                     : InstanceHeroGenericDamage());
 
-            Chessboard.AppendActivity(this, target, Activity.Offensive, combatConducts.ToArray(), 1, rePos);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, combatConducts.ToArray(), 1, rePos);
         }
     }
 
@@ -1003,12 +1018,12 @@ namespace Assets.System.WarModule
         {
             var targets = Chessboard.GetRivals(this).Take(TargetsPick).ToArray();
             if (targets.Length == 0) return;
-            var damage = DamageRate * GetBasicDamage() * 0.01f / targets.Length;
-            var perform = InstanceHeroGenericDamage((int)damage);
+            var addOn = DamageRate * GeneralDamage() * 0.01f / targets.Length;
+            var perform = InstanceHeroGenericDamage(addOn);
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                Chessboard.AppendActivity(this, target, i == 0 ? Activity.Offensive : Activity.OffendAttach, Helper.Singular(perform), 1);
+                Chessboard.AppendChessOpActivity(this, target, i == 0 ? Activity.Offensive : Activity.OffendAttach, Helper.Singular(perform), 1);
             }
         }
     }
@@ -1025,7 +1040,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             for (int i = 0; i < Combo; i++)
             {
-                var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), i);
+                var result = Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), i);
                 if (result == null || result.IsDeath) return;
                 if (!Chessboard.IsRandomPass(ComboRate))
                     break;
@@ -1052,8 +1067,8 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             var status = Chessboard.GetStatus(target.Operator);
             var damageRate = HpDepletedRatioWithGap(status, 0, DataTable.GetGameValue(93), DataTable.GetGameValue(94));
-            var performDamage = InstanceHeroGenericDamage(GetBasicDamage() * (int)(damageRate * 0.01f));
-            Chessboard.AppendActivity(this, target, Activity.Offensive, new[]
+            var performDamage = InstanceHeroGenericDamage(GeneralDamage() * damageRate * 0.01f);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, new[]
             {
                 CombatConduct.InstanceBuff(CardState.Cons.Shield, -1),
                 performDamage
@@ -1074,9 +1089,9 @@ namespace Assets.System.WarModule
             var addOnDmg = 0;
             foreach (var target in targets)
             {
-                var damage = GetBasicDamage() + addOnDmg;
+                var damage = GeneralDamage() + addOnDmg;
                 if (!Chessboard
-                    .AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 1)
+                    .AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 1)
                     .IsDeath)
                     break;
                 addOnDmg += (int)(damage * DamageIncreaseRate * 0.01f);
@@ -1122,10 +1137,10 @@ namespace Assets.System.WarModule
             var penetrates = ExtendedTargets(target);
             var damage = InstanceHeroGenericDamage();
             var penetrateDmg = GetExtendedDamage(damage);
-            Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(damage), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), 1);
             foreach (var penetrate in penetrates)
             {
-                Chessboard.AppendActivity(this, penetrate, Activity.OffendAttach, Helper.Singular(penetrateDmg), 1);
+                Chessboard.AppendChessOpActivity(this, penetrate, Activity.OffendAttach, Helper.Singular(penetrateDmg), 1);
             }
         }
     }
@@ -1138,7 +1153,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnCounter(Activity activity, IChessOperator offender)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
         }
     }
     /// <summary>
@@ -1148,21 +1163,21 @@ namespace Assets.System.WarModule
     {
         protected override void MilitaryPerforms(int skill = 1)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct), 1);
             var target = Chessboard.GetContraTarget(this);
             var stimulate = Chessboard.GetCondition(this, CardState.Cons.Stimulate);
-            var finalDamage = (int)(DataTable.GetGameValue(97) * 0.01f * stimulate + GetBasicDamage());
-            var result = Chessboard.AppendActivity(this, target, Activity.Offensive,
-                Helper.Singular(InstanceHeroGenericDamage(finalDamage)), 1);
+            var addOn = (int)(DataTable.GetGameValue(97) * 0.01f * stimulate * GeneralDamage());
+            var result = Chessboard.AppendChessOpActivity(this, target, Activity.Offensive,
+                Helper.Singular(InstanceHeroGenericDamage(addOn)), 1);
             if (result.Type == ActivityResult.Types.Dodge ||
                 result.Type == ActivityResult.Types.Shield)
-                MilitaryPerforms(skill);
+                base.MilitaryPerforms(skill);
         }
 
         private CombatConduct StimulateConduct => CombatConduct.InstanceBuff(CardState.Cons.Stimulate);
         protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct),
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct),
                 1);
         }
     }
@@ -1178,8 +1193,8 @@ namespace Assets.System.WarModule
         public override int GetPhysicArmor() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.PhysicalResist, ConfigGap, ConfigMultipleRate);
 
-        protected override int GetBasicDamage() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, ConfigGap, ConfigMultipleRate);
+        public override int GeneralDamage() =>
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), GetStrength, ConfigGap, ConfigMultipleRate);
     }
 
     /// <summary>
@@ -1195,13 +1210,12 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var damage = InstanceHeroGenericDamage((int)(Style.Strength * DataTable.GetGameValue(101) / 100f));
+            var damage = GetStrength * DataTable.GetGameValue(101) * 0.01f + GetStrength;
             foreach (var pos in Chessboard.GetRivals(this))
             {
-                Chessboard.AppendActivity(this, pos, Activity.OffendAttach, Helper.Singular(damage), 1);
+                Chessboard.AppendChessOpActivity(this, pos, Activity.OffendAttach, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
             }
-
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling()), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.SelfAttach, Helper.Singular(CombatConduct.InstanceKilling()), 1);
         }
 
         public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.DodgeRatio,
@@ -1220,7 +1234,7 @@ namespace Assets.System.WarModule
             var list = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.IsRandomPass(DataTable.GetGameValue(102)))
                 list.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
-            Chessboard.AppendActivity(this, target, Activity.Offensive, list.ToArray(), 1);
+            Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, list.ToArray(), 1);
         }
     }
 
@@ -1233,7 +1247,7 @@ namespace Assets.System.WarModule
         {
             if (offender.IsRangeHero) return;
             var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind).Sum(c => c.Total);
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(offender), Activity.OffendAttach, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(offender), Activity.OffendAttach, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
         }
     }
 
@@ -1245,10 +1259,10 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            var result = Chessboard.AppendActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 0);
+            var result = Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 0);
             if (result == null) return;
             var totalSuffer = result.Status.LastSuffers.Sum();
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceHeal(totalSuffer)), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceHeal(totalSuffer)), 1);
         }
     }
 
@@ -1259,7 +1273,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
-            Chessboard.AppendActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible)), 1);
+            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible)), 1);
         }
 
         public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd()
