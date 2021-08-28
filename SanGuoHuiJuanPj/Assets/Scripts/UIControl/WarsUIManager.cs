@@ -31,7 +31,7 @@ public class WarsUIManager : MonoBehaviour
     [SerializeField]
     GameObject cardForWarListPres; //列表卡牌预制件
     [SerializeField]
-    GameObject guanQiaPreObj;   //关卡按钮预制件
+    GuanQiaUi guanQiaPreObj;   //关卡按钮预制件
     [SerializeField] Button operationButton;    //关卡执行按钮
     [SerializeField] Text operationText; //关卡执行文字
     [SerializeField]
@@ -44,6 +44,7 @@ public class WarsUIManager : MonoBehaviour
     [SerializeField] GenericWarWindow GenericWindow;
 
     public WarMiniWindowUI gameOverWindow;//战役结束ui
+    public Dictionary<int, GameStage> StagesMap { get; } = new Dictionary<int, GameStage>();
     [SerializeField]
     float percentReturnHp;    //回春回血百分比
 
@@ -211,22 +212,42 @@ public class WarsUIManager : MonoBehaviour
         currentEvent = EventTypes.初始;
         //尝试展示指引
         //ShowOrHideGuideObj(0, true);
-        InitShowParentGuanQia(new int[] {DataTable.War[PlayerDataForGame.instance.selectedWarId].BeginPoint});
+        var checkpointId = DataTable.War[PlayerDataForGame.instance.selectedWarId].BeginPoint;
+        var checkpoint = DataTable.Checkpoint[checkpointId];
+        InstanceStage(checkpoint);
+        InitShowParentGuanQia(checkpoint.Next);
+    }
+
+    private GameStage InstanceStage(CheckpointTable checkPoint)
+    {
+        var stage = new GameStage();
+        if (!StagesMap.ContainsKey(checkPoint.Id))
+            StagesMap.Add(checkPoint.Id, stage);
+        var battle = DataTable.BattleEvent[checkPoint.BattleEventTableId];
+        var index = Random.Range(0, battle.EnemyTableIndexes.Length); //敌人随机库抽取一个id
+        stage.Checkpoint = checkPoint;
+        stage.BattleEvent = battle;
+        stage.RandomId = index;
+        var isBattle = IsBattle(stage.Checkpoint.EventType);
+        if (isBattle)
+            stage.BattleEvent = DataTable.BattleEvent[checkPoint.BattleEventTableId];
+        return stage;
     }
 
     int selectParentIndex = -1;
 
     //选择某个父级关卡初始化子集关卡
-    private void ChooseParentGuanQia(int parentGuanQiaId, int randImg, Transform parentTran)
+    private void ChooseParentGuanQia(GameStage stage, int randImg, Transform parentTran)
     {
-        UpdateLevelInfoText(parentGuanQiaId);
+        var checkpointId = stage.Checkpoint.Id;
+        UpdateLevelInfoText(checkpointId);
 
-        if (selectParentIndex != parentGuanQiaId)
+        if (selectParentIndex != checkpointId)
         {
             point0Tran.gameObject.SetActive(false);
         }
 
-        indexLastGuanQiaId = parentGuanQiaId;
+        indexLastGuanQiaId = checkpointId;
 
         for (int i = 0; i < point0Tran.childCount; i++)
         {
@@ -234,52 +255,29 @@ public class WarsUIManager : MonoBehaviour
         }
 
         //最后一关
-        var nexPoints = DataTable.Checkpoint[parentGuanQiaId].Next;
+        var nexPoints = DataTable.Checkpoint[checkpointId].Next;
         if (nowGuanQiaIndex >= DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints)
         {
             nexPoints = new int[0];
         }
 
         List<Transform> childsTranform = new List<Transform>();
-
+        GameStage nextStage = null;
         for (int i = 0; i < nexPoints.Length; i++)
         {
             int guanQiaId = nexPoints[i];
-            var checkPoint = DataTable.Checkpoint[guanQiaId];
-            GameObject obj = Instantiate(guanQiaPreObj, point0Tran);
-            obj.transform.localScale = new Vector3(0.8f, 0.8f, 1);
-            var eventType = DataTable.Checkpoint[guanQiaId].EventType;
-            if (IsBattle(eventType))
-            {
-                obj.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = checkPoint.Title;
-                obj.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
-                if (eventType != 7)
-                {
-                    obj.transform.GetChild(1).GetChild(1).GetComponent<Image>().sprite =
-                        GameResources.GuanQiaEventImg[(eventType == 1 ? 0 : 1)];
-                    obj.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = checkPoint.FlagTitle;
-                    obj.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().fontSize = checkPoint.FlagTitle.Length > 2 ? 45 : 50;
-                    obj.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
-                }
-            }
-
-            obj.transform.GetChild(1).GetComponent<Image>().sprite =
-                GameResources.GuanQiaEventImg[checkPoint.ImageId];
-
-            childsTranform.Add(obj.transform);
-            //暂时不能选择后面的子关卡
-            //obj.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate ()
-            //{
-            //    startBtn.SetActive(false);
-            //    SelectOneGuanQia(obj);
-            //    UpdateLevelInfoText(guanQiaId);
-            //});
-
+            var checkpoint = DataTable.Checkpoint[guanQiaId];
+            nextStage = !StagesMap.ContainsKey(checkpoint.Id) ? 
+                InstanceStage(checkpoint) : 
+                StagesMap[checkpoint.Id];
+            var ui = Instantiate(guanQiaPreObj, point0Tran);
+            ui.Set(new Vector3(0.8f, 0.8f, 1), nextStage, IsBattle(checkpoint.EventType));
+            childsTranform.Add(ui.transform);
         }
 
-        if (selectParentIndex != parentGuanQiaId)
+        if (selectParentIndex != checkpointId)
         {
-            selectParentIndex = parentGuanQiaId;
+            selectParentIndex = checkpointId;
 
             //关卡艺术图
             levelIntroText.transform.parent.GetComponent<Image>().DOFade(0, 0.5f).OnComplete(delegate ()
@@ -411,34 +409,22 @@ public class WarsUIManager : MonoBehaviour
         {
             Destroy(point1Tran.GetChild(i).gameObject);
         }
+        StagesMap.Clear();
         for (int i = 0; i < checkPoints.Length; i++)
         {
             var checkPoint = DataTable.Checkpoint[checkPoints[i]];
-            GameObject obj = Instantiate(guanQiaPreObj, point1Tran);
-            obj.transform.GetChild(1).GetComponent<Image>().sprite =
-                GameResources.GuanQiaEventImg[checkPoint.ImageId];
-            if (IsBattle(checkPoint.EventType)) //战斗关卡城池名
-            {
-                obj.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = checkPoint.Title;
-                obj.transform.GetChild(1).GetChild(0).gameObject.SetActive(true);
-                if (checkPoint.EventType != 7)
-                {
-                    obj.transform.GetChild(1).GetChild(1).GetComponent<Image>().sprite =
-                        GameResources.GuanQiaEventImg[(checkPoint.EventType == 1 ? 0 : 1)];
-                    obj.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().text = checkPoint.FlagTitle;
-                    obj.transform.GetChild(1).GetChild(1).GetChild(0).GetComponent<Text>().fontSize = checkPoint.FlagTitle.Length > 2 ? 45 : 50;
-                    obj.transform.GetChild(1).GetChild(1).gameObject.SetActive(true);
-                }
-            }
-
+            var stage = InstanceStage(checkPoint);
+            //下个关卡点
+            var ui = Instantiate(guanQiaPreObj, point1Tran);
+            ui.Set(Vector3.one, stage, IsBattle(checkPoint.EventType));
             int randArtImg = Random.Range(0, 25); //随机艺术图
-            obj.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate()
+            ui.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(()=>
             {
                 operationText.text = IsBattle(checkPoint.EventType) ? DataTable.GetStringText(53) : DataTable.GetStringText(54);
                 operationButton.gameObject.SetActive(true);
-                SelectOneGuanQia(obj);
-                ChooseParentGuanQia(checkPoint.Id, randArtImg, obj.transform);
-                OnCheckpointInvoke(checkPoint);
+                SelectOneGuanQia(ui);
+                ChooseParentGuanQia(stage, randArtImg, ui.transform);
+                OnCheckpointInvoke(checkPoint.Id);
             });
         }
         StartCoroutine(LiteInitChooseFirst(0));
@@ -451,8 +437,8 @@ public class WarsUIManager : MonoBehaviour
         point1Tran.GetChild(0).GetChild(1).GetComponent<Button>().onClick.Invoke();
     }
 
-    GameObject indexSelectGuanQia;
-    private void SelectOneGuanQia(GameObject chooseObj)
+    Image indexSelectGuanQia;
+    private void SelectOneGuanQia(GuanQiaUi chooseObj)
     {
         AudioController0.instance.RandomPlayGuZhengAudio();
 
@@ -460,26 +446,27 @@ public class WarsUIManager : MonoBehaviour
 
         if (indexSelectGuanQia != null)
         {
-            indexSelectGuanQia.transform.GetChild(2).gameObject.SetActive(false);
+            indexSelectGuanQia.gameObject.SetActive(false);
         }
-        chooseObj.transform.GetChild(2).gameObject.SetActive(true);
-        indexSelectGuanQia = chooseObj;
+        chooseObj.SelectedImg.gameObject.SetActive(true);
+        indexSelectGuanQia = chooseObj.SelectedImg;
     }
 
     /// <summary>
     /// 进入不同关卡
     /// </summary>
-    private void OnCheckpointInvoke(CheckpointTable cp)
+    private void OnCheckpointInvoke(int checkpointId)
     {
-        operationButton.onClick.AddListener(() => InvokeToTheNextStage(cp));
-        void InvokeToTheNextStage(CheckpointTable checkpoint)
+        var stage = StagesMap[checkpointId];
+        operationButton.onClick.AddListener(InvokeToTheNextStage);
+        void InvokeToTheNextStage()
         {
             if (isPointMoving || isGettingStage) return;
-            var eventType = GetEvent(checkpoint.EventType);
+            var eventType = GetEvent(stage.Checkpoint.EventType);
             switch (eventType)
             {
                 case EventTypes.战斗:
-                    GoToBattle(checkpoint); 
+                    GoToBattle(stage); 
                     break;
                 case EventTypes.答题:
                     GoToQuiz();
@@ -505,8 +492,9 @@ public class WarsUIManager : MonoBehaviour
     /// <summary>
     /// 进入战斗
     /// </summary>
-    private void GoToBattle(CheckpointTable checkPoint)
+    private void GoToBattle(GameStage stage)
     {
+        var checkPoint = stage.Checkpoint;
         currentEvent = EventTypes.战斗;
         PlayAudioClip(21);
         fightBackImage.sprite = GameResources.BattleBG[checkPoint.BattleBG];
@@ -514,7 +502,7 @@ public class WarsUIManager : MonoBehaviour
         AudioController1.instance.isNeedPlayLongMusic = true;
         AudioController1.instance.ChangeAudioClip(audioClipsFightBack[bgmIndex], audioVolumeFightBack[bgmIndex]);
         AudioController1.instance.PlayLongBackMusInit();
-        FightForManager.instance.InitChessboard(checkPoint.BattleEventTableId);
+        FightForManager.instance.InitChessboard(stage);
         Chessboard.SetActive(true);
         //eventsWindows[0].SetActive(true);
     }
@@ -1385,4 +1373,11 @@ public class WarsUIManager : MonoBehaviour
             Show(States.Reward);
         }
     }
+}
+
+public class GameStage
+{
+    public CheckpointTable Checkpoint { get; set; }
+    public BattleEventTable BattleEvent { get; set; }
+    public int RandomId { get; set; }
 }
