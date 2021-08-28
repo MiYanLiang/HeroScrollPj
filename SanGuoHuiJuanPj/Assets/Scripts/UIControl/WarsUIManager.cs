@@ -366,7 +366,7 @@ public class WarsUIManager : MonoBehaviour
             PlayerDataForGame.instance.baYe.gold = GoldForCity;
         } else if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition)
         {
-            PlayerDataForGame.instance.UpdateWarUnlockProgress(passedGuanQiaNums);
+            PlayerDataForGame.instance.UpdateWarUnlockProgress(passedGuanQiaNums + 1);
             var ca = PlayerDataForGame.instance.warsData.GetCampaign(reward.WarId);
             //if (treasureChestNums > 0) rewardMap.Trade(2, treasureChestNums); //index2是宝箱图
             var viewBag = ViewBag.Instance()
@@ -397,7 +397,7 @@ public class WarsUIManager : MonoBehaviour
     private void InitShowParentGuanQia(int[] checkPoints)
     {
         passedGuanQiaNums++;
-        if (passedGuanQiaNums >= DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints)
+        if (passedGuanQiaNums >= DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints -1)
         {
             ExpeditionFinalize(true);//通过所有关卡
             return;
@@ -418,7 +418,7 @@ public class WarsUIManager : MonoBehaviour
             var ui = Instantiate(guanQiaPreObj, point1Tran);
             ui.Set(Vector3.one, stage, IsBattle(checkPoint.EventType));
             int randArtImg = Random.Range(0, 25); //随机艺术图
-            ui.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(()=>
+            ui.Button.onClick.AddListener(()=>
             {
                 operationText.text = IsBattle(checkPoint.EventType) ? DataTable.GetStringText(53) : DataTable.GetStringText(54);
                 operationButton.gameObject.SetActive(true);
@@ -434,7 +434,7 @@ public class WarsUIManager : MonoBehaviour
     {
         yield return new WaitForSeconds(startTime);
         //默认选择第一个
-        point1Tran.GetChild(0).GetChild(1).GetComponent<Button>().onClick.Invoke();
+        point1Tran.GetComponentInChildren<Button>().onClick.Invoke();
     }
 
     Image indexSelectGuanQia;
