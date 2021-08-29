@@ -153,8 +153,8 @@ public class LoginUiController : MonoBehaviour
     private void InitAccountInfo()
     {
         //accountInfo.warningMessage.gameObject.SetActive(!GamePref.IsUserAccountCompleted);
-        if (GamePref.IsUserAccountCompleted) accountInfo.password.text = GamePref.Password;
-        accountInfo.password.contentType = isDeviceLogin ? InputField.ContentType.Password : InputField.ContentType.Standard;
+        var isDefaultPwd = accountInfo.password.text == DeviceLoginString;
+        accountInfo.password.contentType = isDefaultPwd ? InputField.ContentType.Password : InputField.ContentType.Standard;
         accountInfo.backBtn.onClick.AddListener(Close);
         accountInfo.changePasswordBtn.onClick.AddListener(() => OnAction(ActionWindows.ChangePassword));
     }
@@ -184,14 +184,27 @@ public class LoginUiController : MonoBehaviour
 
     private async Task RegisterAccountApi()
     {
-        if(!IsPassPasswordLogic(register.password,register.rePassword,register.message))
+        if (!IsPassPasswordLogic(register.password, register.rePassword, register.message))
             return;
-        var userInfo = await Http.PostAsync<UserInfo>(Server.PLAYER_REG_ACCOUNT_API,Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)));
-        if(userInfo==null)
+        UserInfo userInfo = null;
+        try
+        {
+            userInfo = await Http.PostAsync<UserInfo>(Server.PLAYER_REG_ACCOUNT_API,
+                Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)));
+        }
+        catch (Exception)//为了防止任务报错
+        {
+            register.message.text = "注册失败!";
+            return;
+
+        }
+
+        if (userInfo == null)
         {
             register.message.text = "注册失败!";
             return;
         }
+
         UnityMainThread.thread.RunNextFrame(() =>
         {
             PlayerDataForGame.instance.ShowStringTips("注册成功!");
@@ -262,6 +275,11 @@ public class LoginUiController : MonoBehaviour
         busyPanel.gameObject.SetActive(false);
         if (success)
         {
+            if (!isDeviceLogin)
+            {
+                GamePref.SetPassword(password);
+                accountInfo.password.text = password;
+            }
             UnityMainThread.thread.RunNextFrame(() =>
                 OnLoggedInAction.Invoke(info.Username, password, info.Arrangement, info.IsNewRegistered));
             return;

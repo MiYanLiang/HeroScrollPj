@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Assets;
@@ -289,7 +290,7 @@ public class SignalRClient : MonoBehaviour
             if (bag == default) bag = ViewBag.Instance();
             if (tokenSource == null) tokenSource = new CancellationTokenSource();
             var result = await _hub.InvokeCoreAsync(method, _stringType,
-                bag == null ? new object[0] : new object[] { Json.Serialize(bag)},
+                bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) },
                 tokenSource.Token);
             return result?.ToString();
         }
