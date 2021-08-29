@@ -411,18 +411,19 @@ public class WarsUIManager : MonoBehaviour
         }
         for (int i = 0; i < checkPoints.Length; i++)
         {
-            var checkPoint = DataTable.Checkpoint[checkPoints[i]];
-            var stage = InstanceStage(checkPoint);
+            var cId = checkPoints[i];
+
+            var stage = StagesMap.ContainsKey(cId) ? StagesMap[cId] : InstanceStage(DataTable.Checkpoint[cId]);
             //下个关卡点
             var ui = Instantiate(guanQiaPreObj, point1Tran);
-            ui.Set(Vector3.one, stage, IsBattle(checkPoint.EventType));
+            ui.Set(Vector3.one, stage, IsBattle(stage.Checkpoint.EventType));
             ui.Button.onClick.AddListener(()=>
             {
-                operationText.text = IsBattle(checkPoint.EventType) ? DataTable.GetStringText(53) : DataTable.GetStringText(54);
+                operationText.text = IsBattle(stage.Checkpoint.EventType) ? DataTable.GetStringText(53) : DataTable.GetStringText(54);
                 operationButton.gameObject.SetActive(true);
                 SelectOneGuanQia(ui);
                 SelectStage(stage);
-                OnCheckpointInvoke(checkPoint.Id);
+                OnCheckpointInvoke(stage.Checkpoint.Id);
             });
         }
         StartCoroutine(LiteInitChooseFirst(0));
