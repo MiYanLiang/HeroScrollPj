@@ -69,7 +69,8 @@ public class WarsUIManager : MonoBehaviour
     }
     private List<int> WarChests;
     int indexLastGuanQiaId;   //记录上一个关卡id
-    int passedGuanQiaNums;  //记录通过的关卡数
+    //int passedGuanQiaNums;  //记录通过的关卡数
+    private bool[] PassCheckpoints;
 
     public List<FightCardData> playerCardsDatas; //我方卡牌信息集合
 
@@ -172,7 +173,7 @@ public class WarsUIManager : MonoBehaviour
 
         WarChests = new List<int>();
         indexLastGuanQiaId = 0;
-        passedGuanQiaNums = -1;
+        PassCheckpoints = new bool[DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints];
         playerCardsDatas = new List<FightCardData>();
         cardMoveSpeed = 2f;
         nowGuanQiaIndex = 0;
@@ -215,7 +216,7 @@ public class WarsUIManager : MonoBehaviour
         var checkpointId = DataTable.War[PlayerDataForGame.instance.selectedWarId].BeginPoint;
         var checkpoint = DataTable.Checkpoint[checkpointId];
         InstanceStage(checkpoint);
-        InitShowParentGuanQia(checkpoint.Next);
+        PreInitNextStage(new []{checkpoint.Id});
     }
 
     private GameStage InstanceStage(CheckpointTable checkPoint)
@@ -237,11 +238,11 @@ public class WarsUIManager : MonoBehaviour
     int selectParentIndex = -1;
 
     //选择某个父级关卡初始化子集关卡
-    private void ChooseParentGuanQia(GameStage stage, int randImg, Transform parentTran)
+    private void SelectStage(GameStage stage)
     {
         var checkpointId = stage.Checkpoint.Id;
         UpdateLevelInfoText(checkpointId);
-
+        int randArtImg = Random.Range(0, 25); //随机艺术图
         if (selectParentIndex != checkpointId)
         {
             point0Tran.gameObject.SetActive(false);
@@ -282,18 +283,18 @@ public class WarsUIManager : MonoBehaviour
             //关卡艺术图
             levelIntroText.transform.parent.GetComponent<Image>().DOFade(0, 0.5f).OnComplete(delegate ()
             {
-                levelIntroText.transform.parent.GetComponent<Image>().sprite = GameResources.ArtWindow[randImg];
+                levelIntroText.transform.parent.GetComponent<Image>().sprite = GameResources.ArtWindow[randArtImg];
                 levelIntroText.transform.parent.GetComponent<Image>().DOFade(1, 1f);
             });
 
             pointWays.SetActive(false);
             //展示云朵动画
             ShowClouds();
-            StartCoroutine(LiteInitChooseFirst111(2f, parentTran, childsTranform));
+            StartCoroutine(LiteInitChooseFirst111(2f));
         }
     }
 
-    IEnumerator LiteInitChooseFirst111(float startTime, Transform parentTran, List<Transform> childsTranform)
+    IEnumerator LiteInitChooseFirst111(float startTime)
     {
         yield return new WaitForSeconds(startTime / 2);
         //显示子关卡
@@ -366,7 +367,7 @@ public class WarsUIManager : MonoBehaviour
             PlayerDataForGame.instance.baYe.gold = GoldForCity;
         } else if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition)
         {
-            PlayerDataForGame.instance.UpdateWarUnlockProgress(passedGuanQiaNums + 1);
+            PlayerDataForGame.instance.UpdateWarUnlockProgress(PassCheckpoints.Count(isPass=>isPass));
             var ca = PlayerDataForGame.instance.warsData.GetCampaign(reward.WarId);
             //if (treasureChestNums > 0) rewardMap.Trade(2, treasureChestNums); //index2是宝箱图
             var viewBag = ViewBag.Instance()
@@ -394,10 +395,9 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //初始化父级关卡
-    private void InitShowParentGuanQia(int[] checkPoints)
+    private void PreInitNextStage(int[] checkPoints)
     {
-        passedGuanQiaNums++;
-        if (passedGuanQiaNums >= DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints -1)
+        if (PassCheckpoints.All(isPass=>isPass))
         {
             ExpeditionFinalize(true);//通过所有关卡
             return;
@@ -409,7 +409,6 @@ public class WarsUIManager : MonoBehaviour
         {
             Destroy(point1Tran.GetChild(i).gameObject);
         }
-        StagesMap.Clear();
         for (int i = 0; i < checkPoints.Length; i++)
         {
             var checkPoint = DataTable.Checkpoint[checkPoints[i]];
@@ -417,13 +416,12 @@ public class WarsUIManager : MonoBehaviour
             //下个关卡点
             var ui = Instantiate(guanQiaPreObj, point1Tran);
             ui.Set(Vector3.one, stage, IsBattle(checkPoint.EventType));
-            int randArtImg = Random.Range(0, 25); //随机艺术图
             ui.Button.onClick.AddListener(()=>
             {
                 operationText.text = IsBattle(checkPoint.EventType) ? DataTable.GetStringText(53) : DataTable.GetStringText(54);
                 operationButton.gameObject.SetActive(true);
                 SelectOneGuanQia(ui);
-                ChooseParentGuanQia(stage, randArtImg, ui.transform);
+                SelectStage(stage);
                 OnCheckpointInvoke(checkPoint.Id);
             });
         }
@@ -504,7 +502,6 @@ public class WarsUIManager : MonoBehaviour
         AudioController1.instance.PlayLongBackMusInit();
         FightForManager.instance.InitChessboard(stage);
         Chessboard.SetActive(true);
-        //eventsWindows[0].SetActive(true);
     }
 
     /// <summary>
@@ -645,14 +642,12 @@ public class WarsUIManager : MonoBehaviour
     //展示关卡前进的云朵动画
     private void ShowClouds()
     {
-        if (passedGuanQiaNums + 1 < DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints)
+        if (PassCheckpoints.All(isPass => isPass)) return;
+        if (warCityCloudsObj.activeInHierarchy)
         {
-            if (warCityCloudsObj.activeInHierarchy)
-            {
-                warCityCloudsObj.SetActive(false);
-            }
-            warCityCloudsObj.SetActive(true);
+            warCityCloudsObj.SetActive(false);
         }
+        warCityCloudsObj.SetActive(true);
     }
 
     /// <summary>
@@ -664,11 +659,18 @@ public class WarsUIManager : MonoBehaviour
             return;
 
         isGettingStage = false;
+        for (var i = 0; i < PassCheckpoints.Length; i++)
+        {
+            var passCheckpoint = PassCheckpoints[i];
+            if (passCheckpoint) continue;
+            PassCheckpoints[i] = true;
+            break;
+        } 
 
         PlayAudioClip(13);
 
         UpdateBattleSchedule();
-        InitShowParentGuanQia(DataTable.Checkpoint[indexLastGuanQiaId].Next);
+        PreInitNextStage(DataTable.Checkpoint[indexLastGuanQiaId].Next);
         TongGuanCityPointShow();
         //关闭所有战斗事件的物件
         if(Chessboard.activeSelf)
