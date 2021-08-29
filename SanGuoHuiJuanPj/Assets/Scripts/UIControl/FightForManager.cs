@@ -118,13 +118,13 @@ public class FightForManager : MonoBehaviour
     /// <summary>
     /// 初始化敌方卡牌到战斗位上
     /// </summary>
-    /// <param name="battleEventId"></param>
-    public void InitChessboard(int battleEventId)
+
+    public void InitChessboard(GameStage stage)
     {
         //初始化敌方羁绊原始集合
         CardManager.ResetJiBan(FightController.instance.enemyJiBanAllTypes);
 
-        battleIdIndex = battleEventId;
+        battleIdIndex = stage.BattleEvent.Id;
         var baseConfig = DataTable.BaseLevel[WarsUIManager.instance.cityLevel];
         var playerLvlCfg = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level];
         playerFightCardsDatas[17].fullHp = playerFightCardsDatas[17].nowHp = baseConfig.BaseHp + playerLvlCfg.BaseHpAddOn;
@@ -139,30 +139,11 @@ public class FightForManager : MonoBehaviour
                 enemyFightCardsDatas[i] = null;
             }
         }
-        //对战势力名
-        var battle = DataTable.BattleEvent[battleEventId];
-        string battleEnemyPowerName = battle.EnemyForce;
 
-        var index = Random.Range(0, battle.EnemyTableIndexes.Length); //敌人随机库抽取一个id
-        int enemyRandId = battle.EnemyTableIndexes[index];
-
+        var battle = stage.BattleEvent;
+        var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
         //随机敌人卡牌
-        if (battle.IsStaticEnemies == 0)
-        {
-            var enemies = DataTable.Enemy[enemyRandId].Poses();
-            for (int i = 0; i < 20; i++)
-            {
-                var enemyId = enemies[i];
-                if (enemyId == 0) continue;
-                FightCardData data = CreateEnemyFightUnit(enemyId, false);
-                data.posIndex = i;
-                data.isPlayerCard = false;
-                data.cardObj.transform.position = enemyCardsPos[i].transform.position;
-                enemyFightCardsDatas[i] = data;
-                CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
-            }
-        }
-        else
+        if (battle.IsStaticEnemies > 0)
         {
             var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
             //固定敌人卡牌
@@ -181,12 +162,27 @@ public class FightForManager : MonoBehaviour
                 CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
             }
         }
+        else
+        {
+            var enemies = DataTable.Enemy[enemyRandId].Poses();
+            for (int i = 0; i < 20; i++)
+            {
+                var enemyId = enemies[i];
+                if (enemyId == 0) continue;
+                FightCardData data = CreateEnemyFightUnit(enemyId, false);
+                data.posIndex = i;
+                data.isPlayerCard = false;
+                data.cardObj.transform.position = enemyCardsPos[i].transform.position;
+                enemyFightCardsDatas[i] = data;
+                CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
+            }
+        }
 
 
         FightCardData enemyHomeData = new FightCardData();
         enemyHomeData.cardObj = Instantiate(homeCardObj, enemyCardsBox);
         enemyHomeData.cardObj.transform.position = enemyCardsPos[17].transform.position;
-        enemyHomeData.fullHp = enemyHomeData.nowHp = DataTable.BattleEvent[battleEventId].BaseHp;
+        enemyHomeData.fullHp = enemyHomeData.nowHp = battle.BaseHp;
         enemyHomeData.hpr = 0;
         enemyHomeData.cardType = 522;
         enemyHomeData.posIndex = 17;
