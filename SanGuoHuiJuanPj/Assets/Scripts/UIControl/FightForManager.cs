@@ -97,53 +97,51 @@ public class FightForManager : MonoBehaviour
     /// <summary>
     /// 初始化敌方卡牌到战斗位上
     /// </summary>
-    /// <param name="battleEventId"></param>
-    public void InitChessboard(int battleEventId)
+
+    public void InitChessboard(GameStage stage)
     {
         //初始化敌方羁绊原始集合
         CardManager.ResetJiBan(FightController.instance.enemyJiBanAllTypes);
 
-        battleIdIndex = battleEventId;
+        battleIdIndex = stage.BattleEvent.Id;
         var playerBase = ResetPlayerBaseHp();
         playerBase.UpdateHpUi();
-        FightController.instance.ClearEmTieQiCardList();
         chessboard.ClearEnemyCards();
-        //对战势力名
-        var battle = DataTable.BattleEvent[battleEventId];
-        var randomIndex = Random.Range(0, battle.EnemyTableIndexes.Length); //敌人随机库抽取一个id
-        var enemyRandId = battle.EnemyTableIndexes[randomIndex];
+        FightController.instance.ClearEmTieQiCardList();
 
+        var battle = stage.BattleEvent;
+        var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
         //随机敌人卡牌
-        if (battle.IsStaticEnemies == 0)
-        {
-            var enemies = DataTable.Enemy[enemyRandId].Poses();
-            for (var i = 0; i < 20; i++)
-            {
-                var enemyId = enemies[i];
-                if (enemyId == 0) continue;
-                var card = CreateEnemyFightUnit(i, enemyId, false);
-                PlaceCardOnBoard(card, i, false);
-            }
-        }
-        else
+        if (battle.IsStaticEnemies > 0)
         {
             var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
             //固定敌人卡牌
-            for (var i = 0; i < 20; i++)
+            for (int i = 0; i < 20; i++)
             {
                 var chessman = enemies[i];
                 if (chessman == null) continue;
                 if (chessman.Star <= 0)
                     throw new InvalidOperationException(
                         $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
-                var card = CreateEnemyFightUnit(i, 1, true, chessman);
+                var card = CreateEnemyFightUnit(i,1, true, chessman);
                 PlaceCardOnBoard(card, i, false);
+            }
+        }
+        else
+        {
+            var enemies = DataTable.Enemy[enemyRandId].Poses();
+            for (int i = 0; i < 20; i++)
+            {
+                var enemyId = enemies[i];
+                if (enemyId == 0) continue;
+                var card = CreateEnemyFightUnit(enemyId, i, false);
+                PlaceCardOnBoard(card,i,false);
             }
         }
 
         var enemyBase = new FightCardData();
         enemyBase.cardObj = Instantiate(homeCardObj, transform);
-        enemyBase.ResetHp(DataTable.BattleEvent[battleEventId].BaseHp);
+        enemyBase.ResetHp(stage.BattleEvent.BaseHp);
         enemyBase.hpr = 0;
         enemyBase.cardType = 522;
         enemyBase.isPlayerCard = false;
@@ -158,7 +156,7 @@ public class FightForManager : MonoBehaviour
         Time.timeScale = speed;
         speedBtnText.text = Multiply + speed;
         //创建敌方卡牌战斗单位数据
-        FightCardData CreateEnemyFightUnit(int index, int unitId, bool isFixed, Chessman chessman = null)
+        FightCardData CreateEnemyFightUnit(int pos, int unitId, bool isFixed, Chessman chessman = null)
         {
             var fCard = new FightCardData();
             fCard.cardObj = PrefabManager.NewWarGameCardUi(transform); //Instantiate(fightCardPre, enemyCardsBox);
@@ -183,7 +181,7 @@ public class FightForManager : MonoBehaviour
             var info = card.GetInfo();
             fCard.cardObj.Init(card);
             fCard.cardObj.tag = GameSystem.UnTagged;
-            fCard.posIndex = index;
+            fCard.posIndex = pos;
             fCard.isPlayerCard = false;
             fCard.damage = info.GetDamage(fCard.cardGrade);
             fCard.hpr = info.GameSetRecovery;
