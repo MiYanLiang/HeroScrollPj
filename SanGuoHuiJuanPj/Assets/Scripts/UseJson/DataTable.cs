@@ -101,7 +101,7 @@ public class DataTable : MonoBehaviour
         public TextAsset PlayerSignTable;
         public TextAsset DirtyWordTable;
 
-        private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
+        //private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
         private void Awake()
         {
             if (instance != null && instance != this)
@@ -116,63 +116,53 @@ public class DataTable : MonoBehaviour
 
         public void Init()
         {
-            var type = GetType();
-            data = type.GetFields().Where(f => f.FieldType == TextAssetType)
-                .ToDictionary(p => p.Name.ToLower(), p => ConvertText(p.GetValue(this).ToString()));
-            PlayerInitialConfig = ResolveProperty(l => new PlayerInitialConfigTable(l));
-            ResourceConfig =      ResolveProperty(l => new ResourceConfigTable(l));
-            Hero =                ResolveProperty(l => new HeroTable(l));
-            PlayerLevelConfig =   ResolveProperty(l => new PlayerLevelConfigTable(l));
-            Tower =               ResolveProperty(l => new TowerTable(l));
-            Military =            ResolveProperty(l => new MilitaryTable(l));
-            CardLevel =           ResolveProperty(l => new CardLevelTable(l));
-            Trap =                ResolveProperty(l => new TrapTable(l));
-            WarChest =            ResolveProperty(l => new WarChestTable(l));
-            War =                 ResolveProperty(l => new WarTable(l));
-            BaseLevel =           ResolveProperty(l => new BaseLevelTable(l));
-            Checkpoint =          ResolveProperty(l => new CheckpointTable(l));
-            BattleEvent =         ResolveProperty(l => new BattleEventTable(l));
-            Enemy =               ResolveProperty(l => new EnemyTable(l));
-            EnemyUnit =           ResolveProperty(l => new EnemyUnitTable(l));
-            Quest =               ResolveProperty(l => new QuestTable(l));
-            QuestReward =         ResolveProperty(l => new QuestRewardTable(l));
-            Mercenary =           ResolveProperty(l => new MercenaryTable(l));
-            GameMode =            ResolveProperty(l => new GameModeTable(l));
-            Guide =               ResolveProperty(l => new GuideTable(l));
-            Tips =                ResolveProperty(l => new TipsTable(l));
-            RCode =               ResolveProperty(l => new RCodeTable(l));
-            Chicken =             ResolveProperty(l => new ChickenTable(l));
-            StaticArrangement =   ResolveProperty(l => new StaticArrangementTable(l));
-            Text =                ResolveProperty(l => new TextTable(l));
-            NumericalConfig =     ResolveProperty(l => new NumericalConfigTable(l));
-            JiBan =               ResolveProperty(l => new JiBanTable(l));
-            Force =               ResolveProperty(l => new ForceTable(l));
-            BaYeCity =            ResolveProperty(l => new BaYeCityTable(l));
-            BaYeCityEvent =       ResolveProperty(l => new BaYeCityEventTable(l));
-            BaYeLevelMapping =    ResolveProperty(l => new BaYeLevelMappingTable(l));
-            BaYeTask =            ResolveProperty(l => new BaYeTaskTable(l));
-            BaYeStoryPool =       ResolveProperty(l => new BaYeStoryPoolTable(l));
-            BaYeStoryEvent =      ResolveProperty(l => new BaYeStoryEventTable(l));
-            BaYeTv =              ResolveProperty(l => new BaYeTvTable(l));
-            BaYeName =            ResolveProperty(l => new BaYeNameTable(l));
-            City =                ResolveProperty(l => new CityTable(l));
-            PlayerName =          ResolveProperty(l => new PlayerNameTable(l));
-            PlayerNickname =      ResolveProperty(l => new PlayerNicknameTable(l));
-            PlayerSign =          ResolveProperty(l => new PlayerSignTable(l));
-            DirtyWord =           ResolveProperty(l => new DirtyWordTable(l));
+            PlayerInitialConfig = NewConvert(PlayerInitialConfigTable.text, l => new PlayerInitialConfigTable(l)); 
+            ResourceConfig =      NewConvert(ResourceConfigTable.text,l => new ResourceConfigTable(l));
+            Hero =                NewConvert(HeroTable.text,l => new HeroTable(l));
+            PlayerLevelConfig =   NewConvert(PlayerLevelConfigTable.text,l => new PlayerLevelConfigTable(l));
+            Tower =               NewConvert(TowerTable.text,l => new TowerTable(l));
+            Military =            NewConvert(MilitaryTable.text,l => new MilitaryTable(l));
+            CardLevel =           NewConvert(CardLevelTable.text,l => new CardLevelTable(l));
+            Trap =                NewConvert(TrapTable.text,l => new TrapTable(l));
+            WarChest =            NewConvert(WarChestTable.text,l => new WarChestTable(l));
+            War =                 NewConvert(WarTable.text,l => new WarTable(l));
+            BaseLevel =           NewConvert(BaseLevelTable.text,l => new BaseLevelTable(l));
+            Checkpoint =          NewConvert(CheckpointTable.text,l => new CheckpointTable(l));
+            BattleEvent =         NewConvert(BattleEventTable.text,l => new BattleEventTable(l));
+            Enemy =               NewConvert(EnemyTable.text,l => new EnemyTable(l));
+            EnemyUnit =           NewConvert(EnemyUnitTable.text,l => new EnemyUnitTable(l));
+            Quest =               NewConvert(QuestTable.text,l => new QuestTable(l));
+            QuestReward =         NewConvert(QuestRewardTable.text,l => new QuestRewardTable(l));
+            Mercenary =           NewConvert(MercenaryTable.text,l => new MercenaryTable(l));
+            GameMode =            NewConvert(GameModeTable.text,l => new GameModeTable(l));
+            Guide =               NewConvert(GuideTable.text,l => new GuideTable(l));
+            Tips =                NewConvert(TipsTable.text,l => new TipsTable(l));
+            RCode =               NewConvert(RCodeTable.text,l => new RCodeTable(l));
+            Chicken =             NewConvert(ChickenTable.text,l => new ChickenTable(l));
+            StaticArrangement =   NewConvert(StaticArrangementTable.text,l => new StaticArrangementTable(l));
+            Text =                NewConvert(TextTable.text,l => new TextTable(l));
+            NumericalConfig =     NewConvert(NumericalConfigTable.text,l => new NumericalConfigTable(l));
+            JiBan =               NewConvert(JiBanTable.text,l => new JiBanTable(l));
+            Force =               NewConvert(ForceTable.text,l => new ForceTable(l));
+            BaYeCity =            NewConvert(BaYeCityTable.text,l => new BaYeCityTable(l));
+            BaYeCityEvent =       NewConvert(BaYeCityEventTable.text,l => new BaYeCityEventTable(l));
+            BaYeLevelMapping =    NewConvert(BaYeLevelMappingTable.text,l => new BaYeLevelMappingTable(l));
+            BaYeTask =            NewConvert(BaYeTaskTable.text,l => new BaYeTaskTable(l));
+            BaYeStoryPool =       NewConvert(BaYeStoryPoolTable.text,l => new BaYeStoryPoolTable(l));
+            BaYeStoryEvent =      NewConvert(BaYeStoryEventTable.text,l => new BaYeStoryEventTable(l));
+            BaYeTv =              NewConvert(BaYeTvTable.text,l => new BaYeTvTable(l));
+            BaYeName =            NewConvert(BaYeNameTable.text,l => new BaYeNameTable(l));
+            City =                NewConvert(CityTable.text,l => new CityTable(l));
+            PlayerName =          NewConvert(PlayerNameTable.text,l => new PlayerNameTable(l));
+            PlayerNickname =      NewConvert(PlayerNicknameTable.text,l => new PlayerNicknameTable(l));
+            PlayerSign =          NewConvert(PlayerSignTable.text,l => new PlayerSignTable(l));
+            DirtyWord =           NewConvert(DirtyWordTable.text,l => new DirtyWordTable(l));
         }
 
-        private IReadOnlyDictionary<int, T> ResolveProperty<T>(Func<IList<string>,T> func)
-        {
-            var propName = typeof(T).Name.ToLower();
-            return data[propName].Select(s => new KeyValuePair<int, T>(s.Key, func(s.Value.ToArray())))
-                .ToDictionary(s => s.Key, s => s.Value);
-        }
-
-        private Dictionary<int, IReadOnlyList<string>> ConvertText(string text)
+        private static Dictionary<int, T> NewConvert<T>(string text,Func<IList<string>,T> func)
         {
             text = text.Replace(@"\\", @"\");
-            return Json.DeserializeList<List<string>>(text).ToDictionary(row => int.Parse(row[0]), row =>row as IReadOnlyList<string>);
+            return Json.DeserializeList<List<string>>(text).ToDictionary(row => int.Parse(row[0]), row => func(row));
         }
 
         /// <summary>
