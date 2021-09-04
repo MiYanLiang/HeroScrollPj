@@ -274,11 +274,7 @@ public class LoginUiController : MonoBehaviour
         busyPanel.gameObject.SetActive(false);
         if (success)
         {
-            if (!isDeviceLogin)
-            {
-                GamePref.SetPassword(password);
-                accountInfo.password.text = password;
-            }
+            GamePref.SetPassword(isDeviceLogin ? string.Empty : password);
             UnityMainThread.thread.RunNextFrame(() =>
                 OnLoggedInAction.Invoke(info.Username, password, info.Arrangement, info.IsNewRegistered));
             return;
