@@ -28,7 +28,7 @@ public static class ColorDataStatic
     /// <summary>
     /// 蓝色
     /// </summary>
-    public static readonly Color name_blue = new Color(0f / 255f, 44f / 255f, 207f / 255f, 1);
+    public static readonly Color name_blue = new Color(0f / 255f, 70f / 255f, 100f / 255f, 1);
 
     /// <summary>
     /// 紫色
