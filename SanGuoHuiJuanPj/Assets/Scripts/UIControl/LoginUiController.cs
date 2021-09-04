@@ -153,8 +153,7 @@ public class LoginUiController : MonoBehaviour
     private void InitAccountInfo()
     {
         //accountInfo.warningMessage.gameObject.SetActive(!GamePref.IsUserAccountCompleted);
-        var isDefaultPwd = accountInfo.password.text == DeviceLoginString;
-        accountInfo.password.contentType = isDefaultPwd ? InputField.ContentType.Password : InputField.ContentType.Standard;
+        accountInfo.password.contentType = isDeviceLogin ? InputField.ContentType.Password : InputField.ContentType.Standard;
         accountInfo.backBtn.onClick.AddListener(Close);
         accountInfo.changePasswordBtn.onClick.AddListener(() => OnAction(ActionWindows.ChangePassword));
     }
