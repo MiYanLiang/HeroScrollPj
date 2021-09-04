@@ -28,7 +28,7 @@ public static class ColorDataStatic
     /// <summary>
     /// 蓝色
     /// </summary>
-    public static readonly Color name_blue = new Color(0f / 255f, 44f / 255f, 207f / 255f, 1);
+    public static readonly Color name_blue = new Color(0f / 255f, 70f / 255f, 100f / 255f, 1);
 
     /// <summary>
     /// 紫色
@@ -74,112 +74,112 @@ public static class StringNameStatic
     /// <summary>
     /// 铁骑连环状态图标
     /// </summary>
-    public static readonly string StateIconPath_lianHuan = "lianHuanState";
+    public const string StateIconPath_lianHuan = "lianHuanState";
 
     /// <summary>
     /// 眩晕状态图标
     /// </summary>
-    public static readonly string StateIconPath_dizzy = "dizzyState";
+    public const string StateIconPath_dizzy = "dizzyState";
 
     /// <summary>
     /// 坚盾状态图标
     /// </summary>
-    public static readonly string StateIconPath_withStand = "withStandState";
+    public const string StateIconPath_withStand = "withStandState";
 
     /// <summary>
     /// 无敌状态图标
     /// </summary>
-    public static readonly string StateIconPath_invincible = "invincibleState";
+    public const string StateIconPath_invincible = "invincibleState";
 
     /// <summary>
     /// 灼烧状态图标
     /// </summary>
-    public static readonly string StateIconPath_burned = "burnedState";
+    public const string StateIconPath_burned = "burnedState";
 
     /// <summary>
     /// 中毒状态图标
     /// </summary>
-    public static readonly string StateIconPath_poisoned = "poisonedState";
+    public const string StateIconPath_poisoned = "poisonedState";
 
     /// <summary>
     /// 流血状态图标
     /// </summary>
-    public static readonly string StateIconPath_bleed = "bleedState";
+    public const string StateIconPath_bleed = "bleedState";
 
     /// <summary>
     /// 禁锢状态图标
     /// </summary>
-    public static readonly string StateIconPath_imprisoned = "imprisonedState";
+    public const string StateIconPath_imprisoned = "imprisonedState";
 
     /// <summary>
     /// 怯战状态图标
     /// </summary>
-    public static readonly string StateIconPath_cowardly = "cowardlyState";
+    public const string StateIconPath_cowardly = "cowardlyState";
 
     /// <summary>
     /// 卸甲状态图标
     /// </summary>
-    public static readonly string StateIconPath_removeArmor = "removeArmorState";
+    public const string StateIconPath_removeArmor = "removeArmorState";
 
     /// <summary>
     /// 内助状态图标
     /// </summary>
-    public static readonly string StateIconPath_neizhu = "neizhuState";
+    public const string StateIconPath_neizhu = "neizhuState";
 
     /// <summary>
     /// 神助状态图标
     /// </summary>
-    public static readonly string StateIconPath_shenzhu = "shenzhuState";
+    public const string StateIconPath_shenzhu = "shenzhuState";
 
     /// <summary>
     /// 神武兵种战意状态图标
     /// </summary>
-    public static readonly string StateIconPath_willFight = "willFightState";
+    public const string StateIconPath_willFight = "willFightState";
     
     /// <summary>
     /// 防护盾状态(辅佐)图标
     /// </summary>
-    public static readonly string StateIconPath_shield = "shieldState";
+    public const string StateIconPath_shield = "shieldState";
 
     /// <summary>
     /// 战鼓台加成状态图标 10-13伤害加成塔
     /// </summary>
-    public static readonly string StateIconPath_zhangutaiAddtion = "zhangutaiAddtion";
+    public const string StateIconPath_zhangutaiAddtion = "zhangutaiAddtion";
 
     /// <summary>
     /// 风神台加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_fengShenTaiAddtion = "fengShenTaiAddtion";
+    public const string StateIconPath_fengShenTaiAddtion = "fengShenTaiAddtion";
 
     /// <summary>
     /// 霹雳台加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_pilitaiAddtion = "pilitaiAddtion";
+    public const string StateIconPath_pilitaiAddtion = "pilitaiAddtion";
 
     /// <summary>
     /// 狼牙台加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_langyataiAddtion = "langyataiAddtion";
+    public const string StateIconPath_langyataiAddtion = "langyataiAddtion";
 
     /// <summary>
     /// 烽火台加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_fenghuotaiAddtion = "fenghuotaiAddtion";
+    public const string StateIconPath_fenghuotaiAddtion = "fenghuotaiAddtion";
 
     /// <summary>
     /// 奏乐台加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_zouyuetaiAddtion = "zouyuetaiAddtion";
+    public const string StateIconPath_zouyuetaiAddtion = "zouyuetaiAddtion";
     
     /// <summary>
     /// 迷雾阵加成状态图标
     /// </summary>
-    public static readonly string StateIconPath_miWuZhenAddtion = "miWuZhenAddtion";
+    public const string StateIconPath_miWuZhenAddtion = "miWuZhenAddtion";
 
     /// <summary>
     /// 死战状态图标
     /// </summary>
-    public static readonly string StateIconPath_deathFight = "deathFightState";
+    public const string StateIconPath_deathFight = "deathFightState";
 }
 
 /// <summary>
