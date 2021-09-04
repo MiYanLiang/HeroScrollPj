@@ -40,6 +40,7 @@ namespace Assets.System.WarModule
         private readonly ChessPosProcess[] EmptyProcess = Array.Empty<ChessPosProcess>();
 
         private readonly List<ChessRound> rounds;
+        private List<ChessPosProcess> currentProcesses;
         private int ProcessSeed = 0;
         private int ActivitySeed = 0;
         private int ChessSpriteSeed = 0;
@@ -105,7 +106,7 @@ namespace Assets.System.WarModule
             };
 
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
-            var roundProcesses = new List<ChessPosProcess>();
+            currentProcesses = new List<ChessPosProcess>();
             RefreshChessPosses();
             PreRoundAction();
             do
@@ -118,11 +119,10 @@ namespace Assets.System.WarModule
                     continue;
                 }
 
-                CurrentProcess = InstanceProcess(GetStatus(op).Pos, op.IsChallenger);
+                InstanceProcess(GetStatus(op).Pos, op.IsChallenger);
 
                 op.MainActivity();
 
-                roundProcesses.Add(CurrentProcess);
                 currentOps.Remove(op);
                 CheckIsGameOver();
                 if(IsGameOver) break;
@@ -135,7 +135,7 @@ namespace Assets.System.WarModule
 
             } while (currentOps.Count > 0);
 
-            currentRound.Processes = roundProcesses.ToArray();
+            currentRound.Processes = currentProcesses.ToArray();
 
             var finalAction = GetRoundEndTriggerByOperators();
             currentRound.FinalAction.ConcatAction(finalAction);
@@ -164,11 +164,11 @@ namespace Assets.System.WarModule
                 RoundActionInvocation(activity.Key, activity.Value);
         }
 
-        private ChessPosProcess InstanceProcess(int pos, bool isChallenger)
+        private void InstanceProcess(int pos,bool isChallenger)
         {
-            var process = ChessPosProcess.Instance(ProcessSeed, pos, isChallenger);
+            CurrentProcess = ChessPosProcess.Instance(ProcessSeed,pos, isChallenger);
+            currentProcesses.Add(CurrentProcess);
             ProcessSeed++;
-            return process;
         }
 
         private void CheckIsGameOver()
@@ -206,8 +206,7 @@ namespace Assets.System.WarModule
                     op.IsChallenger ? 0 : 1,
                     ResourceTarget(op, to == -1),
                     Activity.PlayerResource,
-                    Singular(CombatConduct.InstancePlayerResource(-1, value))
-                    , 0, -1)));
+                    Singular(CombatConduct.InstancePlayerResource(-1, value)), 0, -1)));
         }
         /// <summary>
         /// 回合结束添加战役宝箱
@@ -224,7 +223,7 @@ namespace Assets.System.WarModule
                     op.IsChallenger ? 0 : 1,
                     ResourceTarget(op, to == -1),
                     Activity.PlayerResource,
-                    warChests.Select(CombatConduct.InstancePlayerResource).ToArray(),
+                    warChests.Select(CombatConduct.InstancePlayerResource).ToArray(), 
                     0, -1)));
         }
 
@@ -257,15 +256,14 @@ namespace Assets.System.WarModule
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
-        public void InstanceChessboardActivity(bool fromChallenger,IChessOperator target, int intent, CombatConduct[] conducts,
+        public void InstanceChessboardActivity(bool fromChallenger,IChessOperator target, int intent,CombatConduct[] conducts,
             int skill = 0, int rePos = -1)
         {
-            if(CurrentProcess.Pos>0)
-            {
-                var pos = fromChallenger ? -1 : -2;
-                CurrentProcess = InstanceProcess(pos, fromChallenger);
-            }
-            AppendChessOpActivity(null, GetChessPos(target), intent, conducts, skill, rePos);
+            var pos = fromChallenger ? -1 : -2;
+            if (CurrentProcess == null || CurrentProcess.Pos != pos)//棋盘独立一个process，不插入棋子process
+                InstanceProcess(pos, fromChallenger);
+
+            AppendOpActivity(null, GetChessPos(target), intent, conducts, skill, rePos);
         }
 
         /// <summary>
@@ -278,28 +276,51 @@ namespace Assets.System.WarModule
         /// <param name="skill">如果是普通攻击，标记0，大于0将会是技能值</param>
         /// <param name="rePos"></param>
         /// <returns></returns>
-        public ActivityResult AppendChessOpActivity(ChessOperator offender, IChessPos target, int intent,
-            CombatConduct[] conducts,int skill ,int rePos = -1)
+        public ActivityResult AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
+             CombatConduct[] conducts, int skill, int rePos = -1)
         {
-            if (target == null) return null;
-            RecursiveActionCount++;
-            ActivitySeed++;
-            var activity = Activity.Instance(ActivitySeed, CurrentProcess.InstanceId,
-                offender == null ? -1 : offender.InstanceId,
-                offender == null ? -1:
-                offender.IsChallenger ? 0 : 1,
-                target.Operator.InstanceId,
-                intent, conducts, skill, rePos);
-            CurrentProcess.Activities.Add(activity);
             var op = GetOperator(target.Operator.InstanceId);
-            if (op == null)
-                throw new NullReferenceException(
-                    $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
+            var activity = InstanceActivity(offender, target, intent, conducts, skill, rePos);
+            if (InnerActivities == null)
+                InnerActivities = new List<Activity>();
+            InnerActivities.Add(activity);
             activity.Result = GetOperator(op.InstanceId).Respond(activity, offender);
             activity.OffenderStatus = GetStatus(op).Clone();
             UpdateTerrain(target);
             return activity.Result;
         }
+        public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
+            CombatConduct[] conducts,int skill ,int rePos = -1)
+        {
+            if (target == null) return null;
+            var activity = InstanceActivity(offender, target, intent, conducts, skill, rePos);
+            var op = GetOperator(target.Operator.InstanceId);
+            if (op == null)
+                throw new NullReferenceException(
+                    $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
+            activity.Inner = InnerActivities?.ToArray();
+            InnerActivities?.Clear();
+            activity.Result = GetOperator(op.InstanceId).Respond(activity, offender);
+            activity.OffenderStatus = GetStatus(op).Clone();
+            UpdateTerrain(target);
+            return activity.Result;
+        }
+
+        private Activity InstanceActivity(ChessOperator offender, IChessPos target, int intent, CombatConduct[] conducts, int skill, int rePos)
+        {
+            RecursiveActionCount++;
+            ActivitySeed++;
+            var activity = Activity.Instance(ActivitySeed, CurrentProcess.InstanceId,
+                offender == null ? -1 : offender.InstanceId,
+                offender == null ? -1 :
+                offender.IsChallenger ? 0 : 1,
+                target.Operator.InstanceId,
+                intent, conducts, skill, rePos);
+            CurrentProcess.Activities.Add(activity);
+            return activity;
+        }
+
+        private List<Activity> InnerActivities { get; set; }
 
         /// <summary>
         /// 生成棋盘精灵
@@ -331,8 +352,7 @@ namespace Assets.System.WarModule
             var activity = Activity.Instance(ActivitySeed,
                 CurrentProcess.InstanceId, sprite.Host,
                 sprite.IsChallenger ? 0 : 1, sprite.Pos, Activity.Sprite,
-                Helper.Singular(conduct),
-                1, -1);
+                Helper.Singular(conduct), 1, -1);
             ActivitySeed++;
             return activity;
         }
@@ -382,7 +402,8 @@ namespace Assets.System.WarModule
         /// <param name="intent"><see cref="Activity"/>Intent</param>
         /// <param name="conducts"></param>
         /// <returns></returns>
-        public Activity InstanceRoundAction(ChessOperator op, int to, int intent, CombatConduct[] conducts) =>
+        public Activity InstanceRoundAction(ChessOperator op, int to, int intent, 
+            CombatConduct[] conducts) =>
             Activity.Instance(ActivitySeed, CurrentProcess.InstanceId, GetStatus(op).Pos,
                 op.IsChallenger ? 0 : 1,
                 ResourceTarget(op, to == -1),
@@ -392,9 +413,9 @@ namespace Assets.System.WarModule
         {
             if (GetStatus(offender).IsDeath ||
                 GetStatus(op).IsDeath ||
-                offender.Style.CombatStyle == AttackStyle.CombatStyles.Range ||
+                offender.Style.Type == CombatStyle.Types.Range ||
                 offender.Style.ArmedType < 0 ||
-                op.Style.CombatStyle == AttackStyle.CombatStyles.Range)
+                op.Style.Type == CombatStyle.Types.Range)
                 return false;
             return !GetBuffOperator(b => b.IsDisableCounter(op)).Any();
         }

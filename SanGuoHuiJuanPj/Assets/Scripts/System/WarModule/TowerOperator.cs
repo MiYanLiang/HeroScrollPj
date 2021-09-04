@@ -29,8 +29,8 @@ namespace Assets.System.WarModule
             var tarStat = Chessboard.GetStatus(target.Operator);
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
-            Chessboard.AppendChessOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceDamage(healingHp,CombatConduct.FixedDmg)),0);
-            Chessboard.AppendChessOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(healingHp)),1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceDamage(healingHp,CombatConduct.FixedDmg)),0);
+            Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(healingHp)),1);
         }
     }
     /// <summary>
@@ -43,9 +43,15 @@ namespace Assets.System.WarModule
             // 获取对位与周围的单位
             var targets = Chessboard.GetContraNeighbors(this).Where(p => p.IsPostedAlive).ToArray();
             if (targets.Length == 0) return;
-            foreach (var target in targets)
+            for (var i = 0; i < targets.Length; i++)
             {
-                Chessboard.AppendChessOpActivity(this, target, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(GetStrength)),1);
+                var target = targets[i];
+                if (i == 1)
+                    Chessboard.AppendOpActivity(this, target, Activity.Offensive,
+                        Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 1);
+                else
+                    Chessboard.AppendOpInnerActivity(this, target, Activity.Offensive,
+                        Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 1);
             }
         }
     }
@@ -57,10 +63,16 @@ namespace Assets.System.WarModule
         protected override void StartActions()
         {
             var targets = Chessboard.GetFriendlyNeighbors(this).Where(p =>
-                p.IsAliveHero);
-            foreach (var target in targets)
+                p.IsAliveHero).ToArray();
+            for (var i = 0; i < targets.Length; i++)
             {
-                Chessboard.AppendChessOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(GetStrength)),1);
+                var target = targets[i];
+                if (i == 0)
+                    Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                        Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 1);
+                else
+                    Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly,
+                        Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 1);
             }
         }
     }
@@ -76,12 +88,15 @@ namespace Assets.System.WarModule
             var pick = chessPoses.Length > maxTargets ? maxTargets : chessPoses.Length;
             //17, 箭楼远射伤害百分比
             var damage = GetStrength * DataTable.GetGameValue(17);
-            var targets = chessPoses.Select(RandomElement.Instance).Pick(pick);
-            foreach (var target in targets)
+            var targets = chessPoses.Select(RandomElement.Instance).Pick(pick).ToArray();
+            for (var i = 0; i < targets.Length; i++)
             {
-                Chessboard.AppendChessOpActivity(this, target.Pos, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(damage)),1);
+                var target = targets[i];
+                if(i==0)
+                    Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
+                else 
+                    Chessboard.AppendOpInnerActivity(this, target.Pos, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
             }
-
         }
 
         class RandomElement : IWeightElement
@@ -108,10 +123,16 @@ namespace Assets.System.WarModule
                 .Where(p => p.IsPostedAlive &&
                             p.Operator.CardType == GameCardType.Hero)
                 .OrderBy(p => Chessboard.GetCondition(p.Operator,CardState.Cons.Shield))
-                .Take(GetStrength); //Style.Strength = 最大添加数
-            foreach (var target in targets)
+                .Take(GetStrength).ToArray(); //Style.Strength = 最大添加数
+            for (var i = 0; i < targets.Length; i++)
             {
-                Chessboard.AppendChessOpActivity(this, target, Activity.FriendlyAttach, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)),1);
+                var target = targets[i];
+                if (i == 0)
+                    Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 1);
+                else
+                    Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly,
+                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 1);
             }
         }
     }

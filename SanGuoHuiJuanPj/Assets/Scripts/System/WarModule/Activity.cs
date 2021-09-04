@@ -9,17 +9,9 @@ namespace Assets.System.WarModule
     /// 而一个棋子的行动在一次进程中可能会有多个对象的行动。
     /// 注意：如果连击将会产生多个<see cref="Activity"/>
     /// </summary>
-    [Serializable]
+    
     public class Activity
     {
-        public enum Intention
-        {
-            UnDefined,
-            Major,
-            Counter,
-            Attach,
-            Sprite
-        }
         public static Activity[] Empty { get; } = Array.Empty<Activity>();
         //注意，负数是非棋子行动。一般都是上升到棋手这个维度的东西如：资源，金币
         /// <summary>
@@ -42,20 +34,10 @@ namespace Assets.System.WarModule
         /// 对自己的行动
         /// </summary>
         public const int Self = 4;
-        public const int SelfAttach = 5;
-        /// <summary>
-        /// 攻击触发器
-        /// </summary>
-        public const int OffendAttach = 6;
-
-        /// <summary>
-        /// 同阵营触发器
-        /// </summary>
-        public const int FriendlyAttach = 7;
         /// <summary>
         /// 精灵类型
         /// </summary>
-        public const int Sprite = 8;
+        public const int Sprite = 5;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -67,6 +49,7 @@ namespace Assets.System.WarModule
         /// <param name="to">正数为棋子Id，-1=玩家，-2=对手</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
+        /// <param name="orientation"></param>
         /// <param name="skill">技能值，普通攻击为0</param>
         /// <param name="rePos">换位</param>
         /// <returns></returns>
@@ -82,7 +65,7 @@ namespace Assets.System.WarModule
                 Conducts = conducts,
                 Intent = intent,
                 Skill = skill,
-                RePos = rePos
+                RePos = rePos,
             };
         }
         [JsonProperty("I")] public int InstanceId { get; set; }
@@ -97,6 +80,7 @@ namespace Assets.System.WarModule
         /// <see cref="PlayerResource"/>,
         /// </summary>
         [JsonProperty("K")] public int Intent { get; set; }
+
         /// <summary>
         /// Target Id, > 0 = InstanceId, -1 = Player, -2 = Opponent
         /// </summary>
@@ -108,42 +92,30 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 如果正数代表换位
         /// </summary>
-        [JsonProperty("R")] public int RePos { get; set; } = -1;
+        [JsonProperty("P")] public int RePos { get; set; } = -1;
         /// <summary>
         /// 技能值，普通攻击=0，其余的值是根据兵种标记
         /// </summary>
         [JsonProperty("S")] public int Skill { get; set; }
-        [JsonProperty("P")] public int ProcessId { get; set; }
+        [JsonProperty("PI")] public int ProcessId { get; set; }
         [JsonProperty("C")] public CombatConduct[] Conducts { get; set; }
-        [JsonProperty("A")] public ActivityResult Result { get; set; }
-        [JsonProperty("O")]public ChessStatus OffenderStatus { get; set; }
+        [JsonProperty("R")] public ActivityResult Result { get; set; }
+        [JsonProperty("In")]public Activity[] Inner { get; set; }
+        [JsonProperty("OS")]public ChessStatus OffenderStatus { get; set; }
         /// <summary>
         /// 发起方 0 = Challenger, 1 = Opposite
         /// </summary>
         [JsonProperty("IC")] public int Initiator { get; set; }
 
-        public Intention GetIntention() => GetIntention(Intent);
-        public static Intention GetIntention(int intent)
-        {
-            switch (intent)
-            {
-                case Offensive: 
-                case Friendly: 
-                case Self: return Intention.Major;
-                case Counter: return Intention.Counter;
-                case SelfAttach:
-                case OffendAttach: 
-                case FriendlyAttach: return Intention.Attach;
-                case PlayerResource: return Intention.UnDefined;
-                case Sprite: return Intention.Sprite;
-                default:
-                    throw new ArgumentOutOfRangeException($"{nameof(GetIntention)}:Unknown intent({intent})");
-            }
-        }
-
         [JsonIgnore] public bool IsRePos => RePos >= 0;
 
-        public override string ToString() => $"{InstanceId}.Intent({GetIntention()})[{Intent}].From[{From}({Initiator})].To[{To}].Com[{Conducts.Length}].Result[{Result.Result}]";
+        //public override string ToString()
+        //{
+        //    var result = Result == null ? string.Empty : Result.Type.ToString();
+        //    var conducts = Conducts == null ? string.Empty : Conducts.Length.ToString();
+        //    return
+        //        $"{InstanceId}Intent[{Intent}]:From[{From}({Initiator})].To[{To}].Combats[{conducts}].Result[{result}]";
+        //}
     }
 
     public class ActivityResult
@@ -190,11 +162,7 @@ namespace Assets.System.WarModule
             /// </summary>
             Kill = 7
         }
-        /// <summary>
-        /// 精灵生成
-        /// </summary>
-        //public List<ChessSprite> SpriteAdded { get; set; }
-        //public List<int>SpriteRemove { get; set; }
+
         public int Result { get; set; }
         public ChessStatus Status { get; set; }
         public Types Type => (Types)Result;

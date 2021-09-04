@@ -40,6 +40,7 @@ public class GameResources
     private const string JiBanVTextPath = "Image/JiBan/name_v";
     private const string JiBanHTextPath = "Image/JiBan/name_h";
     private const string BattleEffectPath = "Image/battle";
+    private const string CardStateIconPath = "Image/fightStateIcon/";
     /// <summary>
     /// Key = heroId, Value = sprite
     /// </summary>
@@ -64,6 +65,7 @@ public class GameResources
     public IReadOnlyDictionary<int, Sprite> JiBanBg => jiBanBg;
     public IReadOnlyDictionary<int, Sprite> JiBanVText => jiBanVText;
     public IReadOnlyDictionary<int, Sprite> JiBanHText => jiBanHText;
+    public IReadOnlyDictionary<string, Sprite> StateIcon => stateIcon;
 
     private bool isInit;
 
@@ -85,20 +87,27 @@ public class GameResources
     private IReadOnlyDictionary<int, Sprite> jiBanBg;
     private IReadOnlyDictionary<int,Sprite> jiBanHText;
     private IReadOnlyDictionary<int,Sprite> jiBanVText;
-
+    private IReadOnlyDictionary<string, Sprite> stateIcon;
 
     public void Init(bool forceReload = false)
     {
         if (isInit && !forceReload) return;
         Instance = this;
-        var l = Resources.LoadAll<Sprite>(HeroImagesPath).ToList();
-        var abc = l.Select(o => new {imageId = int.Parse(o.name), sprite = o})
-            .Join(DataTable.Hero.Values, c => c.imageId, t => t.ImageId,
-                (c, t) => new {t.Id, c.sprite}).OrderBy(c => c.Id).ToDictionary(h => h.Id, h => h.sprite);
-        heroImgMap = new ResourceDataWrapper<int, Sprite>(abc,
-            nameof(heroImgMap));
+        var heroSprites = Resources.LoadAll<Sprite>(HeroImagesPath).ToList();
+        var heroIdImgMap = heroSprites
+            .Select(sprite => new { imageId = int.Parse(sprite.name), sprite })
+            .Join(
+                DataTable.Hero.Values, //英雄表 要融合的东西
+                sprite => sprite.imageId, //列表元素对应 
+                hero => hero.ImageId, //目标元素对应
+                (sprite, hero) => new { hero.Id, sprite.sprite } //(图片,英雄表)-每一列
+            )
+            .OrderBy(c => c.Id)
+            .ToDictionary(c => c.Id, c => c.sprite);
+        heroImgMap = new ResourceDataWrapper<int, Sprite>(heroIdImgMap, nameof(heroImgMap));
         classImgMap = new ResourceDataWrapper<int, Sprite>(
-            Resources.LoadAll<Sprite>(ClassImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
+            Resources.LoadAll<Sprite>(ClassImagesPath)
+                .ToDictionary(s => int.Parse(s.name), s => s),
             nameof(classImgMap));
         fuZhuImgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(FuZhuImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
@@ -106,9 +115,12 @@ public class GameResources
         gradeImgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(GradeImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
             nameof(gradeImgMap));
+
         guanQiaEventMap = new ResourceDataWrapper<int, Sprite>(
-            Resources.LoadAll<Sprite>(GuanQiaEventImagesPath).Where(s => int.TryParse(s.name, out _))
+            Resources.LoadAll<Sprite>(GuanQiaEventImagesPath)
+                .Where(s => int.TryParse(s.name, out _))
                 .ToDictionary(s => int.Parse(s.name), s => s), nameof(guanQiaEventMap));
+
         frameImgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(FrameImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
             nameof(frameImgMap));
@@ -134,10 +146,15 @@ public class GameResources
         jiBanBg = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanBgPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanBg));
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
+        stateIcon = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(CardStateIconPath).ToDictionary(s => s.name, s => s), nameof(stateIcon));
         isInit = true;
     }
 
-
+    /// <summary>
+    /// 调试字典。报错的时候会返回字典名字，和key，方便找bug
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
     internal class ResourceDataWrapper<TKey,TValue> : IReadOnlyDictionary<TKey,TValue>
     {
         public TValue this[TKey key]

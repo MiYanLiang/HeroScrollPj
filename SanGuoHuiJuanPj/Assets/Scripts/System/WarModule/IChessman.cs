@@ -9,7 +9,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public interface IChessman
     {
-        int InstanceId { get; }
+        int InstanceId { get; set; }
         int Pos { get; }
         bool IsPlayer { get; }
         int CardId { get; }
@@ -17,8 +17,8 @@ namespace Assets.System.WarModule
         GameCardInfo Info { get; }
         int HitPoint { get; }
         int Level { get; }
-        AttackStyle Style { get; }
         ChessStatus Status { get; }
+        CombatStyle GetStyle();
     }
     /// <summary>
     /// 棋位接口规范

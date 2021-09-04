@@ -544,7 +544,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(95, 0);
-        yield return CardAnimator.RangeActivity(attackUnit);//, attackShakeTimeToGo / 2);
+        yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -616,7 +616,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(94, 0);
-        yield return CardAnimator.RangeActivity(attackUnit);//, attackShakeTimeToGo / 2);
+        yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -1318,7 +1318,7 @@ public class FightController : MonoBehaviour
         //Debug.Log("-----弩兵连射");
         var waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
 
         ShowSpellTextObj(attackUnit.cardObj, "19", false);
@@ -1329,7 +1329,7 @@ public class FightController : MonoBehaviour
 
         if (classIndex != 51) yield break;
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
         AttackToEffectShow(attackedUnit, false, Effect.CrossBow19A);
         PlayAudioForSecondClip(19, 0);
@@ -2128,13 +2128,13 @@ public class FightController : MonoBehaviour
             string effectStr = "";
             if (classType == 42)  //医士
             {
-                effectStr = Effect.Doctor42A;
+                effectStr = Effect.Heal42A;
                 PlayAudioForSecondClip(42, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(80) / 100f) / fightNums);
             }
             else
             {//大医士
-                effectStr = Effect.Doctor43A;
+                effectStr = Effect.Heal43A;
                 PlayAudioForSecondClip(43, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(81) / 100f) / fightNums);
             }
@@ -4447,7 +4447,7 @@ public class FightController : MonoBehaviour
             yield return null;
         }
 
-        yield return CardAnimator.RangeActivity(attackUnit);//, yuanChengShakeTimeToGo);
+        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         yield return OnAttackStart(1f, attackUnit, target, true);
         //yield return new WaitForSeconds(yuanChengShakeTime);
 
@@ -4620,7 +4620,7 @@ public class FightController : MonoBehaviour
     //主动塔行动
     IEnumerator InitiativeTowerAction(FightCardData attackUnit, bool playerRound)
     {
-        yield return CardAnimator.RangeActivity(attackUnit);//, towerFightTime0);
+        yield return CardAnimator.RangePreAction(attackUnit);//, towerFightTime0);
         //yield return new WaitForSeconds(towerFightTime0 / 2);
         FightForManager.instance.ActiveTowerFight(attackUnit, playerRound);
         yield return new WaitForSeconds(towerFightTime1);

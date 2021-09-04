@@ -1998,13 +1998,13 @@ public class FightControlForStart : MonoBehaviour
             string effectStr = "";
             if (classType == 42)  //医士
             {
-                effectStr = Effect.Doctor42A;
+                effectStr = Effect.Heal42A;
                 PlayAudioForSecondClip(42, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(80) / 100f) / fightNums);
             }
             else
             {//大医士
-                effectStr = Effect.Doctor43A;
+                effectStr = Effect.Heal43A;
                 PlayAudioForSecondClip(43, 0);
                 addtionNums = (int)(attackUnit.damage * (DataTable.GetGameValue(81) / 100f) / fightNums);
             }

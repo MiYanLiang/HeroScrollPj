@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Assets.System.WarModule;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     public Image Highlight;
     public Image Selected;
     public Transform StateContent;
+    public Image PrefabIco;
     public GameCardUiBase baseUi { get; private set; }
     public DragController DragController { get; private set; }
     private Dictionary<States,GameObject> StateObjs
@@ -39,6 +41,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     }
 
     public States State { get; private set; }
+    public Dictionary<string, Image> CardStates { get; set; } = new Dictionary<string, Image>();
 
     public void Init(DragController drag)
     {
@@ -81,5 +84,24 @@ public class GameCardWarUiOperation : MonoBehaviour
         {
             obj.Value.SetActive(false);
         }
+    }
+
+    public void CreateStateIco(CardState.Cons con)
+    {
+        var stateName = CardState.IconName(con);
+        if (CardStates.ContainsKey(stateName)) return;
+        var icon = Instantiate(PrefabIco, StateContent);
+        icon.sprite = GameResources.Instance.StateIcon[stateName];
+        icon.gameObject.SetActive(true);
+        CardStates.Add(stateName, icon);
+    }
+    public void RemoveStateIco(CardState.Cons con)
+    {
+        var stateName = CardState.IconName(con);
+        if(!CardStates.ContainsKey(stateName))return;
+        var icon = CardStates[stateName];
+        icon.gameObject.SetActive(false);
+        CardStates.Remove(stateName);
+        Destroy(icon.gameObject);
     }
 }

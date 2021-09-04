@@ -12,7 +12,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋子攻击方式
         /// </summary>
-        AttackStyle Style { get; }
+        CombatStyle Style { get; }
         /// <summary>
         /// 棋子状态
         /// </summary>
@@ -31,15 +31,15 @@ namespace Assets.System.WarModule
     public abstract class ChessOperator : IChessOperator
     {
         public int InstanceId { get; protected set; }
-        public abstract AttackStyle Style { get; }
+        public abstract CombatStyle Style { get; }
         public virtual int GetStrength => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
         public abstract int Level { get; }
         public abstract bool IsChallenger { get; }
-        public bool IsMeleeHero => Style!=null && Style.ArmedType >= 0 && Style.CombatStyle == AttackStyle.CombatStyles.Melee;       
-        public bool IsRangeHero => Style!=null && Style.ArmedType >= 0 && Style.CombatStyle == AttackStyle.CombatStyles.Melee;
+        public bool IsMeleeHero => Style!=null && Style.ArmedType >= 0 && Style.Type == CombatStyle.Types.Melee;       
+        public bool IsRangeHero => Style!=null && Style.ArmedType >= 0 && Style.Type == CombatStyle.Types.Range;
 
         protected abstract ChessboardOperator Chessboard { get; }
         public abstract int GeneralDamage();
@@ -71,7 +71,8 @@ namespace Assets.System.WarModule
             var result = ProcessActivityResult(activity, offender);
             if (activity.RePos >= 0) SetPos(activity.RePos);
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
-            if (activity.Intent == Activity.Offensive &&
+            if (offender!=null && 
+                activity.Intent == Activity.Offensive &&
                 Chessboard.OnCounterTriggerPass(this,offender)) 
                 OnCounter(activity, offender);
             return result;
@@ -102,7 +103,6 @@ namespace Assets.System.WarModule
             }
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
-                activity.Intent == Activity.FriendlyAttach ||
                 activity.Intent == Activity.Self)
                 result.Result = (int)ActivityResult.Types.Friendly;
 
@@ -242,14 +242,14 @@ namespace Assets.System.WarModule
     public abstract class CardOperator : ChessOperator
     {
         private IChessman chessman;
-        private AttackStyle attackStyle;
+        private CombatStyle combatStyle;
         private ChessboardOperator chessboard;
         private int pos;
 
         protected GameCardInfo Info { get; private set; }
         //public override IChessman Chessman => chessman;
         protected override ChessboardOperator Chessboard => chessboard;
-        public override AttackStyle Style => attackStyle;
+        public override CombatStyle Style => combatStyle;
         //public override ChessStatus Status => dynamicStatus;
         public override GameCardType CardType => chessman.CardType;
         public override int CardId => chessman.CardId;
@@ -262,7 +262,7 @@ namespace Assets.System.WarModule
         {
             InstanceId = card.InstanceId;
             chessman = card;
-            attackStyle = card.Style;
+            combatStyle = card.GetStyle();
             chessboard = chessboardOp;
             pos = card.Pos;
             if (card.CardType != GameCardType.Base)

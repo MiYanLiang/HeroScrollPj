@@ -34,6 +34,12 @@ namespace Assets.System.WarModule
         }
 
         protected bool IsInBondList(IChessOperator op) => BondList.Contains(op.CardId);
+        /// <summary>
+        /// 根据比率给出羁绊者的平均伤害加成
+        /// </summary>
+        /// <param name="rate"></param>
+        /// <returns></returns>
+        protected int AverageAdditionalDamageFromBonds(int rate) => (int)(ActiveBondList.Average(o => Chessboard.ConvertHeroDamage(o)) * 0.01f * rate);
         public void OnRoundStart(IEnumerable<ChessOperator> list)
         {
             var ops = list.ToArray();
@@ -53,17 +59,42 @@ namespace Assets.System.WarModule
 
             foreach (var rival in rivals)
             {
-                var conducts = RoundStartRivalConduct(rival);
-                if (conducts == null || conducts.Length == 0) continue;
-                Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, Activity.OffendAttach, conducts);
+                var result = RoundStartRivalConduct(rival);
+                if(!result.PushBackPos)
+                {
+                    var conducts = result.Conducts;
+                    if (conducts == null || conducts.Length == 0) continue;
+                    Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, Activity.Offensive, conducts);
+                    continue;
+                }
+
+                var backPos = Chessboard.BackPos(Chessboard.GetChessPos(rival));
+                if (backPos == null || backPos.IsPostedAlive) continue;
+                Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, Activity.Offensive, result.Conducts,
+                    skill: 0, rePos: backPos.Pos);
             }
         }
 
-        protected virtual CombatConduct[] RoundStartRivalConduct(IChessOperator rival) => null;
+        protected virtual ConductResult RoundStartRivalConduct(IChessOperator rival) => null;
 
         protected abstract CombatConduct[] RoundStartConducts(ChessOperator op);
         public virtual int OnDamageAddOn(ChessOperator[] ops, ChessOperator op) => 0;
         public virtual int OnBuffingRatioAddOn(ChessOperator[] ops, ChessOperator op) => 0;
+
+        protected class ConductResult
+        {
+            public bool PushBackPos;
+            public CombatConduct[] Conducts;
+
+            public ConductResult()
+            {
+            }
+
+            public ConductResult(CombatConduct[] conducts)
+            {
+                Conducts = conducts;
+            }
+        }
     }
 
     /// <summary>
@@ -77,7 +108,7 @@ namespace Assets.System.WarModule
         {
         }
 
-        protected override CombatConduct[] RoundStartRivalConduct(IChessOperator rival) => null;
+        protected override ConductResult RoundStartRivalConduct(IChessOperator rival) => null;
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op)
         {
@@ -104,14 +135,13 @@ namespace Assets.System.WarModule
         {
         }
 
-        protected override CombatConduct[] RoundStartRivalConduct(IChessOperator rival)
+        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
         {
-            var damage = (int)ActiveBondList.Average(o => Chessboard.ConvertHeroDamage(o)) *
-                         DataTable.GetGameValue(149) * 0.01f;
+            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(149));
             var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(damage) };
             if (Chessboard.IsRandomPass(DataTable.GetGameValue(150)))
                 conducts.Add(CombatConduct.InstanceBuff(CardState.Cons.Cowardly));
-            return conducts.ToArray();
+            return new ConductResult(conducts.ToArray());
         }
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
@@ -202,6 +232,141 @@ namespace Assets.System.WarModule
             if (op.Style.ArmedType != 12 ||
                 !Chessboard.IsRandomPass(DataTable.GetGameValue(139))) return null;
             return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Neizhu));
+        }
+
+        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
+        {
+            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(154));
+            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
+        }
+    }
+    /// <summary>
+    /// 虎踞江东
+    /// </summary>
+    public class HuJuJiangDong : BondOperator
+    {
+        public HuJuJiangDong(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        {
+            if (op.Style.Troop != 2) return 0;
+            return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(157) * 0.01f);
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op)
+        {
+            if (!IsInBondList(op))
+                return null;
+            return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+        }
+    }
+    /// <summary>
+    /// 水师都督
+    /// </summary>
+    public class ShuiShiDuDu : BondOperator
+    {
+        public ShuiShiDuDu(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
+        {
+            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(154));
+            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
+
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        {
+            if (op.Style.ArmedType == 8)//水师都督激活时战船系武将伤害加成50%
+                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(160) * 0.01f);
+            return 0;
+        }
+    }
+    /// <summary>
+    /// 天作之合
+    /// </summary>
+    public class TianZuoZhiHe : BondOperator
+    {
+        public TianZuoZhiHe(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op)
+        {
+            if (IsInBondList(op) &&
+                Chessboard.IsRandomPass(DataTable.GetGameValue(142)))
+                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+            return null;
+        }
+    }
+    /// <summary>
+    /// 河北四庭柱
+    /// </summary>
+    public class HeBeiSiTingZhu : BondOperator
+    {
+        public HeBeiSiTingZhu(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op)
+        {
+            if (IsInBondList(op) &&
+                Chessboard.IsRandomPass(DataTable.GetGameValue(143)))
+                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield));
+            return null;
+        }
+
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        {
+            if (op.Style.Troop == 3)
+                return Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(163);
+            return 0;
+        }
+    }
+    /// <summary>
+    /// 绝世无双
+    /// </summary>
+    public class JueShiWuShuang : BondOperator
+    {
+        public JueShiWuShuang(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op)
+        {
+            if (IsInBondList(op) &&
+                Chessboard.IsRandomPass(DataTable.GetGameValue(144)))
+                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+            return null;
+        }
+
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        {
+            if (op.Style.ArmedType == 5)
+                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(164) * 0.01f);
+            return 0;
+        }
+    }
+    /// <summary>
+    /// 汉末三仙
+    /// </summary>
+    public class HanMoSanXian : BondOperator
+    {
+        public HanMoSanXian(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        {
+        }
+
+        protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
+
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        {
+            if (op.Style.Element > 0)
+                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(161) * 0.01f);
+            return 0;
         }
     }
 }

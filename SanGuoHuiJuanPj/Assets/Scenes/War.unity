@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -11301,8 +11301,7 @@ MonoBehaviour:
     Short: {fileID: 2143110096}
   cityLevelObj: {fileID: 1013465921}
   PlayerCardsRack: {fileID: 670104551}
-  guanQiaPreObj: {fileID: 4726669306532057299, guid: c8ced7f07b8f42a409e5d136d883b653,
-    type: 3}
+  guanQiaPreObj: {fileID: 0}
   operationButton: {fileID: 748998151}
   operationText: {fileID: 179711367}
   upLevelBtn: {fileID: 2125245539}
@@ -26346,7 +26345,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1668858789
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26482,6 +26481,118 @@ MonoBehaviour:
   fireUIObj: {fileID: 1695652139}
   boomUIObj: {fileID: 102819958}
   gongKeUIObj: {fileID: 600486145}
+--- !u!1 &1672411070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1672411073}
+  - component: {fileID: 1672411072}
+  - component: {fileID: 1672411071}
+  m_Layer: 0
+  m_Name: ChessboardManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1672411071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672411070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c408f54a163afca438b16a400cec4ca8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabUi: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
+    type: 3}
+  HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
+    type: 3}
+  NewWar: {fileID: 1672411072}
+  Chessboard: {fileID: 1894831812}
+  RouseEffectObj: {fileID: 638022218}
+  audioSource: {fileID: 1882509704}
+  fireUIObj: {fileID: 1695652139}
+  boomUIObj: {fileID: 102819958}
+  gongKeUIObj: {fileID: 600486145}
+--- !u!114 &1672411072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672411070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c51cddced990be4cb070da249ce04f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StartButton: {fileID: 1306172685}
+  PlayerPoses:
+  - {fileID: 890143788}
+  - {fileID: 1099502986}
+  - {fileID: 177523461}
+  - {fileID: 1998837917}
+  - {fileID: 1119615864}
+  - {fileID: 889946846}
+  - {fileID: 29352998}
+  - {fileID: 1475240218}
+  - {fileID: 1051938241}
+  - {fileID: 1433161575}
+  - {fileID: 1901072554}
+  - {fileID: 1147011136}
+  - {fileID: 1291667532}
+  - {fileID: 647263408}
+  - {fileID: 1178292829}
+  - {fileID: 805947691}
+  - {fileID: 1765745679}
+  - {fileID: 185924660}
+  - {fileID: 1280876998}
+  - {fileID: 1914330803}
+  EnemyPoses:
+  - {fileID: 146907156}
+  - {fileID: 1046547263}
+  - {fileID: 86238248}
+  - {fileID: 1815046899}
+  - {fileID: 1224597768}
+  - {fileID: 1174285678}
+  - {fileID: 1892793289}
+  - {fileID: 1840737794}
+  - {fileID: 1795384219}
+  - {fileID: 430556227}
+  - {fileID: 1576171722}
+  - {fileID: 575002883}
+  - {fileID: 525339224}
+  - {fileID: 1110362776}
+  - {fileID: 1326962940}
+  - {fileID: 1884646995}
+  - {fileID: 1209053671}
+  - {fileID: 653596008}
+  - {fileID: 690417046}
+  - {fileID: 342535828}
+  Player: []
+  Enemy: []
+--- !u!4 &1672411073
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672411070}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1673655643
 GameObject:
   m_ObjectHideFlags: 0

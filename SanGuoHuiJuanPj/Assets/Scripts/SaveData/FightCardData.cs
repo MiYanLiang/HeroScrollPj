@@ -63,15 +63,13 @@ using UnityEngine;
     {
     }
 
-    public FightCardData(int instanceId,int maxHp)
+    public FightCardData(int maxHp)
     {
-        InstanceId = instanceId;
         Hp = new HitPoint(maxHp);
     }
 
-    public FightCardData(int instanceId, GameCard card)
+    public FightCardData(GameCard card)
     {
-        InstanceId = instanceId;
         info = card.GetInfo();
         unitId = 1;
         cardType = card.typeIndex;
@@ -101,16 +99,16 @@ using UnityEngine;
         {
             case GameCardType.Hero:
                 var m = MilitaryInfo.GetInfo(card.CardId);
-                style = AttackStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.CombatType == 1 ? 1 : 0, info.DamageType, info.GetDamage(card.Level), card.Level,force);
+                style = CombatStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.DamageType, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Tower:
-                style = AttackStyle.Instance(cardId, -1, 1, 0, 0, info.GetDamage(card.Level), card.Level,force);
+                style = CombatStyle.Instance(cardId, -2, 1, 0, info.GetDamage(card.Level), card.Level,force);
                 break;
             case GameCardType.Trap:
-                style = AttackStyle.Instance(cardId,-2,2,0,0,info.GetDamage(card.Level),card.Level,force);
+                style = CombatStyle.Instance(cardId, -3, -1, 0, info.GetDamage(card.Level), card.Level, force);
                 break;
             case GameCardType.Base:
-                style = AttackStyle.Instance(-1, -3, 0, 0, 0, 0, card.Level, force);
+                style = CombatStyle.Instance(-1, -4, -1, 0, 0, card.Level, force);
                 break;
             case GameCardType.Soldier:
             case GameCardType.Spell:
@@ -125,10 +123,14 @@ using UnityEngine;
     public GameCardInfo Info => info;
     public int HitPoint => hp.Max;
     public int Level => cardGrade;
-    private AttackStyle style;
-    public AttackStyle Style => style;
+    private CombatStyle style;
+    public CombatStyle Style => style;
     private ChessStatus status;
+    private int instanceId;
+    private ChessmanStyle chessmanStyle;
     public ChessStatus Status => status;
+    public CombatStyle GetStyle() => style;
+
     public void UpdateStatus(ChessStatus ps) => status = ps.Clone();
 
     [JsonIgnore] public Dictionary<int, EffectStateUi> States { get; }
@@ -155,19 +157,55 @@ using UnityEngine;
     }
 
     public void ResetHp(int maxHp) => Hp = new HitPoint(maxHp);
-    public int InstanceId { get; }
+
+    int IChessman.InstanceId
+    {
+        get => instanceId;
+        set => instanceId = value;
+    }
+    public int InstanceId => instanceId;
+
     [JsonIgnore]public int Pos => PosIndex;
     [JsonIgnore]public bool IsPlayer => isPlayerCard;
     [JsonIgnore]public bool IsActed => isActionDone;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
-    public void UpdateActivity(ChessStatus status)
+    public void UpdateActivity(ChessStatus stat)
     {
-        hp.Set(status.Hp, true);
-        CardState.SetStates(status.Buffs);
-        cardObj.War.SetHp(status.HpRate);
-        if(status.IsDeath)
+        hp.Set(stat.Hp, true);
+        CardState.SetStates(stat.Buffs);
+        cardObj.War.SetHp(stat.HpRate);
+        if(stat.IsDeath)
             cardObj.SetLose(true);
     }
+
+    public ChessmanStyle ChessmanStyle
+    {
+        get
+        {
+            if (chessmanStyle == null)
+                chessmanStyle = GetChessmanStyle();
+            return chessmanStyle;
+        }
+    }
+
+    private ChessmanStyle GetChessmanStyle()
+    {
+        switch (CardType)
+        {
+            case GameCardType.Hero:
+                return ChessUiStyle.Instance<HeroStyle>(Style);
+            case GameCardType.Tower:
+                return ChessUiStyle.Instance<TowerStyle>(Style);
+            case GameCardType.Trap:
+            case GameCardType.Base:
+                return ChessUiStyle.Instance<TrapStyle>(Style);
+            case GameCardType.Spell:
+            case GameCardType.Soldier:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
 }
 
 [Serializable]

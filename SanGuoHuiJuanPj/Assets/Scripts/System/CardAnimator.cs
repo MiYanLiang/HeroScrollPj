@@ -3,6 +3,7 @@ using System.Linq;
 using Assets.System.WarModule;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Monetization;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -11,10 +12,9 @@ public class CardAnimator
     static float RangeHeroPreActionBegin = 0.5f;
     static float RangeHeroPreActionFinalize = 0.5f;
     static float yuanChengShakeTime = 0.1f;
-    private static CardState.Cons[] CardStates = Enum.GetValues(typeof(CardState.Cons)).Cast<CardState.Cons>().ToArray();
 
     //攻击行动方式0-适用于-主动塔,远程兵
-    public static Tween RangeActivity(FightCardData card)
+    public static Tween RangePreAction(FightCardData card)
     {
         var obj = card.cardObj;
         return obj.transform.DOScale(new Vector3(1.15f, 1.15f, 1), RangeHeroPreActionBegin).SetAutoKill(false).OnComplete(() => obj.transform.DOPlayBackwards());
@@ -41,26 +41,19 @@ public class CardAnimator
         var facingPos = new Vector3(targetPos.x, targetPos.y - oneYOffset, targetPos.z);
         return DOTween.Sequence().Append(ui.transform.DOMove(facingPos, Move * forward)).AppendInterval(charge);
     }
-    /// <summary>
-    /// 近战行动
-    /// </summary>
-    public static Tween MeleeActivity(FightCardData card, FightCardData target) => StepBackAndHit(card, target);
-    /// <summary>
-    /// 反击动作
-    /// </summary>
-    public static Tween Counter(FightCardData card, FightCardData target)
+    public static Tween Counter(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
         return DOTween.Sequence()
-            .OnComplete(() => GetVTextEffect(13.ToString(), card.cardObj.transform))
-            .Join(StepBackAndHit(card, target, 0.3f, 0.3f, 0.1f));
+            .Join(StepBackAndHit(card, 0.3f, 0.3f, 0.1f))
+            .OnComplete(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
     }
 
     //退后向前进攻模式
-    private static Tween StepBackAndHit(FightCardData card, FightCardData target,float backStepDistance = 0.5f,float time = 1f,float chargeRate = 1f)
+    public static Tween StepBackAndHit(FightCardData card, float backStepDistance = 0.5f,float time = 1f,float chargeRate = 1f)
     {
         var ui = card.cardObj;
-        var size = GetWorldSize(target.cardObj.transform);
+        var size = GetWorldSize(card.cardObj.transform);
         var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
         var origin = ui.transform.position;
         return DOTween.Sequence().Append(ui.transform
@@ -95,19 +88,35 @@ public class CardAnimator
     /// <summary>
     /// 承受动作
     /// </summary>
-    public static Tween SufferingAttack(FightCardData target, Activity activity, CombatConduct conduct,
-        Chessboard chessboard)
+    public static Tween SufferingAttack(FightCardData target, Activity activity, CombatConduct conduct)
     {
         var tween = DOTween.Sequence();
-        var effect =
-            EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f, target.cardObj.transform);
-        effect.GetComponentInChildren<Text>().text = "-" + Mathf.Abs(conduct.Total);
-        effect.GetComponentInChildren<Text>().color = Color.red;
         if (!activity.IsRePos)
-            return tween.Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)))
-                .Join(ChessboardConduct(conduct, chessboard));
+            return tween
+                .Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)))
+                .OnComplete(() =>
+                {
+                    var effect =
+                        EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
+                            target.cardObj.transform);
+                    effect.GetComponentInChildren<Text>().text = "-" + Mathf.Abs(conduct.Total);
+                    effect.GetComponentInChildren<Text>().color = Color.red;
+                });
+        return tween;
+    }
 
-        return ChessboardConduct(conduct, chessboard);
+    public static Tween EffectIconTween(FightCardData target, string iconString, int value, Color color)
+    {
+        var tween = DOTween.Sequence();
+        if (value < 0) tween.Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)));
+        return tween.OnComplete(() =>
+        {
+            var effect =
+                EffectsPoolingControl.instance.GetEffectToFight(iconString, 1.5f,
+                    target.cardObj.transform);
+            effect.GetComponentInChildren<Text>().text = value.ToString();
+            effect.GetComponentInChildren<Text>().color = color;
+        });
     }
 
     /// <summary>
@@ -123,7 +132,7 @@ public class CardAnimator
     public static Tween GenerateHealEffect(FightCardData target, CombatConduct conduct)
     {
         var effect =
-            EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f, target.cardObj.transform);
+            EffectsPoolingControl.instance.GetEffectToFight(Effect.Heal42A, 1.5f, target.cardObj.transform);
         effect.GetComponentInChildren<Text>().text = "+" + Mathf.Abs(conduct.Total);
         effect.GetComponentInChildren<Text>().color = Color.green;
         return target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10));
@@ -151,7 +160,7 @@ public class CardAnimator
     /// <summary>
     /// 打击效果
     /// </summary>
-    public static Tween GetCombatStrikeEffect(Activity activity, IChessman op, FightCardData target)
+    public static Tween GetCombatStrikeEffect(Activity activity, FightCardData op, FightCardData target)
     {
         return DOTween.Sequence().AppendInterval(0.01f).OnComplete(() =>
         {
@@ -177,60 +186,73 @@ public class CardAnimator
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStateEffect(FightCardData target, int con = -1)
+    public static Tween UpdateStatusEffect(FightCardData target, int con = -1)
     {
         return DOTween.Sequence().OnComplete(() =>
         {
             if (con == -1)
-                foreach (var state in CardStates)
+                foreach (var state in CardState.ConsArray)
                     UpdateSingleStateEffect(target, (int)state);
             else UpdateSingleStateEffect(target, con);
         });
     }
-
-    public static Tween UpdateStateEffect(FightCardData target, CardState.Cons con) =>
-        UpdateStateEffect(target, (int)con);
-
+    /// <summary>
+    /// 更新棋子上的状态效果
+    /// </summary>
+    public static Tween UpdateStatusEffect(FightCardData target, CardState.Cons con) =>
+        UpdateStatusEffect(target, (int)con);
+    /// <summary>
+    /// 更新棋子上的状态效果
+    /// </summary>
     private static void UpdateSingleStateEffect(FightCardData target, int key)
     {
         var con = (CardState.Cons)key;
         var status = target.CardState.Data;
         var stateValue = status.ContainsKey(key) ? status[key] : 0;
+        var stateName = CardState.IconName(con);
         if (stateValue <= 0)
         {
+            //更新效果图
             if (target.States.ContainsKey(key))
             {
                 var e = target.States[key];
                 target.States.Remove(key);
                 EffectsPoolingControl.instance.TakeBackStateIcon(e);
             }
+            //更新小图标
+            if (target.cardObj.War.CardStates.ContainsKey(stateName))
+                DestroySateIcon(target.cardObj, con);
 
             return;
         }
 
-        if (target.States.ContainsKey(key))
-            return;
-        var effect = EffectsPoolingControl.instance.GetStateIconToFight(CardState.IconName(con),
-            target.cardObj.transform);
-        target.States.Add(key, effect);
+        if (!target.States.ContainsKey(key))//添加效果图
+        {
+            var effect = EffectsPoolingControl.instance.GetStateEffect(CardState.IconName(con),
+                target.cardObj.transform);
+            target.States.Add(key, effect);
 
-        if (con != CardState.Cons.EaseShield) return;
-        var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
-        effect.Image.color = new Color(1, 1, 1, fade);
+            if (con != CardState.Cons.EaseShield) return;
+            var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
+            effect.Image.color = new Color(1, 1, 1, fade);
+        }
+
+        if (!target.cardObj.War.CardStates.ContainsKey(stateName))
+            CreateSateIcon(target.cardObj, con);
     }
 
-    private static string GetEffectByStyle(AttackStyle style,CombatConduct conduct)
+    private static string GetEffectByStyle(CombatStyle style,CombatConduct conduct)
     {
         if (style.ArmedType >= 0)
             return GetHeroEffectByStyle(style);
-        if (style.ArmedType == -1)
+        if (style.ArmedType == -2)//tower
             return GetTowerEffectByStyle(style);
-        if (style.ArmedType == -2)
+        if (style.ArmedType == -3)//trap
             return GetTrapEffectByStyle(style);
         throw new ArgumentOutOfRangeException($"Arg = {style.ArmedType}");
     }
 
-    private static string GetHeroEffectByStyle(AttackStyle style)
+    private static string GetHeroEffectByStyle(CombatStyle style)
     {
         var value = Effect.Basic0A; // "0A";
         switch (style.Military)
@@ -272,8 +294,8 @@ public class CardAnimator
             case 38: value = Effect.StateAffairs38A;break; // "38A";
             case 39: value = Effect.Support39A;break; // "39A";辅佐
             case 40: value = Effect.Mechanical40A;break; // "40A";器械
-            case 42: value = Effect.Doctor42A;break; // "42A";医师
-            case 43: value = Effect.Doctor43A;break; // "43A";大医师
+            case 42: value = Effect.Heal42A;break; // "42A";医师
+            case 43: value = Effect.Heal43A;break; // "43A";大医师
             case 44: value = Effect.FemaleRider44A;break; // "44A";巾帼
             case 45: value = Effect.Lady45A;break;//"45"	美人
             case 46: value = Effect.Lady46A;break;//"46"  大美人
@@ -299,7 +321,7 @@ public class CardAnimator
         return value;
     }
 
-    private static string GetTrapEffectByStyle(AttackStyle style)
+    private static string GetTrapEffectByStyle(CombatStyle style)
     {
         switch (style.Military)
         {
@@ -310,7 +332,7 @@ public class CardAnimator
                 case 10: return Effect.Dropping ; // "209A";滚木
         }
     }
-    private static string GetTowerEffectByStyle(AttackStyle style)
+    private static string GetTowerEffectByStyle(CombatStyle style)
     {
         switch (style.Military)
         {
@@ -318,7 +340,7 @@ public class CardAnimator
             case 3: return Effect.Bow20A;break; // "20A";箭楼
             case 6: return Effect.Shield4A;break; // "4A";轩辕台
             case 0: //营寨
-            case 2: return Effect.Doctor42A;break; // "42A";奏乐台
+            case 2: return Effect.Heal42A;break; // "42A";奏乐台
         }
     }
 
@@ -432,12 +454,17 @@ public class CardAnimator
         GetVTextEffect(effectName, target.cardObj.transform);
     }
 
-    private static void GetVTextEffect(string effectName,Transform transform)
+    public static Tween VTextEffect(string effectName, Transform transform) =>
+        DOTween.Sequence().OnComplete(() => GetVTextEffect(effectName, transform));
+
+    private static void GetVTextEffect(string effectName, Transform transform)
     {
+        if (string.IsNullOrWhiteSpace(effectName)) return;
         var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, transform);
         effectObj.GetComponentsInChildren<Image>()[1].sprite =
             Resources.Load("Image/battle/" + effectName, typeof(Sprite)) as Sprite;
     }
+
     private static void GetHTextEffect(int id,Transform transform, Color color)
     {
         var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, transform);
@@ -445,7 +472,7 @@ public class CardAnimator
         effectObj.GetComponentInChildren<Text>().color = color;
     }
 
-    public static Tween SkillEffect(Activity activity,FightCardData op, bool isOffense, IChessman target)
+    public static Tween SkillEffect(Activity activity,FightCardData op, bool isOffense, FightCardData target)
     {
         var tween = DOTween.Sequence();
         if (activity.Skill == 0) return tween;
@@ -489,7 +516,7 @@ public class CardAnimator
                 break;
             case 7: //刺甲
                 validEffect = !isOffense;//防守才有效果
-                if (targetStyle.ArmedType < 0 || targetStyle.CombatStyle == AttackStyle.CombatStyles.Range)
+                if (targetStyle.ArmedType < 0 || targetStyle.Type == CombatStyle.Types.Range)
                     return tween;
                 break;
             case 19: //弩兵
@@ -561,4 +588,18 @@ public class CardAnimator
         return tween;
     }
 
+    private const string StateIcon = "stateIcon";
+    /// <summary>
+    /// 创建状态图标
+    /// </summary>
+    private static void CreateSateIcon(WarGameCardUi ui, CardState.Cons con)
+    {
+        ui.War.CreateStateIco(con);
+    }
+
+    //删除状态图标
+    private static void DestroySateIcon(WarGameCardUi ui, CardState.Cons con)
+    {
+        ui.War.RemoveStateIco(con);
+    }
 }

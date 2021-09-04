@@ -200,12 +200,12 @@ public class EffectsPoolingControl : MonoBehaviour
     /// <summary>
     /// 获取状态特效图标,跟随卡牌动
     /// </summary>
-    public EffectStateUi GetStateIconToFight(string iconName, Transform usedTran)
+    public EffectStateUi GetStateEffect(string stateName, Transform usedTran)
     {
         int index = -1;
         for (int i = 0; i < iconNameStr.Length; i++)
         {
-            if (iconNameStr[i] == iconName)
+            if (iconNameStr[i] == stateName)
             {
                 index = i;
                 break;
@@ -226,7 +226,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            var iconObj = Instantiate(GameResources.Instance.StateDin[iconName], usedTran);
+            var iconObj = Instantiate(GameResources.Instance.StateDin[stateName], usedTran);
             iconObj.transform.position = usedTran.position;
             iconObj.gameObject.SetActive(true);
             iconPoolingList[index].Add(iconObj);
@@ -321,8 +321,8 @@ public class Effect
     public const string SiegeMachine23A = "23A";
     public const string Support39A = "39A";
     public const string StateAffairs38A = "38A";
-    public const string Doctor42A = "42A";
-    public const string Doctor43A = "43A";
+    public const string Heal42A = "42A";
+    public const string Heal43A = "43A";
     public const string Assassin25A = "25A";
     public const string Warship21A = "21A";
     public const string Chariot22A = "22A";

@@ -10,6 +10,7 @@ namespace Assets.System.WarModule
     public class CardState
     {
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
+        public static Cons[] ConsArray { get; } = Enum.GetValues(typeof(Cons)).Cast<Cons>().ToArray();
         public static string IconName(Cons con)
         {
             switch (con)

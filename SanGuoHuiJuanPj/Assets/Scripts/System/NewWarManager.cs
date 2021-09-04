@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
@@ -15,15 +17,30 @@ public class NewWarManager : MonoBehaviour
     public ChessPos[] EnemyPoses;
     public ChessCard[] Player;
     public ChessCard[] Enemy;
-    public UnityAction OnButtonClick;
     #endregion
 
     public ChessGrid Grid;
     public ChessOperatorManager<FightCardData> ChessOperator;
-    void Start()
+    public Dictionary<int, FightCardData> CardData { get; } = new Dictionary<int, FightCardData>();
+
+    public void Init()
     {
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid);
+        RegCards(Player, true);
+        RegCards(Enemy, false);
+
+        void RegCards(ChessCard[] list, bool isChallenger)
+        {
+            foreach (var chessCard in list)
+            {
+                var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
+                card.UpdatePos(chessCard.Pos);
+                card.isPlayerCard = isChallenger;
+                card = ChessOperator.RegOperator(card);
+                CardData.Add(card.InstanceId, card);
+            }
+        }
     }
 
     public void StartButtonShow(bool show)

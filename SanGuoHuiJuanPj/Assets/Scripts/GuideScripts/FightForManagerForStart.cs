@@ -772,7 +772,7 @@ public class FightForManagerForStart : MonoBehaviour
                 cardData.Hp.Add(-canAddHpNum);
                 FightControlForStart.instance.AttackedAnimShow(cardData, canAddHpNum, false);
                 //单位加血
-                FightControlForStart.instance.AttackToEffectShow(needAddHpCard, false, Effect.Doctor42A);
+                FightControlForStart.instance.AttackToEffectShow(needAddHpCard, false, Effect.Heal42A);
                 needAddHpCard.Hp.Add(canAddHpNum);
                 FightControlForStart.instance.ShowSpellTextObj(needAddHpCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(needAddHpCard, canAddHpNum, true);
@@ -839,7 +839,7 @@ public class FightForManagerForStart : MonoBehaviour
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
             if (addedFightCard != null && addedFightCard.cardType == 0 && addedFightCard.Hp > 0)
             {
-                FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, Effect.Doctor42A);
+                FightControlForStart.instance.AttackToEffectShow(addedFightCard, false, Effect.Heal42A);
                 addedFightCard.Hp.Add(addtionNums);
                 FightControlForStart.instance.ShowSpellTextObj(addedFightCard.cardObj, DataTable.GetStringText(15), true, false);
                 FightControlForStart.instance.AttackedAnimShow(addedFightCard, addtionNums, true);
@@ -1421,7 +1421,7 @@ public class FightForManagerForStart : MonoBehaviour
             if (!cardData.isPlayerCard)
             {
                 //迷雾动画
-                GameObject stateDinObj = EffectsPoolingControl.instance.GetStateIconToFight(StringNameStatic.StateIconPath_miWuZhenAddtion, cardData.cardObj.transform)?.gameObject;
+                GameObject stateDinObj = EffectsPoolingControl.instance.GetStateEffect(StringNameStatic.StateIconPath_miWuZhenAddtion, cardData.cardObj.transform)?.gameObject;
                 stateDinObj.name = StringNameStatic.StateIconPath_miWuZhenAddtion + "Din";
                 stateDinObj.transform.position = posListToSetMiWu[CardNearbyAdditionForeach[posIndex][i]].transform.position;
                 stateDinObj.GetComponent<Animator>().enabled = false;
@@ -1691,13 +1691,13 @@ public class FightForManagerForStart : MonoBehaviour
     {
         if (tran.Find(stateName) == null)
         {
-            GameObject stateIconObj = EffectsPoolingControl.instance.GetStateIconToFight("stateIcon", tran).gameObject;
+            GameObject stateIconObj = EffectsPoolingControl.instance.GetStateEffect("stateIcon", tran).gameObject;
             stateIconObj.name = stateName;
             stateIconObj.GetComponent<Image>().sprite = Resources.Load("Image/fightStateIcon/" + stateName, typeof(Sprite)) as Sprite;
         }
         if (isShowEffect && tran.parent.Find(stateName + "Din") == null)
         {
-            GameObject stateDinObj = EffectsPoolingControl.instance.GetStateIconToFight(stateName, tran.parent).gameObject;
+            GameObject stateDinObj = EffectsPoolingControl.instance.GetStateEffect(stateName, tran.parent).gameObject;
             stateDinObj.name = stateName + "Din";
         }
     }
