@@ -1210,7 +1210,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnCounter(Activity activity, IChessOperator offender)
         {
-            Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
         }
     }
     /// <summary>

@@ -34,7 +34,10 @@ public class ChessUiStyle : CombatStyle
         };
     }
 
-    public virtual Sequence Respond(Activity activity, FightCardData target, string effectId = null) => DOTween.Sequence();
+    public virtual Sequence Respond(Activity activity, FightCardData target, string effectId = null) => DOTween.Sequence().AppendCallback(()=>
+    {
+        target.UpdateActivity(activity.Result.Status);
+    });//更新战斗状态(血量)
 }
 /// <summary>
 /// 棋盘执行的数据调用抽象层
@@ -65,7 +68,10 @@ public class ChessmanStyle : ChessUiStyle
     /// <returns></returns>
     public virtual Tween FinalizeActionTween(FightCardData card, Vector3 origin) => DOTween.Sequence();
 
-    public virtual Tween CounterTween(Activity activity, FightCardData offense, FightCardData target) => DOTween.Sequence().Join(CardAnimator.Counter(offense));
+    public virtual Tween CounterTween(Activity activity, FightCardData offense, FightCardData target) => DOTween.Sequence().Join(CardAnimator.Counter(offense)).AppendCallback(()=>
+    {
+        //target.UpdateActivity(activity.Result.Status);
+    });
 
 }
 public class SpriteStyle : CombatStyle
@@ -138,8 +144,6 @@ public abstract class CardStyle : ChessmanStyle
                     else effect.transform.localScale = Vector3.one;
                 }
             }
-            target.UpdateActivity(activity.Result.Status); //更新战斗状态(血量)
-            target.UpdateStatus(activity.Result.Status); //更新状态
         });
 
         tween.Join(CardAnimator.DisplayTextEffect(target, activity));//文字效果，描述反馈结果：伤害，闪避，格挡
@@ -210,11 +214,10 @@ public class HeroStyle : CardStyle
 {
     protected override Tween OffenseEffects(Activity activity, FightCardData offense, FightCardData target, Transform chessboard)
     {
-        var tween = DOTween.Sequence();
-        if (activity.Skill == 0) return tween;
+        if (activity.Skill == 0) return DOTween.Sequence();
+        var tween = DOTween.Sequence().AppendCallback(() => CardAnimator.UpdateStatusEffect(offense));
         //武将有自己的攻击特效
-        tween.Join(HeroOffenseVText(activity, offense, target))
-            .OnComplete(() => CardAnimator.UpdateStatusEffect(offense));
+        tween.Join(HeroOffenseVText(activity, offense, target));
         return tween;
     }
 
@@ -222,8 +225,7 @@ public class HeroStyle : CardStyle
 
     protected override Tween RespondEffects(Activity activity, FightCardData target, string effectId)
     {
-        return base.RespondEffects(activity, target, effectId)
-            .OnComplete(() => CardAnimator.UpdateStatusEffect(target));
+        return DOTween.Sequence().AppendCallback(() => CardAnimator.UpdateStatusEffect(target)).Join(base.RespondEffects(activity, target, effectId));
     }
 
     private string MilitaryOffenseTextId(Activity activity)

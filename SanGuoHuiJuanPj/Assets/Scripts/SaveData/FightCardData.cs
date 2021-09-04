@@ -25,12 +25,6 @@ using UnityEngine;
     //伤害
     public int damage;
 
-    public HitPoint Hp
-    {
-        get => hp;
-        protected set => hp = value;
-    }
-
     //战斗状态
     [JsonIgnore]public CardState CardState = new CardState();
     //摆放位置记录
@@ -56,16 +50,10 @@ using UnityEngine;
     /// </summary>
     public int attackedBehavior;
 
-    [SerializeField]private HitPoint hp;
     private GameCardInfo info;
 
     public FightCardData()
     {
-    }
-
-    public FightCardData(int maxHp)
-    {
-        Hp = new HitPoint(maxHp);
     }
 
     public FightCardData(GameCard card)
@@ -79,8 +67,9 @@ using UnityEngine;
         hpr = info.GameSetRecovery;
         cardDamageType = info.DamageType;
         combatType = info.CombatType;
-        hp = new HitPoint(info.GetHp(card.Level));
-        States = new Dictionary<int, EffectStateUi>();
+        var hp = info.GetHp(card.Level);
+        status = ChessStatus.Instance(hp,hp,Pos,0,new Dictionary<int, int>());
+        StatesUi = new Dictionary<int, EffectStateUi>();
         var force = -1;
         switch (card.typeIndex)
         {
@@ -121,19 +110,18 @@ using UnityEngine;
     public int CardId => cardId;
     [JsonIgnore] public GameCardType CardType => (GameCardType) cardType;
     public GameCardInfo Info => info;
-    public int HitPoint => hp.Max;
+    public int HitPoint => status.MaxHp;
     public int Level => cardGrade;
     private CombatStyle style;
     public CombatStyle Style => style;
-    private ChessStatus status;
     private int instanceId;
     private ChessmanStyle chessmanStyle;
-    public ChessStatus Status => status;
+    private ChessStatus status;
+
     public CombatStyle GetStyle() => style;
 
-    public void UpdateStatus(ChessStatus ps) => status = ps.Clone();
 
-    [JsonIgnore] public Dictionary<int, EffectStateUi> States { get; }
+    [JsonIgnore] public Dictionary<int, EffectStateUi> StatesUi { get; }
 
     public void UpdatePos(int pos)
     {
@@ -143,20 +131,23 @@ using UnityEngine;
     //更新血条显示
     public void UpdateHpUi()
     {
-        var isLose = Hp <= 0;
+        var isLose = status.Hp <= 0;
 
         if (isLose)
         {
-            Hp.Set(0);
+            status.Kill();
             UpdateHp();
             cardObj.SetLose(true);
             return;
         }
         UpdateHp();
-        void UpdateHp() => cardObj.War.SetHp(1f * Hp.Value / Hp.Max);
+        void UpdateHp() => cardObj.War.SetHp(status.HpRate);
     }
 
-    public void ResetHp(int maxHp) => Hp = new HitPoint(maxHp);
+    public void ResetHp(int maxHp)
+    {
+        status.ResetHp(maxHp);
+    }
 
     int IChessman.InstanceId
     {
@@ -168,10 +159,11 @@ using UnityEngine;
     [JsonIgnore]public int Pos => PosIndex;
     [JsonIgnore]public bool IsPlayer => isPlayerCard;
     [JsonIgnore]public bool IsActed => isActionDone;
+    [JsonIgnore] public ChessStatus Status => status;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
     public void UpdateActivity(ChessStatus stat)
     {
-        hp.Set(stat.Hp, true);
+        status = stat.Clone();
         CardState.SetStates(stat.Buffs);
         cardObj.War.SetHp(stat.HpRate);
         if(stat.IsDeath)
@@ -187,6 +179,8 @@ using UnityEngine;
             return chessmanStyle;
         }
     }
+    [Obsolete("新战斗系统别用")]
+    public HitPoint Hp { get; set; }
 
     private ChessmanStyle GetChessmanStyle()
     {

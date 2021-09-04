@@ -298,11 +298,11 @@ namespace Assets.System.WarModule
             if (op == null)
                 throw new NullReferenceException(
                     $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
-            activity.Inner = InnerActivities?.ToArray();
-            InnerActivities?.Clear();
             activity.Result = GetOperator(op.InstanceId).Respond(activity, offender);
             activity.OffenderStatus = GetStatus(op).Clone();
             UpdateTerrain(target);
+            activity.Inner = InnerActivities?.ToArray();
+            InnerActivities?.Clear();
             return activity.Result;
         }
 

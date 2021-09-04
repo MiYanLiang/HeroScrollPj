@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using NotImplementedException = System.NotImplementedException;
 
 namespace Assets.System.WarModule
 {
@@ -68,6 +69,12 @@ namespace Assets.System.WarModule
             }
             ClearBuff(CardState.Cons.EaseShield);
             return (int) damage - ease;
+        }
+
+        public void ResetHp(int maxHp)
+        {
+            Hp = maxHp;
+            MaxHp = maxHp;
         }
     }
 }

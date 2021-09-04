@@ -85,31 +85,9 @@ public class CardAnimator
         return DOTween.Sequence().Join(sBack).Join(scaleBack);
     }
 
-    /// <summary>
-    /// 承受动作
-    /// </summary>
-    public static Tween SufferingAttack(FightCardData target, Activity activity, CombatConduct conduct)
-    {
-        var tween = DOTween.Sequence();
-        if (!activity.IsRePos)
-            return tween
-                .Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)))
-                .OnComplete(() =>
-                {
-                    var effect =
-                        EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
-                            target.cardObj.transform);
-                    effect.GetComponentInChildren<Text>().text = "-" + Mathf.Abs(conduct.Total);
-                    effect.GetComponentInChildren<Text>().color = Color.red;
-                });
-        return tween;
-    }
-
     public static Tween EffectIconTween(FightCardData target, string iconString, int value, Color color)
     {
-        var tween = DOTween.Sequence();
-        if (value < 0) tween.Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)));
-        return tween.OnComplete(() =>
+        var tween = DOTween.Sequence().AppendCallback(() =>
         {
             var effect =
                 EffectsPoolingControl.instance.GetEffectToFight(iconString, 1.5f,
@@ -117,6 +95,8 @@ public class CardAnimator
             effect.GetComponentInChildren<Text>().text = value.ToString();
             effect.GetComponentInChildren<Text>().color = color;
         });
+        if (value < 0) tween.Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)));
+        return tween;
     }
 
     /// <summary>
@@ -125,31 +105,17 @@ public class CardAnimator
     public static Tween OnRePos(FightCardData target, ChessPos pos) =>
         target.cardObj.transform.DOMove(pos.transform.position,
             0.2f);
-
-    /// <summary>
-    /// 补血效果
-    /// </summary>
-    public static Tween GenerateHealEffect(FightCardData target, CombatConduct conduct)
-    {
-        var effect =
-            EffectsPoolingControl.instance.GetEffectToFight(Effect.Heal42A, 1.5f, target.cardObj.transform);
-        effect.GetComponentInChildren<Text>().text = "+" + Mathf.Abs(conduct.Total);
-        effect.GetComponentInChildren<Text>().color = Color.green;
-        return target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10));
-    }
-
     static float chessboardShakeIntensity = 30f;
     /// <summary>
     /// 棋盘震动
     /// </summary>
-    public static Tween ChessboardConduct(CombatConduct conduct,Chessboard chessboard)
+    public static Tween ChessboardConduct(Activity activity,Chessboard chessboard)
     {
         var transform = chessboard.transform;
         var origin = transform.position;
-        if (conduct.Kind == CombatConduct.DamageKind)
+        if (activity.Conducts.Any(c=>c.Kind == CombatConduct.DamageKind && (c.Rouse>0|c.Critical>0)))
         {
-            if (conduct.Rouse > 0 || conduct.Critical > 0)
-                return transform.DOShakePosition(0.25f, chessboardShakeIntensity);
+            return transform.DOShakePosition(0.25f, chessboardShakeIntensity);
         }
         return transform.DOMove(origin, 0);
     }
@@ -213,10 +179,10 @@ public class CardAnimator
         if (stateValue <= 0)
         {
             //更新效果图
-            if (target.States.ContainsKey(key))
+            if (target.StatesUi.ContainsKey(key))
             {
-                var e = target.States[key];
-                target.States.Remove(key);
+                var e = target.StatesUi[key];
+                target.StatesUi.Remove(key);
                 EffectsPoolingControl.instance.TakeBackStateIcon(e);
             }
             //更新小图标
@@ -226,11 +192,11 @@ public class CardAnimator
             return;
         }
 
-        if (!target.States.ContainsKey(key))//添加效果图
+        if (!target.StatesUi.ContainsKey(key))//添加效果图
         {
             var effect = EffectsPoolingControl.instance.GetStateEffect(CardState.IconName(con),
                 target.cardObj.transform);
-            target.States.Add(key, effect);
+            target.StatesUi.Add(key, effect);
 
             if (con != CardState.Cons.EaseShield) return;
             var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
@@ -472,123 +438,6 @@ public class CardAnimator
         effectObj.GetComponentInChildren<Text>().color = color;
     }
 
-    public static Tween SkillEffect(Activity activity,FightCardData op, bool isOffense, FightCardData target)
-    {
-        var tween = DOTween.Sequence();
-        if (activity.Skill == 0) return tween;
-        var value = string.Empty;
-        var validEffect = isOffense;
-        var style = op.Style;
-        var targetStyle = target.Style;
-        switch (style.Military)
-        {
-            case 17: //刀兵
-                if (!target.Status.IsDeath)//只有死亡才会有连斩效果
-                    return tween;
-                break;
-            case 13: //禁卫
-                //validEffect = !isOffense;//禁卫只有防守才有效果
-                return tween;//暂时只要是反击，在Counter代码里都会打出效果，不仅于禁卫
-            case 12: //神武
-                if (targetStyle.ArmedType>=0) //非英雄没技能表现
-                    return tween;
-                validEffect = true;//无论进攻或防守都有效果
-                break;
-            case 58: //铁骑
-                validEffect = true;
-                //攻击与防守显示文字不同
-                value = isOffense ? style.Military.ToString() : "58_0";
-                break;
-            case 55: //火船
-                value = op.Status.HpRate * 100 < DataTable.GetGameValue(54) ? 
-                    "55_0" : //火船爆炸
-                    style.Military.ToString();
-                break;
-            case 41: //敢死
-                validEffect = !isOffense;
-                if (op.Status.GetBuff(CardState.Cons.DeathFight) <= 0 &&
-                    op.Status.HpRate * 100 < DataTable.GetGameValue(103))
-                    break;
-                return tween;
-            case 10: //死士
-                if (op.Status.HpRate * 100 > DataTable.GetGameValue(100))
-                    return tween;
-                break;
-            case 7: //刺甲
-                validEffect = !isOffense;//防守才有效果
-                if (targetStyle.ArmedType < 0 || targetStyle.Type == CombatStyle.Types.Range)
-                    return tween;
-                break;
-            case 19: //弩兵
-            case 51: //强弩
-                switch (activity.Skill)
-                {
-                    default:
-                        value = 19.ToString();
-                        break;
-                    case 2:
-                        value = 51.ToString();
-                        break;
-                }
-                break;
-            case 56: //蛮族
-            case 44: //卸甲
-            case 34: //辩士
-            case 35: //辩士
-            case 47: //说客
-            case 48: //说客
-            case 53: //隐士
-            case 54: //隐士
-            case 39: //辅佐
-            case 42: //医生
-            case 43: //医生
-            case 45: //美人
-            case 46: //美人
-            case 36: //谋士
-            case 37: //谋士
-            case 30: //毒士
-            case 31: //毒士
-            case 25: //刺客
-            case 21: //战船
-            case 22: //战车
-                if (targetStyle.ArmedType < 0) //非英雄没技能表现
-                    return tween;
-                value = style.Military.ToString();
-                break;
-            case 23: //攻城车
-            case 40: //器械
-                if (targetStyle.ArmedType >= 0)
-                    return tween;
-                break;
-            case 65: //黄巾
-            case 4: //大盾
-            case 32: //统帅
-            case 33: //统帅
-            case 9: //先锋
-            case 16: //骑兵
-            case 26: //军师
-            case 27: //军师
-            case 24: //投石车
-            case 20: //弓兵
-            case 52: //弓兵
-            case 38: //内政
-            case 18: //斧兵
-            case 15: //戟兵
-            case 14: //枪兵
-            case 59: //枪兵
-            case 11: //白马
-            case 8: //象兵
-            case 6: //虎卫
-                value = style.Military.ToString();
-                break;
-        }
-
-        if (value == string.Empty || !validEffect) return tween;
-        tween.OnComplete(() => GetVTextEffect(value, op.cardObj.transform));
-        return tween;
-    }
-
-    private const string StateIcon = "stateIcon";
     /// <summary>
     /// 创建状态图标
     /// </summary>
