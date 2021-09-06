@@ -7,7 +7,7 @@ namespace Assets.System.WarModule
     /// 战斗执行，描述棋子在战斗中对某一个目标执行的一个战斗行为
     /// </summary>
     [Serializable]
-    public struct CombatConduct
+    public class CombatConduct
     {
         #region Damages 伤害类型
         //正数定义为法术，负数定为物理，而0是基本物理
@@ -100,32 +100,28 @@ namespace Assets.System.WarModule
             Instance(value, 0, 0, resourceId, PlayerDegreeKind);
         public static CombatConduct ZeroDamage => _zeroDamage;
 
-        public static CombatConduct operator *(CombatConduct conduct, float rate)
+        public void TimesRate(float rate)
         {
-            return new CombatConduct
-            {
-                InstanceId = conduct.InstanceId,
-                Basic = conduct.Basic * rate,
-                Critical = conduct.Critical * rate,
-                Rouse = conduct.Rouse * rate,
-                Element = conduct.Element,
-                Kind = conduct.Kind
-            };
-        }
-        public static CombatConduct operator /(CombatConduct conduct, float rate)
-        {
-            return new CombatConduct
-            {
-                InstanceId = conduct.InstanceId,
-                Basic = conduct.Basic / rate,
-                Critical = conduct.Critical / rate,
-                Rouse = conduct.Rouse / rate,
-                Element = conduct.Element,
-                Kind = conduct.Kind
-            };
+            Basic *= rate;
+            Critical *= rate;
+            Rouse *= rate;
         }
 
         public override string ToString() => $"{InstanceId}.K[{Kind}].E[{Element}].B[{Basic}].C[{Critical}].R[{Rouse}]";
+
+        public void SetZero()
+        {
+            Basic = 0;
+            Critical = 0;
+            Rouse = 0;
+        }
+
+        public void SetBasic(int value)
+        {
+            Basic = value;
+            Critical = 0;
+            Rouse = 0;
+        }
     }
 
     public class Damage

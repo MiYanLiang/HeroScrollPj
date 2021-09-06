@@ -733,12 +733,16 @@ namespace Assets.System.WarModule
                 rate += CriticalRate;
             if (rate > MaxRate)
                 rate = MaxRate;
+            var first = true;
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
                 if (Chessboard.IsRandomPass(rate))
-                    if (i == 0)
+                    if (first)
+                    {
                         Chessboard.AppendOpActivity(this, target, Activity.Offensive, Skills(), 1);
+                        first = false;
+                    }
                     else Chessboard.AppendOpInnerActivity(this, target, Activity.Offensive, Skills(), 1);
             }
         }
@@ -1210,7 +1214,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnCounter(Activity activity, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
+            Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(offender), Activity.Counter, Helper.Singular(InstanceHeroGenericDamage()), 1);
         }
     }
     /// <summary>
@@ -1354,14 +1358,11 @@ namespace Assets.System.WarModule
             Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible)), 1);
         }
 
-        public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd()
+        public override void OnRoundEnd()
         {
             //解除无敌状态
             if (Chessboard.GetCondition(this, CardState.Cons.Invincible) > 0)
-                return Helper.Singular(new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing,
-                    Helper.Singular(Chessboard.InstanceRoundAction(this, Chessboard.GetStatus(this).Pos, Activity.Self,
-                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible, -1))))));
-            return base.OnRoundEnd();
+                Chessboard.InstanceChessboardActivity(IsChallenger, this, RoundAction.RoundBuffing, Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible, -1)));
         }
     }
 
@@ -1370,10 +1371,11 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DaDunOperator : HeroOperator
     {
-        public override IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() => Helper.Singular(
-            new KeyValuePair<int, IEnumerable<Activity>>(RoundAction.RoundBuffing,
-                Helper.Singular(Chessboard.InstanceRoundAction(this, Chessboard.GetStatus(this).Pos, Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield))))));
+        public override void OnRoundStart()
+        {
+            Chessboard.InstanceChessboardActivity(IsChallenger, this, RoundAction.RoundBuffing,
+                Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)));
+        }
     }
 
     /// <summary>

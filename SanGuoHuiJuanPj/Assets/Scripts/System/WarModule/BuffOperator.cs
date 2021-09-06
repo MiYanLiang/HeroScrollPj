@@ -50,13 +50,14 @@ namespace Assets.System.WarModule
         }
 
         public virtual bool IsDamageConvertTrigger(ChessOperator op) => false;
+
         /// <summary>
         /// 配合<see cref="IsDamageConvertTrigger"/>改变伤害
         /// </summary>
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public virtual CombatConduct OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct) => conduct;
+        public virtual void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct) {}
 
         public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
         /// <summary>
@@ -121,7 +122,7 @@ namespace Assets.System.WarModule
         protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff(Buff, -value);
 
         protected void SelfConduct(ChessOperator op, CombatConduct[] conducts) =>
-            Chessboard.InstanceChessboardActivity(op.IsChallenger, op, Activity.Self, conducts);
+            Chessboard.InstanceChessboardActivity(op.IsChallenger, op, RoundAction.RoundBuffing, conducts);
         ///// <summary>
         /// 扣除buff值
         /// </summary>
@@ -151,11 +152,9 @@ namespace Assets.System.WarModule
 
         public override bool IsMainActionTrigger => true;
 
-        public override bool IsDisableMainAction(ChessOperator op)
-        {
-            if (!IsBuffActive(op)) return false;
-            return true;
-        }
+        public override bool IsDisableMainAction(ChessOperator op) => IsBuffActive(op);
+
+        public override bool IsDisableCounter(ChessOperator op) => IsBuffActive(op);
 
         public override bool IsRoundStartTrigger => true;
         public override void RoundStart(ChessOperator op)
@@ -174,12 +173,12 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override CombatConduct OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
         {
             if (Damage.GetKind(conduct) == Damage.Kinds.Magic)
-                return conduct;
+                return;
             SelfConduct(op,Helper.Singular(DepleteBuff()));
-            return CombatConduct.ZeroDamage;
+            conduct.SetZero();
         }
     }
     //3 无敌
@@ -217,10 +216,10 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsDamageConvertTrigger(ChessOperator op) => IsBuffActive(op);
-        public override CombatConduct OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
         {
-            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return conduct;
-            return conduct * DataTable.GetGameValue(117) * 0.01f;
+            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
+            conduct.TimesRate(DataTable.GetGameValue(117) * 0.01f);
         }
 
     }
@@ -326,11 +325,11 @@ namespace Assets.System.WarModule
 
         public override bool IsDamageConvertTrigger(ChessOperator op) => IsBuffActive(op);
 
-        public override CombatConduct OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
         {
             var status = Chessboard.GetStatus(op);
             var balance = status.EaseShieldOffset(conduct.Total);
-            return CombatConduct.InstanceDamage(balance, conduct.Element);
+            conduct.SetBasic(balance);
         }
 
     }

@@ -34,10 +34,9 @@ public class ChessUiStyle : CombatStyle
         };
     }
 
-    public virtual Sequence Respond(Activity activity, FightCardData target, string effectId = null) => DOTween.Sequence().AppendCallback(()=>
-    {
-        target.UpdateActivity(activity.Result.Status);
-    });//更新战斗状态(血量)
+    public virtual Sequence Respond(Activity activity, FightCardData target, string effectId = null) => DOTween.Sequence();
+    protected virtual string GetMilitaryEffectId(Activity activity) => Effect.Basic0A;
+
 }
 /// <summary>
 /// 棋盘执行的数据调用抽象层
@@ -68,15 +67,14 @@ public class ChessmanStyle : ChessUiStyle
     /// <returns></returns>
     public virtual Tween FinalizeActionTween(FightCardData card, Vector3 origin) => DOTween.Sequence();
 
-    public virtual Tween CounterTween(Activity activity, FightCardData offense, FightCardData target) => DOTween.Sequence().Join(CardAnimator.Counter(offense)).AppendCallback(()=>
-    {
-        //target.UpdateActivity(activity.Result.Status);
-    });
+    public virtual Tween CounterTween(Activity activity, FightCardData offense, FightCardData target) => 
+        DOTween.Sequence().Join(CardAnimator.Counter(offense))
+        .Append(target.ChessmanStyle.Respond(activity, target, GetMilitaryEffectId(activity)));
 
 }
 public class SpriteStyle : CombatStyle
 {
-    public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence().Join(target.ChessmanStyle.Respond(activity, target));
+    public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence().Join(target.ChessmanStyle.Respond(activity, target)).AppendCallback(() => CardAnimator.UpdateStatusEffect(target));
 }
 public abstract class CardStyle : ChessmanStyle
 {
@@ -101,15 +99,16 @@ public abstract class CardStyle : ChessmanStyle
 
     public override Tween ActivityEffectTween(Activity activity,FightCardData offense,FightCardData target,Transform chessboard)
     {
-        var tween = DOTween.Sequence();
-        tween.Join(OffenseEffects(activity, offense, target, chessboard));
-        tween.Join(target.ChessmanStyle.Respond(activity, target, GetMilitaryEffectId(activity)));
-        return tween;
+        return DOTween.Sequence()
+            .Join(OffenseEffects(activity, offense, target, chessboard))
+            .Join(target.ChessmanStyle.Respond(activity, target, GetMilitaryEffectId(activity)));
     }
 
-    protected virtual string GetMilitaryEffectId(Activity activity) => Effect.Basic0A;
-
-    public override Sequence Respond(Activity activity, FightCardData target, string effectId = null) => base.Respond(activity, target, effectId).Join(RespondEffects(activity, target, effectId));
+    public override Sequence Respond(Activity activity, FightCardData target, string effectId = null) => 
+        base.Respond(activity, target, effectId)
+            .AppendCallback(() => target.UpdateActivity(activity.Result.Status))
+            .Append(RespondEffects(activity, target, effectId))
+            .Join(CardAnimator.UpdateStatusEffect(target));
 
     protected virtual Tween RespondEffects(Activity activity, FightCardData target, string effectId)
     {
@@ -215,17 +214,15 @@ public class HeroStyle : CardStyle
     protected override Tween OffenseEffects(Activity activity, FightCardData offense, FightCardData target, Transform chessboard)
     {
         if (activity.Skill == 0) return DOTween.Sequence();
-        var tween = DOTween.Sequence().AppendCallback(() => CardAnimator.UpdateStatusEffect(offense));
         //武将有自己的攻击特效
-        tween.Join(HeroOffenseVText(activity, offense, target));
-        return tween;
+        return HeroOffenseVText(activity, offense, target);
     }
 
     protected virtual Tween HeroOffenseVText(Activity activity, FightCardData offense, FightCardData target) => CardAnimator.VTextEffect(MilitaryOffenseTextId(activity), offense.cardObj.transform);
 
     protected override Tween RespondEffects(Activity activity, FightCardData target, string effectId)
     {
-        return DOTween.Sequence().AppendCallback(() => CardAnimator.UpdateStatusEffect(target)).Join(base.RespondEffects(activity, target, effectId));
+        return DOTween.Sequence().Join(base.RespondEffects(activity, target, effectId));
     }
 
     private string MilitaryOffenseTextId(Activity activity)

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.UI;
-using NotImplementedException = System.NotImplementedException;
 
 namespace Assets.System.WarModule
 {
@@ -50,7 +48,7 @@ namespace Assets.System.WarModule
             {
                 var conducts = RoundStartConducts(op);
                 if (conducts == null || conducts.Length == 0) continue;
-                Chessboard.InstanceChessboardActivity(op.IsChallenger,op, Activity.Self, conducts);
+                Chessboard.InstanceChessboardActivity(op.IsChallenger,op, RoundAction.JiBan, conducts);
             }
 
             var rivals = Chessboard.GetRivals(first, 
@@ -60,18 +58,19 @@ namespace Assets.System.WarModule
             foreach (var rival in rivals)
             {
                 var result = RoundStartRivalConduct(rival);
-                if(!result.PushBackPos)
+                if (result == null) return;
+                if (!result.PushBackPos)
                 {
                     var conducts = result.Conducts;
                     if (conducts == null || conducts.Length == 0) continue;
-                    Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, Activity.Offensive, conducts);
+                    Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, RoundAction.JiBan, conducts);
                     continue;
                 }
 
                 var backPos = Chessboard.BackPos(Chessboard.GetChessPos(rival));
                 if (backPos == null || backPos.IsPostedAlive) continue;
-                Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, Activity.Offensive, result.Conducts,
-                    skill: 0, rePos: backPos.Pos);
+                Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, RoundAction.JiBan, result.Conducts,
+                    0, backPos.Pos);
             }
         }
 

@@ -10,16 +10,29 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class ChessboardOperator 
     {
+        protected enum ActivityReference
+        {
+            RoundStart,
+            ChessActivity,
+            Inner,
+            RoundEnd
+        }
+        protected ActivityReference ActivityRef { get; private set; }
         public const int HeroDodgeLimit = 75;
         public const int HeroArmorLimit = 90;
         public ChessGrid Grid { get; }
 
         public IReadOnlyList<ChessRound> Rounds => rounds;
         private ChessRound currentRound;
+        private Activity currentActivity;
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
         public IEnumerable<TerrainSprite> ChessSprites => Sprites;
         protected abstract List<TerrainSprite> Sprites { get; }
 
+        public int ChallengerGold { get; protected set; }
+        public int OpponentGold { get; protected set; }
+        public List<int> ChallengerChests { get; set; } = new List<int>();
+        public List<int> OpponentChests { get; set; } = new List<int>();
         protected abstract BondOperator[] JiBan { get; }
 
         public bool IsInit => ProcessSeed > 0;
@@ -108,7 +121,9 @@ namespace Assets.System.WarModule
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             currentProcesses = new List<ChessPosProcess>();
             RefreshChessPosses();
-            PreRoundAction();
+            ActivityRef = ActivityReference.RoundStart;
+            GetPreRoundTriggerByOperators();
+            ActivityRef = ActivityReference.ChessActivity;
             do
             {
                 var op = GetSortedOperator(currentOps); //根据排列逻辑获取执行代理
@@ -134,13 +149,10 @@ namespace Assets.System.WarModule
                 }
 
             } while (currentOps.Count > 0);
-
             currentRound.Processes = currentProcesses.ToArray();
-
-            var finalAction = GetRoundEndTriggerByOperators();
-            currentRound.FinalAction.ConcatAction(finalAction);
-            foreach (var activity in currentRound.FinalAction.Activities)
-                RoundActionInvocation(activity.Key, activity.Value);
+            if (IsGameOver) return currentRound;
+            ActivityRef = ActivityReference.RoundEnd;
+            GetRoundEndTriggerByOperators();
 
             return currentRound;
         }
@@ -151,17 +163,11 @@ namespace Assets.System.WarModule
             {
                 if (!pos.IsPostedAlive) continue;
                 var o = GetOperator(pos.Operator.InstanceId);
-                o.OnPosting(pos);
+                var status = GetStatus(o);
+                if (status.Pos != pos.Pos)
+                    PosOperator(o,pos.Pos);
                 UpdateTerrain(pos);
             }
-        }
-
-        void PreRoundAction()
-        {
-            var preRoundAction = GetPreRoundTriggerByOperators();
-            currentRound.PreAction.ConcatAction(preRoundAction);
-            foreach (var activity in currentRound.PreAction.Activities)
-                RoundActionInvocation(activity.Key, activity.Value);
         }
 
         private void InstanceProcess(int pos,bool isChallenger)
@@ -181,60 +187,42 @@ namespace Assets.System.WarModule
 
         #region RoundActivities
 
-        protected abstract RoundAction GetRoundEndTriggerByOperators();
+        protected abstract void GetRoundEndTriggerByOperators();
 
-        protected abstract RoundAction GetPreRoundTriggerByOperators();
-
-        protected abstract void RoundActionInvocation(int roundKey, IEnumerable<Activity> activities);
-
-        // 注册当回合结束执行的全局逻辑
-        private void RegRoundEnd(int id,IEnumerable<Activity> activity) => AddRoundResourceHelper(currentRound.FinalAction.Activities, id, activity);
+        protected abstract void GetPreRoundTriggerByOperators();
 
         /// <summary>
         /// 回合结束加金币
         /// </summary>
         /// <param name="op"></param>
-        /// <param name="to">如果是玩家资源维度的,-1 = 己方，-2 = 对方。正数为棋格</param>
+        /// <param name="toChallenger"></param>
+        /// <param name="resourceId">金币-1，宝箱id=正数</param>
         /// <param name="value"></param>
-        public void RegGoldOnRoundEnd(ChessOperator op,int to ,int value)
+        public void RegResources(ChessOperator op,bool toChallenger,int resourceId,int value)
         {
-            RegRoundEnd(RoundAction.PlayerResources,
-                Singular(Activity.Instance(
-                    ActivitySeed,
-                    CurrentProcess.InstanceId,
-                    GetStatus(op).Pos,
-                    op.IsChallenger ? 0 : 1,
-                    ResourceTarget(op, to == -1),
-                    Activity.PlayerResource,
-                    Singular(CombatConduct.InstancePlayerResource(-1, value)), 0, -1)));
-        }
-        /// <summary>
-        /// 回合结束添加战役宝箱
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="to">如果是玩家资源维度的,-1 = 己方，-2 = 对方。正数为棋格</param>
-        /// <param name="warChests"></param>
-        public void RegWarChestOnRoundEnd(ChessOperator op,int to ,int[] warChests)
-        {
-            RegRoundEnd(RoundAction.PlayerResources,
-                Singular(Activity.Instance(ActivitySeed,
-                    CurrentProcess.InstanceId,
-                    GetStatus(op).Pos,
-                    op.IsChallenger ? 0 : 1,
-                    ResourceTarget(op, to == -1),
-                    Activity.PlayerResource,
-                    warChests.Select(CombatConduct.InstancePlayerResource).ToArray(), 
-                    0, -1)));
-        }
+            InstanceActivity(op, toChallenger ? -1 : -2, Activity.PlayerResource, Singular(CombatConduct.InstancePlayerResource(resourceId, value)), 0, -1);
+            if(resourceId==-1)
+                if (toChallenger)
+                    ChallengerGold += value;
+                else OpponentGold += value;
+            if (resourceId >= 0)
+            {
+                if (toChallenger)
+                    ChallengerChests.AddRange(WarChests(resourceId, value));
+                else OpponentChests.AddRange(WarChests(resourceId, value));
+            }
+            ActivitySeed++;
 
-        //注册助手
-        private static void AddRoundResourceHelper(Dictionary<int, List<Activity>> dic, int id, IEnumerable<Activity> activity)
-        {
-            if (!dic.ContainsKey(id))
-                dic.Add(id, new List<Activity>());
-            dic[id].AddRange(activity);
+            List<int> WarChests(int id,int amt)
+            {
+                var list = new List<int>();
+                for (int i = 0; i < amt; i++)
+                {
+                    list.Add(id);
+                }
+                return list;
+            }
         }
-
         #endregion
 
         private ChessPosProcess CurrentProcess { get; set; }
@@ -252,18 +240,23 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="fromChallenger"></param>
         /// <param name="target"></param>
-        /// <param name="intent"></param>
+        /// <param name="intent">参考<see cref="RoundAction"/>的值来表示</param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
-        public void InstanceChessboardActivity(bool fromChallenger,IChessOperator target, int intent,CombatConduct[] conducts,
-            int skill = 0, int rePos = -1)
+        public void InstanceChessboardActivity(bool fromChallenger, IChessOperator target, int intent,
+            CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
             var pos = fromChallenger ? -1 : -2;
-            if (CurrentProcess == null || CurrentProcess.Pos != pos)//棋盘独立一个process，不插入棋子process
-                InstanceProcess(pos, fromChallenger);
 
-            AppendOpActivity(null, GetChessPos(target), intent, conducts, skill, rePos);
+            if(ActivityRef == ActivityReference.ChessActivity)//如果当前是棋子行动
+            {
+                if (CurrentProcess == null || CurrentProcess.Pos != pos) //棋盘独立一个process，不插入棋子process
+                    InstanceProcess(pos, fromChallenger);
+            }
+
+            var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
+            ProcessActivityResult(activity);
         }
 
         /// <summary>
@@ -279,34 +272,45 @@ namespace Assets.System.WarModule
         public ActivityResult AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
              CombatConduct[] conducts, int skill, int rePos = -1)
         {
-            var op = GetOperator(target.Operator.InstanceId);
-            var activity = InstanceActivity(offender, target, intent, conducts, skill, rePos);
-            if (InnerActivities == null)
-                InnerActivities = new List<Activity>();
-            InnerActivities.Add(activity);
-            activity.Result = GetOperator(op.InstanceId).Respond(activity, offender);
-            activity.OffenderStatus = GetStatus(op).Clone();
-            UpdateTerrain(target);
+            var temp = ActivityRef;
+            ActivityRef = ActivityReference.Inner;
+            var activity = InstanceActivity(offender, target.Operator.InstanceId, intent, conducts, skill, rePos);
+            ActivityRef = temp;
+            ProcessActivityResult(activity);
             return activity.Result;
         }
+
+        private void ProcessActivityResult(Activity activity)
+        {
+            var target = GetOperator(activity.To);
+            var offender = activity.From < 0 ? null : GetOperator(activity.From);
+            activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
+            activity.OffenderStatus = GetStatus(target).Clone();
+            UpdateTerrain(GetChessPos(target));
+        }
+
         public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
             CombatConduct[] conducts,int skill ,int rePos = -1)
         {
             if (target == null) return null;
-            var activity = InstanceActivity(offender, target, intent, conducts, skill, rePos);
+            currentActivity = InstanceActivity(offender, target.Operator.InstanceId, intent, conducts, skill, rePos);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
                 throw new NullReferenceException(
                     $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
-            activity.Result = GetOperator(op.InstanceId).Respond(activity, offender);
-            activity.OffenderStatus = GetStatus(op).Clone();
-            UpdateTerrain(target);
-            activity.Inner = InnerActivities?.ToArray();
-            InnerActivities?.Clear();
-            return activity.Result;
+            ProcessActivityResult(currentActivity);
+            return currentActivity.Result;
         }
 
-        private Activity InstanceActivity(ChessOperator offender, IChessPos target, int intent, CombatConduct[] conducts, int skill, int rePos)
+        private Activity InstanceActivity(bool fromChallenger, int targetInstance, int intent, CombatConduct[] conducts,
+            int skill, int rePos)
+        {
+            if (CurrentProcess == null)
+                InstanceProcess(fromChallenger ? -1 : -2, fromChallenger);
+            return InstanceActivity(null, targetInstance, intent, conducts, skill, rePos);
+        }
+
+        private Activity InstanceActivity(ChessOperator offender, int targetInstance, int intent, CombatConduct[] conducts, int skill, int rePos)
         {
             RecursiveActionCount++;
             ActivitySeed++;
@@ -314,13 +318,29 @@ namespace Assets.System.WarModule
                 offender == null ? -1 : offender.InstanceId,
                 offender == null ? -1 :
                 offender.IsChallenger ? 0 : 1,
-                target.Operator.InstanceId,
+                targetInstance,
                 intent, conducts, skill, rePos);
-            CurrentProcess.Activities.Add(activity);
+            switch (ActivityRef)
+            {
+                case ActivityReference.RoundStart:
+                    currentRound.PreAction.Activities.Add(activity);
+                    break;
+                case ActivityReference.ChessActivity:
+                    CurrentProcess.Activities.Add(activity);
+                    break;
+                case ActivityReference.RoundEnd:
+                    currentRound.FinalAction.Activities.Add(activity);
+                    break;
+                case ActivityReference.Inner:
+                    currentActivity.Inner.Add(activity);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             return activity;
         }
 
-        private List<Activity> InnerActivities { get; set; }
+        //private List<Activity> InnerActivities { get; set; }
 
         /// <summary>
         /// 生成棋盘精灵
@@ -393,21 +413,6 @@ namespace Assets.System.WarModule
                 RemoveSprite(sprite);
             }
         }
-
-        /// <summary>
-        /// 生成回合触发器
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="to">如果是玩家资源维度的,-1 = 己方，-2 = 对方。正数为棋格</param>
-        /// <param name="intent"><see cref="Activity"/>Intent</param>
-        /// <param name="conducts"></param>
-        /// <returns></returns>
-        public Activity InstanceRoundAction(ChessOperator op, int to, int intent, 
-            CombatConduct[] conducts) =>
-            Activity.Instance(ActivitySeed, CurrentProcess.InstanceId, GetStatus(op).Pos,
-                op.IsChallenger ? 0 : 1,
-                ResourceTarget(op, to == -1),
-                intent, conducts, 0, -1);
 
         public bool OnCounterTriggerPass(ChessOperator op,ChessOperator offender)
         {
@@ -505,7 +510,7 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public CombatConduct OnArmorReduction(ChessOperator op, CombatConduct conduct)
+        public void OnArmorReduction(ChessOperator op, CombatConduct conduct)
         {
             float armor = Damage.GetKind(conduct) == Damage.Kinds.Physical ? op.GetPhysicArmor() : op.GetMagicArmor();
             //加护甲
@@ -514,11 +519,10 @@ namespace Assets.System.WarModule
             if (GetBuffOperator(CardState.Cons.Disarmed, op).Any() || 
                 GetCondition(op, CardState.Cons.Disarmed) > 0)
                 armor *= 0.5f;
-            var finalConduct = conduct * (1 - armor * 0.01f);
+            conduct.TimesRate(1 - armor * 0.01f);
             //伤害转化buff 例如：流血
             foreach (var bo in GetBuffOperator(b => b.IsDamageConvertTrigger(op)))
-                finalConduct = bo.OnDamageConvertTrigger(op, conduct);
-            return finalConduct;
+                bo.OnDamageConvertTrigger(op, conduct);
         }
 
         public bool OnMainProcessAvailable(ChessOperator op)
@@ -610,7 +614,11 @@ namespace Assets.System.WarModule
 
         #region Grid Proxy
         public int[] FrontRows => Grid.FrontRows;
-
+        /// <summary>
+        /// 放置棋子到棋位上
+        /// </summary>
+        /// <param name="op"></param>
+        /// <param name="pos"></param>
         public void PosOperator(ChessOperator op, int pos)
         {
             var oldPos = GetChessPos(op);
@@ -627,7 +635,7 @@ namespace Assets.System.WarModule
                     $"Pos({pos}) has [{replace.CardId}({replace.CardType})] exist!");
             if (!IsInit) return;
             var chessPos = GetChessPos(op);
-            op.OnPosting(chessPos);
+            op.OnPostingTrigger(chessPos);
             UpdateTerrain(chessPos);
         }
 
@@ -649,5 +657,7 @@ namespace Assets.System.WarModule
             Grid.GetScope(op).Values.Where(condition == null ? p => p.IsPostedAlive : condition);
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
         #endregion
+
+        protected abstract void OnPlayerResourcesActivity(Activity activity);
     }
 }

@@ -124,32 +124,6 @@ public class CardAnimator
         ((RectTransform) transform).sizeDelta * transform.lossyScale;
 
     /// <summary>
-    /// 打击效果
-    /// </summary>
-    public static Tween GetCombatStrikeEffect(Activity activity, FightCardData op, FightCardData target)
-    {
-        return DOTween.Sequence().AppendInterval(0.01f).OnComplete(() =>
-        {
-            foreach (var conduct in activity.Conducts)
-            {
-                GameObject effect;
-                if (activity.Skill == 0)
-                {
-                    effect = EffectsPoolingControl.instance.GetEffect(Effect.Basic0A, target.cardObj.transform,
-                        0.5f);
-                    effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
-                }
-                else
-                    effect = EffectsPoolingControl.instance.GetEffect(GetEffectByStyle(op.Style, conduct), target.cardObj.transform, 1f);
-
-                if (conduct.Critical > 0 || conduct.Rouse > 0) //如果会心或暴击 物体变大1.5
-                    effect.transform.localScale = new Vector3(1.5f, 1.5f, 1);
-                else effect.transform.localScale = Vector3.one;
-            }
-        });
-    }
-
-    /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
     public static Tween UpdateStatusEffect(FightCardData target, int con = -1)
@@ -198,9 +172,11 @@ public class CardAnimator
                 target.cardObj.transform);
             target.StatesUi.Add(key, effect);
 
-            if (con != CardState.Cons.EaseShield) return;
-            var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
-            effect.Image.color = new Color(1, 1, 1, fade);
+            if (con == CardState.Cons.EaseShield)
+            {
+                var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
+                effect.Image.color = new Color(1, 1, 1, fade);
+            }
         }
 
         if (!target.cardObj.War.CardStates.ContainsKey(stateName))

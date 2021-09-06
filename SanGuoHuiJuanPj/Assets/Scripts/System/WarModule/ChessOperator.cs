@@ -43,9 +43,9 @@ namespace Assets.System.WarModule
 
         protected abstract ChessboardOperator Chessboard { get; }
         public abstract int GeneralDamage();
-        public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundStart() => null;
+        public virtual void OnRoundStart() {}
 
-        public virtual IEnumerable<KeyValuePair<int, IEnumerable<Activity>>> OnRoundEnd() => null;
+        public virtual void OnRoundEnd() {}
 
         /// <summary>
         /// 棋子主进程的行动
@@ -183,9 +183,9 @@ namespace Assets.System.WarModule
                     int finalDamage = conductTotal;
                     if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                     {
-                        var damage = Chessboard.OnArmorReduction(this, conduct);
+                        Chessboard.OnArmorReduction(this, conduct);
                         //自身(武将技)伤害转化
-                        finalDamage = OnMilitaryDamageConvert(damage);
+                        finalDamage = OnMilitaryDamageConvert(conduct);
                     }
                     SubtractHp(finalDamage);
                     if(IsAlive) OnAfterSubtractHp(finalDamage, conduct);
@@ -233,10 +233,8 @@ namespace Assets.System.WarModule
         protected virtual void OnDeadTrigger(int damage)
         {
         }
-
+        public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
-
-        public virtual void OnPosting(IChessPos chessPos){}
     }
 
     public abstract class CardOperator : ChessOperator

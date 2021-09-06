@@ -148,7 +148,7 @@ namespace Assets.System.WarModule
         /// 外圈，默认一圈 = 1
         /// </summary>
         protected virtual int Surround { get; } = 1;
-        public override void OnPosting(IChessPos chessPos)
+        public override void OnPostingTrigger(IChessPos chessPos)
         {
             //除去所有精灵(如果被移位)
             foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Host == InstanceId))

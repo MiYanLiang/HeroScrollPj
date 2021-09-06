@@ -13,10 +13,6 @@ namespace Assets.System.WarModule
         private int cardSeed;
         protected override List<TerrainSprite> Sprites { get; }
         protected override BondOperator[] JiBan { get; }
-        public int ChallengerGold { get; set; }
-        public int OpponentGold { get; set; }
-        public List<int> ChallengerChests { get; set; }
-        public List<int> OpponentChests { get; set; }
         private BuffOperator[] BuffOps { get; }
 
         public ChessOperatorManager(ChessGrid grid) : base(grid)
@@ -481,17 +477,17 @@ namespace Assets.System.WarModule
 
         #region RoundTrigger
 
-        protected override RoundAction GetRoundEndTriggerByOperators()
+        protected override void GetRoundEndTriggerByOperators()
         {
-            var ra = new RoundAction();
             foreach (var bo in GetBuffOperator(b => b.IsRoundEndTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
                 bo.RoundEnd(op);
-            ProceedRoundCondition(o => o.OnRoundEnd(), ra);
-            return ra;
+            StatusMap.Keys
+                .Where(o => o != null)
+                .ToList().ForEach(o=>o.OnRoundEnd());
         }
 
-        protected override RoundAction GetPreRoundTriggerByOperators()
+        protected override void GetPreRoundTriggerByOperators()
         {
             OnRoundStartJiBan(Grid.Challenger.Where(p => p.Value.IsPostedAlive)
                 .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
@@ -506,12 +502,12 @@ namespace Assets.System.WarModule
                     RemoveSprite(sprite);
             }
 
-            var ra = new RoundAction();
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
                 bo.RoundStart(op);
-            ProceedRoundCondition(o => o.OnRoundStart(), ra);
-            return ra;
+            StatusMap.Keys
+                .Where(o => o != null)
+                .ToList().ForEach(o => o.OnRoundEnd());
         }
 
         private void OnRoundStartJiBan(ChessOperator[] chessOperators)
@@ -519,36 +515,12 @@ namespace Assets.System.WarModule
             foreach (var jb in JiBan) jb.OnRoundStart(chessOperators);
         }
 
-
-        protected override void RoundActionInvocation(int roundKey, IEnumerable<Activity> activities)
-        {
-            switch (roundKey)
-            {
-                case RoundAction.PlayerResources:
-                    ActionForeach(activities, RoundActionPlayerResources);
-                    break;
-                case RoundAction.RoundBuffing:
-                    ActionForeach(activities, RoundActionBuffering);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown RoundKey({roundKey})!");
-            }
-
-            void ActionForeach(IEnumerable<Activity> list, Action<Activity> action)
-            {
-                foreach (var activity in list) action(activity);
-            }
-        }
-
         protected override ChessOperator GetOperator(int id) => ops.ContainsKey(id) ? ops[id] : null;
 
         protected override IEnumerable<BuffOperator> GetBuffOperator(Func<BuffOperator, bool> func) =>
             BuffOps.Where(func);
 
-        private void RoundActionBuffering(Activity activity) =>
-            InstanceChessboardActivity(activity.Initiator == 0, GetOperator(activity.To), activity.Intent, activity.Conducts);
-
-        private void RoundActionPlayerResources(Activity activity)
+        protected override void OnPlayerResourcesActivity(Activity activity)
         {
             foreach (var conduct in activity.Conducts)
             {
@@ -588,18 +560,6 @@ namespace Assets.System.WarModule
                     default: throw new ArgumentOutOfRangeException($"Unknown target({to}) for warChest action!");
                 }
             }
-        }
-
-        protected void ProceedRoundCondition(
-            Func<ChessOperator, IEnumerable<KeyValuePair<int, IEnumerable<Activity>>>> func, RoundAction roundAction)
-        {
-            var roundActions = StatusMap.Keys
-                .Select(func)
-                .Where(o => o != null)
-                .SelectMany(o => o)
-                .GroupBy(g => g.Key, g => g.Value)
-                .ToDictionary(g => g.Key, g => g.SelectMany(s => s));
-            roundAction.Activities = roundActions.ToDictionary(a => a.Key, a => a.Value.ToList());
         }
         #endregion
     }

@@ -66,6 +66,7 @@ namespace Assets.System.WarModule
                 Intent = intent,
                 Skill = skill,
                 RePos = rePos,
+                Inner = new List<Activity>()
             };
         }
         [JsonProperty("I")] public int InstanceId { get; set; }
@@ -100,7 +101,7 @@ namespace Assets.System.WarModule
         [JsonProperty("PI")] public int ProcessId { get; set; }
         [JsonProperty("C")] public CombatConduct[] Conducts { get; set; }
         [JsonProperty("R")] public ActivityResult Result { get; set; }
-        [JsonProperty("In")]public Activity[] Inner { get; set; }
+        [JsonProperty("In")]public List<Activity> Inner { get; set; }
         [JsonProperty("OS")]public ChessStatus OffenderStatus { get; set; }
         /// <summary>
         /// 发起方 0 = Challenger, 1 = Opposite

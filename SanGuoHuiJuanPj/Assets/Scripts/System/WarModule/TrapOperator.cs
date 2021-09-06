@@ -204,7 +204,7 @@ namespace Assets.System.WarModule
     {
         protected override void OnDeadTrigger(int damage)
         {
-            Chessboard.RegGoldOnRoundEnd(this, -2, DataTable.EnemyUnit[CardId].GoldReward);
+            Chessboard.RegResources(this, !IsChallenger, -1, DataTable.EnemyUnit[CardId].GoldReward);
         }
     }
     /// <summary>
@@ -214,7 +214,10 @@ namespace Assets.System.WarModule
     {
         protected override void OnDeadTrigger(int damage)
         {
-            Chessboard.RegWarChestOnRoundEnd(this,-2, DataTable.EnemyUnit[CardId].WarChest);
+            foreach (var warChestId in DataTable.EnemyUnit[CardId].WarChest)
+            {
+                Chessboard.RegResources(this, !IsChallenger, warChestId, 1);
+            }
         }
     }
 }
