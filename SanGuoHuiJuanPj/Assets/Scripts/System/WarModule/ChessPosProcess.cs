@@ -35,13 +35,13 @@ namespace Assets.System.WarModule
             switch (Pos)
             {
                 case -1:
-                    challengerText = "玩家棋手";
+                    challengerText = "玩家棋手[-1]";
                     break;
                 case -2:
-                    challengerText = "对手棋手";
+                    challengerText = "对手棋手[-2]";
                     break;
                 default: 
-                    challengerText = Scope == 0? $"玩家({Pos})": $"对手({Pos})";
+                    challengerText = Scope == 0? $"玩家Pos({Pos})": $"对手Pos({Pos})";
                     break;
             }
 

@@ -212,10 +212,11 @@ namespace Assets.System.WarModule
         /// <param name="toChallenger"></param>
         /// <param name="resourceId">金币-1，宝箱id=正数</param>
         /// <param name="value"></param>
-        public void RegResources(ChessOperator op,bool toChallenger,int resourceId,int value)
+        public void RegResources(ChessOperator op, bool toChallenger, int resourceId, int value)
         {
-            InstanceActivity(op, toChallenger ? -1 : -2, Activity.PlayerResource, Singular(CombatConduct.InstancePlayerResource(resourceId, value)), 0, -1);
-            if(resourceId==-1)
+            InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
+                Singular(CombatConduct.InstancePlayerResource(resourceId, value)), 0, -1);
+            if (resourceId == -1)
                 if (toChallenger)
                     ChallengerGold += value;
                 else OpponentGold += value;
@@ -225,18 +226,21 @@ namespace Assets.System.WarModule
                     ChallengerChests.AddRange(WarChests(resourceId, value));
                 else OpponentChests.AddRange(WarChests(resourceId, value));
             }
+
             ActivitySeed++;
 
-            List<int> WarChests(int id,int amt)
+            List<int> WarChests(int id, int amt)
             {
                 var list = new List<int>();
                 for (int i = 0; i < amt; i++)
                 {
                     list.Add(id);
                 }
+
                 return list;
             }
         }
+
         #endregion
 
         private ChessPosProcess CurrentProcess { get; set; }
@@ -263,11 +267,8 @@ namespace Assets.System.WarModule
         {
             var pos = fromChallenger ? -1 : -2;
 
-            if(ActivityRef == ActivityReference.ChessActivity)//如果当前是棋子行动
-            {
-                if (CurrentProcess == null || CurrentProcess.Pos != pos) //棋盘独立一个process，不插入棋子process
-                    InstanceProcess(pos, fromChallenger);
-            }
+            //if (CurrentProcess == null || CurrentProcess.Pos != pos) //棋盘独立一个process，不插入棋子process
+            //    InstanceProcess(pos, fromChallenger);
 
             var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
             ProcessActivityResult(activity);
@@ -288,7 +289,8 @@ namespace Assets.System.WarModule
         {
             var temp = ActivityRef;
             ActivityRef = ActivityReference.Inner;
-            var activity = InstanceActivity(offender, target.Operator.InstanceId, intent, conducts, skill, rePos);
+            var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+                conducts, skill, rePos);
             ActivityRef = temp;
             ProcessActivityResult(activity);
             return activity.Result;
@@ -317,7 +319,8 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts,int skill ,int rePos = -1)
         {
             if (target == null) return null;
-            currentActivity = InstanceActivity(offender, target.Operator.InstanceId, intent, conducts, skill, rePos);
+            currentActivity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+                conducts, skill, rePos);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
                 throw new NullReferenceException(
@@ -327,21 +330,24 @@ namespace Assets.System.WarModule
         }
 
         private Activity InstanceActivity(bool fromChallenger, int targetInstance, int intent, CombatConduct[] conducts,
-            int skill, int rePos)
-        {
-            if (CurrentProcess == null)
-                InstanceProcess(fromChallenger ? -1 : -2, fromChallenger);
-            return InstanceActivity(null, targetInstance, intent, conducts, skill, rePos);
-        }
+            int skill, int rePos) =>
+            InstanceActivity(fromChallenger,null, targetInstance, intent, conducts, skill, rePos);
 
-        private Activity InstanceActivity(ChessOperator offender, int targetInstance, int intent, CombatConduct[] conducts, int skill, int rePos)
+        private Activity InstanceActivity(bool fromChallenger,ChessOperator offender, int targetInstance, int intent, CombatConduct[] conducts, int skill, int rePos)
         {
             RecursiveActionCount++;
             ActivitySeed++;
-            var activity = Activity.Instance(ActivitySeed, CurrentProcess.InstanceId,
-                offender == null ? -1 : offender.InstanceId,
-                offender == null ? -1 :
-                offender.IsChallenger ? 0 : 1,
+            var processId = ActivityRef == ActivityReference.ChessActivity ||
+                            ActivityRef == ActivityReference.Inner
+                ? CurrentProcess.InstanceId
+                : -1;
+            var fromId = offender == null ?
+                fromChallenger ? -1 : -2 : offender.InstanceId;
+            var activity = Activity.Instance(
+                ActivitySeed,
+                processId,
+                fromId,
+                fromChallenger ? 0 : 1,
                 targetInstance,
                 intent, conducts, skill, rePos);
             switch (ActivityRef)

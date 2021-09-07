@@ -16,6 +16,7 @@ public class ChessboardManager : MonoBehaviour
     public NewWarManager NewWar;
     public Chessboard Chessboard;
     public GameObject RouseEffectObj;
+    public JiBanEffectUi JiBanEffect;
 
     [SerializeField] private AudioSource audioSource;
 
@@ -178,7 +179,7 @@ public class ChessboardManager : MonoBehaviour
                 if (jiBanId != activity.Skill && jiBanId != -1)
                 {
                     //羁绊画面演示
-                    yield return JiBanEffect(jiBanId);
+                    yield return OnJiBanEffect(jiBan);
                     yield return OnChessboardProcess(jiBan);
                     jiBan.Clear();
                 }
@@ -188,15 +189,22 @@ public class ChessboardManager : MonoBehaviour
         }
 
         if (jiBan.Count == 0) yield break;
-        yield return JiBanEffect(jiBanId);
+        yield return OnJiBanEffect(jiBan);
         yield return OnChessboardProcess(jiBan);
     }
 
-    private IEnumerator JiBanEffect(int jiBanId)
+    private IEnumerator OnJiBanEffect(List<Activity> jiBan)
     {
-        var jb = DataTable.JiBan[jiBanId];
-        Debug.Log($"羁绊[{jb.JiBanTitle}]特效!");
-        return null;
+        var ac = jiBan.First();
+        var initiator = ac.IsChallenger == 0 ? JiBanEffect.Player : JiBanEffect.Opposite;
+        var jb = DataTable.JiBan[ac.Skill];
+        JiBanEffect.JiBanTransform.SetParent(initiator);
+        JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
+        JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
+        JiBanEffect.JiBanTransform.gameObject.SetActive(true);
+        JiBanEffect.JiBanTransform.localPosition = Vector3.zero;
+        yield return new WaitForSeconds(1.5f);
+        JiBanEffect.JiBanTransform.gameObject.SetActive(false);
     }
 
     private IEnumerator OnChessboardProcess(List<Activity> activities)
@@ -224,8 +232,11 @@ public class ChessboardManager : MonoBehaviour
         {
             var innerTween = DOTween.Sequence().Pause(); //内嵌活动
             Sequence chessboardShake = null;
+            FightCardData op = null;
+
             target = CardMap[activity.To];
-            var op = offense = CardMap[activity.From];
+            op = offense = CardMap[activity.From];
+
             var tg = target;
             if (!preActionDone)
             {
@@ -583,7 +594,7 @@ public class ChessboardManager : MonoBehaviour
                 return;
             }
             //生成精灵
-            var pos = Chessboard.GetChessPos(activity.To, activity.Initiator == 0);
+            var pos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
             var sp = EffectsPoolingControl.instance.GetPosState(conduct, pos);
             if (sp == null) return;
             Sprites.Add(conduct.Kind, sp);

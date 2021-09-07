@@ -45,11 +45,10 @@ namespace Assets.System.WarModule
         /// <param name="id"></param>
         /// <param name="processId"></param>
         /// <param name="from"></param>
-        /// <param name="isChallenger"></param>
+        /// <param name="isChallenger">0=challenger,1=opposite</param>
         /// <param name="to">正数为棋子Id，-1=玩家，-2=对手</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
-        /// <param name="orientation"></param>
         /// <param name="skill">技能值，普通攻击为0</param>
         /// <param name="rePos">换位</param>
         /// <returns></returns>
@@ -60,7 +59,7 @@ namespace Assets.System.WarModule
                 InstanceId = id,
                 ProcessId = processId,
                 From = from,
-                Initiator = isChallenger,
+                IsChallenger = isChallenger,
                 To = to,
                 Conducts = conducts,
                 Intent = intent,
@@ -118,7 +117,7 @@ namespace Assets.System.WarModule
         /// 发起方 0 = Challenger, 1 = Opposite
         /// </summary>
         //[JsonProperty("IC")] 
-        public int Initiator { get; set; }
+        public int IsChallenger { get; set; }
 
         [JsonIgnore] 
         public bool IsRePos => RePos >= 0;
@@ -126,7 +125,7 @@ namespace Assets.System.WarModule
         public override string ToString()
         {
             var intentText = string.Empty;
-            var initiatorText = Initiator == 0 ? "玩家" : "对方";
+            var initiatorText = IsChallenger == 0 ? "玩家" : "对方";
             var toText = string.Empty;
             switch (To)
             {
@@ -162,7 +161,7 @@ namespace Assets.System.WarModule
             var result = Result == null ? string.Empty : Result.Type.ToString();
             var conducts = Conducts == null ? string.Empty : Conducts.Length.ToString();
             var innerText = Inner == null ? string.Empty : $"内嵌({Inner.Count})";
-            return $"活动({InstanceId}):{initiatorText}意向[{intentText})].目标[{toText}]: 格斗={conducts} {innerText} 结果[{result}]";
+            return $"活动({InstanceId}):[{initiatorText}]意向[{intentText})].目标[{toText}]: 格斗={conducts} {innerText} 结果[{result}]";
 
         }
     }
