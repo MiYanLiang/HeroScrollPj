@@ -10,6 +10,7 @@ using UnityEngine;
 
 public class ChessboardManager : MonoBehaviour
 {
+    public bool SkipAnim;
     public WarGameCardUi PrefabUi;
     public WarGameCardUi HomePrefab;
     public NewWarManager NewWar;
@@ -54,6 +55,11 @@ public class ChessboardManager : MonoBehaviour
         var chess = NewWar.ChessOperator;
         NewWar.StartButtonShow(false);
         var round = chess.StartRound();
+        if (SkipAnim)
+        {
+            NewWar.StartButtonShow(true);
+            return;
+        }
         StartCoroutine(AnimateRound(round, chess));
     }
 
@@ -114,7 +120,7 @@ public class ChessboardManager : MonoBehaviour
     private IEnumerator AnimateRound(ChessRound round,ChessboardOperator chess)
     {
         IsBusy = true;
-        yield return OnChessboardProcess(round.PreAction.Activities);
+        yield return OnRoundBegin(round.PreAction.Activities);
         for (int i = 0; i < round.Processes.Length; i++)
         {
             var process = round.Processes[i];
@@ -130,7 +136,7 @@ public class ChessboardManager : MonoBehaviour
                 yield return ProceedChessmanActivities(process.Activities);
             }
 
-            foreach (var card in CardMap.ToDictionary(c=>c.Key,c=>c.Value))
+            foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
             {
                 Chessboard.ResetPos(card.Value);
                 if (card.Value.CardType == GameCardType.Base) continue;
@@ -157,6 +163,40 @@ public class ChessboardManager : MonoBehaviour
 
         IsBusy = false;
         NewWar.StartButtonShow(true);
+    }
+
+    private IEnumerator OnRoundBegin(List<Activity> activities)
+    {
+        var jiBanId = -1;
+        var jiBan = new List<Activity>();
+        for (var i = 0; i < activities.Count; i++)
+        {
+            var activity = activities[i];
+            if (activity.Intent == RoundAction.JiBan)
+            {
+                //是否跟上一个是同一个羁绊id
+                if (jiBanId != activity.Skill && jiBanId != -1)
+                {
+                    //羁绊画面演示
+                    yield return JiBanEffect(jiBanId);
+                    yield return OnChessboardProcess(jiBan);
+                    jiBan.Clear();
+                }
+            }
+            jiBan.Add(activity);
+            jiBanId = activity.Skill;
+        }
+
+        if (jiBan.Count == 0) yield break;
+        yield return JiBanEffect(jiBanId);
+        yield return OnChessboardProcess(jiBan);
+    }
+
+    private IEnumerator JiBanEffect(int jiBanId)
+    {
+        var jb = DataTable.JiBan[jiBanId];
+        Debug.Log($"羁绊[{jb.JiBanTitle}]特效!");
+        return null;
     }
 
     private IEnumerator OnChessboardProcess(List<Activity> activities)

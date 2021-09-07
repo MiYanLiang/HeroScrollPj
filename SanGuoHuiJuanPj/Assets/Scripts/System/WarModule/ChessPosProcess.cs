@@ -29,6 +29,23 @@ namespace Assets.System.WarModule
         /// </summary>
         [JsonProperty("P")] public int Pos { get; set; }
         [JsonProperty("S")] public int Scope { get; set; }
-        public override string ToString() => $"{InstanceId}.Pos[{Pos}]({Scope}).Act[{Activities.Count}]";
+        public override string ToString()
+        {
+            string challengerText;
+            switch (Pos)
+            {
+                case -1:
+                    challengerText = "玩家棋手";
+                    break;
+                case -2:
+                    challengerText = "对手棋手";
+                    break;
+                default: 
+                    challengerText = Scope == 0? $"玩家({Pos})": $"对手({Pos})";
+                    break;
+            }
+
+            return $"主进程({InstanceId}).{challengerText}活动({Activities.Count})";
+        }
     }
 }

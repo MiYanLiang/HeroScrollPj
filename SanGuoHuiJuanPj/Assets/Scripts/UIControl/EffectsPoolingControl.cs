@@ -143,6 +143,7 @@ public class EffectsPoolingControl : MonoBehaviour
         if (effect != null)
         {
             effect.transform.localScale = Vector3.one;
+            effect.transform.localRotation = Quaternion.identity;
             effect.SetActive(false);
             effect.transform.SetParent(effectContentTran);
         }

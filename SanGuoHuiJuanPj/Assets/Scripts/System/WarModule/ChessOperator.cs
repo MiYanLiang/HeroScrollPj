@@ -271,5 +271,12 @@ namespace Assets.System.WarModule
             chessman.Pos,
             new Dictionary<int, int>());
 
+        public override string ToString()
+        {
+            var sideText = IsChallenger ? "玩家" : "对方";
+            if (CardType == GameCardType.Base)
+                return $"{sideText} 老巢{CardId}({Level})";
+            return $"{sideText} {Info.Name}({CardId})等级({Level})力量({Style.Strength})";
+        }
     }
 }

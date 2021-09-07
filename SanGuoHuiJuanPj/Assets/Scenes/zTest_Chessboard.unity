@@ -1195,15 +1195,15 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 8
-  - Id: 11
+  - Id: 59
     Pos: 2
     Type: 0
     Level: 1
-  - Id: 59
+  - Id: 17
     Pos: 1
     Type: 0
     Level: 1
-  - Id: 77
+  - Id: 11
     Pos: 6
     Type: 0
     Level: 1
@@ -1211,29 +1211,33 @@ MonoBehaviour:
     Pos: 9
     Type: 0
     Level: 1
-  - Id: 28
-    Pos: 8
-    Type: 0
-    Level: 1
   Enemy:
   - Id: 0
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 59
+  - Id: 11
     Pos: 1
     Type: 0
     Level: 1
-  - Id: 66
+  - Id: 17
     Pos: 4
     Type: 0
     Level: 1
-  - Id: 50
+  - Id: 14
     Pos: 6
     Type: 0
     Level: 1
-  - Id: 70
+  - Id: 13
     Pos: 8
+    Type: 0
+    Level: 1
+  - Id: 16
+    Pos: 9
+    Type: 0
+    Level: 1
+  - Id: 70
+    Pos: 10
     Type: 0
     Level: 1
 --- !u!4 &413234022
@@ -1262,6 +1266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e012589388e32f14ca2b79314e360760, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SkipAnim: 0
   PrefabUi: {fileID: 1186401183671722616}
   HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
     type: 3}

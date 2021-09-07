@@ -122,7 +122,7 @@ namespace Assets.System.WarModule
         protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff(Buff, -value);
 
         protected void SelfConduct(ChessOperator op, CombatConduct[] conducts) =>
-            Chessboard.InstanceChessboardActivity(op.IsChallenger, op, RoundAction.RoundBuffing, conducts);
+            Chessboard.InstanceChessboardActivity(op.IsChallenger, op, RoundAction.RoundBuffing, conducts, (int)Buff);
         ///// <summary>
         /// 扣除buff值
         /// </summary>

@@ -293,7 +293,7 @@ namespace Assets.System.WarModule
             var tPoss = new List<int>();
             for (var i = 1; i < PenetrateUnits + 1; i++)
             {
-                var pos = i * 5 * target.Pos;
+                var pos = i * 5 + target.Pos;
                 tPoss.Add(pos);
             }
 
@@ -340,7 +340,7 @@ namespace Assets.System.WarModule
                     var chessPos = surrounded[i];
                     if (Chessboard.IsRandomPass(BurnExplodeRatio))
                         explode.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
-                    if(i==0) Chessboard.AppendOpActivity(this, chessPos, Activity.Offensive, explode.ToArray(), 2);
+                    if (i == 0) Chessboard.AppendOpActivity(this, chessPos, Activity.Offensive, explode.ToArray(), 2);
                     else Chessboard.AppendOpInnerActivity(this, chessPos, Activity.Offensive, explode.ToArray(), 2);
                 }
 
@@ -1234,12 +1234,20 @@ namespace Assets.System.WarModule
             
             Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(StimulateConduct), 1);
 
-            if (result.Type == ActivityResult.Types.Dodge || RecursiveLimit >= loopCount)
+            if (result.Type == ActivityResult.Types.Dodge)
             {
+                if (loopCount >= RecursiveLimit)
+                {
+                    loopCount = 0;
+                    return;
+                }
+
                 loopCount++;
                 MilitaryPerforms();//闪避会继续攻击直到被伤害为止。
                 return;
             }
+
+
             loopCount = 0;
         }
 

@@ -53,6 +53,7 @@ namespace Assets.System.WarModule
         public LastingType Lasting {  get; set; }
         /// <summary>
         /// 宿主<see cref="ChessOperator.InstanceId"/>
+        /// -1 =回合类型，正数：棋子id
         /// </summary>
         public int Host { get; set; }
         public int Value { get; set; }
@@ -86,7 +87,12 @@ namespace Assets.System.WarModule
 
         public virtual int GetBuff(CardState.Cons con) => 0;
 
-        public override string ToString() => $"Sprite({InstanceId})[{Host}].Pos[{Pos}|{IsChallenger}]:{Value}|Type({TypeId})";
+        public override string ToString()
+        {
+            var hostText = Host >= 0 ? $"宿主({Value})" : $"回合({Value})";
+            var challengerText = IsChallenger ? $"玩家({Pos})" : $"对手({Pos})";
+            return $"精灵({InstanceId})类型=({TypeId}).{hostText} Pos:{challengerText}";
+        }
     }
 
     /// <summary>

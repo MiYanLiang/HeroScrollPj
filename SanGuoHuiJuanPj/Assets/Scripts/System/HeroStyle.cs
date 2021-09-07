@@ -136,7 +136,19 @@ public abstract class CardStyle : ChessmanStyle
                         effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
                     }
                     else
+                    {
                         effect = EffectsPoolingControl.instance.GetEffect(effectId, target.cardObj.transform, 1f);
+                    }
+
+                    //一些效果需要反向显示
+                    switch (effectId)
+                    {
+                        case Effect.LongSpear14A:
+                        case Effect.Spear59A:
+                            var rotation = target.isPlayerCard ? new Quaternion(0, 0, 180, 0) : Quaternion.identity;
+                            effect.transform.localRotation = rotation;
+                            break;
+                    }
 
                     if (conduct.Critical > 0 || conduct.Rouse > 0) //如果会心或暴击 物体变大1.5
                         effect.transform.localScale = new Vector3(1.5f, 1.5f, 1);

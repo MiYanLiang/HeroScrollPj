@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CorrelateLib;
+using Microsoft.Extensions.Logging;
 
 namespace Assets.System.WarModule
 {
@@ -15,7 +16,7 @@ namespace Assets.System.WarModule
         protected override BondOperator[] JiBan { get; }
         private BuffOperator[] BuffOps { get; }
 
-        public ChessOperatorManager(ChessGrid grid) : base(grid)
+        public ChessOperatorManager(ChessGrid grid, ILogger log = null) : base(grid, log)
         {
             StatusMap = new Dictionary<ChessOperator, ChessStatus>();
             Sprites = new List<TerrainSprite>();
@@ -39,21 +40,20 @@ namespace Assets.System.WarModule
 
         private BondOperator GetBondOperator(JiBanTable jb)
         {
-            var jiBanIds = jb.Cards.Select(c => c.CardId).ToArray();
             switch (jb.Id)
             {
-                case 0: return new TaoYuanJieYi(this, jiBanIds);
-                case 1: return new WuHuSHangJiang(this, jiBanIds);
-                case 2: return new WoLongFengChu(this, jiBanIds);
-                case 3: return new HuChiELai(this, jiBanIds);
-                case 4: return new WuZiLiangJiang(this, jiBanIds);
-                case 5: return new WeiWuMouShi(this, jiBanIds);
-                case 6: return new HuJuJiangDong(this, jiBanIds);
-                case 7: return new ShuiShiDuDu(this, jiBanIds);
-                case 8: return new TianZuoZhiHe(this, jiBanIds);
-                case 9: return new HeBeiSiTingZhu(this, jiBanIds);
-                case 10: return new JueShiWuShuang(this, jiBanIds);
-                case 11: return new HanMoSanXian(this, jiBanIds);
+                case 0: return new TaoYuanJieYi(jb,this);
+                case 1: return new WuHuSHangJiang(jb, this);
+                case 2: return new WoLongFengChu(jb, this);
+                case 3: return new HuChiELai(jb, this);
+                case 4: return new WuZiLiangJiang(jb, this);
+                case 5: return new WeiWuMouShi(jb, this);
+                case 6: return new HuJuJiangDong(jb, this);
+                case 7: return new ShuiShiDuDu(jb, this);
+                case 8: return new TianZuoZhiHe(jb, this);
+                case 9: return new HeBeiSiTingZhu(jb, this);
+                case 10: return new JueShiWuShuang(jb, this);
+                case 11: return new HanMoSanXian(jb, this);
                 default: return null;
             }
         }
@@ -512,7 +512,10 @@ namespace Assets.System.WarModule
 
         private void OnRoundStartJiBan(ChessOperator[] chessOperators)
         {
-            foreach (var jb in JiBan) jb.OnRoundStart(chessOperators);
+            foreach (var jb in JiBan)
+            {
+                jb.OnRoundStart(chessOperators);
+            }
         }
 
         protected override ChessOperator GetOperator(int id) => ops.ContainsKey(id) ? ops[id] : null;

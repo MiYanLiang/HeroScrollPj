@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
+using Microsoft.Extensions.Logging;
 
 namespace Assets.System.WarModule
 {
@@ -61,7 +62,7 @@ namespace Assets.System.WarModule
         public bool IsGameOver => IsChallengerWin || IsOppositeWin;
         public bool IsChallengerWin { get; private set; }
         public bool IsOppositeWin { get; private set; }
-
+        private ILogger Logger { get; }
         /// <summary>
         /// 单体 一列
         /// </summary>
@@ -80,10 +81,11 @@ namespace Assets.System.WarModule
         private static float GetRatio(float value, int ratio) => ratio * 0.01f * value;
         #endregion
 
-        protected ChessboardOperator(ChessGrid grid)
+        protected ChessboardOperator(ChessGrid grid, ILogger log = null)
         {
             rounds = new List<ChessRound>();
             Grid = grid;
+            Logger = log;
         }
 
         public ChessStatus GetStatus(IChessOperator op) => GetStatus(GetOperator(op.InstanceId));
@@ -102,6 +104,7 @@ namespace Assets.System.WarModule
                    GetChessPos(op).Terrain.GetServed(con, op);
         }
 
+        protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
         public ChessRound StartRound()
         {
             if (IsGameOver) return null;
@@ -117,7 +120,7 @@ namespace Assets.System.WarModule
                 PreAction = new RoundAction(),
                 FinalAction = new RoundAction(),
             };
-
+            Log($"开始回合[{currentRound.InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             currentProcesses = new List<ChessPosProcess>();
             RefreshChessPosses();
@@ -136,6 +139,7 @@ namespace Assets.System.WarModule
 
                 InstanceProcess(GetStatus(op).Pos, op.IsChallenger);
 
+                Log(OperatorText(op.InstanceId));
                 op.MainActivity();
 
                 currentOps.Remove(op);
@@ -150,7 +154,16 @@ namespace Assets.System.WarModule
 
             } while (currentOps.Count > 0);
             currentRound.Processes = currentProcesses.ToArray();
-            if (IsGameOver) return currentRound;
+            if (IsGameOver)
+            {
+                var winner = string.Empty;
+                if (IsChallengerWin)
+                    winner += "玩家胜利!";
+                if (IsOppositeWin)
+                    winner += "对方胜利!";
+                Log($"{winner}");
+                return currentRound;
+            }
             ActivityRef = ActivityReference.RoundEnd;
             GetRoundEndTriggerByOperators();
 
@@ -175,6 +188,7 @@ namespace Assets.System.WarModule
             CurrentProcess = ChessPosProcess.Instance(ProcessSeed,pos, isChallenger);
             currentProcesses.Add(CurrentProcess);
             ProcessSeed++;
+            Log($"生成{CurrentProcess}");
         }
 
         private void CheckIsGameOver()
@@ -280,12 +294,22 @@ namespace Assets.System.WarModule
             return activity.Result;
         }
 
+        private string OperatorText(int id)
+        {
+            var op = GetOperator(id);
+            var stat = GetStatus(op);
+            return $"{op.InstanceId}.{op}[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
+        }
+
         private void ProcessActivityResult(Activity activity)
         {
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
+            Log($"-->{OperatorText(target.InstanceId)}");
             activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
             activity.OffenderStatus = GetStatus(target).Clone();
+            Log(activity.ToString());
+            Log(activity.Result.ToString());
             UpdateTerrain(GetChessPos(target));
         }
 
@@ -337,6 +361,7 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            //Log($"生成{activity}");
             return activity;
         }
 
@@ -378,6 +403,7 @@ namespace Assets.System.WarModule
         }
         public void RegSprite(TerrainSprite sprite)
         {
+            Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.Undefined);
             CurrentProcess.Activities.Add(activity);
@@ -387,6 +413,7 @@ namespace Assets.System.WarModule
 
         public void RemoveSprite(TerrainSprite sprite)
         {
+            Log($"移除{sprite}");
             var activity = SpriteActivity(sprite, false);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.Undefined);
             CurrentProcess.Activities.Add(activity);

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using CorrelateLib;
 
 namespace Assets.System.WarModule
 {
@@ -12,6 +13,7 @@ namespace Assets.System.WarModule
         /// 羁绊绑定列表。每一列代表一个身份，而必须满足每一个id才会点亮羁绊能力
         /// </summary>
         public int[] BondList { get; }
+        public int BondId { get; }
         protected ChessboardOperator Chessboard { get; }
         protected ChessOperator[] ActiveBondList { get; private set; }
         /// <summary>
@@ -25,9 +27,10 @@ namespace Assets.System.WarModule
             return list.Length != BondList.Length ? null : list;
         }
 
-        protected BondOperator(ChessboardOperator chessboard, int[] bondList)
+        protected BondOperator(JiBanTable jiBan, ChessboardOperator chessboard)
         {
-            BondList = bondList;
+            BondList = jiBan.Cards.Select(c=>c.CardId).ToArray();
+            BondId = jiBan.Id;
             Chessboard = chessboard;
         }
 
@@ -48,7 +51,7 @@ namespace Assets.System.WarModule
             {
                 var conducts = RoundStartConducts(op);
                 if (conducts == null || conducts.Length == 0) continue;
-                Chessboard.InstanceChessboardActivity(op.IsChallenger,op, RoundAction.JiBan, conducts);
+                Chessboard.InstanceChessboardActivity(op.IsChallenger, op, RoundAction.JiBan, conducts, BondId);
             }
 
             var rivals = Chessboard.GetRivals(first, 
@@ -63,7 +66,8 @@ namespace Assets.System.WarModule
                 {
                     var conducts = result.Conducts;
                     if (conducts == null || conducts.Length == 0) continue;
-                    Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, RoundAction.JiBan, conducts);
+                    Chessboard.InstanceChessboardActivity(first.IsChallenger, rival, RoundAction.JiBan, conducts,
+                        BondId);
                     continue;
                 }
 
@@ -82,6 +86,7 @@ namespace Assets.System.WarModule
 
         protected class ConductResult
         {
+            public int JbId;
             public bool PushBackPos;
             public CombatConduct[] Conducts;
 
@@ -103,7 +108,7 @@ namespace Assets.System.WarModule
     {
         public int ShenZhuRatio { get; } = DataTable.GetGameValue(134);
         public int DamageAdditionRatio { get; } = DataTable.GetGameValue(148);
-        public TaoYuanJieYi(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public TaoYuanJieYi(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -121,7 +126,6 @@ namespace Assets.System.WarModule
         {
             var bonds = GetActiveBonds(ops);
             if (bonds == null || bonds.Length == 0) return 0;
-            //if (!bonds.Contains(op)) return 0;
             return (int)(op.GeneralDamage() * DamageAdditionRatio * 0.01f);
         }
     }
@@ -130,7 +134,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuHuSHangJiang :BondOperator
     {
-        public WuHuSHangJiang(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -151,7 +155,7 @@ namespace Assets.System.WarModule
     public class WoLongFengChu : BondOperator
     {
         public int ShenZhuRatio { get; } = DataTable.GetGameValue(136);
-        public WoLongFengChu(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public WoLongFengChu(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -173,7 +177,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HuChiELai : BondOperator
     {
-        public HuChiELai(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public HuChiELai(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -197,7 +201,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuZiLiangJiang : BondOperator
     {
-        public WuZiLiangJiang(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public WuZiLiangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -221,7 +225,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WeiWuMouShi : BondOperator
     {
-        public WeiWuMouShi(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public WeiWuMouShi(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -244,7 +248,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HuJuJiangDong : BondOperator
     {
-        public HuJuJiangDong(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public HuJuJiangDong(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -266,7 +270,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ShuiShiDuDu : BondOperator
     {
-        public ShuiShiDuDu(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public ShuiShiDuDu(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -290,7 +294,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TianZuoZhiHe : BondOperator
     {
-        public TianZuoZhiHe(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public TianZuoZhiHe(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -307,7 +311,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HeBeiSiTingZhu : BondOperator
     {
-        public HeBeiSiTingZhu(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public HeBeiSiTingZhu(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -331,7 +335,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class JueShiWuShuang : BondOperator
     {
-        public JueShiWuShuang(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public JueShiWuShuang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
@@ -355,7 +359,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HanMoSanXian : BondOperator
     {
-        public HanMoSanXian(ChessboardOperator chessboard, int[] bondList) : base(chessboard, bondList)
+        public HanMoSanXian(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
