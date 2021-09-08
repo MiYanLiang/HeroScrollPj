@@ -335,6 +335,9 @@ namespace Assets.System.WarModule
 
         private Activity InstanceActivity(bool fromChallenger,ChessOperator offender, int targetInstance, int intent, CombatConduct[] conducts, int skill, int rePos)
         {
+            try
+            {
+
             RecursiveActionCount++;
             ActivitySeed++;
             var processId = ActivityRef == ActivityReference.ChessActivity ||
@@ -369,6 +372,11 @@ namespace Assets.System.WarModule
             }
             //Log($"生成{activity}");
             return activity;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
         }
 
         //private List<Activity> InnerActivities { get; set; }
@@ -498,9 +506,13 @@ namespace Assets.System.WarModule
             //闪避判定
             if (OnDodgeTriggerPass(op, offender))
                 result.Result = (int)ActivityResult.Types.Dodge;
-            else result.Result = (int)DetermineSufferResult(activity, op, offender);
-            /***执行Activities***/
-            op.ProceedActivity(activity);
+            else
+            {
+                result.Result = (int)DetermineSufferResult(activity, op, offender);
+                /***执行Activities***/
+                op.ProceedActivity(activity);
+            }
+
             result.Status = GetStatus(op).Clone();
             return result;
         }

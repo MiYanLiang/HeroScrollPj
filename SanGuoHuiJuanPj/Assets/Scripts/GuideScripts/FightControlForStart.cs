@@ -3645,7 +3645,7 @@ public class FightControlForStart : MonoBehaviour
                     }
                 }
                 break;
-            case JiBanSkillName.ShuiShiDouDu:
+            case JiBanSkillName.ShuiShiDuDu:
                 //40%概率分别为战船（兵种系）武将增加1层【内助】 战船8
                 for (int i = 0; i < cardDatas.Length; i++)
                 {

@@ -334,7 +334,7 @@ public class FightController : MonoBehaviour
 
                 break;
             case 8: //战船系
-                if (jiBanAllTypes[(int) JiBanSkillName.ShuiShiDouDu].IsActive)
+                if (jiBanAllTypes[(int) JiBanSkillName.ShuiShiDuDu].IsActive)
                 {
                     //水师都督激活时战船系武将伤害加成50%
                     dmg = JiBanAddOn(dmg, 160);
@@ -3814,7 +3814,7 @@ public class FightController : MonoBehaviour
                 }
                 waitTime = 1f;
                 break;
-            case JiBanSkillName.ShuiShiDouDu:
+            case JiBanSkillName.ShuiShiDuDu:
                 //对敌方全体武将造成一次隐士攻击（平均*0.25）
                 PlayAudioForSecondClip(102, 0);
                 fullScreenEffectObjs[3].SetActive(false);
@@ -4819,7 +4819,7 @@ public enum JiBanSkillName
     /// <summary>
     /// 水师都督
     /// </summary>
-    ShuiShiDouDu = 7,
+    ShuiShiDuDu = 7,
     /// <summary>
     /// 天作之合
     /// </summary>

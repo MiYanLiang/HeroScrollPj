@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using Assets.System.WarModule;
 using CorrelateLib;
 using DG.Tweening;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class ChessboardManager : MonoBehaviour
 {
@@ -17,7 +19,8 @@ public class ChessboardManager : MonoBehaviour
     public Chessboard Chessboard;
     public GameObject RouseEffectObj;
     public JiBanEffectUi JiBanEffect;
-
+    public GameObject[] JiBanOffensiveEffects;
+    
     [SerializeField] private AudioSource audioSource;
 
     [SerializeField] private GameObject fireUIObj;
@@ -30,6 +33,8 @@ public class ChessboardManager : MonoBehaviour
     protected Dictionary<int,EffectStateUi>Sprites { get; set; }
     private ChessOperatorManager<FightCardData> chessOp;
     private static SpriteStyle ChessboardStyle { get; } = new SpriteStyle();
+
+    private Stopwatch Sw = Stopwatch.StartNew();
     public void Init()
     {
         NewWar.StartButton.onClick.AddListener(InvokeCard);
@@ -120,6 +125,7 @@ public class ChessboardManager : MonoBehaviour
 
     private IEnumerator AnimateRound(ChessRound round,ChessboardOperator chess)
     {
+        Sw.Start();
         IsBusy = true;
         yield return OnRoundBegin(round.PreAction.Activities);
         for (int i = 0; i < round.Processes.Length; i++)
@@ -169,7 +175,7 @@ public class ChessboardManager : MonoBehaviour
     private IEnumerator OnRoundBegin(List<Activity> activities)
     {
         var jiBanId = -1;
-        var jiBan = new List<Activity>();
+        var jbActivities = new List<Activity>();
         for (var i = 0; i < activities.Count; i++)
         {
             var activity = activities[i];
@@ -178,37 +184,105 @@ public class ChessboardManager : MonoBehaviour
                 //是否跟上一个是同一个羁绊id
                 if (jiBanId != activity.Skill && jiBanId != -1)
                 {
-                    //羁绊画面演示
-                    yield return OnJiBanEffect(jiBan);
-                    yield return OnChessboardProcess(jiBan);
-                    jiBan.Clear();
+                    yield return JiBanAnimTween(jbActivities)
+                        .WaitForCompletion();
+                    yield return OnChessboardProcess(jbActivities)
+                        .WaitForCompletion();
+                    jbActivities.Clear();
+                    yield return new WaitForSeconds(0.5f);
                 }
             }
-            jiBan.Add(activity);
+            jbActivities.Add(activity);
             jiBanId = activity.Skill;
         }
 
-        if (jiBan.Count == 0) yield break;
-        yield return OnJiBanEffect(jiBan);
-        yield return OnChessboardProcess(jiBan);
+        if (jbActivities.Count == 0) yield break;
+        yield return JiBanAnimTween(jbActivities)
+            .WaitForCompletion();
+        yield return OnChessboardProcess(jbActivities)
+            .WaitForCompletion();
+        yield return new WaitForSeconds(0.5f);
+
+        //羁绊画面演示
+        Tween JiBanAnimTween(List<Activity> list)
+        {
+            var ac = list.First();
+            var jb = DataTable.JiBan[ac.Skill];
+            return DOTween.Sequence()
+                .Append(OnJiBanEffect(ac.IsChallenger == 0, jb))
+                .Append(OnJiBanOffenseAnim(ac.IsChallenger != 0, jb));
+        }
     }
 
-    private IEnumerator OnJiBanEffect(List<Activity> jiBan)
+    private Tween OnJiBanEffect(bool isChallenger,JiBanTable jb)
     {
-        var ac = jiBan.First();
-        var initiator = ac.IsChallenger == 0 ? JiBanEffect.Player : JiBanEffect.Opposite;
-        var jb = DataTable.JiBan[ac.Skill];
-        JiBanEffect.JiBanTransform.SetParent(initiator);
-        JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
-        JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
-        JiBanEffect.JiBanTransform.gameObject.SetActive(true);
-        JiBanEffect.JiBanTransform.localPosition = Vector3.zero;
-        yield return new WaitForSeconds(1.5f);
-        JiBanEffect.JiBanTransform.gameObject.SetActive(false);
+        Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanEffect)} [{Sw.Elapsed}]");
+        return DOTween.Sequence()
+            .AppendCallback(() =>
+            {
+                JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
+                JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
+                DisplayJiBanObj(isChallenger, JiBanEffect.JiBanTransform);
+            })
+            .AppendInterval(1f)
+            .OnComplete(() => JiBanEffect.JiBanTransform.gameObject.SetActive(false));
+    }
+    void DisplayJiBanObj(bool isPlayer,Transform obj)
+    {
+        var targetTransform =  isPlayer? JiBanEffect.Player : JiBanEffect.Opposite;
+        obj.SetParent(targetTransform);
+        obj.gameObject.SetActive(true);
+        obj.localPosition = Vector3.zero;
     }
 
-    private IEnumerator OnChessboardProcess(List<Activity> activities)
+    private Tween OnJiBanOffenseAnim(bool isPlayer, JiBanTable jb)
     {
+        Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanOffenseAnim)} [{Sw.Elapsed}]");
+        GameObject offensiveEffect = null;
+        switch ((JiBanSkillName)jb.Id)
+        {
+            case JiBanSkillName.WuHuShangJiang:
+                offensiveEffect = JiBanOffensiveEffects[0];
+                break;
+            case JiBanSkillName.WuZiLiangJiang:
+                offensiveEffect = JiBanOffensiveEffects[3];
+                break;
+            case JiBanSkillName.WeiWuMouShi:
+                offensiveEffect = JiBanOffensiveEffects[2];
+                break;
+            case JiBanSkillName.ShuiShiDuDu:
+                offensiveEffect = JiBanOffensiveEffects[1];
+                break;
+            case JiBanSkillName.HeBeiSiTingZhu:
+                offensiveEffect = JiBanOffensiveEffects[4];
+                break;
+            case JiBanSkillName.TaoYuanJieYi:
+            case JiBanSkillName.WoLongFengChu:
+            case JiBanSkillName.HuChiELai:
+            case JiBanSkillName.HuJuJiangDong:
+            case JiBanSkillName.TianZuoZhiHe:
+            case JiBanSkillName.JueShiWuShuang:
+            case JiBanSkillName.HanMoSanXian:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        if (offensiveEffect == null) return DOTween.Sequence();
+        return DOTween.Sequence()
+            .AppendCallback(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
+            .AppendInterval(0.5f)
+            .OnComplete(
+                () =>
+                {
+                    offensiveEffect.gameObject.SetActive(false);
+                    offensiveEffect.transform.SetParent(JiBanEffect.transform);
+                });
+    }
+
+    private Tween OnChessboardProcess(List<Activity> activities)
+    {
+        Debug.Log($"{nameof(OnChessboardProcess)} acts[{activities.Count}][{Sw.Elapsed}]");
         var tween = DOTween.Sequence();
         foreach (var activity in activities)
         {
@@ -216,8 +290,7 @@ public class ChessboardManager : MonoBehaviour
             target.UpdateActivity(activity.Result.Status);
             tween.Join(ChessboardStyle.Activity(activity, target));
         }
-        yield return tween.WaitForCompletion();
-        yield return new WaitForSeconds(0.5f);
+        return tween;
     }
 
     private IEnumerator ProceedChessmanActivities(List<Activity> actSet)
