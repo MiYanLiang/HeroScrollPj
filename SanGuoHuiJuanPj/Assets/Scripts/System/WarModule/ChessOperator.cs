@@ -42,7 +42,8 @@ namespace Assets.System.WarModule
         public bool IsRangeHero => Style!=null && Style.ArmedType >= 0 && Style.Type == CombatStyle.Types.Range;
 
         protected abstract ChessboardOperator Chessboard { get; }
-        public abstract int GeneralDamage();
+
+        protected abstract int GeneralDamage();
         public virtual void OnRoundStart() {}
 
         public virtual void OnRoundEnd() {}
@@ -254,7 +255,7 @@ namespace Assets.System.WarModule
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
 
-        public override int GeneralDamage() => Style.Strength;
+        protected override int GeneralDamage() => Style.Strength;
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {

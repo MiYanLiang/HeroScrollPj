@@ -108,7 +108,7 @@ namespace Assets.System.WarModule
         /// 根据状态算出基础伤害
         /// </summary>
         /// <returns></returns>
-        public override int GeneralDamage() => Chessboard.ConvertHeroDamage(this);
+        protected override int GeneralDamage() => Chessboard.GetCompleteDamageWithBond(this);
 
         /// <summary>
         /// 跟据会心率获取会心伤害
@@ -219,7 +219,7 @@ namespace Assets.System.WarModule
             var comrades = GetComrades().Count();
             var bonus = 0;
             if (comrades > 0)
-                bonus = (int)(DataTable.GetGameValue(50) * 0.01f * comrades * Chessboard.ConvertHeroDamage(this));
+                bonus = (int)(DataTable.GetGameValue(50) * 0.01f * comrades * GeneralDamage());
 
             return Helper.Singular(InstanceHeroGenericDamage(bonus));
         }
@@ -512,6 +512,13 @@ namespace Assets.System.WarModule
     public class GanSiOperator : HeroOperator
     {
         protected virtual int TriggerRate => DataTable.GetGameValue(103);
+        public override void OnRoundStart()
+        {
+            if (Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0)
+                Chessboard.InstanceChessboardActivity(IsChallenger, this, RoundAction.RoundBuffing,
+                    Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.DeathFight, -1)));
+        }
+
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
             if (Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f) return;
@@ -525,8 +532,13 @@ namespace Assets.System.WarModule
 
         protected override int OnMilitaryDamageConvert(CombatConduct conduct)
         {
-            Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceHeal(conduct.Total)), 1);
-            return 0;
+            if (Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0)
+            {
+                Chessboard.AppendOpInnerActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                    Helper.Singular(CombatConduct.InstanceHeal(conduct.Total)), 1);
+                return 0;
+            }
+            return (int)conduct.Total;
         }
     }
 
@@ -798,7 +810,7 @@ namespace Assets.System.WarModule
                 var combat = new List<CombatConduct> { CombatConduct.InstanceDamage(basicDamage, Style.Element) };
                 if (Chessboard.IsRandomPass(BurnRatio))
                     combat.Add(burnBuff);
-                Chessboard.InstanceSprite<FireSprite>(chessPos, InstanceId, TerrainSprite.LastingType.Round, value: 2,
+                Chessboard.InstanceSprite<FireSprite>(chessPos, TerrainSprite.LastingType.Round, value: 2,
                     typeId: TerrainSprite.YeHuo);
                 if (chessPos.Operator == null || !Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
                 if(index == 0) Chessboard.AppendOpActivity(this, chessPos, Activity.Offensive, combat.ToArray(), 1);
@@ -1270,7 +1282,7 @@ namespace Assets.System.WarModule
         public override int GetPhysicArmor() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.PhysicalResist, ConfigGap, ConfigMultipleRate);
 
-        public override int GeneralDamage() =>
+        protected override int GeneralDamage() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), GetStrength, ConfigGap, ConfigMultipleRate);
     }
 

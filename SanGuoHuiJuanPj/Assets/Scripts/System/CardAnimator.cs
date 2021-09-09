@@ -183,6 +183,27 @@ public class CardAnimator
             CreateSateIcon(target.cardObj, con);
     }
 
+    public static GameObject AddSpriteEffect(ChessPos pos, CombatConduct conduct)
+    {
+        var effectId = GetSpriteEffectName(conduct);
+        if (string.IsNullOrWhiteSpace(effectId)) return null;
+        return EffectsPoolingControl.instance.GetEffect(effectId, pos.transform, -1);
+    }
+    private static string GetSpriteEffectName(CombatConduct conduct)
+    {
+        var effectId = string.Empty;
+        switch (conduct.Element)
+        {
+            case TerrainSprite.Forge:
+                effectId = CardState.IconName(CardState.Cons.Forge);
+                break;
+            case TerrainSprite.YeHuo:
+                effectId = CardState.IconName(CardState.Cons.Burn);
+                break;
+        }
+        return effectId;
+    }
+
     private static string GetEffectByStyle(CombatStyle style,CombatConduct conduct)
     {
         if (style.ArmedType >= 0)
@@ -288,6 +309,8 @@ public class CardAnimator
 
     public static Tween DisplayTextEffect(FightCardData target, Activity activity)
     {
+        if (activity.Intent == Activity.Sprite)
+            throw new InvalidOperationException($"{nameof(DisplayTextEffect)}不支持精灵Activity[{activity.Intent}]效果!");
         var tween = DOTween.Sequence();
         if (activity.IsRePos)
             tween.OnComplete(() => GetHTextEffect(17, target.cardObj.transform, Color.red));
@@ -332,7 +355,8 @@ public class CardAnimator
                             tableId = 21;
                             break;
                         case CardState.Cons.Stunned:
-                            if (conduct.Total < 0 && target.Status.GetBuff(CardState.Cons.Stunned) <= 0)
+                            if (conduct.Total < 0 &&
+                                target.Status.GetBuff(CardState.Cons.Stunned) <= 0)
                                 tableId = 14; //如果buff值是负数，判定为镇定效果(移除buff)
                             break;
                         case CardState.Cons.EaseShield:
@@ -353,6 +377,7 @@ public class CardAnimator
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+
                     break;
                 case CombatConduct.KillingKind:
                     tableId = 13;

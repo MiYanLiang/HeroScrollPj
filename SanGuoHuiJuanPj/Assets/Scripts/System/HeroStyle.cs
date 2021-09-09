@@ -106,7 +106,7 @@ public abstract class CardStyle : ChessmanStyle
 
     public override Sequence Respond(Activity activity, FightCardData target, string effectId = null) => 
         base.Respond(activity, target, effectId)
-            .AppendCallback(() => target.UpdateActivity(activity.Result.Status))
+            .AppendCallback(() => target.UpdateActivityStatus(activity.Result.Status))
             .Append(RespondEffects(activity, target, effectId))
             .Join(CardAnimator.UpdateStatusEffect(target));
 

@@ -479,18 +479,27 @@ namespace Assets.System.WarModule
 
         protected override void GetRoundEndTriggerByOperators()
         {
-            foreach (var bo in GetBuffOperator(b => b.IsRoundEndTrigger))
+            //卡牌回合结束触发器
+            StatusMap.Keys
+                .Where(o => o.IsAlive)
+                .ToList().ForEach(o=>o.OnRoundEnd());
+            //buff触发器
+            foreach (var bo in GetBuffOperator(b => b.IsRoundEndTrigger))//buff回合结束触发
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
                 bo.RoundEnd(op);
-            StatusMap.Keys
-                .Where(o => o != null)
-                .ToList().ForEach(o=>o.OnRoundEnd());
         }
 
         protected override void GetPreRoundTriggerByOperators()
         {
+            //卡牌回合开始触发器
+            StatusMap.Keys
+                .Where(o => o.IsAlive)
+                .ToList().ForEach(o => o.OnRoundStart());
+            //羁绊触发器
+            //玩家方
             OnRoundStartJiBan(Grid.Challenger.Where(p => p.Value.IsPostedAlive)
                 .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
+            //对手方
             OnRoundStartJiBan(Grid.Opposite.Where(p => p.Value.IsPostedAlive)
                 .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
             
@@ -501,21 +510,16 @@ namespace Assets.System.WarModule
                 if (sprite.Value <= 0)
                     RemoveSprite(sprite);
             }
-
+            //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
                 bo.RoundStart(op);
-            StatusMap.Keys
-                .Where(o => o != null)
-                .ToList().ForEach(o => o.OnRoundEnd());
         }
 
         private void OnRoundStartJiBan(ChessOperator[] chessOperators)
         {
-            foreach (var jb in JiBan)
-            {
+            foreach (var jb in JiBan.Where(j => JiBanActivation(j, chessOperators)))
                 jb.OnRoundStart(chessOperators);
-            }
         }
 
         protected override ChessOperator GetOperator(int id) => ops.ContainsKey(id) ? ops[id] : null;

@@ -151,7 +151,7 @@ namespace Assets.System.WarModule
         public override void OnPostingTrigger(IChessPos chessPos)
         {
             //除去所有精灵(如果被移位)
-            foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Host == InstanceId))
+            foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Value == InstanceId))
                 Chessboard.RemoveSprite(sprite);
             var neighbors = Chessboard.GetNeighbors(chessPos, true, Surround);
             //在周围生成精灵
@@ -165,7 +165,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ZhanGuTaiOperator : NeighborSpriteTowerOperator
     {
-        protected override TerrainSprite InstanceSprite(IChessPos pos)=> Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+        protected override TerrainSprite InstanceSprite(IChessPos pos)=> Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ namespace Assets.System.WarModule
     public class HaoJiaoTaiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -183,14 +183,14 @@ namespace Assets.System.WarModule
     public class LiaoWangTaiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<RangeStrengthSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<RangeStrengthSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 七星坛
     /// </summary>
     public class QiXingTanOperator : NeighborSpriteTowerOperator
     {
-        protected override TerrainSprite InstanceSprite(IChessPos pos)=> Chessboard.InstanceSprite<MagicForceSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+        protected override TerrainSprite InstanceSprite(IChessPos pos)=> Chessboard.InstanceSprite<MagicForceSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ namespace Assets.System.WarModule
     public class FengShenTaiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<DodgeSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<DodgeSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ namespace Assets.System.WarModule
     public class ZhuTieLuOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos)=>
-            Chessboard.InstanceSprite<CriticalSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<CriticalSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -217,14 +217,14 @@ namespace Assets.System.WarModule
     public class SiFangDingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos)=>
-            Chessboard.InstanceSprite<RouseSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<RouseSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 烽火台
     /// </summary>
     public class FengHuoTaiOperator : NeighborSpriteTowerOperator
     {
-        protected override TerrainSprite InstanceSprite(IChessPos pos)=>Chessboard.InstanceSprite<ArmorSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+        protected override TerrainSprite InstanceSprite(IChessPos pos)=>Chessboard.InstanceSprite<ArmorSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 演武场
@@ -232,7 +232,7 @@ namespace Assets.System.WarModule
     public class YanWuChangOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos)=>
-            Chessboard.InstanceSprite<PhysicalSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<PhysicalSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -241,7 +241,7 @@ namespace Assets.System.WarModule
     public class CaoWeiQiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CaoWeiSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<CaoWeiSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 蜀汉旗
@@ -249,7 +249,7 @@ namespace Assets.System.WarModule
     public class SuHanQiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<SuHanSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<SuHanSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 东吴旗
@@ -257,7 +257,7 @@ namespace Assets.System.WarModule
     public class DongWuQiOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<DongWuSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<DongWuSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 骑兵营
@@ -265,7 +265,7 @@ namespace Assets.System.WarModule
     public class QiBingYingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CavalrySprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<CavalrySprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     
     /// <summary>
@@ -274,7 +274,7 @@ namespace Assets.System.WarModule
     public class GongNuYingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ArrowSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<ArrowSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     
     /// <summary>
@@ -283,7 +283,7 @@ namespace Assets.System.WarModule
     public class BuBingYingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<InfantrySprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<InfantrySprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 
     /// <summary>
@@ -292,7 +292,7 @@ namespace Assets.System.WarModule
     public class ChangChiYingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<StickWeaponSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<StickWeaponSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     /// <summary>
     /// 战船营
@@ -300,7 +300,7 @@ namespace Assets.System.WarModule
     public class ZhanChuanYingOperator : NeighborSpriteTowerOperator
     {
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<WarshipSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<WarshipSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
     
     /// <summary>
@@ -311,6 +311,6 @@ namespace Assets.System.WarModule
         protected override int Surround => CardId == 18 ? 2 : 1;
 
         protected override TerrainSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ForgeSprite>(pos, InstanceId, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
+            Chessboard.InstanceSprite<ForgeSprite>(pos, TerrainSprite.LastingType.Relation, value: Info.GetDamage(Level));
     }
 }

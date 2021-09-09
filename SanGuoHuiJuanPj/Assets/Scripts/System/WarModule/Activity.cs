@@ -89,7 +89,7 @@ namespace Assets.System.WarModule
         //[JsonProperty("T")] 
         public int To { get; set; }
         /// <summary>
-        /// From InstanceId
+        /// From InstanceId, -1 = Challenger, -2 = Opposite
         /// </summary>
         //[JsonProperty("F")] 
         public int From { get; set; }

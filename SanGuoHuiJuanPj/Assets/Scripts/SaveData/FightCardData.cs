@@ -161,7 +161,7 @@ using UnityEngine;
     [JsonIgnore]public bool IsActed => isActionDone;
     [JsonIgnore] public ChessStatus Status => status;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
-    public void UpdateActivity(ChessStatus stat)
+    public void UpdateActivityStatus(ChessStatus stat)
     {
         status = stat.Clone();
         CardState.SetStates(stat.Buffs);

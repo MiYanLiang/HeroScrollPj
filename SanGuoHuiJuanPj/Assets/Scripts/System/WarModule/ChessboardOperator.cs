@@ -35,7 +35,7 @@ namespace Assets.System.WarModule
         public List<int> ChallengerChests { get; set; } = new List<int>();
         public List<int> OpponentChests { get; set; } = new List<int>();
         protected abstract BondOperator[] JiBan { get; }
-
+        
         public bool IsInit => ProcessSeed > 0;
         
         private static Random random = new Random();
@@ -114,11 +114,14 @@ namespace Assets.System.WarModule
             //invoke this operations
             //invoke finalization
             RecursiveActionCount = 0;
+            ActivatedJiBan.Clear();
             currentRound = new ChessRound
             {
                 InstanceId = Rounds.Count,
                 PreAction = new RoundAction(),
                 FinalAction = new RoundAction(),
+                ChallengerJiBans = new List<int>(),
+                OppositeJiBans = new List<int>()
             };
             Log($"开始回合[{currentRound.InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
@@ -205,6 +208,30 @@ namespace Assets.System.WarModule
 
         protected abstract void GetPreRoundTriggerByOperators();
 
+        protected bool JiBanActivation(BondOperator jb, ChessOperator[] list)
+        {
+            var map = new Dictionary<int, bool>();
+            foreach (var jId in jb.BondList)
+                map.Add(jId, list.Any(o => o.CardId == jId));
+            var isActivate = map.All(m => m.Value);
+            if(isActivate)
+            {
+                var op = list.First();
+                ActivatedJiBan.Add(new JiBanController
+                {
+                    Operator = jb,
+                    IsChallenger = op.IsChallenger,
+                    Chessmen = list.Where(o=>o.CardType == GameCardType.Hero)
+                        .Join(map,o=>o.CardId,m=>m.Key,(o,_)=>o).ToList()
+                });
+                if (op.IsChallenger)
+                    currentRound.ChallengerJiBans.Add(jb.BondId);
+                else
+                    currentRound.OppositeJiBans.Add(jb.BondId);
+            }
+            return isActivate;
+        }
+
         /// <summary>
         /// 回合结束加金币
         /// </summary>
@@ -265,11 +292,6 @@ namespace Assets.System.WarModule
         public void InstanceChessboardActivity(bool fromChallenger, IChessOperator target, int intent,
             CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
-            var pos = fromChallenger ? -1 : -2;
-
-            //if (CurrentProcess == null || CurrentProcess.Pos != pos) //棋盘独立一个process，不插入棋子process
-            //    InstanceProcess(pos, fromChallenger);
-
             var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
             ProcessActivityResult(activity);
         }
@@ -284,16 +306,16 @@ namespace Assets.System.WarModule
         /// <param name="skill">如果是普通攻击，标记0，大于0将会是技能值</param>
         /// <param name="rePos"></param>
         /// <returns></returns>
-        public ActivityResult AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
-             CombatConduct[] conducts, int skill, int rePos = -1)
+        public void AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
+            CombatConduct[] conducts, int skill, int rePos = -1)
         {
+            if (CurrentProcess == null) return;
             var temp = ActivityRef;
             ActivityRef = ActivityReference.Inner;
             var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                 conducts, skill, rePos);
             ActivityRef = temp;
             ProcessActivityResult(activity);
-            return activity.Result;
         }
 
         private string OperatorText(int id)
@@ -333,10 +355,9 @@ namespace Assets.System.WarModule
             int skill, int rePos) =>
             InstanceActivity(fromChallenger,null, targetInstance, intent, conducts, skill, rePos);
 
-        private Activity InstanceActivity(bool fromChallenger,ChessOperator offender, int targetInstance, int intent, CombatConduct[] conducts, int skill, int rePos)
+        private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, int intent,
+            CombatConduct[] conducts, int skill, int rePos)
         {
-            try
-            {
 
             RecursiveActionCount++;
             ActivitySeed++;
@@ -344,8 +365,7 @@ namespace Assets.System.WarModule
                             ActivityRef == ActivityReference.Inner
                 ? CurrentProcess.InstanceId
                 : -1;
-            var fromId = offender == null ?
-                fromChallenger ? -1 : -2 : offender.InstanceId;
+            var fromId = offender == null ? fromChallenger ? -1 : -2 : offender.InstanceId;
             var activity = Activity.Instance(
                 ActivitySeed,
                 processId,
@@ -370,13 +390,9 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             //Log($"生成{activity}");
             return activity;
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
         }
 
         //private List<Activity> InnerActivities { get; set; }
@@ -386,16 +402,19 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
-        /// <param name="host">-1 =回合类型，正数：棋子id</param>
         /// <param name="lasting"></param>
         /// <param name="value"></param>
         /// <param name="typeId"></param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, int host,TerrainSprite.LastingType lasting ,int value = 1, int typeId = -99)
+        public T InstanceSprite<T>(IChessPos target, TerrainSprite.LastingType lasting ,int value = 1, int typeId = -99)
             where T : TerrainSprite, new()
         {
             var sprite =
-                TerrainSprite.Instance<T>(ChessSpriteSeed, host, lasting, value, target.Pos, target.IsChallenger);
+                TerrainSprite.Instance<T>(ChessSpriteSeed,
+                    lasting: lasting,
+                    value: value,
+                    pos: target.Pos,
+                    isChallenger: target.IsChallenger);
             if (typeId != -99)
                 sprite.TypeId = typeId;
             RegSprite(sprite);
@@ -408,10 +427,16 @@ namespace Assets.System.WarModule
             var conduct = isAdd
                 ? CombatConduct.AddSprite(sprite.Value, sprite.InstanceId, sprite.TypeId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId);
-            var activity = Activity.Instance(ActivitySeed,
-                CurrentProcess.InstanceId, sprite.Host,
-                sprite.IsChallenger ? 0 : 1, sprite.Pos, Activity.Sprite,
-                Helper.Singular(conduct), 1, -1);
+            var activity = Activity.Instance(
+                id: ActivitySeed,
+                processId: CurrentProcess.InstanceId, 
+                @from: sprite.IsChallenger ? -1 : -2,
+                isChallenger: sprite.IsChallenger ? 0 : 1, 
+                to: sprite.Pos,
+                intent: Activity.Sprite,
+                conducts: Helper.Singular(conduct),
+                skill: 1,
+                rePos: -1);
             ActivitySeed++;
             return activity;
         }
@@ -435,22 +460,33 @@ namespace Assets.System.WarModule
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.RemoveSprite(sprite);
         }
 
-        /// <summary>
-        /// 执行进攻方伤害转化
-        /// </summary>
-        /// <param name="op"></param>
-        /// <returns></returns>
-        public int ConvertHeroDamage(ChessOperator op)
+        public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
             return (int)(op.GetStrength + op.GetStrength * 0.01f * ratio);
+        }
+        /// <summary>
+        /// 完全动态伤害=进攻方伤害转化(buff,羁绊)
+        /// todo 注意这个已经包括羁绊，羁绊获取伤害不可以透过这个方法，否则无限循环
+        /// </summary>
+        /// <param name="op"></param>
+        /// <returns></returns>
+        public int GetCompleteDamageWithBond(ChessOperator op)
+        {
+            var damage = GetHeroBuffDamage(op);
+            var bonds = ActivatedJiBan
+                .Where(j => j.IsChallenger == op.IsChallenger
+                            && j.Chessmen.Contains(op)).ToList();
+            if (bonds.Count > 0)
+                damage += bonds.Sum(b => b.Operator.OnDamageAddOn(b.Chessmen.ToArray(), op, damage));
+            return damage;
         }
 
         private void UpdateTerrain(IChessPos pos)
         {
             foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Lasting == TerrainSprite.LastingType.Relation).ToArray())
             {
-                if (GetOperator(sprite.Host).IsAlive) continue;
+                if (GetOperator(sprite.Value).IsAlive) continue;
                 RemoveSprite(sprite);
             }
         }
@@ -504,7 +540,8 @@ namespace Assets.System.WarModule
             var offender = GetOperator(off.InstanceId);
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
             //闪避判定
-            if (OnDodgeTriggerPass(op, offender))
+            if (offender.CardType == GameCardType.Hero &&
+                OnDodgeTriggerPass(op, offender))
                 result.Result = (int)ActivityResult.Types.Dodge;
             else
             {
@@ -704,5 +741,13 @@ namespace Assets.System.WarModule
         #endregion
 
         protected abstract void OnPlayerResourcesActivity(Activity activity);
+
+        private List<JiBanController> ActivatedJiBan { get; } = new List<JiBanController>();
+        private class JiBanController
+        {
+            public bool IsChallenger;
+            public BondOperator Operator;
+            public List<ChessOperator> Chessmen;
+        }
     }
 }

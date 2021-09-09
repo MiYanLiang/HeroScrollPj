@@ -26,12 +26,12 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 统帅-业火精灵id(回合制)
         /// </summary>
-        public const int YeHuo = -2;
+        public const int YeHuo = 6;
         /// <summary>
         /// 迷雾精灵(依赖类)
         /// </summary>
         public const int Forge = 20;
-        public static T Instance<T>(int instanceId,int host,LastingType lasting,int value, int pos, bool isChallenger)
+        public static T Instance<T>(int instanceId,LastingType lasting,int value, int pos, bool isChallenger)
             where T : TerrainSprite, new()
         {
             return new T
@@ -39,7 +39,7 @@ namespace Assets.System.WarModule
                 InstanceId = instanceId,
                 Lasting = lasting,
                 Value = value,
-                Host = host,
+                //Host = host,
                 Pos = pos,
                 IsChallenger = isChallenger
             };
@@ -55,7 +55,7 @@ namespace Assets.System.WarModule
         /// 宿主<see cref="ChessOperator.InstanceId"/>
         /// -1 =回合类型，正数：棋子id
         /// </summary>
-        public int Host { get; set; }
+        //public int Host { get; set; }
         public int Value { get; set; }
         /// <summary>
         /// 棋格
@@ -89,9 +89,15 @@ namespace Assets.System.WarModule
 
         public override string ToString()
         {
-            var hostText = Host >= 0 ? $"宿主({Value})" : $"回合({Value})";
+            var hostText = Lasting == LastingType.Relation ? $"宿主({Value})" : $"回合({Value})";
             var challengerText = IsChallenger ? $"玩家({Pos})" : $"对手({Pos})";
-            return $"精灵({InstanceId})类型=({TypeId}).{hostText} Pos:{challengerText}";
+            var typeText = "未定";
+            switch (TypeId)
+            {
+                case YeHuo: typeText = "业火";break;
+                case Forge: typeText = "迷雾";break;
+            }
+            return $"精灵({InstanceId})({typeText}).{hostText} Pos:{challengerText}";
         }
     }
 

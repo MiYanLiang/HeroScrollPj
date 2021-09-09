@@ -133,13 +133,18 @@ public class EffectsPoolingControl : MonoBehaviour
         effect.transform.position = targetTransform.position;
         effect.transform.SetParent(targetTransform);
         effect.SetActive(true);
-        StartCoroutine(RecycleEffect(effect, lasting));
+        if (lasting > 0) StartCoroutine(RecycleEffect(effect, lasting));
         return effect;
     }
 
-    private IEnumerator RecycleEffect(GameObject effect, float lasting)
+    public IEnumerator RecycleEffect(GameObject effect, float lasting = 0)
     {
         yield return new WaitForSeconds(lasting);
+        RecycleEffect(effect);
+    }
+
+    public void RecycleEffect(GameObject effect)
+    {
         if (effect != null)
         {
             effect.transform.localScale = Vector3.one;

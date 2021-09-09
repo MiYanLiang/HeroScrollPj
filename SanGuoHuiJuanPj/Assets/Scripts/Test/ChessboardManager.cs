@@ -28,7 +28,11 @@ public class ChessboardManager : MonoBehaviour
     [SerializeField] private GameObject boomUIObj;
 
     [SerializeField] private GameObject gongKeUIObj;
-    protected Dictionary<int, FightCardData> CardMap;
+
+    protected FightCardData GetCardMap(int id) => CardMap.ContainsKey(id) ? CardMap[id] : null;
+
+    protected Dictionary<int, FightCardData> CardMap { get; set; }
+
     protected bool IsBusy { get; set; }
     protected Dictionary<int,EffectStateUi>Sprites { get; set; }
     private ChessOperatorManager<FightCardData> chessOp;
@@ -93,34 +97,6 @@ public class ChessboardManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         Time.timeScale = 1;
-        //var enemyCards = FightForManager.instance.GetCardList(false);
-        //for (int i = 0; i < enemyCards.Count; i++)
-        //{
-        //    FightCardData cardData = enemyCards[i];
-        //    if (i != 17 && cardData != null && cardData.Hp <= 0)
-        //    {
-        //        totalGold += DataTable.EnemyUnit[cardData.unitId].GoldReward;
-        //        var chests = DataTable.EnemyUnit[cardData.unitId].WarChest;
-        //        //暂时关闭打死单位获得的战役宝箱
-        //        if (chests != null && chests.Length > 0)
-        //        {
-        //            for (int j = 0; j < chests.Length; j++)
-        //            {
-        //                this.chests.Add(chests[j]);
-        //            }
-        //        }
-        //    }
-        //}
-        //totalGold += DataTable.BattleEvent[FightForManager.instance.battleIdIndex].GoldReward;
-        //var warChests = DataTable.BattleEvent[FightForManager.instance.battleIdIndex].WarChestTableIds;
-        //for (int k = 0; k < warChests.Length; k++)
-        //{
-        //    chests.Add(warChests[k]);
-        //}
-
-        //WarsUIManager.instance.FinalizeWar(totalGold, chests);
-        //totalGold = 0;
-        //chests.Clear();
     }
 
     private IEnumerator AnimateRound(ChessRound round,ChessboardOperator chess)
@@ -170,6 +146,7 @@ public class ChessboardManager : MonoBehaviour
 
         IsBusy = false;
         NewWar.StartButtonShow(true);
+        Sw.Stop();
     }
 
     private IEnumerator OnRoundBegin(List<Activity> activities)
@@ -286,8 +263,8 @@ public class ChessboardManager : MonoBehaviour
         var tween = DOTween.Sequence();
         foreach (var activity in activities)
         {
-            var target = CardMap[activity.To];
-            target.UpdateActivity(activity.Result.Status);
+            var target = GetCardMap(activity.To);
+            target.UpdateActivityStatus(activity.Result.Status);
             tween.Join(ChessboardStyle.Activity(activity, target));
         }
         return tween;
@@ -303,12 +280,23 @@ public class ChessboardManager : MonoBehaviour
         var preActionDone = false;
         foreach (var activity in actSet)
         {
+            if (activity.Intent == Activity.Sprite)//精灵活动
+            {
+                yield return effectTween.Play().WaitForCompletion();
+                yield return OnSpriteEffect(activity).Play().WaitForCompletion();
+                continue;
+            }
             var innerTween = DOTween.Sequence().Pause(); //内嵌活动
             Sequence chessboardShake = null;
             FightCardData op = null;
 
-            target = CardMap[activity.To];
-            op = offense = CardMap[activity.From];
+            target = GetCardMap(activity.To);
+            op = offense = GetCardMap(activity.From);
+            if (op == null)
+            {
+                effectTween.Join(target.ChessmanStyle.Respond(activity, target));
+                continue;
+            }
 
             var tg = target;
             if (!preActionDone)
@@ -384,6 +372,48 @@ public class ChessboardManager : MonoBehaviour
         }
     }
 
+    private Dictionary<ChessPos, List<SpriteObj>> SpritePosMap { get; } = new Dictionary<ChessPos, List<SpriteObj>>();
+    private class SpriteObj
+    {
+        public int SpriteId;
+        public GameObject Obj;
+        public int Value;
+    }
+    private Tween OnSpriteEffect(Activity activity)
+    {
+        var chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
+        if (!SpritePosMap.ContainsKey(chessPos)) SpritePosMap.Add(chessPos, new List<SpriteObj>());
+        var pos = SpritePosMap[chessPos];
+        return DOTween.Sequence().Pause().AppendCallback(() =>
+        {
+            foreach (var conduct in activity.Conducts)
+            {
+                var sp = pos.FirstOrDefault(s => s.SpriteId == conduct.Element);
+                if (sp == null)
+                {
+                    sp = new SpriteObj { SpriteId = conduct.Element };
+                    pos.Add(sp);
+                }
+                sp.Value += (int)conduct.Total;
+                if (sp.Value > 0)
+                {
+                    if (sp.Obj == null)
+                        sp.Obj = CardAnimator.AddSpriteEffect(chessPos, conduct);
+                    continue;
+                }
+
+                if (sp.Obj != null)
+                {
+                    var obj = sp.Obj;
+                    EffectsPoolingControl.instance.RecycleEffect(obj);
+                    sp.Obj = null;
+                }
+            }
+        });
+        //var targetPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
+        //targetPos.transform
+    }
+
     private const int RecursiveInnerActivitiesProtection = 9999;
     private int RecursiveInnerCount;
 
@@ -392,8 +422,8 @@ public class ChessboardManager : MonoBehaviour
         if (RecursiveInnerCount >= RecursiveInnerActivitiesProtection) throw new StackOverflowException($"{nameof(ProcessInnerActivities)} Count = {RecursiveInnerCount}!");
 
         var tween = DOTween.Sequence();
-        var tg = CardMap[activity.To];
-        var of = CardMap[activity.From];
+        var tg = GetCardMap(activity.To);
+        var of = GetCardMap(activity.From);
         tween.Join(of.ChessmanStyle.ActivityEffectTween(activity, of, tg, Chessboard.transform));
         if (activity.Inner != null)
         {

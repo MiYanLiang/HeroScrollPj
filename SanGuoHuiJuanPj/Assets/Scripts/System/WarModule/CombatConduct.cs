@@ -39,7 +39,7 @@ namespace Assets.System.WarModule
         [JsonProperty("I")] public int InstanceId { get; set; }
         /// <summary>
         /// 战斗元素类型,其余资源类型并不使用这字段，请查<see cref="Element"/>
-        /// 精灵类：精灵id
+        /// 精灵类：精灵InstanceId
         /// </summary>
         [JsonProperty("K")] public int Kind { get; set; }
         /// <summary>
@@ -70,7 +70,7 @@ namespace Assets.System.WarModule
         public static CombatConduct Instance(float value, float critical, float rouse, int element, int kind) =>
             new CombatConduct { Basic = value, Element = element, Critical = critical, Rouse = rouse, Kind = kind };
 
-        public static CombatConduct AddSprite(int value,int spriteId, int typeId) => Instance(value, 0, 0, typeId, spriteId);
+        public static CombatConduct AddSprite(int value,int spriteId, int typeId) => Instance(value, critical: 0, rouse: 0, element: typeId, kind: spriteId);
         public static CombatConduct RemoveSprite(int spriteId) => Instance(-1, 0, 0, spriteId, -1);
         public static CombatConduct InstanceKilling() => Instance(0, 0, 0, 0, KillingKind);
 

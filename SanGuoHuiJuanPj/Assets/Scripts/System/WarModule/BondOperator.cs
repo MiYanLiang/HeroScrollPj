@@ -15,17 +15,6 @@ namespace Assets.System.WarModule
         public int[] BondList { get; }
         public int BondId { get; }
         protected ChessboardOperator Chessboard { get; }
-        protected ChessOperator[] ActiveBondList { get; private set; }
-        /// <summary>
-        /// 获取有效羁绊，如果返回null表示羁绊未被激活
-        /// </summary>
-        /// <param name="ops"></param>
-        /// <returns></returns>
-        public ChessOperator[] GetActiveBonds(IEnumerable<ChessOperator> ops)
-        {
-            var list = BondList.Join(ops.Where(o => o.IsAlive), b => b, o => o.CardId, (_, o) => o).ToArray();
-            return list.Length != BondList.Length ? null : list;
-        }
 
         protected BondOperator(JiBanTable jiBan, ChessboardOperator chessboard)
         {
@@ -35,18 +24,19 @@ namespace Assets.System.WarModule
         }
 
         protected bool IsInBondList(IChessOperator op) => BondList.Contains(op.CardId);
+
         /// <summary>
         /// 根据比率给出羁绊者的平均伤害加成
         /// </summary>
+        /// <param name="ops"></param>
         /// <param name="rate"></param>
         /// <returns></returns>
-        protected int AverageAdditionalDamageFromBonds(int rate) => (int)(ActiveBondList.Average(o => Chessboard.ConvertHeroDamage(o)) * 0.01f * rate);
+        protected int AverageAdditionalDamageFromBonds(ChessOperator[] ops, int rate) =>
+            (int)(ops.Average(o => Chessboard.GetHeroBuffDamage(o)) * 0.01f * rate);
         public void OnRoundStart(IEnumerable<ChessOperator> list)
         {
             var ops = list.ToArray();
-            ActiveBondList = GetActiveBonds(ops);
-            if (ActiveBondList == null || ActiveBondList.Length == 0) return;
-            var first = ActiveBondList.First();
+            var first = ops.First();
             foreach (var op in ops)
             {
                 var conducts = RoundStartConducts(op);
@@ -60,7 +50,7 @@ namespace Assets.System.WarModule
 
             foreach (var rival in rivals)
             {
-                var result = RoundStartRivalConduct(rival);
+                var result = RoundStartRivalConduct(ops,rival);
                 if (result == null) return;
                 if (!result.PushBackPos)
                 {
@@ -78,10 +68,10 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual ConductResult RoundStartRivalConduct(IChessOperator rival) => null;
+        protected virtual ConductResult RoundStartRivalConduct(ChessOperator[] chessOperators, IChessOperator rival) => null;
 
         protected abstract CombatConduct[] RoundStartConducts(ChessOperator op);
-        public virtual int OnDamageAddOn(ChessOperator[] ops, ChessOperator op) => 0;
+        public virtual int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage) => 0;
         public virtual int OnBuffingRatioAddOn(ChessOperator[] ops, ChessOperator op) => 0;
 
         protected class ConductResult
@@ -112,7 +102,7 @@ namespace Assets.System.WarModule
         {
         }
 
-        protected override ConductResult RoundStartRivalConduct(IChessOperator rival) => null;
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] chessOperators, IChessOperator rival) => null;
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op)
         {
@@ -122,11 +112,11 @@ namespace Assets.System.WarModule
             return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
-            var bonds = GetActiveBonds(ops);
-            if (bonds == null || bonds.Length == 0) return 0;
-            return (int)(op.GeneralDamage() * DamageAdditionRatio * 0.01f);
+            var bonds = ops.Where(IsInBondList).ToArray();
+            if (bonds.Length == 0) return 0;
+            return (int)(damage * DamageAdditionRatio * 0.01f);
         }
     }
     /// <summary>
@@ -138,9 +128,10 @@ namespace Assets.System.WarModule
         {
         }
 
-        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
-            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(149));
+            var damage =
+                AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(149));
             var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(damage) };
             if (Chessboard.IsRandomPass(DataTable.GetGameValue(150)))
                 conducts.Add(CombatConduct.InstanceBuff(CardState.Cons.Cowardly));
@@ -166,9 +157,9 @@ namespace Assets.System.WarModule
                 Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu)) : null;
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
-            if (op.IsRangeHero) return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(151) * 0.01f);
+            if (op.IsRangeHero) return (int)(damage * DataTable.GetGameValue(151) * 0.01f);
             return 0;
         }
     }
@@ -189,10 +180,10 @@ namespace Assets.System.WarModule
             return null;
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             return op.Style.Troop == 1
-                ? (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(152) * 0.01f)
+                ? (int)(damage * DataTable.GetGameValue(152) * 0.01f)
                 : 0;
         }
     }
@@ -213,9 +204,9 @@ namespace Assets.System.WarModule
             return null;
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
-            if (op.IsMeleeHero) return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(153) * 0.01f);
+            if (op.IsMeleeHero) return (int)(damage * DataTable.GetGameValue(153) * 0.01f);
             return 0;
         }
     }
@@ -237,9 +228,10 @@ namespace Assets.System.WarModule
             return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Neizhu));
         }
 
-        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
-            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(154));
+            var damage =
+                AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
             return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
         }
     }
@@ -252,10 +244,10 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             if (op.Style.Troop != 2) return 0;
-            return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(157) * 0.01f);
+            return (int)(damage * DataTable.GetGameValue(157) * 0.01f);
         }
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op)
@@ -274,18 +266,19 @@ namespace Assets.System.WarModule
         {
         }
 
-        protected override ConductResult RoundStartRivalConduct(IChessOperator rival)
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
-            var damage = AverageAdditionalDamageFromBonds(DataTable.GetGameValue(154));
+            var damage =
+                AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
             return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
         }
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             if (op.Style.ArmedType == 8)//水师都督激活时战船系武将伤害加成50%
-                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(160) * 0.01f);
+                return (int)(damage * DataTable.GetGameValue(160) * 0.01f);
             return 0;
         }
     }
@@ -323,10 +316,10 @@ namespace Assets.System.WarModule
             return null;
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             if (op.Style.Troop == 3)
-                return Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(163);
+                return damage * DataTable.GetGameValue(163);
             return 0;
         }
     }
@@ -347,10 +340,10 @@ namespace Assets.System.WarModule
             return null;
         }
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             if (op.Style.ArmedType == 5)
-                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(164) * 0.01f);
+                return (int)(damage * DataTable.GetGameValue(164) * 0.01f);
             return 0;
         }
     }
@@ -365,10 +358,10 @@ namespace Assets.System.WarModule
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
 
-        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op)
+        public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
         {
             if (op.Style.Element > 0)
-                return (int)(Chessboard.ConvertHeroDamage(op) * DataTable.GetGameValue(161) * 0.01f);
+                return (int)(damage * DataTable.GetGameValue(161) * 0.01f);
             return 0;
         }
     }
