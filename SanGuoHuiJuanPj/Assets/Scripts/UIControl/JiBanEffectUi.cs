@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class JiBanEffectUi : MonoBehaviour
 {
-    public Transform JiBanTransform;
     public Transform Player;
     public Transform Opposite;
     public Image Image;

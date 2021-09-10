@@ -199,10 +199,10 @@ public class ChessboardManager : MonoBehaviour
             {
                 JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
                 JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
-                DisplayJiBanObj(isChallenger, JiBanEffect.JiBanTransform);
+                DisplayJiBanObj(isChallenger, JiBanEffect.transform);
             })
             .AppendInterval(1f)
-            .OnComplete(() => JiBanEffect.JiBanTransform.gameObject.SetActive(false));
+            .OnComplete(() => JiBanEffect.gameObject.SetActive(false));
     }
     void DisplayJiBanObj(bool isPlayer,Transform obj)
     {
