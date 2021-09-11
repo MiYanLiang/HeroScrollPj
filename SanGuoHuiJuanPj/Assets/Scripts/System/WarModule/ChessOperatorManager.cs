@@ -508,7 +508,16 @@ namespace Assets.System.WarModule
             {
                 sprite.Value--;
                 if (sprite.Value <= 0)
+                {
                     RemoveSprite(sprite);
+                    continue;
+                }
+
+                var pos = Grid.GetChessPos(sprite.Pos, sprite.IsChallenger);
+                if (!pos.IsPostedAlive) continue;
+                CombatConduct[] conducts = sprite.RoundStart(pos.Operator,this);
+                if (conducts == null || conducts.Length == 0) continue;
+                InstanceChessboardActivity(sprite.IsChallenger, pos.Operator, Activity.Sprite, conducts);
             }
             //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))

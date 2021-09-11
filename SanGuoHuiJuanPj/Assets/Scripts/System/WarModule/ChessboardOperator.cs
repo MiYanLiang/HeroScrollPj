@@ -186,9 +186,9 @@ namespace Assets.System.WarModule
             }
         }
 
-        private void InstanceProcess(int pos,bool isChallenger)
+        private void InstanceProcess(int pos, bool isChallenger)
         {
-            CurrentProcess = ChessPosProcess.Instance(ProcessSeed,pos, isChallenger);
+            CurrentProcess = ChessPosProcess.Instance(ProcessSeed, pos, isChallenger);
             currentProcesses.Add(CurrentProcess);
             ProcessSeed++;
             Log($"生成{CurrentProcess}");
@@ -310,6 +310,12 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts, int skill, int rePos = -1)
         {
             if (CurrentProcess == null) return;
+            if (currentActivity == null)
+            {
+                ActivityRef = ActivityReference.ChessActivity;
+                AppendOpActivity(offender, target, intent, conducts, skill, rePos);
+                return;
+            }
             var temp = ActivityRef;
             ActivityRef = ActivityReference.Inner;
             var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
@@ -385,7 +391,13 @@ namespace Assets.System.WarModule
                     currentRound.FinalAction.Activities.Add(activity);
                     break;
                 case ActivityReference.Inner:
+                {
+                    if (currentActivity == null)
+                    {
+
+                    }
                     currentActivity.Inner.Add(activity);
+                }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -406,7 +418,7 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         /// <param name="typeId"></param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, TerrainSprite.LastingType lasting ,int value = 1, int typeId = -99)
+        public T InstanceSprite<T>(IChessPos target, TerrainSprite.LastingType lasting ,int typeId, int value)
             where T : TerrainSprite, new()
         {
             var sprite =
@@ -414,9 +426,8 @@ namespace Assets.System.WarModule
                     lasting: lasting,
                     value: value,
                     pos: target.Pos,
+                    typeId: typeId,
                     isChallenger: target.IsChallenger);
-            if (typeId != -99)
-                sprite.TypeId = typeId;
             RegSprite(sprite);
             ChessSpriteSeed++;
             return sprite;

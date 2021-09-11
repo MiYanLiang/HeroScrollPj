@@ -116,7 +116,7 @@ public class ChessboardManager : MonoBehaviour
                 Chessboard.OnActivityBeginTransformSibling(process.Pos, process.Scope == 0);
                 //列表配置应该是主活动在附列表最上端，然后附活动跟着在列表后面
                 //yield return ProceedActivitySet(process.Activities);
-                yield return ProceedChessmanActivities(process.Activities);
+                yield return ChessmanProcess(process);
             }
 
             foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
@@ -270,16 +270,24 @@ public class ChessboardManager : MonoBehaviour
         return tween;
     }
 
-    private IEnumerator ProceedChessmanActivities(List<Activity> actSet)
+    private IEnumerator ChessmanProcess(ChessPosProcess process)
     {
-        FightCardData offense = null;
-        FightCardData target = null;
         Sequence chessboardTween = null;
         Sequence effectTween = DOTween.Sequence().Pause(); //注意DoTween必须在一个线程添加，如果没暂停，一旦yield所有tween将直接执行。
-
+        FightCardData offense = null;
         var preActionDone = false;
-        foreach (var activity in actSet)
+        foreach (var activity in process.Activities)
         {
+            var target = GetCardMap(activity.To);
+            var op = GetCardMap(activity.From);
+            if (!preActionDone && process.Pos >= 0)
+            {
+                offense = op;
+                op = Chessboard.GetChessPos(process.Pos, process.Scope == 0).Card;
+                yield return PreActionAnimation(op, target);
+                preActionDone = true;
+            }
+
             if (activity.Intent == Activity.Sprite)//精灵活动
             {
                 yield return effectTween.Play().WaitForCompletion();
@@ -288,10 +296,7 @@ public class ChessboardManager : MonoBehaviour
             }
             var innerTween = DOTween.Sequence().Pause(); //内嵌活动
             Sequence chessboardShake = null;
-            FightCardData op = null;
 
-            target = GetCardMap(activity.To);
-            op = offense = GetCardMap(activity.From);
             if (op == null)
             {
                 effectTween.Join(target.ChessmanStyle.Respond(activity, target));
@@ -299,19 +304,6 @@ public class ChessboardManager : MonoBehaviour
             }
 
             var tg = target;
-            if (!preActionDone)
-            {
-                if (offense != null)
-                {
-                    yield return offense.ChessmanStyle.PreActionTween(offense, target).WaitForCompletion();
-
-                    //攻击前摇
-                    if (offense.ChessmanStyle.Type == CombatStyle.Types.Melee)
-                        yield return CardAnimator.StepBackAndHit(offense).WaitForCompletion();
-                }
-
-                preActionDone = true;
-            }
 
             //主要活动
             effectTween.Join(op.ChessmanStyle.ActivityEffectTween(activity, op, tg, Chessboard.transform));
@@ -368,15 +360,25 @@ public class ChessboardManager : MonoBehaviour
         if (offense != null)
         {
             var chessPos = Chessboard.GetChessPos(offense).transform.position;
+            yield return new WaitForSeconds(0.3f);
             yield return offense.ChessmanStyle.FinalizeActionTween(offense, chessPos).WaitForCompletion();
         }
+    }
+
+    private IEnumerator PreActionAnimation(FightCardData offense, FightCardData target)
+    {
+        yield return offense.ChessmanStyle.PreActionTween(offense, target).WaitForCompletion();
+
+        //攻击前摇
+        if (offense.ChessmanStyle.Type == CombatStyle.Types.Melee)
+            yield return CardAnimator.StepBackAndHit(offense).WaitForCompletion();
     }
 
     private Dictionary<ChessPos, List<SpriteObj>> SpritePosMap { get; } = new Dictionary<ChessPos, List<SpriteObj>>();
     private class SpriteObj
     {
         public int SpriteId;
-        public GameObject Obj;
+        public EffectStateUi Obj;
         public int Value;
     }
     private Tween OnSpriteEffect(Activity activity)
@@ -397,7 +399,7 @@ public class ChessboardManager : MonoBehaviour
                 sp.Value += (int)conduct.Total;
                 if (sp.Value > 0)
                 {
-                    if (sp.Obj == null)
+                    if (sp.Obj == null) 
                         sp.Obj = CardAnimator.AddSpriteEffect(chessPos, conduct);
                     continue;
                 }
@@ -405,7 +407,7 @@ public class ChessboardManager : MonoBehaviour
                 if (sp.Obj != null)
                 {
                     var obj = sp.Obj;
-                    EffectsPoolingControl.instance.RecycleEffect(obj);
+                    EffectsPoolingControl.instance.TakeBackStateIcon(obj);
                     sp.Obj = null;
                 }
             }

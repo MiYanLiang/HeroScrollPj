@@ -137,13 +137,13 @@ public class EffectsPoolingControl : MonoBehaviour
         return effect;
     }
 
-    public IEnumerator RecycleEffect(GameObject effect, float lasting = 0)
+    public IEnumerator RecycleEffect(GameObject effect, float lasting)
     {
         yield return new WaitForSeconds(lasting);
         RecycleEffect(effect);
     }
 
-    public void RecycleEffect(GameObject effect)
+    private void RecycleEffect(GameObject effect)
     {
         if (effect != null)
         {
