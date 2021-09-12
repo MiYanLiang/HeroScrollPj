@@ -477,7 +477,7 @@ namespace Assets.System.WarModule
 
         #region RoundTrigger
 
-        protected override void GetRoundEndTriggerByOperators()
+        protected override void InvokeRoundEndTriggers()
         {
             //卡牌回合结束触发器
             StatusMap.Keys
@@ -489,7 +489,7 @@ namespace Assets.System.WarModule
                 bo.RoundEnd(op);
         }
 
-        protected override void GetPreRoundTriggerByOperators()
+        protected override void InvokePreRoundTriggers()
         {
             //卡牌回合开始触发器
             StatusMap.Keys
@@ -507,8 +507,13 @@ namespace Assets.System.WarModule
             foreach (var sprite in ChessSprites.Where(s => s.Lasting == TerrainSprite.LastingType.Round).ToArray())
             {
                 sprite.Value--;
-                if (sprite.Value <= 0)
-                    RemoveSprite(sprite);
+                DepleteSprite(sprite);
+
+                var pos = Grid.GetChessPos(sprite.Pos, sprite.IsChallenger);
+                if (!pos.IsPostedAlive) continue;
+                CombatConduct[] conducts = sprite.RoundStart(pos.Operator,this);
+                if (conducts == null || conducts.Length == 0) continue;
+                InstanceChessboardActivity(-1, sprite.IsChallenger, pos.Operator, Activity.Sprite, conducts);
             }
             //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace Assets.System.WarModule
 {
     /// <summary>
-    /// 棋子对1个对象的1个行动描述。主要是嵌套在棋格主进程<see cref="ChessPosProcess"/>>的每一个行动描述。
+    /// 棋子对1个对象的1个行动描述。主要是嵌套在棋格主进程<see cref="ChessProcess"/>>的每一个行动描述。
     /// 而一个棋子的行动在一次进程中可能会有多个对象的行动。
     /// 注意：如果连击将会产生多个<see cref="Activity"/>
     /// </summary>
@@ -38,6 +38,10 @@ namespace Assets.System.WarModule
         /// 精灵类型
         /// </summary>
         public const int Sprite = 5;
+        /// <summary>
+        /// 局外影响(棋盘)，无法闪避
+        /// </summary>
+        public const int OuterScope = 6;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -65,7 +69,6 @@ namespace Assets.System.WarModule
                 Intent = intent,
                 Skill = skill,
                 RePos = rePos,
-                Inner = new List<Activity>()
             };
         }
         //[JsonProperty("I")] 
@@ -109,8 +112,7 @@ namespace Assets.System.WarModule
         public CombatConduct[] Conducts { get; set; }
         //[JsonProperty("R")] 
         public ActivityResult Result { get; set; }
-        //[JsonProperty("In")]
-        public List<Activity> Inner { get; set; }
+
         //[JsonProperty("OS")]
         public ChessStatus OffenderStatus { get; set; }
         /// <summary>
@@ -119,7 +121,7 @@ namespace Assets.System.WarModule
         //[JsonProperty("IC")] 
         public int IsChallenger { get; set; }
 
-        [JsonIgnore] 
+        //[JsonIgnore] 
         public bool IsRePos => RePos >= 0;
 
         public override string ToString()
@@ -154,14 +156,14 @@ namespace Assets.System.WarModule
                     break;
                 case Sprite:
                     intentText = "精灵";
+                    toText = $"棋格[{To}]";
                     break;
 
             }
 
             var result = Result == null ? string.Empty : Result.Type.ToString();
             var conducts = Conducts == null ? string.Empty : Conducts.Length.ToString();
-            var innerText = Inner == null ? string.Empty : $"内嵌({Inner.Count})";
-            return $"活动({InstanceId}):[{initiatorText}]意向[{intentText})].目标[{toText}]: 格斗={conducts} {innerText} 结果[{result}]";
+            return $"活动({InstanceId}):[{initiatorText}]意向[{intentText})].目标[{toText}]: 格斗={conducts} 结果[{result}]";
 
         }
     }
@@ -169,7 +171,7 @@ namespace Assets.System.WarModule
     public class ActivityResult
     {
 
-        [JsonConstructor]
+        //[JsonConstructor]
         private ActivityResult()
         {
 
@@ -180,7 +182,10 @@ namespace Assets.System.WarModule
 
         public enum Types
         {
-            Undefined = -1,
+            /// <summary>
+            /// 地块结果
+            /// </summary>
+            ChessPos = -1,
             /// <summary>
             /// 承受
             /// </summary>
@@ -214,13 +219,14 @@ namespace Assets.System.WarModule
         public int Result { get; set; }
         public ChessStatus Status { get; set; }
         public Types Type => (Types)Result;
-        [JsonIgnore] public bool IsDeath => Status.IsDeath;
+        //[JsonIgnore] 
+        public bool IsDeath => Status.IsDeath;
         public override string ToString()
         {
             var resultText = string.Empty;
             switch (Type)
             {
-                case Types.Undefined:
+                case Types.ChessPos:
                     break;
                 case Types.Suffer:
                     resultText = "承受";

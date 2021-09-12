@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CorrelateLib;
 using Newtonsoft.Json;
 
@@ -31,7 +32,13 @@ namespace Assets.System.WarModule
         /// 迷雾精灵(依赖类)
         /// </summary>
         public const int Forge = 20;
-        public static T Instance<T>(int instanceId,LastingType lasting,int value, int pos, bool isChallenger)
+        public const int Strength = 10;
+        public const int Armor = 14;
+        public const int Dodge = 11;
+        public const int Critical = 12;
+        public const int Rouse = 13;
+
+        public static T Instance<T>(int instanceId,LastingType lasting,int value,int typeId ,int pos, bool isChallenger)
             where T : TerrainSprite, new()
         {
             return new T
@@ -39,9 +46,9 @@ namespace Assets.System.WarModule
                 InstanceId = instanceId,
                 Lasting = lasting,
                 Value = value,
-                //Host = host,
                 Pos = pos,
-                IsChallenger = isChallenger
+                IsChallenger = isChallenger,
+                TypeId = typeId
             };
         }
 
@@ -49,7 +56,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 类型标签，用来识别单位类型
         /// </summary>
-        public virtual int TypeId { get; set; }
+        public int TypeId { get; set; }
         public LastingType Lasting {  get; set; }
         /// <summary>
         /// 宿主<see cref="ChessOperator.InstanceId"/>
@@ -99,6 +106,8 @@ namespace Assets.System.WarModule
             }
             return $"精灵({InstanceId})({typeText}).{hostText} Pos:{challengerText}";
         }
+
+        public virtual CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard) => null;
     }
 
     /// <summary>
@@ -106,7 +115,16 @@ namespace Assets.System.WarModule
     /// </summary>
     public class FireSprite : TerrainSprite
     {
-        public override int TypeId { get; set; } = 6;
+        public int BuffRatio { get; } = 10;
+        public int Damage { get; } = 100;
+        public override CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        {
+            if (!op.IsAlive) return null;
+            var combat = new List<CombatConduct> { CombatConduct.InstanceDamage(Damage, CombatConduct.FireDmg) };
+            if (op.CardType == GameCardType.Hero && chessboard.IsRandomPass(BuffRatio))
+                combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
+            return combat.ToArray();
+        }
     }
     // 依赖型精灵
     public abstract class RelationSprite : TerrainSprite
@@ -118,7 +136,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class StrengthSprite : RelationSprite
     {
-        public override int TypeId { get; set; } = 10;
         /// <summary>
         /// 代理特殊条件
         /// </summary>
@@ -128,7 +145,6 @@ namespace Assets.System.WarModule
     }
     public class ArmorSprite : RelationSprite
     {
-        public override int TypeId { get; set; } = 14;
 
         public override int ServedBuff(CardState.Cons buff, IChessOperator op) => GetBuff(buff);
 
@@ -223,7 +239,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DodgeSprite : RelationSprite
     {
-        public override int TypeId { get; set; } = 11;
         public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
             op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
         public override int GetBuff(CardState.Cons con) => con == CardState.Cons.DodgeUp ? Value : 0;
@@ -233,7 +248,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class CriticalSprite : RelationSprite
     {
-        public override int TypeId { get; set; } = 12;
         public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
             op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
         public override int GetBuff(CardState.Cons con) => con == CardState.Cons.CriticalUp ? Value : 0;
@@ -243,7 +257,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class RouseSprite : RelationSprite
     {
-        public override int TypeId { get; set; } = 12;
         public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
             op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
         public override int GetBuff(CardState.Cons con) => con == CardState.Cons.RouseUp ? Value : 0;
@@ -253,7 +266,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ForgeSprite : DodgeSprite
     {
-        public override int TypeId { get; set; } = Forge;
     }
 
 }

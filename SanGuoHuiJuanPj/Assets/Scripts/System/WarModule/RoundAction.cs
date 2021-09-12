@@ -11,15 +11,6 @@ namespace Assets.System.WarModule
     [Serializable]
     public class RoundAction
     {
-        public const int PlayerResources = -1;
-        public const int JiBan = 0;
-        public const int RoundBuffing = 1;
-
-        /// <summary>
-        /// State id , action
-        /// </summary>
-        [JsonProperty("A")]
-        public List<Activity> Activities { get; set; } = new List<Activity>();
-
+        public List<ChessProcess> ChessProcesses {  get; set; } = new List<ChessProcess>();
     }
 }

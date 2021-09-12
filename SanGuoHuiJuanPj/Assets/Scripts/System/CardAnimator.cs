@@ -183,11 +183,11 @@ public class CardAnimator
             CreateSateIcon(target.cardObj, con);
     }
 
-    public static GameObject AddSpriteEffect(ChessPos pos, CombatConduct conduct)
+    public static EffectStateUi AddSpriteEffect(ChessPos pos, CombatConduct conduct)
     {
         var effectId = GetSpriteEffectName(conduct);
         if (string.IsNullOrWhiteSpace(effectId)) return null;
-        return EffectsPoolingControl.instance.GetEffect(effectId, pos.transform, -1);
+        return EffectsPoolingControl.instance.GetStateEffect(effectId, pos.transform);
     }
     private static string GetSpriteEffectName(CombatConduct conduct)
     {
@@ -309,8 +309,6 @@ public class CardAnimator
 
     public static Tween DisplayTextEffect(FightCardData target, Activity activity)
     {
-        if (activity.Intent == Activity.Sprite)
-            throw new InvalidOperationException($"{nameof(DisplayTextEffect)}不支持精灵Activity[{activity.Intent}]效果!");
         var tween = DOTween.Sequence();
         if (activity.IsRePos)
             tween.OnComplete(() => GetHTextEffect(17, target.cardObj.transform, Color.red));

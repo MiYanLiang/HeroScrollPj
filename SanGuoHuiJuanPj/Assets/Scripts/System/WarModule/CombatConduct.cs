@@ -71,7 +71,7 @@ namespace Assets.System.WarModule
             new CombatConduct { Basic = value, Element = element, Critical = critical, Rouse = rouse, Kind = kind };
 
         public static CombatConduct AddSprite(int value,int spriteId, int typeId) => Instance(value, critical: 0, rouse: 0, element: typeId, kind: spriteId);
-        public static CombatConduct RemoveSprite(int spriteId) => Instance(-1, 0, 0, spriteId, -1);
+        public static CombatConduct RemoveSprite(int spriteId,int typeId) => Instance(-1, 0, 0, element: typeId, kind: spriteId);
         public static CombatConduct InstanceKilling() => Instance(0, 0, 0, 0, KillingKind);
 
         public static CombatConduct InstanceHeal(float heal, int element = 0) => Instance(heal, 0, 0, element, HealKind);
