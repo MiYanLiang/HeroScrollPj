@@ -11,19 +11,17 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class ChessboardOperator 
     {
-        protected enum ActivityReference
-        {
-            RoundStart,
-            ChessActivity,
-            Inner,
-            RoundEnd
-        }
-        protected ActivityReference ActivityRef { get; private set; }
         public const int HeroDodgeLimit = 75;
         public const int HeroArmorLimit = 90;
         public ChessGrid Grid { get; }
+        private enum ProcessCondition
+        {
+            RoundStart,
+            Chessman,
+            RoundEnd
+        }
 
-        public IReadOnlyList<ChessRound> Rounds => rounds;
+        private ProcessCondition Condition { get; set; }
         private ChessRound currentRound;
         private Activity currentActivity;
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
@@ -37,6 +35,7 @@ namespace Assets.System.WarModule
         protected abstract BondOperator[] JiBan { get; }
         
         public bool IsInit => ProcessSeed > 0;
+        private int RoundIdSeed;
         
         private static Random random = new Random();
         private int RecursiveActionCount
@@ -51,10 +50,10 @@ namespace Assets.System.WarModule
         }
         private const int RecursiveActionsLimit = 99999;
 
-        private readonly ChessPosProcess[] EmptyProcess = Array.Empty<ChessPosProcess>();
+        private readonly ChessProcess[] EmptyProcess = Array.Empty<ChessProcess>();
 
         private readonly List<ChessRound> rounds;
-        private List<ChessPosProcess> currentProcesses;
+        private List<ChessProcess> currentProcesses;
         private int ProcessSeed = 0;
         private int ActivitySeed = 0;
         private int ChessSpriteSeed = 0;
@@ -117,19 +116,20 @@ namespace Assets.System.WarModule
             ActivatedJiBan.Clear();
             currentRound = new ChessRound
             {
-                InstanceId = Rounds.Count,
+                InstanceId = RoundIdSeed,
                 PreAction = new RoundAction(),
                 FinalAction = new RoundAction(),
                 ChallengerJiBans = new List<int>(),
                 OppositeJiBans = new List<int>()
             };
+            RoundIdSeed++;
             Log($"开始回合[{currentRound.InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
-            currentProcesses = new List<ChessPosProcess>();
+            currentProcesses = new List<ChessProcess>();
             RefreshChessPosses();
-            ActivityRef = ActivityReference.RoundStart;
-            GetPreRoundTriggerByOperators();
-            ActivityRef = ActivityReference.ChessActivity;
+            Condition = ProcessCondition.RoundStart;
+            InvokePreRoundTriggers();
+            Condition = ProcessCondition.Chessman;
             do
             {
                 var op = GetSortedOperator(currentOps); //根据排列逻辑获取执行代理
@@ -140,7 +140,7 @@ namespace Assets.System.WarModule
                     continue;
                 }
 
-                InstanceProcess(GetStatus(op).Pos, op.IsChallenger);
+                InstanceChessmanProcess(GetStatus(op).Pos, op.IsChallenger);
 
                 Log(OperatorText(op.InstanceId));
                 op.MainActivity();
@@ -167,8 +167,8 @@ namespace Assets.System.WarModule
                 Log($"{winner}");
                 return currentRound;
             }
-            ActivityRef = ActivityReference.RoundEnd;
-            GetRoundEndTriggerByOperators();
+            Condition = ProcessCondition.RoundEnd;
+            InvokeRoundEndTriggers();
 
             return currentRound;
         }
@@ -186,10 +186,25 @@ namespace Assets.System.WarModule
             }
         }
 
-        private void InstanceProcess(int pos, bool isChallenger)
+        private void InstanceChessmanProcess(int pos, bool isChallenger) =>
+            InstanceProcess(ChessProcess.Types.Chessman, pos, isChallenger);
+        private void InstanceProcess(ChessProcess.Types type, int major, bool isChallenger)
         {
-            CurrentProcess = ChessPosProcess.Instance(ProcessSeed, pos, isChallenger);
-            currentProcesses.Add(CurrentProcess);
+            CurrentProcess = ChessProcess.Instance(ProcessSeed, currentRound.InstanceId, type, major, isChallenger);
+            switch (Condition)
+            {
+                case ProcessCondition.RoundStart:
+                    currentRound.PreAction.ChessProcesses.Add(CurrentProcess);
+                    break;
+                case ProcessCondition.Chessman:
+                    currentProcesses.Add(CurrentProcess);
+                    break;
+                case ProcessCondition.RoundEnd:
+                    currentRound.FinalAction.ChessProcesses.Add(CurrentProcess);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             ProcessSeed++;
             Log($"生成{CurrentProcess}");
         }
@@ -204,9 +219,9 @@ namespace Assets.System.WarModule
 
         #region RoundActivities
 
-        protected abstract void GetRoundEndTriggerByOperators();
+        protected abstract void InvokeRoundEndTriggers();
 
-        protected abstract void GetPreRoundTriggerByOperators();
+        protected abstract void InvokePreRoundTriggers();
 
         protected bool JiBanActivation(BondOperator jb, ChessOperator[] list)
         {
@@ -241,8 +256,9 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         public void RegResources(ChessOperator op, bool toChallenger, int resourceId, int value)
         {
-            InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
+            var activity = InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
                 Singular(CombatConduct.InstancePlayerResource(resourceId, value)), 0, -1);
+            AddToCurrentProcess(activity, 0);
             if (resourceId == -1)
                 if (toChallenger)
                     ChallengerGold += value;
@@ -270,7 +286,7 @@ namespace Assets.System.WarModule
 
         #endregion
 
-        private ChessPosProcess CurrentProcess { get; set; }
+        private ChessProcess CurrentProcess { get; set; }
 
         protected abstract ChessOperator GetOperator(int id);
         //执行代理的排列逻辑
@@ -283,18 +299,41 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋盘指令，非棋子执行类，一般用于羁绊，buff
         /// </summary>
+        /// <param name="major"></param>
         /// <param name="fromChallenger"></param>
         /// <param name="target"></param>
         /// <param name="intent">参考<see cref="RoundAction"/>的值来表示</param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
-        public void InstanceChessboardActivity(bool fromChallenger, IChessOperator target, int intent,
+        public void InstanceChessboardActivity(int major,bool fromChallenger, IChessOperator target, int intent,
             CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
+            //棋盘没用字典分类活动顺序，所以不用声明actId
+            if (CurrentProcess == null ||
+                CurrentProcess.Type != ChessProcess.Types.Chessboard ||
+                CurrentProcess.Scope != GetScope(fromChallenger))
+                InstanceProcess(ChessProcess.Types.Chessboard, major, fromChallenger);
             var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
+            AddToCurrentProcess(activity, 0);
             ProcessActivityResult(activity);
         }
+
+        private static int GetScope(bool isChallenger) => isChallenger ? 0 : 1;
+        public void InstanceJiBanActivity(int bondId, bool fromChallenger, IChessOperator target, int intent,
+            CombatConduct[] conducts, int rePos = -1)
+        {
+
+            if (CurrentProcess == null ||
+                CurrentProcess.Type != ChessProcess.Types.JiBan || 
+                CurrentProcess.Major != bondId ||
+                CurrentProcess.Scope != GetScope(fromChallenger))
+                InstanceProcess(ChessProcess.Types.JiBan, bondId, fromChallenger);
+            var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, 0, rePos);
+            AddToCurrentProcess(activity, 0);
+            ProcessActivityResult(activity);
+        }
+
 
         /// <summary>
         /// 棋子指令，为当前的行动添加上一个行动指令
@@ -306,23 +345,23 @@ namespace Assets.System.WarModule
         /// <param name="skill">如果是普通攻击，标记0，大于0将会是技能值</param>
         /// <param name="rePos"></param>
         /// <returns></returns>
-        public void AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
-            CombatConduct[] conducts, int skill, int rePos = -1)
-        {
-            if (CurrentProcess == null) return;
-            if (currentActivity == null)
-            {
-                ActivityRef = ActivityReference.ChessActivity;
-                AppendOpActivity(offender, target, intent, conducts, skill, rePos);
-                return;
-            }
-            var temp = ActivityRef;
-            ActivityRef = ActivityReference.Inner;
-            var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
-                conducts, skill, rePos);
-            ActivityRef = temp;
-            ProcessActivityResult(activity);
-        }
+        //public void AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
+        //    CombatConduct[] conducts, int skill, int rePos = -1)
+        //{
+        //    if (CurrentProcess == null) return;
+        //    if (currentActivity == null)
+        //    {
+        //        ActivityRef = ActivityReference.ChessActivity;
+        //        AppendOpActivity(offender, target, intent, conducts, skill, rePos);
+        //        return;
+        //    }
+        //    var temp = ActivityRef;
+        //    ActivityRef = ActivityReference.Inner;
+        //    var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+        //        conducts, skill, rePos);
+        //    ActivityRef = temp;
+        //    ProcessActivityResult(activity);
+        //}
 
         private string OperatorText(int id)
         {
@@ -343,12 +382,25 @@ namespace Assets.System.WarModule
             UpdateTerrain(GetChessPos(target));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offender"></param>
+        /// <param name="target"></param>
+        /// <param name="intent"></param>
+        /// <param name="conducts"></param>
+        /// <param name="actId">-1 = 加入上一个活动</param>
+        /// <param name="skill"></param>
+        /// <param name="rePos"></param>
+        /// <returns></returns>
         public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
-            CombatConduct[] conducts,int skill ,int rePos = -1)
+            CombatConduct[] conducts,int actId,int skill ,int rePos = -1)
         {
             if (target == null) return null;
-            currentActivity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+            var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                 conducts, skill, rePos);
+            currentActivity = activity;
+            AddToCurrentProcess(activity, actId);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
                 throw new NullReferenceException(
@@ -357,20 +409,40 @@ namespace Assets.System.WarModule
             return currentActivity.Result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fromChallenger"></param>
+        /// <param name="targetInstance"></param>
+        /// <param name="intent"></param>
+        /// <param name="conducts"></param>
+        /// <param name="skill"></param>
+        /// <param name="rePos"></param>
+        /// <returns></returns>
         private Activity InstanceActivity(bool fromChallenger, int targetInstance, int intent, CombatConduct[] conducts,
-            int skill, int rePos) =>
-            InstanceActivity(fromChallenger,null, targetInstance, intent, conducts, skill, rePos);
+            int skill, int rePos)
+        {
+            return InstanceActivity(fromChallenger, null, targetInstance, intent, conducts, skill, rePos);
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fromChallenger"></param>
+        /// <param name="offender"></param>
+        /// <param name="targetInstance"></param>
+        /// <param name="intent"></param>
+        /// <param name="conducts"></param>
+        /// <param name="skill"></param>
+        /// <param name="rePos"></param>
+        /// <returns></returns>
         private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, int intent,
             CombatConduct[] conducts, int skill, int rePos)
         {
 
             RecursiveActionCount++;
             ActivitySeed++;
-            var processId = ActivityRef == ActivityReference.ChessActivity ||
-                            ActivityRef == ActivityReference.Inner
-                ? CurrentProcess.InstanceId
-                : -1;
+            var processId = CurrentProcess.InstanceId;
             var fromId = offender == null ? fromChallenger ? -1 : -2 : offender.InstanceId;
             var activity = Activity.Instance(
                 ActivitySeed,
@@ -379,32 +451,22 @@ namespace Assets.System.WarModule
                 fromChallenger ? 0 : 1,
                 targetInstance,
                 intent, conducts, skill, rePos);
-            switch (ActivityRef)
-            {
-                case ActivityReference.RoundStart:
-                    currentRound.PreAction.Activities.Add(activity);
-                    break;
-                case ActivityReference.ChessActivity:
-                    CurrentProcess.Activities.Add(activity);
-                    break;
-                case ActivityReference.RoundEnd:
-                    currentRound.FinalAction.Activities.Add(activity);
-                    break;
-                case ActivityReference.Inner:
-                {
-                    if (currentActivity == null)
-                    {
-
-                    }
-                    currentActivity.Inner.Add(activity);
-                }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
             //Log($"生成{activity}");
             return activity;
+        }
+
+        /// <summary>
+        /// 加入活动
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="actId">-1 = 加入上一个活动</param>
+        private void AddToCurrentProcess(Activity activity, int actId)
+        {
+            if (actId == -1) //如果-1的话就加入上一个活动
+                actId = CurrentProcess.ActMap.Count == 0 ? 0 : CurrentProcess.ActMap.Last().Key;
+            if (!CurrentProcess.ActMap.ContainsKey(actId))
+                CurrentProcess.ActMap.Add(actId, new List<Activity>());
+            CurrentProcess.ActMap[actId].Add(activity);
         }
 
         //private List<Activity> InnerActivities { get; set; }
@@ -437,7 +499,7 @@ namespace Assets.System.WarModule
         {
             var conduct = isAdd
                 ? CombatConduct.AddSprite(sprite.Value, sprite.InstanceId, sprite.TypeId)
-                : CombatConduct.RemoveSprite(sprite.InstanceId);
+                : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
             var activity = Activity.Instance(
                 id: ActivitySeed,
                 processId: CurrentProcess.InstanceId, 
@@ -451,22 +513,33 @@ namespace Assets.System.WarModule
             ActivitySeed++;
             return activity;
         }
-        public void RegSprite(TerrainSprite sprite)
+
+        private void RegSprite(TerrainSprite sprite)
         {
             Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
-            activity.Result = ActivityResult.Instance(ActivityResult.Types.Undefined);
-            CurrentProcess.Activities.Add(activity);
+            activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+
+            if (currentRound.InstanceId!= CurrentProcess.RoundId)
+                InstanceProcess(ChessProcess.Types.Chessboard, -1, sprite.IsChallenger);
+            AddToCurrentProcess(activity, 0);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
         }
 
-        public void RemoveSprite(TerrainSprite sprite)
+        public void DepleteSprite(TerrainSprite sprite)
         {
             Log($"移除{sprite}");
+            if (sprite.Value <= 0) RemoveSprite(sprite);
             var activity = SpriteActivity(sprite, false);
-            activity.Result = ActivityResult.Instance(ActivityResult.Types.Undefined);
-            CurrentProcess.Activities.Add(activity);
+            activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+            if (currentRound.InstanceId != CurrentProcess.RoundId)
+                InstanceProcess(ChessProcess.Types.Chessboard, -1, sprite.IsChallenger);
+            AddToCurrentProcess(activity, 0);
+        }
+
+        private void RemoveSprite(TerrainSprite sprite)
+        {
             Sprites.Remove(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.RemoveSprite(sprite);
         }
@@ -498,7 +571,7 @@ namespace Assets.System.WarModule
             foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Lasting == TerrainSprite.LastingType.Relation).ToArray())
             {
                 if (GetOperator(sprite.Value).IsAlive) continue;
-                RemoveSprite(sprite);
+                DepleteSprite(sprite);
             }
         }
 

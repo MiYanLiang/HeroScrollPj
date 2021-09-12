@@ -4415,14 +4415,14 @@ public class FightController : MonoBehaviour
     [SerializeField]
     float yuanChengShakeTime = 0.1f;
 
-    private List<ChessPosProcess> rounds;
+    private List<ChessProcess> rounds;
     //武将行动
     IEnumerator InitiativeHeroAction(FightCardData attackUnit)
     {
         float waitTime = 0;
         waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        rounds = new List<ChessPosProcess>();
+        rounds = new List<ChessProcess>();
         /////////前摇//////////
         targetIndex = FightForManager.instance.FindOpponentIndex(attackUnit); //锁定目标卡牌
         var target = FightForManager.instance.GetCard(targetIndex, !isPlayerRound);

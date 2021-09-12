@@ -29,8 +29,8 @@ namespace Assets.System.WarModule
             var tarStat = Chessboard.GetStatus(target.Operator);
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceDamage(healingHp, CombatConduct.FixedDmg)), 0);
-            Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(healingHp)), 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceDamage(healingHp, CombatConduct.FixedDmg)),0, 0);
+            Chessboard.AppendOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(healingHp)), 0,1);
         }
     }
     /// <summary>
@@ -46,12 +46,8 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                if (i == 1)
-                    Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                        Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 1);
-                else
-                    Chessboard.AppendOpInnerActivity(this, target, Activity.Offensive,
-                        Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 1);
+                Chessboard.AppendOpActivity(this, target, Activity.Offensive,
+                    Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 0, 1);
             }
         }
     }
@@ -67,12 +63,8 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                if (i == 0)
-                    Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                        Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 1);
-                else
-                    Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly,
-                        Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 1);
+                Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                    Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 0, 1);
             }
         }
     }
@@ -92,10 +84,8 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                if (i == 0)
-                    Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
-                else
-                    Chessboard.AppendOpInnerActivity(this, target.Pos, Activity.Offensive, Helper.Singular(CombatConduct.InstanceDamage(damage)), 1);
+                Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive,
+                    Helper.Singular(CombatConduct.InstanceDamage(damage)), 0, 1);
             }
         }
 
@@ -127,12 +117,8 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                if (i == 0)
-                    Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 1);
-                else
-                    Chessboard.AppendOpInnerActivity(this, target, Activity.Friendly,
-                        Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 1);
+                Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                    Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 0, 1);
             }
         }
     }
@@ -152,7 +138,7 @@ namespace Assets.System.WarModule
         {
             //除去所有精灵(如果被移位)
             foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Value == InstanceId))
-                Chessboard.RemoveSprite(sprite);
+                Chessboard.DepleteSprite(sprite);
             var neighbors = Chessboard.GetNeighbors(chessPos, true, Surround);
             //在周围生成精灵
             foreach (var pos in neighbors)

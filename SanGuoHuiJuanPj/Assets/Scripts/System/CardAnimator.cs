@@ -309,8 +309,6 @@ public class CardAnimator
 
     public static Tween DisplayTextEffect(FightCardData target, Activity activity)
     {
-        if (activity.Intent == Activity.Sprite)
-            throw new InvalidOperationException($"{nameof(DisplayTextEffect)}不支持精灵Activity[{activity.Intent}]效果!");
         var tween = DOTween.Sequence();
         if (activity.IsRePos)
             tween.OnComplete(() => GetHTextEffect(17, target.cardObj.transform, Color.red));
