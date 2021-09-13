@@ -469,7 +469,7 @@ namespace Assets.System.WarModule
                 .FirstOrDefault();
             if (target == null)
             {
-                base.MilitaryPerforms();
+                base.MilitaryPerforms(0);
                 return;
             }
             Chessboard.AppendOpActivity(this, target, Activity.Friendly, Helper.Singular(BuffToFriendly),0, 1);
@@ -584,7 +584,7 @@ namespace Assets.System.WarModule
                 .Take(TargetAmount).ToArray();
             if (targets.Length == 0)
             {
-                base.MilitaryPerforms();
+                base.MilitaryPerforms(0);
                 return;
             }
 
@@ -637,17 +637,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class NeiZhengOperator : HeroOperator
     {
-        private CardState.Cons[] NegativeBuffs { get; } = new[]
-        {
-            CardState.Cons.Stunned,
-            CardState.Cons.Bleed,
-            CardState.Cons.Poison,
-            CardState.Cons.Burn,
-            CardState.Cons.Imprisoned,
-            CardState.Cons.Cowardly,
-            CardState.Cons.Disarmed
-        };
-
         protected virtual int BasicRate => DataTable.GetGameValue(126);
         protected virtual int LevelingIncrease => DataTable.GetGameValue(127);
         protected override void MilitaryPerforms(int skill = 1)
@@ -658,7 +647,7 @@ namespace Assets.System.WarModule
                          p.Operator.CardType == GameCardType.Hero)
                 .Select(pos => new
                 {
-                    pos.Operator, Buffs = NegativeBuffs.Sum(n => Chessboard.GetCondition(pos.Operator, n))
+                    pos.Operator, Buffs = CardState.NegativeBuffs.Sum(n => Chessboard.GetCondition(pos.Operator, n))
                 }) //找出所有武将的负面数
                 .Where(o => o.Buffs > 0)
                 .OrderByDescending(b => b.Buffs).Take(3).ToArray();
@@ -666,7 +655,7 @@ namespace Assets.System.WarModule
 
             if (targets.Length == 0)
             {
-                base.MilitaryPerforms();
+                base.MilitaryPerforms(0);
                 return;
             }
 
@@ -677,7 +666,7 @@ namespace Assets.System.WarModule
                     var target = targets[i];
                     var tarStat = Chessboard.GetStatus(target.Operator);
                     var keys = tarStat.Buffs.Where(p => p.Value > 0)
-                        .Join(NegativeBuffs, p => p.Key, n => (int)n, (p, n) => new { key = n, buffValue = p.Value })
+                        .Join(CardState.NegativeBuffs, p => p.Key, n => (int)n, (p, n) => new { key = n, buffValue = p.Value })
                         .ToArray();
                     var con = keys[Chessboard.Randomize(keys.Length)];
                     if(i==0) Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(target.Operator), Activity.Friendly, Helper.Singular(CombatConduct.InstanceBuff(con.key, -con.buffValue)),0, 1);
@@ -1278,7 +1267,7 @@ namespace Assets.System.WarModule
             var stimulate = Chessboard.GetCondition(this, CardState.Cons.Stimulate);
             var addOn = (int)(DataTable.GetGameValue(97) * 0.01f * stimulate * GeneralDamage());
             var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                Helper.Singular(InstanceHeroGenericDamage(addOn)),0, 1);
+                Helper.Singular(InstanceHeroGenericDamage(addOn)),0, 0);
 
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(StimulateConduct), 0, 1);

@@ -9,6 +9,26 @@ namespace Assets.System.WarModule
 //战斗状态类
     public class CardState
     {
+        public static Cons[] NegativeBuffs { get; } = new[]
+        {
+            Cons.Stunned,
+            Cons.Bleed,
+            Cons.Poison,
+            Cons.Burn,
+            Cons.Imprisoned,
+            Cons.Cowardly,
+            Cons.Disarmed
+        };
+        public static bool IsNegativeBuff(Cons con)
+        {
+            return con == Cons.Stunned ||
+                   con == Cons.Bleed ||
+                   con == Cons.Poison ||
+                   con == Cons.Burn ||
+                   con == Cons.Imprisoned ||
+                   con == Cons.Cowardly ||
+                   con == Cons.Disarmed;
+        }
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
         public static Cons[] ConsArray { get; } = Enum.GetValues(typeof(Cons)).Cast<Cons>().ToArray();
         public static string IconName(Cons con)

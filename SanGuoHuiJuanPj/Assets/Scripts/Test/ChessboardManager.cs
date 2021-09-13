@@ -38,7 +38,7 @@ public class ChessboardManager : MonoBehaviour
     private ChessOperatorManager<FightCardData> chessOp;
     private static SpriteStyle ChessboardStyle { get; } = new SpriteStyle();
 
-    private Stopwatch Sw = Stopwatch.StartNew();
+    //private Stopwatch Sw = Stopwatch.StartNew();
     public void Init()
     {
         NewWar.StartButton.onClick.AddListener(InvokeCard);
@@ -102,7 +102,7 @@ public class ChessboardManager : MonoBehaviour
     //演示回合
     private IEnumerator AnimateRound(ChessRound round,ChessboardOperator chess)
     {
-        Sw.Start();
+        //Sw.Start();
         IsBusy = true;
         //回合开始演示
         yield return OnRoundBegin(round.PreAction);
@@ -141,7 +141,7 @@ public class ChessboardManager : MonoBehaviour
 
         IsBusy = false;
         NewWar.StartButtonShow(true);
-        Sw.Stop();
+        //Sw.Stop();
     }
 
     private IEnumerator OnRoundBegin(RoundAction action)
@@ -177,10 +177,17 @@ public class ChessboardManager : MonoBehaviour
 
     private Tween OnJiBanEffect(bool isChallenger,JiBanTable jb)
     {
-        Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanEffect)} [{Sw.Elapsed}]");
+        var jbCards = Chessboard.Data.Values
+            .Where(c=>c.isPlayerCard == isChallenger)
+            .Join(jb.Cards, c => (c.cardId, c.cardType), j => (j.CardId, j.CardType), (c, _) => c).ToArray();
+        //Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanEffect)} [{Sw.Elapsed}]");
         return DOTween.Sequence()
+            .AppendCallback(() => {
+                foreach (var card in jbCards) card.cardObj.SetHighLight(true);
+            }).AppendInterval(0.5f)
             .AppendCallback(() =>
             {
+                foreach (var card in jbCards) card.cardObj.SetHighLight(false);
                 JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
                 JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
                 DisplayJiBanObj(isChallenger, JiBanEffect.transform);
@@ -198,7 +205,7 @@ public class ChessboardManager : MonoBehaviour
 
     private Tween OnJiBanOffenseAnim(bool isPlayer, JiBanTable jb)
     {
-        Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanOffenseAnim)} [{Sw.Elapsed}]");
+        //Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanOffenseAnim)} [{Sw.Elapsed}]");
         GameObject offensiveEffect = null;
         switch ((JiBanSkillName)jb.Id)
         {
@@ -231,7 +238,7 @@ public class ChessboardManager : MonoBehaviour
 
         if (offensiveEffect == null) return DOTween.Sequence();
         return DOTween.Sequence()
-            .AppendCallback(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
+            .OnComplete(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
             .AppendInterval(0.5f)
             .OnComplete(
                 () =>
@@ -243,7 +250,7 @@ public class ChessboardManager : MonoBehaviour
 
     private Tween OnInstantEffects(IList<Activity> activities)
     {
-        Debug.Log($"{nameof(OnInstantEffects)} acts[{activities.Count}][{Sw.Elapsed}]");
+        //Debug.Log($"{nameof(OnInstantEffects)} acts[{activities.Count}][{Sw.Elapsed}]");
         var tween = DOTween.Sequence();
         foreach (var activity in activities)
         {
@@ -293,19 +300,34 @@ public class ChessboardManager : MonoBehaviour
                 if (!preActionDone && process.Major >= 0)
                 {
                     op = Chessboard.GetChessPos(process.Major, process.Scope == 0).Card;
-                    yield return majorCard?.ChessmanStyle.PreActionTween(majorCard, target).WaitForCompletion();
+                    if (majorCard != null)
+                        yield return CardAnimator.PreActionTween(majorCard, target).WaitForCompletion();
                     preActionDone = true;
                 }
                 #endregion
 
                 if (op == null)//如果找不到攻击方
                 {
-                    major.Join(target.ChessmanStyle.Respond(activity, target));
+                    major.Join(target.ChessmanStyle.RespondTween(activity, target));
                     continue;
                 }
 
+                if (activity.Intent == Activity.Counter)
+                {
+                    //直接演示上一个演示动作
+                    yield return MajorActivity(majorCard, chessboardTween, major);
+                    //并且执行一个反击动作
+                    yield return CardAnimator.CounterAnimation(op)
+                        .OnComplete(() => PlaySoundEffect(activity, op.ChessmanStyle, target))
+                        .WaitForCompletion();
+                    //重新组织新活动演示链
+                    major = null;
+                }
+
                 //主要活动
-                major.Join(op.ChessmanStyle.ActivityEffectTween(activity, op, target, Chessboard.transform));
+                major.Join(op.ChessmanStyle.OffensiveTween(activity, op, target, Chessboard.transform))
+                    .Join(target.ChessmanStyle.RespondTween(activity, target,
+                        op.ChessmanStyle.GetMilitarySparkId(activity)));
 
                 //棋盘活动
                 if (activity.Conducts.Any(c => c.Rouse > 0))
@@ -323,18 +345,6 @@ public class ChessboardManager : MonoBehaviour
                             Chessboard.PlaceCard(activity.RePos, target);
                         }));
 
-                if (activity.Intent == Activity.Counter)
-                {
-                    //直接演示上一个演示动作
-                    yield return MajorActivity(majorCard, chessboardTween, major);
-                    //yield return effectTween.Play().WaitForCompletion();
-                    //并且执行一个反击动作
-                    yield return op.ChessmanStyle.CounterTween(activity, op, target)
-                        .OnComplete(() => PlaySoundEffect(activity, op.ChessmanStyle, target))
-                        .WaitForCompletion();
-                    //重新组织新活动演示链
-                    major = null;
-                }
             }
 
             if (major != null)
@@ -353,22 +363,15 @@ public class ChessboardManager : MonoBehaviour
             }
         }
 
-
         if (majorCard != null)
         {
             var chessPos = Chessboard.GetChessPos(majorCard).transform.position;
             yield return new WaitForSeconds(0.3f);
-            yield return majorCard.ChessmanStyle.FinalizeActionTween(majorCard, chessPos).WaitForCompletion();
+            yield return CardAnimator.FinalizeAnimation(majorCard, chessPos).WaitForCompletion();
         }
     }
 
     private Dictionary<ChessPos, List<SpriteObj>> SpritePosMap { get; } = new Dictionary<ChessPos, List<SpriteObj>>();
-    private class SpriteObj
-    {
-        public int SpriteType;
-        public EffectStateUi Obj;
-        public int Value;
-    }
     private Tween OnSpriteEffect(Activity activity)
     {
         var chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
@@ -655,26 +658,6 @@ public class ChessboardManager : MonoBehaviour
         return audioId;
     }
 
-    private void OnSpriteActivity(Activity activity)
-    {
-        foreach (var conduct in activity.Conducts)
-        {
-            if (conduct.Total <= -1)//移除精灵
-            {
-                var sprite = Sprites[conduct.Kind];
-                Sprites.Remove(conduct.Kind);
-                Destroy(sprite.gameObject);
-                return;
-            }
-            //生成精灵
-            var pos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
-            var sp = EffectsPoolingControl.instance.GetPosState(conduct, pos);
-            if (sp == null) return;
-            Sprites.Add(conduct.Kind, sp);
-        }
-
-    }
-
     private Tween FullScreenRouse() =>
         DOTween.Sequence().AppendCallback(() =>
         {
@@ -702,4 +685,11 @@ public class ChessboardManager : MonoBehaviour
             return;
         audioSource.PlayDelayed(delayedTime);
     }
+    private class SpriteObj
+    {
+        public int SpriteType;
+        public EffectStateUi Obj;
+        public int Value;
+    }
+
 }

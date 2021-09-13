@@ -18,7 +18,6 @@ namespace Assets.System.WarModule
         /// </summary>
         //PieceStatus Status { get; }
 
-        //bool IsAlive { get; }
         GameCardType CardType { get; }
         int CardId { get; }
         int Level { get; }
@@ -246,15 +245,12 @@ namespace Assets.System.WarModule
         private int pos;
 
         protected GameCardInfo Info { get; private set; }
-        //public override IChessman Chessman => chessman;
         protected override ChessboardOperator Chessboard => chessboard;
         public override CombatStyle Style => combatStyle;
-        //public override ChessStatus Status => dynamicStatus;
         public override GameCardType CardType => chessman.CardType;
         public override int CardId => chessman.CardId;
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
-
         protected override int GeneralDamage() => Style.Strength;
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)

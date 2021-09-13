@@ -124,19 +124,10 @@ namespace Assets.System.WarModule
         //[JsonIgnore] 
         public bool IsRePos => RePos >= 0;
 
-        public override string ToString()
+        public string IntentText()
         {
             var intentText = string.Empty;
-            var initiatorText = IsChallenger == 0 ? "玩家" : "对方";
             var toText = string.Empty;
-            switch (To)
-            {
-                case -1: toText = "己方";break;
-                case -2: toText = "对方";break;
-                default:
-                    toText = $"单位Id({To})";
-                    break;
-            }
             switch (Intent)
             {
                 case PlayerResource:
@@ -160,11 +151,22 @@ namespace Assets.System.WarModule
                     break;
 
             }
-
+            switch (To)
+            {
+                case -1: toText = "己方";break;
+                case -2: toText = "对方";break;
+                default:
+                    toText = $"单位Id({To})";
+                    break;
+            }
+            return intentText + toText;
+        }
+        public string StanceText()=>IsChallenger == 0 ? "玩家" : "对方";
+        public override string ToString()
+        {
             var result = Result == null ? string.Empty : Result.Type.ToString();
             var conducts = Conducts == null ? string.Empty : Conducts.Length.ToString();
-            return $"活动({InstanceId}):[{initiatorText}]意向[{intentText})].目标[{toText}]: 格斗={conducts} 结果[{result}]";
-
+            return $"({InstanceId}):[{StanceText()}]{IntentText()}: 武技={conducts} 结果[{result}]";
         }
     }
 

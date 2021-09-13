@@ -13,13 +13,6 @@ public class CardAnimator
     static float RangeHeroPreActionFinalize = 0.5f;
     static float yuanChengShakeTime = 0.1f;
 
-    //攻击行动方式0-适用于-主动塔,远程兵
-    public static Tween RangePreAction(FightCardData card)
-    {
-        var obj = card.cardObj;
-        return obj.transform.DOScale(new Vector3(1.15f, 1.15f, 1), RangeHeroPreActionBegin).SetAutoKill(false).OnComplete(() => obj.transform.DOPlayBackwards());
-    }
-
     public static float Move = 0.534f;
     public static float Back = 0.167f;
     public static float forward = 0.2f; //去
@@ -29,10 +22,36 @@ public class CardAnimator
     public static float posFloat = 0;
     public static float oneDisY = 1;
 
+    public static Tween PreActionTween(FightCardData card, FightCardData target)
+    {
+        var tween = DOTween.Sequence();
+        switch (card.ChessmanStyle.Type)
+        {
+            case CombatStyle.Types.None:
+                break;
+            case CombatStyle.Types.Melee:
+                tween.Join(MeleeMoveAnimation(card, target));
+                break;
+            case CombatStyle.Types.Range:
+                tween.Join(RangePreActAnimation(card));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        return tween;
+    }
+
+    //攻击行动方式0-适用于-主动塔,远程兵
+    private static Tween RangePreActAnimation(FightCardData card)
+    {
+        var obj = card.cardObj;
+        return obj.transform.DOScale(new Vector3(1.15f, 1.15f, 1), RangeHeroPreActionBegin).SetAutoKill(false).OnComplete(() => obj.transform.DOPlayBackwards());
+    }
+
     /// <summary>
     /// 近战移动方式
     /// </summary>
-    public static Tween MeleeMoving(FightCardData card, FightCardData target)
+    private static Tween MeleeMoveAnimation(FightCardData card, FightCardData target)
     {
         var ui = card.cardObj;
         var size = GetWorldSize(target.cardObj.transform);
@@ -41,12 +60,23 @@ public class CardAnimator
         var facingPos = new Vector3(targetPos.x, targetPos.y - oneYOffset, targetPos.z);
         return DOTween.Sequence().Append(ui.transform.DOMove(facingPos, Move * forward)).AppendInterval(charge);
     }
-    public static Tween Counter(FightCardData card)
+
+    /// <summary>
+    /// 结束动作(卡牌大小归位)
+    /// </summary>
+    public static Tween FinalizeAnimation(FightCardData card, Vector3 origin)
+    {
+        var sBack = card.cardObj.transform.DOMove(origin, Back);
+        var scaleBack = card.cardObj.transform.DOScale(Vector3.one, Back);
+        return DOTween.Sequence().Join(sBack).Join(scaleBack);
+    }
+
+    public static Tween CounterAnimation(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
         return DOTween.Sequence()
             .Join(StepBackAndHit(card, 0.3f, 0.3f, 0.1f))
-            .OnComplete(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
+            .AppendCallback(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
     }
 
     //退后向前进攻模式
@@ -56,8 +86,8 @@ public class CardAnimator
         var size = GetWorldSize(card.cardObj.transform);
         var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
         var origin = ui.transform.position;
-        return DOTween.Sequence().Append(ui.transform
-            .DOMove(origin + new Vector3(0, oneYOffset * backStepDistance), stepBack * time))
+        return DOTween.Sequence()
+            .Append(ui.transform.DOMove(origin + new Vector3(0, oneYOffset * backStepDistance), stepBack * time))
             .AppendInterval(charge * chargeRate)
             .Append(ui.transform.DOMove(origin, hit * time));
     }
@@ -65,29 +95,40 @@ public class CardAnimator
     /// <summary>
     /// 闪避动作
     /// </summary>
-    public static Tween SideDodge(FightCardData target,float distance = 0.2f,float time = 0.2f)
+    public static Tween SideDodgeAnimation(FightCardData target,float distance = 0.2f,float time = 0.2f)
     {
         var ui = target.cardObj;
         var size = GetWorldSize(target.cardObj.transform);
         var origin = ui.transform.position;
-        return DOTween.Sequence().Append(ui.transform
-                .DOMove(origin + new Vector3(size.x * distance, 0, 0), time))
+        return DOTween.Sequence()
+            .Append(ui.transform.DOMove(origin + new Vector3(size.x * distance, 0, 0), time))
             .Append(ui.transform.DOMove(origin, time * 0.5f));
     }
+    /// <summary>
+    /// 被攻击摇晃动作
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public static Tween SufferShakeAnimation(FightCardData target) =>
+        target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10));
 
     /// <summary>
-    /// 结束动作(卡牌大小归位)
+    /// 文字特效
     /// </summary>
-    public static Tween FinalizeAction(FightCardData card,Vector3 origin)
+    /// <param name="target"></param>
+    /// <param name="iconString"></param>
+    /// <param name="conduct"></param>
+    /// <param name="color"></param>
+    /// <returns></returns>
+    public static Tween NumberEffectTween(FightCardData target, string iconString, CombatConduct conduct,Color color = default)
     {
-        var sBack = card.cardObj.transform.DOMove(origin, Back);
-        var scaleBack = card.cardObj.transform.DOScale(Vector3.one, Back);
-        return DOTween.Sequence().Join(sBack).Join(scaleBack);
-    }
+        var value = conduct.Total;
+        if (color == default)
+            color = CombatConduct.IsPositiveConduct(conduct)
+                ? ColorDataStatic.huiFu_green
+                : ColorDataStatic.name_deepRed;
 
-    public static Tween EffectIconTween(FightCardData target, string iconString, int value, Color color)
-    {
-        var tween = DOTween.Sequence().AppendCallback(() =>
+        return DOTween.Sequence().AppendCallback(() =>
         {
             var effect =
                 EffectsPoolingControl.instance.GetEffectToFight(iconString, 1.5f,
@@ -95,8 +136,6 @@ public class CardAnimator
             effect.GetComponentInChildren<Text>().text = value.ToString();
             effect.GetComponentInChildren<Text>().color = color;
         });
-        if (value < 0) tween.Join(target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10)));
-        return tween;
     }
 
     /// <summary>
@@ -126,7 +165,7 @@ public class CardAnimator
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStatusEffect(FightCardData target, int con = -1)
+    public static Tween UpdateStateIcon(FightCardData target, int con = -1)
     {
         return DOTween.Sequence().OnComplete(() =>
         {
@@ -139,8 +178,8 @@ public class CardAnimator
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStatusEffect(FightCardData target, CardState.Cons con) =>
-        UpdateStatusEffect(target, (int)con);
+    public static Tween UpdateStateIcon(FightCardData target, CardState.Cons con) =>
+        UpdateStateIcon(target, (int)con);
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
@@ -426,8 +465,7 @@ public class CardAnimator
     {
         if (string.IsNullOrWhiteSpace(effectName)) return;
         var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, transform);
-        effectObj.GetComponentsInChildren<Image>()[1].sprite =
-            Resources.Load("Image/battle/" + effectName, typeof(Sprite)) as Sprite;
+        effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[effectName];
     }
 
     private static void GetHTextEffect(int id,Transform transform, Color color)
