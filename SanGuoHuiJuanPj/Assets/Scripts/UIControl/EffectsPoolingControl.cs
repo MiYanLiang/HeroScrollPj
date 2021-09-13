@@ -354,4 +354,9 @@ public class Effect
     public const string LongBow52A = "52A";
     public const string Anchorite53A= "53A";
     public const string Anchorite54A= "54A";
+
+    public const string VTextDodge = "闪避";
+    public const string VTextParry = "格挡";
+    public const string VTextInvincible = "5";
+    public const string VTextShield = "4";
 }

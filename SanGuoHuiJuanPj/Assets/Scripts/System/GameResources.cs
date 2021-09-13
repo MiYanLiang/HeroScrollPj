@@ -41,6 +41,7 @@ public class GameResources
     private const string JiBanHTextPath = "Image/JiBan/name_h";
     private const string BattleEffectPath = "Image/battle";
     private const string CardStateIconPath = "Image/fightStateIcon/";
+    private const string VTextPath = "Image/battle";
     /// <summary>
     /// Key = heroId, Value = sprite
     /// </summary>
@@ -66,6 +67,7 @@ public class GameResources
     public IReadOnlyDictionary<int, Sprite> JiBanVText => jiBanVText;
     public IReadOnlyDictionary<int, Sprite> JiBanHText => jiBanHText;
     public IReadOnlyDictionary<string, Sprite> StateIcon => stateIcon;
+    public IReadOnlyDictionary<string, Sprite> VText => vText;
 
     private bool isInit;
 
@@ -88,6 +90,7 @@ public class GameResources
     private IReadOnlyDictionary<int,Sprite> jiBanHText;
     private IReadOnlyDictionary<int,Sprite> jiBanVText;
     private IReadOnlyDictionary<string, Sprite> stateIcon;
+    private IReadOnlyDictionary<string, Sprite> vText;
 
     public void Init(bool forceReload = false)
     {
@@ -147,6 +150,7 @@ public class GameResources
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
         stateIcon = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(CardStateIconPath).ToDictionary(s => s.name, s => s), nameof(stateIcon));
+        vText = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(VTextPath).ToDictionary(s => s.name, s => s), nameof(vText));
         isInit = true;
     }
 

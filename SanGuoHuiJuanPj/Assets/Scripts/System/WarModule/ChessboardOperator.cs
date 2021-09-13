@@ -142,7 +142,6 @@ namespace Assets.System.WarModule
 
                 InstanceChessmanProcess(GetStatus(op).Pos, op.IsChallenger);
 
-                Log(OperatorText(op.InstanceId));
                 op.MainActivity();
 
                 currentOps.Remove(op);
@@ -206,7 +205,23 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
             ProcessSeed++;
-            Log($"生成{CurrentProcess}");
+            string opText;
+            switch (CurrentProcess.Type)
+            {
+                case ChessProcess.Types.Chessman:
+                    opText = OperatorText(CurrentProcess);
+                    break;
+                case ChessProcess.Types.Chessboard:
+                    opText = "棋盘";
+                    break;
+                case ChessProcess.Types.JiBan:
+                    opText = $"羁绊[{CurrentProcess.Major}]";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            Log($"主进程({CurrentProcess.InstanceId})[{opText}]");
         }
 
         private void CheckIsGameOver()
@@ -334,38 +349,11 @@ namespace Assets.System.WarModule
             ProcessActivityResult(activity);
         }
 
+        private string OperatorText(int instanceId) => OpText(GetOperator(instanceId));
+        private string OperatorText(ChessProcess process) => OpText(Grid.GetChessPos(process.Major, process.Scope == 0).Operator);
 
-        /// <summary>
-        /// 棋子指令，为当前的行动添加上一个行动指令
-        /// </summary>
-        /// <param name="offender"></param>
-        /// <param name="target"></param>
-        /// <param name="intent"></param>
-        /// <param name="conducts"></param>
-        /// <param name="skill">如果是普通攻击，标记0，大于0将会是技能值</param>
-        /// <param name="rePos"></param>
-        /// <returns></returns>
-        //public void AppendOpInnerActivity(ChessOperator offender, IChessPos target, int intent,
-        //    CombatConduct[] conducts, int skill, int rePos = -1)
-        //{
-        //    if (CurrentProcess == null) return;
-        //    if (currentActivity == null)
-        //    {
-        //        ActivityRef = ActivityReference.ChessActivity;
-        //        AppendOpActivity(offender, target, intent, conducts, skill, rePos);
-        //        return;
-        //    }
-        //    var temp = ActivityRef;
-        //    ActivityRef = ActivityReference.Inner;
-        //    var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
-        //        conducts, skill, rePos);
-        //    ActivityRef = temp;
-        //    ProcessActivityResult(activity);
-        //}
-
-        private string OperatorText(int id)
+        private string OpText(IChessOperator op)
         {
-            var op = GetOperator(id);
             var stat = GetStatus(op);
             return $"{op.InstanceId}.{op}[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
         }
@@ -374,12 +362,25 @@ namespace Assets.System.WarModule
         {
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
-            Log($"-->{OperatorText(target.InstanceId)}");
+            LogActivity(activity, target);
             activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
             activity.OffenderStatus = GetStatus(target).Clone();
-            Log(activity.ToString());
+            LogConducts(activity);
             Log(activity.Result.ToString());
+            if (activity.To >= 0 && activity.Result.IsDeath)
+            {
+                var op = GetOperator(activity.To);
+                Log($"{op}败退！");
+            }
+
             UpdateTerrain(GetChessPos(target));
+        }
+
+        private void LogActivity(Activity activity,IChessOperator target) => Log($"活动-->{activity.StanceText()}{activity.IntentText()} {OperatorText(target.InstanceId)}");
+
+        private void LogConducts(Activity activity)
+        {
+            foreach (var conduct in activity.Conducts) Log($"武技--->{conduct}");
         }
 
         /// <summary>

@@ -544,7 +544,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(95, 0);
-        yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -616,7 +616,7 @@ public class FightController : MonoBehaviour
 
         var opponents = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard);
         PlayAudioForSecondClip(94, 0);
-        yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, attackShakeTimeToGo / 2);
         //yield return new WaitForSeconds(attackShakeTimeToGo);
 
         List<FightCardData> newGunMuList = new List<FightCardData>();
@@ -1227,7 +1227,7 @@ public class FightController : MonoBehaviour
         ShowSpellTextObj(attackUnit.cardObj, "17", false);
 
         targetIndex = FightForManager.instance.FindOpponentIndex(attackUnit); //锁定目标卡牌
-        if(ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
+        //if(ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
 
         var nextAttackedUnit = FightForManager.instance.GetCardList(!attackUnit.isPlayerCard)[targetIndex];
@@ -1248,7 +1248,7 @@ public class FightController : MonoBehaviour
         var waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
         ShowSpellTextObj(attackUnit.cardObj, "12", false);
-        if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
+        //if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
         AttackToEffectShow(target, false, Effect.Stimulate12A);
         PlayAudioForSecondClip(12, 0);
@@ -1282,7 +1282,7 @@ public class FightController : MonoBehaviour
             float waitTime = CountAttackTimeSpan(attackUnit);
             yield return new WaitForSeconds(waitTime);
             ShowSpellTextObj(attackUnit.cardObj, "9", false);
-            if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
+            //if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
             yield return new WaitForSeconds(attackShakeTimeToGo);
             AttackToEffectShow(target, false, classType + "A");
             PlayAudioForSecondClip(9, 0);
@@ -1302,7 +1302,7 @@ public class FightController : MonoBehaviour
         float waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
         ShowSpellTextObj(attackUnit.cardObj, "16", false);
-        if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
+        //if(ChessPosIndex!=-1) yield return CardAnimator.MeleeMoving(attackUnit, target);
         yield return new WaitForSeconds(attackShakeTimeToGo);
         AttackToEffectShow(target, false, Effect.Cavalry16A);
         PlayAudioForSecondClip(16, 0);
@@ -1318,7 +1318,7 @@ public class FightController : MonoBehaviour
         //Debug.Log("-----弩兵连射");
         var waitTime = CountAttackTimeSpan(attackUnit);
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
 
         ShowSpellTextObj(attackUnit.cardObj, "19", false);
@@ -1329,7 +1329,7 @@ public class FightController : MonoBehaviour
 
         if (classIndex != 51) yield break;
         yield return new WaitForSeconds(waitTime);
-        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         //yield return new WaitForSeconds(yuanChengShakeTimeToGo / 2);
         AttackToEffectShow(attackedUnit, false, Effect.CrossBow19A);
         PlayAudioForSecondClip(19, 0);
@@ -4429,7 +4429,7 @@ public class FightController : MonoBehaviour
         //近战跟远程选择不同的进攻方式
         if (attackUnit.combatType == 0)
         {
-            if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
+            //if (ChessPosIndex != -1) yield return CardAnimator.MeleeMoving(attackUnit, target);
             yield return new WaitForSeconds(attackShakeTimeToGo);
             //var tg = new MeleeOperation();
             //var melee = new MeleeOperation();
@@ -4447,7 +4447,7 @@ public class FightController : MonoBehaviour
             yield return null;
         }
 
-        yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, yuanChengShakeTimeToGo);
         yield return OnAttackStart(1f, attackUnit, target, true);
         //yield return new WaitForSeconds(yuanChengShakeTime);
 
@@ -4620,7 +4620,7 @@ public class FightController : MonoBehaviour
     //主动塔行动
     IEnumerator InitiativeTowerAction(FightCardData attackUnit, bool playerRound)
     {
-        yield return CardAnimator.RangePreAction(attackUnit);//, towerFightTime0);
+        //yield return CardAnimator.RangePreAction(attackUnit);//, towerFightTime0);
         //yield return new WaitForSeconds(towerFightTime0 / 2);
         FightForManager.instance.ActiveTowerFight(attackUnit, playerRound);
         yield return new WaitForSeconds(towerFightTime1);
