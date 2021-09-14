@@ -155,7 +155,7 @@ namespace Assets.System.WarModule
                     op = new ShenWuOperator();
                     break; //12  神武
                 case 13:
-                    op = new JinWeiOperator();
+                    op = new YuLinOperator();
                     break; //13  禁卫
                 case 14:
                     op = new ChangQiangOperator();
