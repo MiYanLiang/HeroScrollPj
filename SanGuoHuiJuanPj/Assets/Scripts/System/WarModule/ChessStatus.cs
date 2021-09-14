@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using NotImplementedException = System.NotImplementedException;
 
 namespace Assets.System.WarModule
 {
@@ -14,17 +12,26 @@ namespace Assets.System.WarModule
         public static ChessStatus Instance(int hp, int maxHp, int pos, int speed, Dictionary<int, int> states) =>
             new ChessStatus(hp, maxHp, pos, speed, states);
 
-        public static ChessStatus Instance(ChessStatus ps) =>
-            Instance(ps.Hp, ps.MaxHp, ps.Pos, ps.Speed, ps.Buffs.ToDictionary(s => s.Key, s => s.Value));
+        public static ChessStatus Instance(ChessStatus ps) => new ChessStatus
+        {
+            Hp = ps.Hp, MaxHp = ps.MaxHp, Pos = ps.Pos, Speed = ps.Speed,
+            Buffs = ps.Buffs.ToDictionary(s => s.Key, s => s.Value), LastSuffers = ps.LastSuffers.ToList()
+        };
 
         public int Hp { get; private set; }
         public int Pos { get; private set; }
         public int MaxHp { get; private set; }
         public int Speed { get; private set; }
 
-        [JsonIgnore] public bool IsDeath => Hp <= 0;
-        [JsonIgnore] public float HpRate => 1f * Hp / MaxHp;
+        //[JsonIgnore] 
+        public bool IsDeath => Hp <= 0;
+        //[JsonIgnore] 
+        public float HpRate => 1f * Hp / MaxHp;
 
+        private ChessStatus()
+        {
+            
+        }
         private ChessStatus(int hp, int maxHp, int pos,int speed, Dictionary<int, int> buffs)
         {
             Hp = hp;

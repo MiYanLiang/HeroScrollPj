@@ -120,7 +120,7 @@ public class CardAnimator
     /// <param name="conduct"></param>
     /// <param name="color"></param>
     /// <returns></returns>
-    public static Tween NumberEffectTween(FightCardData target, string iconString, CombatConduct conduct,Color color = default)
+    public static Tween NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
     {
         var value = conduct.Total;
         if (color == default)
@@ -131,7 +131,7 @@ public class CardAnimator
         return DOTween.Sequence().AppendCallback(() =>
         {
             var effect =
-                EffectsPoolingControl.instance.GetEffectToFight(iconString, 1.5f,
+                EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
                     target.cardObj.transform);
             effect.GetComponentInChildren<Text>().text = value.ToString();
             effect.GetComponentInChildren<Text>().color = color;

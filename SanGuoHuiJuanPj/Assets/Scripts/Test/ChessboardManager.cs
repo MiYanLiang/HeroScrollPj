@@ -8,7 +8,6 @@ using Assets.System.WarModule;
 using CorrelateLib;
 using DG.Tweening;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 public class ChessboardManager : MonoBehaviour
 {
@@ -317,13 +316,15 @@ public class ChessboardManager : MonoBehaviour
                     //直接演示上一个演示动作
                     yield return MajorActivity(majorCard, chessboardTween, major);
                     //并且执行一个反击动作
-                    yield return CardAnimator.CounterAnimation(op)
-                        .OnComplete(() => PlaySoundEffect(activity, op.ChessmanStyle, target))
+                    yield return DOTween.Sequence().Join(CardAnimator.CounterAnimation(op))
+                        .AppendCallback(() => PlaySoundEffect(activity, op.ChessmanStyle, target))
+                        .Join(target.ChessmanStyle.RespondTween(activity, target, string.Empty))
                         .WaitForCompletion();
                     //重新组织新活动演示链
                     major = null;
                 }
 
+                if (major == null) continue;
                 //主要活动
                 major.Join(op.ChessmanStyle.OffensiveTween(activity, op, target, Chessboard.transform))
                     .Join(target.ChessmanStyle.RespondTween(activity, target,

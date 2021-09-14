@@ -8,7 +8,7 @@ namespace Assets.System.WarModule
     public class BuffStatus
     {
         public Dictionary<int, int> Buffs { get; set; } = new Dictionary<int, int>();
-        [JsonIgnore] public List<int> LastSuffers { get; } = new List<int>();
+        public List<int> LastSuffers { get; set; } = new List<int>();
         public int GetBuff(int buffId) => Buffs.ContainsKey(buffId) ? Buffs[buffId] : 0;
         public int GetBuff(CardState.Cons buff) => GetBuff((int) buff);
         public void DepleteBuff(CardState.Cons buff,int value) => DepleteBuff((int) buff,value);

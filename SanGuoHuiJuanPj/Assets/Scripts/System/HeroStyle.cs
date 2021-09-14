@@ -109,11 +109,11 @@ public abstract class CardStyle : ChessmanStyle
                     {
                         case CombatConduct.DamageKind:
                         case CombatConduct.KillingKind:
-                            tween.Join(CardAnimator.NumberEffectTween(target, Effect.DropBlood, conduct))
+                            tween.Join(CardAnimator.NumberEffectTween(target, conduct))
                                 .Join(CardAnimator.SufferShakeAnimation(target));
                             break;
                         case CombatConduct.HealKind:
-                            tween.Join(CardAnimator.NumberEffectTween(target, effectId, conduct));
+                            tween.Join(CardAnimator.NumberEffectTween(target, conduct));
                             break;
                     }
                     break;
@@ -129,8 +129,7 @@ public abstract class CardStyle : ChessmanStyle
                     tween.Join(CardAnimator.VTextEffect(Effect.VTextInvincible, target.cardObj.transform));
                     break;
                 case ActivityResult.Types.EaseShield:
-                    tween.Join(CardAnimator.NumberEffectTween(target, Effect.DropBlood, conduct,
-                            ColorDataStatic.name_gray))
+                    tween.Join(CardAnimator.NumberEffectTween(target, conduct, ColorDataStatic.name_gray))
                         .Join(CardAnimator.UpdateStateIcon(target, CardState.Cons.EaseShield))
                         .Join(CardAnimator.SufferShakeAnimation(target));
                     break;
@@ -236,6 +235,7 @@ public class HeroStyle : CardStyle
         return Military.ToString();
     }
 
+    //武将特效
     public override string GetMilitarySparkId(Activity activity)
     {
         if (activity.Skill == 0) return Effect.Basic0A;
@@ -243,6 +243,7 @@ public class HeroStyle : CardStyle
         switch (Military)
         {
             case 3: value = Effect.FeiJia3A; break; // "3A";飞甲
+            case 1: //近战
             case 4: value = Effect.Shield4A; break; // "4A";大盾
             case 6: value = Effect.SuckBlood6A; break; // "6A";虎卫
             case 7: value = Effect.Blademail7A; break; // "7A";
