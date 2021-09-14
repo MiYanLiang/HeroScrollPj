@@ -1027,7 +1027,9 @@ public class WarsUIManager : MonoBehaviour
         string flagShort;
         if (py.Character != null && py.Character.IsValidCharacter() && !string.IsNullOrWhiteSpace(py.Character.Name))
             flagShort = py.Character.Name.First().ToString();
-        else flagShort = DataTable.PlayerInitialConfig[py.pyData.ForceId].Force;
+        else if(DataTable.PlayerInitialConfig.ContainsKey(py.pyData.ForceId)) 
+            flagShort =  DataTable.PlayerInitialConfig[py.pyData.ForceId].Force;
+        else flagShort = "玩";
         infoUis.Short.text = flagShort;
         UpdateInfoUis();
         UpdateLevelInfo();
