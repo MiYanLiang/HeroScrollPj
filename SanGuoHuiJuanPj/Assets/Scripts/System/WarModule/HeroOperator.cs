@@ -1234,10 +1234,10 @@ namespace Assets.System.WarModule
             var penetrates = ExtendedTargets(target);
             var damage = InstanceHeroGenericDamage();
             var penetrateDmg = GetExtendedDamage(damage);
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), 0, 1);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), actId: 0, skill: 1);
             foreach (var penetrate in penetrates)
             {
-                Chessboard.AppendOpActivity(this, penetrate, Activity.Offensive, Helper.Singular(penetrateDmg), 0, -1);
+                Chessboard.AppendOpActivity(this, penetrate, Activity.Offensive, Helper.Singular(penetrateDmg), actId: 0, skill: -1);
             }
         }
     }

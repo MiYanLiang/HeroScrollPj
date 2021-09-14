@@ -148,15 +148,17 @@ public abstract class CardStyle : ChessmanStyle
             foreach (var conduct in activity.Conducts)
             {
                 GameObject effect;
-                if (activity.Skill == 0)
+                switch (activity.Skill)
                 {
-                    effect = EffectsPoolingControl.instance.GetEffect(Effect.Basic0A, target.cardObj.transform,
-                        0.5f);
-                    effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
-                }
-                else
-                {
-                    effect = EffectsPoolingControl.instance.GetEffect(effectId, target.cardObj.transform, 1f);
+                    case 0:
+                        effect = EffectsPoolingControl.instance.GetEffect(Effect.Basic0A, target.cardObj.transform,
+                            0.5f);
+                        effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
+                        break;
+                    default:
+                        effect = EffectsPoolingControl.instance.GetEffect(effectId, target.cardObj.transform, 1f);
+                        break;
+                    case -1: continue;//-1 = 没有特效
                 }
 
                 //一些效果需要反向显示
