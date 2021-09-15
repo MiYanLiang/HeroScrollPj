@@ -23,13 +23,13 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Offensive = 0;
         /// <summary>
-        /// 同阵营行动
-        /// </summary>
-        public const int Friendly = 1;
-        /// <summary>
         /// 
         /// </summary>
-        public const int Counter = 2;
+        public const int Counter = 1;
+        /// <summary>
+        /// 同阵营行动
+        /// </summary>
+        public const int Friendly = 2;
         /// <summary>
         /// 对自己的行动
         /// </summary>
@@ -39,9 +39,13 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Sprite = 5;
         /// <summary>
+        /// 反伤
+        /// </summary>
+        public const int Reflect = 6;
+        /// <summary>
         /// 局外影响(棋盘)，无法闪避
         /// </summary>
-        public const int OuterScope = 6;
+        public const int OuterScope = 7;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -148,6 +152,9 @@ namespace Assets.System.WarModule
                 case Sprite:
                     intentText = "精灵";
                     toText = $"棋格[{To}]";
+                    break;
+                case Reflect:
+                    intentText = "反伤";
                     break;
 
             }

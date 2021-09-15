@@ -31,6 +31,8 @@ namespace Assets.System.WarModule
                 new Imprisoned(this), // 8 禁锢
                 new CowardlyBuff(this), //9 怯战
                 new DisarmedBuff(this), //16 卸甲
+                new NeiZhuBuff(this),//17 内助
+                new ShenZhuBuff(this),//18 神助
                 new ExtendedShieldBuff(this), // 19 缓冲盾
             };
             JiBan = GetJiBan();

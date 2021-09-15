@@ -88,6 +88,7 @@ namespace Assets.System.WarModule
         }
 
         public ChessStatus GetStatus(IChessOperator op) => GetStatus(GetOperator(op.InstanceId));
+
         public ChessStatus GetStatus(ChessOperator op)
         {
             if (!StatusMap.ContainsKey(op))
@@ -154,6 +155,7 @@ namespace Assets.System.WarModule
                     PosOperator(deathOp, -1);
                 }
 
+                LogProcess(CurrentProcess);
             } while (currentOps.Count > 0);
             currentRound.Processes = currentProcesses.ToArray();
             if (IsGameOver)
@@ -170,6 +172,35 @@ namespace Assets.System.WarModule
             InvokeRoundEndTriggers();
 
             return currentRound;
+        }
+
+        private void LogProcess(ChessProcess process)
+        {
+            string opText;
+            switch (CurrentProcess.Type)
+            {
+                case ChessProcess.Types.Chessman:
+                    opText = OperatorText(CurrentProcess);
+                    break;
+                case ChessProcess.Types.Chessboard:
+                    opText = "棋盘";
+                    break;
+                case ChessProcess.Types.JiBan:
+                    opText = $"羁绊[{CurrentProcess.Major}]";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            Log($"进程({CurrentProcess.InstanceId})[{opText}]");
+            foreach (var map in process.ActMap)
+            {
+                foreach (var activity in map.Value)
+                {
+                    LogActivity(activity);
+                    LogConducts(activity);
+                    Log(activity.Result.ToString());
+                }
+            }
         }
 
         private void RefreshChessPosses()
@@ -205,23 +236,6 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
             ProcessSeed++;
-            string opText;
-            switch (CurrentProcess.Type)
-            {
-                case ChessProcess.Types.Chessman:
-                    opText = OperatorText(CurrentProcess);
-                    break;
-                case ChessProcess.Types.Chessboard:
-                    opText = "棋盘";
-                    break;
-                case ChessProcess.Types.JiBan:
-                    opText = $"羁绊[{CurrentProcess.Major}]";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            Log($"主进程({CurrentProcess.InstanceId})[{opText}]");
         }
 
         private void CheckIsGameOver()
@@ -325,9 +339,7 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
             //棋盘没用字典分类活动顺序，所以不用声明actId
-            if (CurrentProcess == null ||
-                CurrentProcess.Type != ChessProcess.Types.Chessboard ||
-                CurrentProcess.Scope != GetScope(fromChallenger))
+            if (CurrentProcess == null || CurrentProcess.Type != ChessProcess.Types.Chessman)
                 InstanceProcess(ChessProcess.Types.Chessboard, major, fromChallenger);
             var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
             AddToCurrentProcess(activity, 0);
@@ -354,6 +366,7 @@ namespace Assets.System.WarModule
 
         private string OpText(IChessOperator op)
         {
+            if (op == null) return string.Empty;
             var stat = GetStatus(op);
             return $"{op.InstanceId}.{op}[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
         }
@@ -362,11 +375,8 @@ namespace Assets.System.WarModule
         {
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
-            LogActivity(activity, target);
             activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
             activity.OffenderStatus = GetStatus(target).Clone();
-            LogConducts(activity);
-            Log(activity.Result.ToString());
             if (activity.To >= 0 && activity.Result.IsDeath)
             {
                 var op = GetOperator(activity.To);
@@ -376,7 +386,8 @@ namespace Assets.System.WarModule
             UpdateTerrain(GetChessPos(target));
         }
 
-        private void LogActivity(Activity activity,IChessOperator target) => Log($"活动-->{activity.StanceText()}{activity.IntentText()} {OperatorText(target.InstanceId)}");
+        private void LogActivity(Activity activity) =>
+            Log($"活动-->{activity.StanceText()}@{activity.IntentText()} 目标：{OperatorText(activity.To)}");
 
         private void LogConducts(Activity activity)
         {
@@ -682,14 +693,9 @@ namespace Assets.System.WarModule
             float armor = Damage.GetKind(conduct) == Damage.Kinds.Physical ? op.GetPhysicArmor() : op.GetMagicArmor();
             //加护甲
             armor += GetCondition(op, CardState.Cons.DefendUp);
-            //卸甲状态
-            if (GetBuffOperator(CardState.Cons.Disarmed, op).Any() || 
-                GetCondition(op, CardState.Cons.Disarmed) > 0)
-                armor *= 0.5f;
-            conduct.TimesRate(1 - armor * 0.01f);
-            //伤害转化buff 例如：流血
-            foreach (var bo in GetBuffOperator(b => b.IsDamageConvertTrigger(op)))
-                bo.OnDamageConvertTrigger(op, conduct);
+            //伤害或护甲转化buff 例如：流血
+            foreach (var bo in GetBuffOperator(b => b.IsArmorConductTrigger))
+                bo.OnArmorConduct(armor, op, conduct);
         }
 
         public bool OnMainProcessAvailable(ChessOperator op)
@@ -765,7 +771,7 @@ namespace Assets.System.WarModule
             if (op.CardType == GameCardType.Hero)
                 ratio += DataTable.Hero[op.CardId].RouseRatio;
             foreach (var bo in GetBuffOperator(b=>b.IsRouseRatioTrigger)) 
-                ratio += bo.OnRouseRatio(op);
+                ratio += bo.OnRouseRatioAddOn(op);
             return IsRandomPass(ratio);
         }
 
@@ -775,7 +781,7 @@ namespace Assets.System.WarModule
             if (op.CardType == GameCardType.Hero)
                 ratio += DataTable.Hero[op.CardId].CriticalRatio;
             foreach (var bo in GetBuffOperator(b => b.IsCriticalRatioTrigger))
-                ratio += bo.OnCriticalRatio(op);
+                ratio += bo.OnCriticalRatioAddOn(op);
             return IsRandomPass(ratio);
         }
 

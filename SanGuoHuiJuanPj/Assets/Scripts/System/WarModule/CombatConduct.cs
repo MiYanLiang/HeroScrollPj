@@ -9,7 +9,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 战斗执行，描述棋子在战斗中对某一个目标执行的一个战斗行为
     /// </summary>
-    [Serializable]
+    //[Serializable]
     public class CombatConduct
     {
         #region Damages 伤害类型
@@ -109,7 +109,7 @@ namespace Assets.System.WarModule
             Instance(value, 0, 0, resourceId, PlayerDegreeKind);
         public static CombatConduct ZeroDamage => _zeroDamage;
 
-        public void TimesRate(float rate)
+        public void Multiply(float rate)
         {
             Basic *= rate;
             Critical *= rate;

@@ -122,13 +122,13 @@ namespace Assets.System.WarModule
         /// 跟据会心率获取会心伤害
         /// </summary>
         /// <returns></returns>
-        private float RouseDamage() => GetStrength - CombatInfo.GetRouseDamage(GetStrength);
+        private float RouseDamage() => CombatInfo.GetRouseDamage(GetStrength) - GetStrength;
 
         /// <summary>
         /// 根据暴击率获取暴击伤害
         /// </summary>
         /// <returns></returns>
-        private float CriticalDamage() => GetStrength - CombatInfo.GetCriticalDamage(GetStrength);
+        private float CriticalDamage() => CombatInfo.GetCriticalDamage(GetStrength) - GetStrength;
 
         public override int GetDodgeRate() => CombatInfo.DodgeRatio;
 
@@ -485,7 +485,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetFriendly(this,
                     p => p.IsPostedAlive &&
                          p.Operator.CardType == GameCardType.Hero)
-                .FirstOrDefault();
+                .RandomPick();
             if (target == null)
             {
                 base.MilitaryPerforms(0);
@@ -1426,7 +1426,7 @@ namespace Assets.System.WarModule
             if (offender.IsRangeHero) return;
             var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
                              .Sum(c => c.Total) * ReflectRate();
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.OuterScope,
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Reflect,
                 Helper.Singular(CombatConduct.InstanceDamage(damage)), -1, 1);
         }
     }
@@ -1480,7 +1480,10 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                default: return 20;
+                case 5: return 30;
+                case 81: return 50;
+                case 82: return 70;
+                default: throw MilitaryNotValidError(this);
             }
         }
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
@@ -1489,14 +1492,6 @@ namespace Assets.System.WarModule
                 Chessboard.IsRandomPass(InvincibleRate()))
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                     Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible)), 0, 1);
-        }
-
-        public override void OnRoundEnd()
-        {
-            //解除无敌状态
-            if (Chessboard.GetCondition(this, CardState.Cons.Invincible) > 0)
-                Chessboard.InstanceChessboardActivity(InstanceId, IsChallenger, this, Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Invincible, -1)));
         }
     }
 

@@ -18,10 +18,9 @@ namespace Assets.System.WarModule
         protected ChessboardOperator Chessboard { get; }
 
         public virtual bool IsRoundStartTrigger { get; protected set; }
-        public virtual bool IsTriggerRoundStart(ChessOperator op) => false;
 
         /// <summary>
-        /// 配合标记<see cref="IsRoundStartTrigger"/>并在<see cref="IsTriggerRoundStart"/>写出判断后才会在这里执行的方法。
+        /// 配合标记<see cref="IsRoundStartTrigger"/>
         /// 主要是回合开始的执行方法
         /// </summary>
         /// <param name="op"></param>
@@ -31,6 +30,14 @@ namespace Assets.System.WarModule
 
         public virtual bool IsRoundEndTrigger { get; protected set; }
 
+        /// <summary>
+        /// 配合标记<see cref="IsRoundEndTrigger"/>在这里执行的方法。
+        /// 主要是回合结束的执行方法
+        /// </summary>
+        /// <param name="op"></param>
+        public virtual void RoundEnd(ChessOperator op)
+        {
+        }
         public virtual bool IsHeroPerformTrigger { get; protected set; }
         /// <summary>
         /// 配合标记<see cref="IsHeroPerformTrigger"/>触发，并判断给出是否禁用武将技
@@ -39,25 +46,16 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual bool IsDisableHeroPerform(HeroOperator op) => false;
 
-        public virtual bool IsTriggerRoundEnd(ChessOperator op) => false;
-        /// <summary>
-        /// 配合标记<see cref="IsRoundEndTrigger"/>并在<see cref="IsTriggerRoundEnd"/>写出判断后才会在这里执行的方法。
-        /// 主要是回合结束的执行方法
-        /// </summary>
-        /// <param name="op"></param>
-        public virtual void RoundEnd(ChessOperator op)
-        {
-        }
-
-        public virtual bool IsDamageConvertTrigger(ChessOperator op) => false;
+        public virtual bool IsArmorConductTrigger => false;
 
         /// <summary>
-        /// 配合<see cref="IsDamageConvertTrigger"/>改变伤害
+        /// 配合<see cref="IsArmorConductTrigger"/>改变伤害
         /// </summary>
+        /// <param name="armor"></param>
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public virtual void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct) {}
+        public virtual void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct) {}
 
         public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
         /// <summary>
@@ -76,7 +74,7 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="op"></param>
         /// <returns></returns>
-        public virtual int OnRouseRatio(ChessOperator op) => 0;
+        public virtual int OnRouseRatioAddOn(ChessOperator op) => 0;
 
         public virtual bool IsCriticalRatioTrigger { get; set; }
         /// <summary>
@@ -84,7 +82,7 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="op"></param>
         /// <returns></returns>
-        public virtual int OnCriticalRatio(ChessOperator op) => 0;
+        public virtual int OnCriticalRatioAddOn(ChessOperator op) => 0;
 
         /// <summary>
         /// 是否禁止主行动,配合<see cref="IsMainActionTrigger"/>触发
@@ -115,7 +113,14 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         /// <returns></returns>
         public virtual int OnBuffConvert(ChessOperator op, int value) => value;
-
+        /// <summary>
+        /// 根据攻击元素改变免伤值
+        /// </summary>
+        /// <param name="op"></param>
+        /// <param name="element"></param>
+        /// <param name="armor"></param>
+        /// <returns></returns>
+        public virtual int OnConvertArmor(ChessOperator op,int element, int armor) => armor;
         #region Helper
 
         protected bool IsBuffActive(ChessOperator op) => Chessboard.GetCondition(op, Buff) > 0;
@@ -133,7 +138,6 @@ namespace Assets.System.WarModule
         //protected void IncreaseBuff(ChessOperator op, int value = 1) => op.Status.AddBuff(Buff, value);
         #endregion
 
-
         public virtual bool IsHealingTrigger(ChessOperator op) => false;
         /// <summary>
         /// 配合<see cref="IsHealingTrigger"/>实现改变治疗值
@@ -143,8 +147,23 @@ namespace Assets.System.WarModule
         public virtual int OnHealingConvert(int value) => value;
 
     }
+
+    public abstract class RoundEndDepleteSelfBuff:BuffOperator
+    {
+        protected RoundEndDepleteSelfBuff(ChessboardOperator chessboard) : base(chessboard)
+        {
+        }
+
+        public override bool IsRoundEndTrigger => true;
+
+        public override void RoundEnd(ChessOperator op)
+        {
+            if (IsBuffActive(op))
+                SelfConduct(op, Helper.Singular(DepleteBuff()));
+        }
+    }
     //1 眩晕
-    public class StunnedBuff : BuffOperator
+    public class StunnedBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Stunned;
         public StunnedBuff(ChessboardOperator chessboard) : base(chessboard)
@@ -157,51 +176,36 @@ namespace Assets.System.WarModule
 
         public override bool IsDisableCounter(ChessOperator op) => IsBuffActive(op);
 
-        public override bool IsRoundStartTrigger => true;
-        public override void RoundStart(ChessOperator op)
-        {
-            if (IsBuffActive(op)) SelfConduct(op, Helper.Singular(DepleteBuff()));
-        }
     }
     //2 护盾
     public class ShieldBuff : BuffOperator
     {
         public override CardState.Cons Buff => CardState.Cons.Shield;
 
-        public override bool IsDamageConvertTrigger(ChessOperator op) => IsBuffActive(op);
+        public override bool IsArmorConductTrigger => true;
 
         public ShieldBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
 
-        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
         {
-            if (Damage.GetKind(conduct) == Damage.Kinds.Magic)
-                return;
-            SelfConduct(op,Helper.Singular(DepleteBuff()));
+            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
+            SelfConduct(op, Helper.Singular(DepleteBuff()));
             conduct.SetZero();
         }
     }
     //3 无敌
-    public class InvincibleBuff : BuffOperator
+    public class InvincibleBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Invincible;
         
         public InvincibleBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
-
-        public override bool IsRoundStartTrigger => true;
-
-        //由于Chessboard上为无敌特别处理略过伤害，所以这里仅写触发
-        public override void RoundStart(ChessOperator op)
-        {
-            if (IsBuffActive(op))
-                SelfConduct(op,Helper.Singular(DepleteBuff()));
-        }
     }
     //4 流血
-    public class BleedBuff : BuffOperator
+    public class BleedBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Bleed;
 
@@ -209,29 +213,21 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsRoundEndTrigger => true;
-        public override void RoundEnd(ChessOperator op)
-        {
-            if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
-        }
-
-        public override bool IsDamageConvertTrigger(ChessOperator op) => IsBuffActive(op);
-        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override bool IsArmorConductTrigger => true;
+        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
-            conduct.TimesRate(DataTable.GetGameValue(117) * 0.01f);
+            conduct.Multiply(DataTable.GetGameValue(117) * 0.01f);
         }
 
     }
     //5 毒
-    public class PoisonBuff : BuffOperator
+    public class PoisonBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Poison;
         public PoisonBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
-
         public override bool IsRoundEndTrigger => true;
         public override void RoundEnd(ChessOperator op)
         {
@@ -246,7 +242,7 @@ namespace Assets.System.WarModule
 
     }
     //6 灼烧
-    public class BurnBuff : BuffOperator
+    public class BurnBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Burn;
         public BurnBuff(ChessboardOperator chessboard) : base(chessboard)
@@ -268,7 +264,7 @@ namespace Assets.System.WarModule
     //7 战意-不属于buff控制器可空类型
 
     //8 禁锢
-    public class Imprisoned : BuffOperator
+    public class Imprisoned : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Imprisoned;
         public Imprisoned(ChessboardOperator chessboard) : base(chessboard)
@@ -277,30 +273,32 @@ namespace Assets.System.WarModule
 
         public override bool IsHeroPerformTrigger => true;
         public override bool IsDisableHeroPerform(HeroOperator op) => IsBuffActive(op);
-        public override bool IsRoundEndTrigger => true;
-        public override void RoundEnd(ChessOperator op)
-        {
-            if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
-        }
     }
 
     //9 怯战
-    public class CowardlyBuff : BuffOperator
+    public class CowardlyBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Cowardly;
         public CowardlyBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+        public override bool IsCriticalRatioTrigger => true;
 
-        public override void RoundEnd(ChessOperator op)
+        public override int OnCriticalRatioAddOn(ChessOperator op)
         {
-            if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
+            if (IsBuffActive(op)) return -100;
+            return 0;
+        }
+
+        public override bool IsRouseRatioTrigger => true;
+        public override int OnRouseRatioAddOn(ChessOperator op)
+        {
+            if (IsBuffActive(op)) return -100;
+            return 0;
         }
     }
     //16 卸甲
-    public class DisarmedBuff : BuffOperator
+    public class DisarmedBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Disarmed;
 
@@ -308,11 +306,45 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsRoundEndTrigger => true;
-        public override void RoundEnd(ChessOperator op)
+        public override bool IsArmorConductTrigger=> true;
+        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
         {
-            if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
+            if (IsBuffActive(op) && 
+                Damage.GetKind(conduct) == Damage.Kinds.Physical) 
+                conduct.Multiply(0.5f * armor);
+        }
+    }
+
+    //17 内助
+    public class NeiZhuBuff:BuffOperator
+    {
+        public override CardState.Cons Buff => CardState.Cons.Neizhu;
+        public NeiZhuBuff(ChessboardOperator chessboard) : base(chessboard)
+        {
+        }
+
+        public override bool IsCriticalRatioTrigger => true;
+        public override int OnCriticalRatioAddOn(ChessOperator op)
+        {
+            if (!IsBuffActive(op)) return 0;
+            SelfConduct(op,Helper.Singular(DepleteBuff()));
+            return 100;
+        }
+    }
+    //18 神助
+    public class ShenZhuBuff : BuffOperator
+    {
+        public override CardState.Cons Buff => CardState.Cons.ShenZhu;
+        public ShenZhuBuff(ChessboardOperator chessboard) : base(chessboard)
+        {
+        }
+
+        public override bool IsRouseRatioTrigger => true;
+        public override int OnRouseRatioAddOn(ChessOperator op)
+        {
+            if (!IsBuffActive(op)) return 0;
+            SelfConduct(op, Helper.Singular(DepleteBuff()));
+            return 100;
         }
     }
 
@@ -324,14 +356,15 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsDamageConvertTrigger(ChessOperator op) => IsBuffActive(op);
+        public override bool IsArmorConductTrigger=> true;
 
-        public override void OnDamageConvertTrigger(ChessOperator op, CombatConduct conduct)
+        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
         {
+            if (!IsBuffActive(op)) return;
             var status = Chessboard.GetStatus(op);
             var balance = status.EaseShieldOffset(conduct.Total);
-            conduct.SetBasic(balance);
+            conduct.SetBasic(balance);//缓冲盾会把会心或暴击变成一般攻击
         }
-
     }
+
 }

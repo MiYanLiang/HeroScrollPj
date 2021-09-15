@@ -74,9 +74,7 @@ public class CardAnimator
     public static Tween CounterAnimation(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
-        return DOTween.Sequence()
-            .Join(StepBackAndHit(card, 0.3f, 0.3f, 0.1f))
-            .AppendCallback(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
+        return StepBackAndHit(card, 0.3f, 0.3f, 0.1f).OnComplete(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
     }
 
     //退后向前进攻模式
@@ -148,15 +146,13 @@ public class CardAnimator
     /// <summary>
     /// 棋盘震动
     /// </summary>
-    public static Tween ChessboardConduct(Activity activity,Chessboard chessboard)
+    public static Tween ChessboardConduct(Chessboard chessboard)
     {
         var transform = chessboard.transform;
         var origin = transform.position;
-        if (activity.Conducts.Any(c=>c.Kind == CombatConduct.DamageKind && (c.Rouse>0|c.Critical>0)))
-        {
-            return transform.DOShakePosition(0.25f, chessboardShakeIntensity);
-        }
-        return transform.DOMove(origin, 0);
+        return DOTween.Sequence().Join(transform.DOShakePosition(0.25f, chessboardShakeIntensity))
+            .AppendInterval(0.3f)
+            .OnComplete(() => transform.DOMove(origin, 0));
     }
 
     private static Vector2 GetWorldSize(Transform transform) =>

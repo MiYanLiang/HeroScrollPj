@@ -1057,7 +1057,11 @@ MonoBehaviour:
     Type: 522
     Level: 10
   - Id: 59
-    Pos: 1
+    Pos: 6
+    Type: 0
+    Level: 1
+  - Id: 20
+    Pos: 3
     Type: 0
     Level: 1
 --- !u!4 &413234022
