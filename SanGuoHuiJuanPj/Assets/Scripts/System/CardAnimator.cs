@@ -120,7 +120,7 @@ public class CardAnimator
     /// <returns></returns>
     public static Tween NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
     {
-        var value = conduct.Total;
+        var value = (int)conduct.Total;
         if (color == default)
             color = CombatConduct.IsPositiveConduct(conduct)
                 ? ColorDataStatic.huiFu_green
