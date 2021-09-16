@@ -396,7 +396,7 @@ public class CardAnimator
                         case CardState.Cons.Disarmed:
                         case CardState.Cons.Shield:
                         case CardState.Cons.Invincible:
-                        case CardState.Cons.Stimulate:
+                        case CardState.Cons.BattleSoul:
                         case CardState.Cons.StrengthUp:
                         case CardState.Cons.DodgeUp:
                         case CardState.Cons.CriticalUp:

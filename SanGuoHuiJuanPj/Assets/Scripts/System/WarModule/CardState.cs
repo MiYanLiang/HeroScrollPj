@@ -47,7 +47,7 @@ namespace Assets.System.WarModule
                     return StringNameStatic.StateIconPath_poisoned;
                 case Cons.Burn:
                     return StringNameStatic.StateIconPath_burned;
-                case Cons.Stimulate:
+                case Cons.BattleSoul:
                     return StringNameStatic.StateIconPath_willFight;
                 case Cons.Imprisoned:
                     return StringNameStatic.StateIconPath_imprisoned;
@@ -91,7 +91,7 @@ namespace Assets.System.WarModule
                 case Cons.Stunned:
                 case Cons.Shield:
                 case Cons.Invincible:
-                case Cons.Stimulate:
+                case Cons.BattleSoul:
                 case Cons.Imprisoned:
                 case Cons.Cowardly:
                 case Cons.StrengthUp:
@@ -137,9 +137,9 @@ namespace Assets.System.WarModule
             /// </summary>
             Burn = 6,
             /// <summary>
-            /// 战意
+            /// 武魂
             /// </summary>
-            Stimulate = 7,
+            BattleSoul = 7,
             /// <summary>
             /// 禁锢
             /// </summary>
@@ -191,7 +191,11 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 迷雾
             /// </summary>
-            Forge = 20
+            Forge = 20,
+            /// <summary>
+            /// 战意
+            /// </summary>
+            Stimulate = 21
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -230,7 +234,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 战意层数
         /// </summary>
-        [JsonIgnore] public int Stimulate { get => data[7]; set => data[7] = value; }
+        [JsonIgnore] public int Stimulate { get => data[21]; set => data[21] = value; }
 
         /// <summary>
         /// 禁锢层数
@@ -297,6 +301,7 @@ namespace Assets.System.WarModule
         /// </summary>
         [JsonIgnore] public int MiWuZhenAddOn { get => data[20]; set => data[20] = value; }
 
+        public int BattleSoul { get => data[7]; set => data[7] = value; }
         public void AddState(Cons con,int value)
         {
             switch (con)
@@ -319,8 +324,8 @@ namespace Assets.System.WarModule
                 case Cons.Burn:
                     Burn += MinZeroAlign(Burn);
                     break;
-                case Cons.Stimulate:
-                    Stimulate += MinZeroAlign(Burn);
+                case Cons.BattleSoul:
+                    BattleSoul += MinZeroAlign(BattleSoul);
                     break;
                 case Cons.Imprisoned:
                     Imprisoned += MinZeroAlign(Imprisoned);
@@ -361,11 +366,16 @@ namespace Assets.System.WarModule
                 case Cons.Forge:
                     MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn);
                     break;
+                case Cons.Stimulate:
+                    Stimulate += MinZeroAlign(Stimulate);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }
             int MinZeroAlign(int ori) => value < 0 && ori < value ? -ori : value; //最多是清0
         }
+
+        
 
         public void ClearState(Cons con)
         {
@@ -389,8 +399,8 @@ namespace Assets.System.WarModule
                 case Cons.Burn:
                     Burn = 0;
                     break;
-                case Cons.Stimulate:
-                    Stimulate = 0;
+                case Cons.BattleSoul:
+                    BattleSoul = 0;
                     break;
                 case Cons.Imprisoned:
                     Imprisoned = 0;
@@ -430,6 +440,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Forge:
                     MiWuZhenAddOn = 0;
+                    break;
+                case Cons.Stimulate:
+                    Stimulate = 0;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);

@@ -29,8 +29,10 @@ namespace Assets.System.WarModule
                 Buffs.Add(buffId, 0);
             Buffs[buffId] += value;
             //防护盾最大值
-            if (buffId == (int) CardState.Cons.EaseShield)
-                Buffs[buffId] = Math.Max(Buffs[buffId] + value, DataTable.GetGameValue(119));
+            if (buffId == (int)CardState.Cons.EaseShield)
+                Buffs[buffId] = Math.Min(Buffs[buffId] + value, DataTable.GetGameValue(119));
+            if (buffId == (int)CardState.Cons.BattleSoul)
+                Buffs[buffId] = Math.Min(Buffs[buffId] + value, 20);//战意最大值10
 
             //去掉负数或是0的状态
             RefreshBuffs();

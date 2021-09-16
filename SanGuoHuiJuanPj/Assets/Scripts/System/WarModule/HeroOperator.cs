@@ -295,12 +295,18 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HuangJinOperator : HeroOperator
     {
-        protected virtual int DamageRate => DataTable.GetGameValue(146);
-
+        private const int Max = 10;
+        private bool IsSameType(int militaryId) =>
+            militaryId == 65 ||
+            militaryId == 127 ||
+            militaryId == 128;
+        protected virtual int DamageRate => 20;
+        
         public override int GetStrength => (int)(Chessboard.GetFriendly(this,
                 p => p.IsPostedAlive &&
                      p.Operator.CardType == GameCardType.Hero &&
-                     p.Operator.Style.Military == 65).Count() * base.GetStrength * DamageRate * 0.01f);
+                     IsSameType(p.Operator.Style.Military)).Count() * base.GetStrength * DamageRate * 0.01f);
+
     }
 
     /// <summary>
@@ -318,31 +324,37 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 59  短枪 - 手持短枪，攻击时，可穿刺攻击目标身后1个单位。
     /// </summary>
-    public class QiangOperator : ExtendedDamageHero
+    public class ChangQiangOperator : HeroOperator
     {
         /// <summary>
         /// 刺穿单位数
         /// </summary>
-        protected virtual int PenetrateUnits => 1;
-
-        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
+        private int PenetrateUnits()
         {
-            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(96) * 0.01f;
-            return CombatConduct.InstanceDamage(penetrateDmg);
+            switch (Style.Military)
+            {
+                case 59: return 1;
+                case 14: return 2;
+                case 101: return 2;
+                default: throw MilitaryNotValidError(this);
+            }
         }
 
-        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target)
+        private float[] PenetrateDecreases = new[] { 0.75f, 0.5f, 0.25f };
+        protected override void MilitaryPerforms(int skill = 1)
         {
-            var tPoss = new List<int>();
-            for (var i = 1; i < PenetrateUnits + 1; i++)
-            {
-                var pos = i * 5 + target.Pos;
-                tPoss.Add(pos);
-            }
+            var target = Chessboard.GetContraTarget(this);
+            var damage = InstanceHeroGenericDamage();
 
-            return Chessboard.GetRivals(this, p => tPoss.Contains(p.Pos) && p != target && p.IsPostedAlive)
-                .OrderBy(p => p.Pos)
-                .Take(PenetrateUnits);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), actId: 0, skill: 1);
+
+            for (var i = 1; i < PenetrateUnits() + 1; i++)
+            {
+                var backPos = Chessboard.BackPos(target);
+                target = backPos;
+                if (backPos.Operator == null) continue;
+                Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage.Clone(PenetrateDecreases[i])), actId: 0, skill: -1);
+            }
         }
     }
 
@@ -351,13 +363,31 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ManZuOperator : HeroOperator
     {
-        protected virtual int PoisonRate => DataTable.GetGameValue(51);
+        private int PoisonRate()
+        {
+            switch (Style.Military)
+            {
+                case 56: return 30;
+                case 131: return 50;
+                case 132: return 70;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int RouseAddOn = 30;
+        private int CriticalAddOn = 15;
+
         protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
         {
-            var combat = new List<CombatConduct> { InstanceHeroGenericDamage() };
-            if (Chessboard.IsRandomPass(PoisonRate))
-                combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Poison));
-            return combat.ToArray();
+            var combat = InstanceHeroGenericDamage();
+            var poisonRate = PoisonRate();
+            if (combat.IsRouseDamage())
+                poisonRate += RouseAddOn;
+            if(combat.IsCriticalDamage())
+                poisonRate+= CriticalAddOn;
+            return Chessboard.IsRandomPass(poisonRate) ? 
+                new[] { combat, CombatConduct.InstanceBuff(CardState.Cons.Poison) } : 
+                Helper.Singular(combat);
         }
     }
 
@@ -1176,17 +1206,41 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DaFuOperator : HeroOperator
     {
+        public override bool IsIgnoreShieldUnit => true;
+
+        private int BreakShields()
+        {
+            switch (Style.Military)
+            {
+                case 18: return 2;
+                case 106: return 3;
+                case 107: return 5;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        private int DamageRate()
+        {
+            switch (Style.Military)
+            {
+                case 18: return 5;
+                case 106: return 7;
+                case 107: return 9;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
             var status = Chessboard.GetStatus(target.Operator);
-            var damageRate = HpDepletedRatioWithGap(status, 0, DataTable.GetGameValue(93), DataTable.GetGameValue(94));
-            var performDamage = InstanceHeroGenericDamage(GeneralDamage() * damageRate * 0.01f);
+            var dmgGapValue = GetStrength * DamageRate() * 0.01;//每10%掉血增加数
+            var additionDamage = HpDepletedRatioWithGap(status, 0, 10, (int)dmgGapValue);
+            var performDamage = InstanceHeroGenericDamage(additionDamage);
+            var breakShield = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield) > 0 ? 1 : 0;
             Chessboard.AppendOpActivity(this, target, Activity.Offensive, new[]
             {
-                CombatConduct.InstanceBuff(CardState.Cons.Shield, -1),
+                CombatConduct.InstanceBuff(CardState.Cons.Shield, -BreakShields()),
                 performDamage
-            }, 0, 1);
+            }, 0, breakShield);
         }
     }
 
@@ -1228,45 +1282,29 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 15  大戟 - 挥动大戟，攻击时，可横扫攻击目标周围全部单位。横扫伤害比攻击伤害略低。
     /// </summary>
-    public class DaJiOperator : ExtendedDamageHero
+    public class DaJiOperator : HeroOperator
     {
-        protected override CombatConduct GetExtendedDamage(CombatConduct currentDamage)
+        private int DamageRate()
         {
-            var penetrateDmg = currentDamage.Total * DataTable.GetGameValue(95) * 0.01f;
-            return CombatConduct.InstanceDamage(penetrateDmg);
+            switch (Style.Military)
+            {
+                case 15: return 30;
+                case 102: return 45;
+                case 103: return 60;
+                default: throw MilitaryNotValidError(this);
+            }
         }
-
-        protected override IEnumerable<IChessPos> ExtendedTargets(IChessPos target) =>
-            Chessboard.GetNeighbors(target, false);
-    }
-
-    /// <summary>
-    /// 14  长枪 - 手持长枪，攻击时，可穿刺攻击目标身后2个单位。穿刺伤害比攻击伤害略低。
-    /// </summary>
-    public class ChangQiangOperator : QiangOperator
-    {
-        protected override int PenetrateUnits => 2;
-    }
-
-    /// <summary>
-    /// 给予散列伤害的武将类型
-    /// </summary>
-    public abstract class ExtendedDamageHero : HeroOperator
-    {
-        protected abstract CombatConduct GetExtendedDamage(CombatConduct currentDamage);
-
-        protected abstract IEnumerable<IChessPos> ExtendedTargets(IChessPos target);
-
+        private IEnumerable<IChessPos> ExtendedTargets(IChessPos target) => Chessboard.GetNeighbors(target, false);
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
             var penetrates = ExtendedTargets(target);
             var damage = InstanceHeroGenericDamage();
-            var penetrateDmg = GetExtendedDamage(damage);
+            var splash = damage.Clone(DamageRate() * 0.01f);
             Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), actId: 0, skill: 1);
             foreach (var penetrate in penetrates)
             {
-                Chessboard.AppendOpActivity(this, penetrate, Activity.Offensive, Helper.Singular(penetrateDmg), actId: 0, skill: -1);
+                Chessboard.AppendOpActivity(this, penetrate, Activity.Offensive, Helper.Singular(splash), actId: -1, skill: -1);
             }
         }
     }
@@ -1301,39 +1339,41 @@ namespace Assets.System.WarModule
     {
         private const int RecursiveLimit = 10;
         private static int loopCount = 0;
+        private int DamageRate => 10;
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            var stimulate = Chessboard.GetCondition(this, CardState.Cons.Stimulate);
-            var addOn = (int)(DataTable.GetGameValue(97) * 0.01f * stimulate * GeneralDamage());
+            var soul = Chessboard.GetCondition(this, CardState.Cons.BattleSoul);
+            var addOn = DamageRate * 0.01f * soul * GeneralDamage();
             var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                Helper.Singular(InstanceHeroGenericDamage(addOn)),0, 0);
+                Helper.Singular(InstanceHeroGenericDamage(addOn)), 0, 0);
 
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(StimulateConduct), 0, 1);
+                Helper.Singular(BattleSoulConduct), -1, 1);
 
-            if (result.Type == ActivityResult.Types.Dodge)
+            var targetStat = Chessboard.GetStatus(target.Operator);
+            var resultType = result.Type;
+            while ((resultType == ActivityResult.Types.Shield ||
+                    resultType == ActivityResult.Types.Dodge) &&
+                   !targetStat.IsDeath &&
+                   loopCount <= RecursiveLimit)
             {
-                if (loopCount >= RecursiveLimit)
-                {
-                    loopCount = 0;
-                    return;
-                }
-
+                Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                    Helper.Singular(BattleSoulConduct), loopCount + 1, 1);
+                resultType = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
+                    Helper.Singular(InstanceHeroGenericDamage(addOn)), loopCount + 1, 2).Type;
                 loopCount++;
-                MilitaryPerforms();//闪避会继续攻击直到被伤害为止。
-                return;
             }
-
 
             loopCount = 0;
         }
 
-        private CombatConduct StimulateConduct => CombatConduct.InstanceBuff(CardState.Cons.Stimulate);
+        private CombatConduct BattleSoulConduct => CombatConduct.InstanceBuff(CardState.Cons.BattleSoul);
         protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(StimulateConduct), 0, 1);
+                Helper.Singular(BattleSoulConduct), 0, 1);
         }
     }
 
@@ -1389,22 +1429,108 @@ namespace Assets.System.WarModule
     /// <summary>
     /// (8)象兵 - 践踏战场。攻击时可让敌方武将【眩晕】。
     /// </summary>
-    public class XiangBingOperator : HeroOperator
+    public class ZhanXiangOperator : HeroOperator
     {
+        private enum DamageState
+        {
+            Basic,
+            Critical,
+            Rouse
+        }
+        private int StunRate(DamageState state,bool major)
+        {
+            var rate = 0;
+            switch (Style.Military)
+            {
+                case 8:
+                    if (major) return 50;
+                    switch (state)
+                    {
+                        case DamageState.Critical: rate = 10; break;
+                        case DamageState.Rouse: rate = 15; break;
+                    }
+                    break;
+                case 174:
+                    if (major) return 70;
+                    switch (state)
+                    {
+                        case DamageState.Critical: rate = 25; break;
+                        case DamageState.Rouse: rate = 40; break;
+                    }
+                    break;
+                case 175:
+                    if (major) return 90;
+                    switch (state)
+                    {
+                        case DamageState.Critical: rate = 30; break;
+                        case DamageState.Rouse: rate = 50; break;
+                    }
+                    break;
+                default: throw MilitaryNotValidError(this);
+            }
+            return rate;
+        }
+        private int SplashDamageRate(DamageState state)
+        {
+            switch (Style.Military)
+            {
+                case 8:
+                    switch (state)
+                    {
+                        case DamageState.Critical: return 10;
+                        case DamageState.Rouse: return 15;
+                    }
+                    break;
+                case 174:
+                    switch (state)
+                    {
+                        case DamageState.Critical: return 20;
+                        case DamageState.Rouse: return 30;
+                    }
+                    break;
+                case 175:
+                    switch (state)
+                    {
+                        case DamageState.Critical: return 30;
+                        case DamageState.Rouse: return 45;
+                    }
+                    break;
+                default: throw MilitaryNotValidError(this);
+            }
+
+            return 0;
+        }
+        
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            var list = new List<CombatConduct> { InstanceHeroGenericDamage() };
-            if (Chessboard.IsRandomPass(DataTable.GetGameValue(102)))
+            var majorCombat = InstanceHeroGenericDamage();
+            var list = new List<CombatConduct> { majorCombat };
+            var combatState = majorCombat.IsRouseDamage() ? DamageState.Rouse : 
+                majorCombat.IsCriticalDamage() ? DamageState.Critical : DamageState.Basic;
+            if (Chessboard.IsRandomPass(StunRate(combatState, true)))
                 list.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, list.ToArray(),0, 1);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, list.ToArray(), 0,
+                combatState == DamageState.Basic ? 0 : 1);
+
+            if (combatState == DamageState.Basic) return;
+            //会心与暴击才触发周围伤害
+            var splashTargets = Chessboard.GetNeighbors(target, false).ToArray();
+            var splashDamage = majorCombat.Clone(SplashDamageRate(combatState) * 0.01f);
+            foreach (var splashTarget in splashTargets)
+            {
+                var spList = new List<CombatConduct> { splashDamage };
+                if(Chessboard.IsRandomPass(StunRate(combatState,false)))
+                    spList.Add(CombatConduct.InstanceBuff(CardState.Cons.Stunned));
+                Chessboard.AppendOpActivity(this, splashTarget, Activity.Offensive, spList.ToArray(), -1, 1);
+            }
         }
     }
 
     /// <summary>
     /// (7)刺甲 - 装备刺甲，武将受到近战伤害时，可将伤害反弹。
     /// </summary>
-    public class ChiJiaOperator : HeroOperator
+    public class CiDunOperator : HeroOperator
     {
         private float ReflectRate()
         {
@@ -1521,12 +1647,12 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
             var damage = MilitaryDamages(target);
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, damage, 0, skill);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, damage, 0, 0);
             var shield = 1;
             if (damage.Any(c => c.Rouse > 0))
                 shield++;
-            Chessboard.InstanceChessboardActivity(InstanceId, IsChallenger, this, Activity.Self,
-                Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield, shield)));
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield, shield)), -1, 1);
         }
     }
 

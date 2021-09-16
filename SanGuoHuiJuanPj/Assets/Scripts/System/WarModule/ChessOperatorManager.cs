@@ -142,7 +142,7 @@ namespace Assets.System.WarModule
                     op = new CiDunOperator();
                     break; //7   刺甲
                 case 8:
-                    op = new XiangBingOperator();
+                    op = new ZhanXiangOperator();
                     break; //8   象兵
                 case 9:
                     op = new XianFengOperator();
