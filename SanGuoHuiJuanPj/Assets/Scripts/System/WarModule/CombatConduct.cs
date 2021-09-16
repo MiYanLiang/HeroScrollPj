@@ -185,6 +185,8 @@ namespace Assets.System.WarModule
                    conduct.Kind == BuffKind && !CardState.IsNegativeBuff((CardState.Cons)conduct.Element) &&
                    conduct.Total > 0;
         }
+
+        public CombatConduct Duplicate(float rate = 1f) => Instance(Basic * rate, Critical * rate, Rouse * rate, Element, Kind);
     }
 
     public class Damage

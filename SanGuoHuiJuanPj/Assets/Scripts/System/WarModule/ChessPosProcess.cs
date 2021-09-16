@@ -25,7 +25,7 @@ namespace Assets.System.WarModule
                 Type = type,
                 Major = major,
                 Scope = isChallenger ? 0 : 1,
-                ActMap = new Dictionary<int, List<Activity>>()
+                CombatMaps = new Dictionary<int, CombatMapper>()
             };
         public static ChessProcess Instance(int id,int roundId,int pos, bool isChallenger)
             => new ChessProcess()
@@ -35,7 +35,7 @@ namespace Assets.System.WarModule
                 Type = Types.Chessman,
                 Major = pos, 
                 Scope = isChallenger ? 0 : 1,
-                ActMap = new Dictionary<int, List<Activity>>()
+                CombatMaps = new Dictionary<int, CombatMapper>()
             };
 
 
@@ -46,7 +46,7 @@ namespace Assets.System.WarModule
         /// 棋子活动集，key = actId, value = 活动
         /// </summary>
         //[JsonProperty("A")]
-        public Dictionary<int,List<Activity>> ActMap { get; set; }
+        public Dictionary<int,CombatMapper> CombatMaps { get; set; }
         //[JsonProperty("P")] 
         /// <summary>
         /// <see cref="Types.Chessman"/>  和 <see cref="Types.Chessboard"/> : -1 = 棋盘活动，正数为棋子InstanceId，
@@ -74,7 +74,24 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            return $"主进程({InstanceId}).{challengerText}，活动({ActMap.Count})";
+            return $"主进程({InstanceId}).{challengerText}，活动({CombatMaps.Count})";
+        }
+    }
+
+    public class CombatMapper
+    {
+        public int Id {  get; set; }
+        public List<Activity> Activities { get; set; } = new List<Activity>();
+        public List<Activity> CounterActs { get; set; } = new List<Activity>();
+
+        public CombatMapper()
+        {
+            
+        }
+
+        public CombatMapper(int id)
+        {
+            Id = id;
         }
     }
 }

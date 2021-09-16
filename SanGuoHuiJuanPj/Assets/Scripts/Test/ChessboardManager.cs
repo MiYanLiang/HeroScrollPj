@@ -124,7 +124,7 @@ public class ChessboardManager : MonoBehaviour
         }
         //回合结束演示
         yield return OnInstantEffects(round.FinalAction.ChessProcesses
-            .SelectMany(p => p.ActMap.Values.SelectMany(l => l)).ToList());
+            .SelectMany(p => p.CombatMaps.Values.SelectMany(m => m.Activities)).ToList());
 
         if (chess.IsGameOver)
         {
@@ -152,7 +152,7 @@ public class ChessboardManager : MonoBehaviour
             {
                 case ChessProcess.Types.Chessboard:
                 {
-                    foreach (var activity in process.ActMap.Values.SelectMany(l=>l))
+                    foreach (var activity in process.CombatMaps.Values.SelectMany(m=>m.Activities))
                         yield return OnSpriteEffect(activity);
                     break;
                 }
@@ -163,8 +163,7 @@ public class ChessboardManager : MonoBehaviour
                         .Append(OnJiBanEffect(process.Scope == 0, jb))
                         .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
                         .WaitForCompletion();
-                    yield return OnInstantEffects(process.ActMap.Values.SelectMany(l => l).ToList())
-                        .WaitForCompletion();
+                    yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(m => m.Activities).ToList()).WaitForCompletion();
                     yield return new WaitForSeconds(1);
                     break;
                 }
@@ -272,127 +271,98 @@ public class ChessboardManager : MonoBehaviour
             throw new InvalidOperationException("棋子行动不允许调用羁绊。");
         if (process.Type == ChessProcess.Types.Chessboard)
         {
-            yield return OnInstantEffects(process.ActMap.Values.SelectMany(v => v).ToArray()).WaitForCompletion();
+            yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(m => m.Activities.Concat(m.CounterActs)).ToArray()).WaitForCompletion();
             yield break;
         }
 
         //把棋子提到最上端
         Chessboard.OnActivityBeginTransformSibling(process.Major, process.Scope == 0);
 
-        var fragments = GenerateAnimFragments(process);
+        //var fragments = GenerateAnimFragments(process);
         var majorCard = GetCardMap(Chessboard.GetChessPos(process.Major, process.Scope == 0).Card.InstanceId);
-        for (var i = 0; i < fragments.Length; i++)
+        foreach (var map in process.CombatMaps)
         {
-            var fragment = fragments[i];
-            if (fragment.Activity.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
+            var mainTween = DOTween.Sequence().Pause();
+            var counterTween = DOTween.Sequence().Pause();
+            if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
                 yield return FullScreenRouse().WaitForCompletion();
 
-            var tween = DOTween.Sequence().Pause();
-            if (fragment.Type == ChessAnimFragment.Types.Offense)
+            var offensiveActivity = map.Value.Activities.FirstOrDefault(a => a.Intent == Activity.Offensive);
+            if (offensiveActivity != null)
             {
-                var offensiveActivity = fragment.Activity.FirstOrDefault(a => a.Intent == Activity.Offensive);
-                if (offensiveActivity!= null)
-                {
-                    var target = GetCardMap(offensiveActivity.To);
-                    yield return CardAnimator.PreActionTween(majorCard, target).WaitForCompletion();
-                }
-
-                foreach (var activity in fragment.Activity)
-                {
-                    var target = GetCardMap(activity.To);
-                    var op = GetCardMap(activity.From);
-
-                    if (activity.Intent == Activity.Sprite) //精灵活动最高优先，否则target会译为棋子而非棋位
-                    {
-                        tween.Join(OnSpriteEffect(activity));
-                        continue;
-                    }
-
-                    if (op == null) //没有施放者多数是buff活动
-                    {
-                        tween.Join(target.ChessmanStyle.RespondTween(activity, target));
-                        continue;
-                    }
-                    
-                    //主要活动
-                    tween.Join(op.ChessmanStyle.OffensiveTween(activity, op, target, Chessboard.transform))
-                        .Join(target.ChessmanStyle.RespondTween(activity, target,
-                            op.ChessmanStyle.GetMilitarySparkId(activity)));
-
-                    //击退一格
-                    if (activity.IsRePos)
-                        tween.Join(CardAnimator.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
-                            .OnComplete(() =>
-                            {
-                                PlaySoundEffect(activity, op.ChessmanStyle, target);
-                                Chessboard.PlaceCard(activity.RePos, target);
-                            }));
-                }
-
-                if (fragment.Invoker.Style.Type == CombatStyle.Types.Melee)
-                    yield return CardAnimator.StepBackAndHit(fragment.Invoker).WaitForCompletion();
-
-                if (fragment.Activity.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
-                    yield return CardAnimator.ChessboardConduct(Chessboard);
+                var target = GetCardMap(offensiveActivity.To);
+                yield return CardAnimator.PreActionTween(majorCard, target).WaitForCompletion();
             }
-            else if (fragment.Type == ChessAnimFragment.Types.Counter)
+            //施放者活动
+            FightCardData major = null;
+            foreach (var activity in map.Value.Activities)
             {
-                
-                yield return CardAnimator.CounterAnimation(fragment.Invoker).WaitForCompletion();
-                foreach (var activity in fragment.Activity)
+                var target = GetCardMap(activity.To);
+                var op = GetCardMap(activity.From);
+                if (major == null)
+                    major = op;
+                if (activity.Intent == Activity.Sprite) //精灵活动最高优先，否则target会译为棋子而非棋位
                 {
-                    var target = GetCardMap(activity.To);
-                    var op = GetCardMap(activity.From);
-                    tween.Join(op.ChessmanStyle.OffensiveTween(activity, op, target, Chessboard.transform))
-                        .Join(target.ChessmanStyle.RespondTween(activity, target,
-                            op.ChessmanStyle.GetMilitarySparkId(activity)));
+                    mainTween.Join(OnSpriteEffect(activity));
+                    continue;
                 }
+
+                if (op == null) //没有施放者多数是buff活动
+                {
+                    mainTween.Join(target.ChessmanStyle.RespondTween(activity, target));
+                    continue;
+                }
+
+                //主要活动
+                mainTween.Join(op.ChessmanStyle.OffensiveTween(activity, op))
+                    .Join(target.ChessmanStyle.RespondTween(activity, target,
+                        op.ChessmanStyle.GetMilitarySparkId(activity)));
+
+                //击退一格
+                if (activity.IsRePos)
+                    mainTween.Join(CardAnimator.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                        .OnComplete(() =>
+                        {
+                            PlaySoundEffect(activity, op.ChessmanStyle, target);
+                            Chessboard.PlaceCard(activity.RePos, target);
+                        }));
             }
 
-            yield return tween.Play().WaitForCompletion();
+            if (major!=null && major.Style.Type == CombatStyle.Types.Melee)
+                yield return CardAnimator.StepBackAndHit(major).WaitForCompletion();
+
+            if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
+                mainTween.Join(CardAnimator.ChessboardConduct(Chessboard));
+
+            yield return mainTween.Play().WaitForCompletion();//播放主要活动
+
+            /*********************反击*************************/
+            //如果没有反击
+            if (map.Value.CounterActs == null || map.Value.CounterActs.Count == 0) continue;
+
+            var counterUnit = GetCardMap(map.Value.CounterActs.First().From);
+            yield return CardAnimator.CounterAnimation(counterUnit).WaitForCompletion();
+
+            //反击活动
+            foreach (var activity in map.Value.CounterActs)
+            {
+                var target = GetCardMap(activity.To);
+                var op = GetCardMap(activity.From);
+                counterTween.Join(op.ChessmanStyle.OffensiveTween(activity, op))
+                    .Join(target.ChessmanStyle.RespondTween(activity, target,
+                        op.ChessmanStyle.GetMilitarySparkId(activity)));
+            }
+
+            if (map.Value.CounterActs.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
+                counterTween.Join(CardAnimator.ChessboardConduct(Chessboard));
+
+
+            yield return counterTween.Play().WaitForCompletion();//播放反击
         }
+
         var chessPos = Chessboard.GetChessPos(majorCard).transform.position;
         yield return new WaitForSeconds(0.5f);
         yield return CardAnimator.FinalizeAnimation(majorCard, chessPos).WaitForCompletion();
-    }
-
-    public ChessAnimFragment[] GenerateAnimFragments(ChessProcess process)
-    {
-        if (process.Type != ChessProcess.Types.Chessman)
-            throw new NotSupportedException($"Process type[{process.Type}] not support!");
-        var result = new List<ChessAnimFragment>();
-        foreach (var map in process.ActMap)
-        {
-            var first = map.Value.Where(a => a.Intent == Activity.Offensive ||
-                                             a.Intent == Activity.Counter ||
-                                             a.Intent == Activity.Friendly ||
-                                             a.Intent == Activity.Self ||
-                                             a.Intent == Activity.Reflect).OrderBy(a => a.Intent).FirstOrDefault();
-            ChessAnimFragment animFragment = null;
-            if (first == null) continue;
-            animFragment = InstanceFragment(first);
-            foreach (var activity in map.Value)
-            {
-                if (activity.Intent == Activity.Counter) 
-                    animFragment = InstanceFragment(activity);
-                animFragment.Activity.Add(activity);
-            }
-        }
-        return result.ToArray();
-
-        ChessAnimFragment InstanceFragment(Activity activity)
-        {
-            var target = GetCardMap(activity.To);
-            var offender = GetCardMap(activity.From);
-            var fragment = new ChessAnimFragment();
-            fragment.Type = activity.Intent == Activity.Counter
-                ? ChessAnimFragment.Types.Counter
-                : ChessAnimFragment.Types.Offense;
-            fragment.Invoker = offender;
-            fragment.Target = target;
-            result.Add(fragment);
-            return fragment;
-        }
     }
     public class ChessAnimFragment
     {

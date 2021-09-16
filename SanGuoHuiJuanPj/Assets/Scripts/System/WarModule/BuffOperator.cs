@@ -6,6 +6,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 棋子的增益效果，与<see cref="TerrainSprite"/>不同的是<see cref="BuffOperator"/>是在棋子身上挂着的状态
     /// </summary>
+    // todo ChessOperator 与buffOperator存在共同管理buff问题，需要统一管理
     public abstract class BuffOperator
     {
         private static Activity[] ZeroActivity = new Activity[0];
