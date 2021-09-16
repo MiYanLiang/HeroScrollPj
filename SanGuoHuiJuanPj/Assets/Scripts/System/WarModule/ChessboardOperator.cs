@@ -615,10 +615,16 @@ namespace Assets.System.WarModule
             return IsRandomPass(rate);
         }
 
-        private ActivityResult.Types DetermineSufferResult(Activity activity, ChessOperator op, ChessOperator offender)
+        private ActivityResult.Types DetermineSufferResult(ChessOperator op, ChessOperator offender)
         {
             if (GetCondition(op,CardState.Cons.Shield) > 0)
+            {
+                if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
+                //如果被护盾免伤后，扣除护盾1层
+                AppendOpActivity(op, GetChessPos(op), Activity.Self,
+                    Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield, -1)), -1, 1);
                 return ActivityResult.Types.Shield;
+            }
             if (GetCondition(op,CardState.Cons.EaseShield) > 0) // 缓冲盾
                 return ActivityResult.Types.EaseShield;
             return ActivityResult.Types.Suffer;
@@ -629,10 +635,7 @@ namespace Assets.System.WarModule
             if (op.CardType != GameCardType.Hero) return 0;
             var value = (int)conduct.Total;
             foreach (var bo in GetBuffOperator((CardState.Cons) conduct.Element, op))
-            {
-                 value = bo.OnBuffConvert(op, value);
-                 if (value <= 0) return 0;
-            }
+                value = bo.OnBuffConvert(op, value);
             return value;
         }
 
@@ -648,34 +651,13 @@ namespace Assets.System.WarModule
                 result.Result = (int)ActivityResult.Types.Dodge;
             else
             {
-                result.Result = (int)DetermineSufferResult(activity, op, offender);
+                result.Result = (int)DetermineSufferResult(op, offender);
                 /***执行Activities***/
                 op.ProceedActivity(activity);
             }
 
             result.Status = GetStatus(op).Clone();
             return result;
-        }
-
-        /// <summary>
-        /// 盾类的过滤判定
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="activity"></param>
-        /// <returns></returns>
-        public IEnumerable<CombatConduct> OnShieldFilter(ChessOperator op, Activity activity)
-        {
-            var conducts = activity.Conducts;
-
-            var shields = GetBuffOperator(CardState.Cons.Shield, op).ToArray();
-            if (shields.Any())
-                foreach (var bo in shields)
-                {
-                    conducts = bo.OnCombatConductFilter(conducts);
-                    if (!conducts.Any()) return conducts;
-                }
-
-            return conducts;
         }
 
         public int OnHealConvert(ChessOperator op, CombatConduct conduct)

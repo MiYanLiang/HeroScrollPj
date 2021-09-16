@@ -23,7 +23,7 @@ namespace Assets.System.WarModule
             BuffOps = new BuffOperator[]
             {
                 new StunnedBuff(this), //1 眩晕
-                new ShieldBuff(this), //2 护甲
+                //new ShieldBuff(this), //2 护甲
                 new InvincibleBuff(this), //3 无敌
                 new BleedBuff(this), // 4 流血
                 new PoisonBuff(this), // 5 毒
@@ -139,7 +139,7 @@ namespace Assets.System.WarModule
                     op = new HuWeiOperator();
                     break; //6   虎卫
                 case 7:
-                    op = new ChiJiaOperator();
+                    op = new CiDunOperator();
                     break; //7   刺甲
                 case 8:
                     op = new XiangBingOperator();
@@ -159,9 +159,7 @@ namespace Assets.System.WarModule
                 case 13:
                     op = new YuLinOperator();
                     break; //13  禁卫
-                case 14:
-                    op = new ChangQiangOperator();
-                    break; //14  长枪
+                
                 case 15:
                     op = new DaJiOperator();
                     break; //15  大戟
@@ -295,7 +293,8 @@ namespace Assets.System.WarModule
                     op = new TieJiOperator();
                     break; //58  铁骑
                 case 59:
-                    op = new QiangOperator();
+                case 14:
+                    op = new ChangQiangOperator();
                     break; //59  短枪
                 case 60:
                     op = new JiXianFengOperator();
