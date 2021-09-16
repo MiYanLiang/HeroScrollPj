@@ -148,29 +148,19 @@ public class ChessboardManager : MonoBehaviour
     {
         foreach (var process in action.ChessProcesses)
         {
-            switch (process.Type)
+            if (process.Type == ChessProcess.Types.JiBan)
             {
-                case ChessProcess.Types.Chessboard:
-                {
-                    foreach (var activity in process.CombatMaps.Values.SelectMany(m=>m.Activities))
-                        yield return OnSpriteEffect(activity);
-                    break;
-                }
-                case ChessProcess.Types.JiBan:
-                {
-                    var jb = DataTable.JiBan[process.Major];
-                    yield return DOTween.Sequence()
-                        .Append(OnJiBanEffect(process.Scope == 0, jb))
-                        .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
-                        .WaitForCompletion();
-                    yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(m => m.Activities).ToList()).WaitForCompletion();
-                    yield return new WaitForSeconds(1);
-                    break;
-                }
-                case ChessProcess.Types.Chessman:
-                default:
-                    throw new ArgumentOutOfRangeException();
+                var jb = DataTable.JiBan[process.Major];
+                yield return DOTween.Sequence()
+                    .Append(OnJiBanEffect(process.Scope == 0, jb))
+                    .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
+                    .Join(OnInstantEffects(process.CombatMaps.Values.SelectMany(a => a.Activities).ToList()))
+                    .WaitForCompletion();
+                yield return new WaitForSeconds(1);
+                continue;
             }
+
+            yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(a => a.Activities).ToList()).WaitForCompletion();
         }
     }
 
