@@ -55,10 +55,8 @@ public class ChessmanStyle : ChessUiStyle
     /// </summary>
     /// <param name="activity"></param>
     /// <param name="offense"></param>
-    /// <param name="target"></param>
-    /// <param name="chessboard"></param>
     /// <returns></returns>
-    public virtual Tween OffensiveTween(Activity activity, FightCardData offense, FightCardData target, Transform chessboard) => DOTween.Sequence();
+    public virtual Tween OffensiveTween(Activity activity, FightCardData offense) => DOTween.Sequence();
 
 }
 public class SpriteStyle : CombatStyle
@@ -70,7 +68,7 @@ public class SpriteStyle : CombatStyle
 public abstract class CardStyle : ChessmanStyle
 {
 
-    public override Tween OffensiveTween(Activity activity,FightCardData offense,FightCardData target,Transform chessboard)
+    public override Tween OffensiveTween(Activity activity,FightCardData offense)
     {
         return DOTween.Sequence()
             .Join(OffenseVText(activity, offense));

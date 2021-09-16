@@ -6,6 +6,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 棋子的增益效果，与<see cref="TerrainSprite"/>不同的是<see cref="BuffOperator"/>是在棋子身上挂着的状态
     /// </summary>
+    // todo ChessOperator 与buffOperator存在共同管理buff问题，需要统一管理
     public abstract class BuffOperator
     {
         private static Activity[] ZeroActivity = new Activity[0];
@@ -99,14 +100,6 @@ namespace Assets.System.WarModule
         public virtual bool IsDisableCounter(ChessOperator op) => false;
 
         /// <summary>
-        /// 如果<see cref="Buff"/>设为<see cref="CardState.Cons.Shield"/>，将会在攻击前进行过滤<see cref="CombatConduct"/>，
-        /// 
-        /// </summary>
-        /// <param name="conducts"></param>
-        /// <returns></returns>
-        public virtual CombatConduct[] OnCombatConductFilter(CombatConduct[] conducts) => conducts;
-
-        /// <summary>
         /// 配合<see cref="Buff"/>来削减或加深状态值
         /// </summary>
         /// <param name="op"></param>
@@ -177,24 +170,15 @@ namespace Assets.System.WarModule
         public override bool IsDisableCounter(ChessOperator op) => IsBuffActive(op);
 
     }
-    //2 护盾
-    public class ShieldBuff : BuffOperator
-    {
-        public override CardState.Cons Buff => CardState.Cons.Shield;
+    //2 护盾，护盾基本不是护甲削减伤害(完全免伤)，所以不需要buff代理处理逻辑
+    //public class ShieldBuff : BuffOperator
+    //{
+    //    public override CardState.Cons Buff => CardState.Cons.Shield;
 
-        public override bool IsArmorConductTrigger => true;
-
-        public ShieldBuff(ChessboardOperator chessboard) : base(chessboard)
-        {
-        }
-
-        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
-        {
-            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
-            SelfConduct(op, Helper.Singular(DepleteBuff()));
-            conduct.SetZero();
-        }
-    }
+    //    public ShieldBuff(ChessboardOperator chessboard) : base(chessboard)
+    //    {
+    //    }
+    //}
     //3 无敌
     public class InvincibleBuff : RoundEndDepleteSelfBuff
     {

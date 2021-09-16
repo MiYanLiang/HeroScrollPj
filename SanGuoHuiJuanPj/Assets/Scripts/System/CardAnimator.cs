@@ -120,7 +120,7 @@ public class CardAnimator
     /// <returns></returns>
     public static Tween NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
     {
-        var value = conduct.Total;
+        var value = (int)conduct.Total;
         if (color == default)
             color = CombatConduct.IsPositiveConduct(conduct)
                 ? ColorDataStatic.huiFu_green
@@ -396,7 +396,7 @@ public class CardAnimator
                         case CardState.Cons.Disarmed:
                         case CardState.Cons.Shield:
                         case CardState.Cons.Invincible:
-                        case CardState.Cons.Stimulate:
+                        case CardState.Cons.BattleSoul:
                         case CardState.Cons.StrengthUp:
                         case CardState.Cons.DodgeUp:
                         case CardState.Cons.CriticalUp:

@@ -41,6 +41,10 @@ namespace Assets.System.WarModule
         public bool IsRangeHero => Style!=null && Style.ArmedType >= 0 && Style.Type == CombatStyle.Types.Range;
 
         protected abstract ChessboardOperator Chessboard { get; }
+        /// <summary>
+        /// 无视盾牌单位
+        /// </summary>
+        public virtual bool IsIgnoreShieldUnit { get; set; }
 
         protected abstract int GeneralDamage();
         public virtual void OnRoundStart() {}
@@ -127,8 +131,7 @@ namespace Assets.System.WarModule
 
         public void ProceedActivity(Activity activity)
         {
-            var filtered = Chessboard.OnShieldFilter(this, activity);
-            foreach (var conduct in filtered)
+            foreach (var conduct in activity.Conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
                 UpdateConduct(conduct);

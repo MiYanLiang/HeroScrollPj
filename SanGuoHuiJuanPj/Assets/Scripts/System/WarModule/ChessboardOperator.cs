@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
+using UnityEditor;
 
 namespace Assets.System.WarModule
 {
@@ -192,9 +193,9 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
             Log($"进程({CurrentProcess.InstanceId})[{opText}]");
-            foreach (var map in process.ActMap)
+            foreach (var activities in process.CombatMaps.Values.Select(m=>m.Activities.Concat(m.CounterActs)))
             {
-                foreach (var activity in map.Value)
+                foreach (var activity in activities)
                 {
                     LogActivity(activity);
                     LogConducts(activity);
@@ -370,7 +371,7 @@ namespace Assets.System.WarModule
             var stat = GetStatus(op);
             return $"{op.InstanceId}.{op}[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
         }
-
+        
         private void ProcessActivityResult(Activity activity)
         {
             var target = GetOperator(activity.To);
@@ -394,6 +395,7 @@ namespace Assets.System.WarModule
             foreach (var conduct in activity.Conducts) Log($"武技--->{conduct}");
         }
 
+        private bool IsFlagCounter = false;
         /// <summary>
         /// 
         /// </summary>
@@ -409,6 +411,8 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts,int actId,int skill ,int rePos = -1)
         {
             if (target == null) return null;
+            //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
+            if (!IsFlagCounter) IsFlagCounter = intent == Activity.Counter;
             var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                 conducts, skill, rePos);
             currentActivity = activity;
@@ -418,6 +422,7 @@ namespace Assets.System.WarModule
                 throw new NullReferenceException(
                     $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
             ProcessActivityResult(currentActivity);
+            IsFlagCounter = false;
             return currentActivity.Result;
         }
 
@@ -475,10 +480,12 @@ namespace Assets.System.WarModule
         private void AddToCurrentProcess(Activity activity, int actId)
         {
             if (actId == -1) //如果-1的话就加入上一个活动
-                actId = CurrentProcess.ActMap.Count == 0 ? 0 : CurrentProcess.ActMap.Last().Key;
-            if (!CurrentProcess.ActMap.ContainsKey(actId))
-                CurrentProcess.ActMap.Add(actId, new List<Activity>());
-            CurrentProcess.ActMap[actId].Add(activity);
+                actId = CurrentProcess.CombatMaps.Count == 0 ? 0 : CurrentProcess.CombatMaps.Last().Key;
+            if (!CurrentProcess.CombatMaps.ContainsKey(actId))
+                CurrentProcess.CombatMaps.Add(actId, new CombatMapper(actId));
+            if(IsFlagCounter)
+                CurrentProcess.CombatMaps[actId].CounterActs.Add(activity);
+            else CurrentProcess.CombatMaps[actId].Activities.Add(activity);
         }
 
         //private List<Activity> InnerActivities { get; set; }
@@ -608,10 +615,16 @@ namespace Assets.System.WarModule
             return IsRandomPass(rate);
         }
 
-        private ActivityResult.Types DetermineSufferResult(Activity activity, ChessOperator op, ChessOperator offender)
+        private ActivityResult.Types DetermineSufferResult(ChessOperator op, ChessOperator offender)
         {
             if (GetCondition(op,CardState.Cons.Shield) > 0)
+            {
+                if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
+                //如果被护盾免伤后，扣除护盾1层
+                AppendOpActivity(op, GetChessPos(op), Activity.Self,
+                    Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield, -1)), -1, 1);
                 return ActivityResult.Types.Shield;
+            }
             if (GetCondition(op,CardState.Cons.EaseShield) > 0) // 缓冲盾
                 return ActivityResult.Types.EaseShield;
             return ActivityResult.Types.Suffer;
@@ -622,10 +635,7 @@ namespace Assets.System.WarModule
             if (op.CardType != GameCardType.Hero) return 0;
             var value = (int)conduct.Total;
             foreach (var bo in GetBuffOperator((CardState.Cons) conduct.Element, op))
-            {
-                 value = bo.OnBuffConvert(op, value);
-                 if (value <= 0) return 0;
-            }
+                value = bo.OnBuffConvert(op, value);
             return value;
         }
 
@@ -641,34 +651,13 @@ namespace Assets.System.WarModule
                 result.Result = (int)ActivityResult.Types.Dodge;
             else
             {
-                result.Result = (int)DetermineSufferResult(activity, op, offender);
+                result.Result = (int)DetermineSufferResult(op, offender);
                 /***执行Activities***/
                 op.ProceedActivity(activity);
             }
 
             result.Status = GetStatus(op).Clone();
             return result;
-        }
-
-        /// <summary>
-        /// 盾类的过滤判定
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="activity"></param>
-        /// <returns></returns>
-        public IEnumerable<CombatConduct> OnShieldFilter(ChessOperator op, Activity activity)
-        {
-            var conducts = activity.Conducts;
-
-            var shields = GetBuffOperator(CardState.Cons.Shield, op).ToArray();
-            if (shields.Any())
-                foreach (var bo in shields)
-                {
-                    conducts = bo.OnCombatConductFilter(conducts);
-                    if (!conducts.Any()) return conducts;
-                }
-
-            return conducts;
         }
 
         public int OnHealConvert(ChessOperator op, CombatConduct conduct)
