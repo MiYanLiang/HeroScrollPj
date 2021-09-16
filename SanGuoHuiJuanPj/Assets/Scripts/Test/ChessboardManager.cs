@@ -343,8 +343,9 @@ public class ChessboardManager : MonoBehaviour
                 {
                     var target = GetCardMap(activity.To);
                     var op = GetCardMap(activity.From);
-                    tween.Join(target.ChessmanStyle.RespondTween(activity, target, string.Empty))
-                        .AppendCallback(() => PlaySoundEffect(activity, op.ChessmanStyle, target));
+                    tween.Join(op.ChessmanStyle.OffensiveTween(activity, op, target, Chessboard.transform))
+                        .Join(target.ChessmanStyle.RespondTween(activity, target,
+                            op.ChessmanStyle.GetMilitarySparkId(activity)));
                 }
             }
 

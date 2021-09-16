@@ -39,7 +39,6 @@ public class GameResources
     private const string JiBanBgPath = "Image/JiBan/art";
     private const string JiBanVTextPath = "Image/JiBan/name_v";
     private const string JiBanHTextPath = "Image/JiBan/name_h";
-    private const string BattleEffectPath = "Image/battle";
     private const string CardStateIconPath = "Image/fightStateIcon/";
     private const string VTextPath = "Image/battle";
     /// <summary>
