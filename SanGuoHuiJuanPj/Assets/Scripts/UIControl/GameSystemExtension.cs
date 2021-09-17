@@ -4,14 +4,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public static class GameSystemExtension
 {
-    public static T RandomPick<T>(this IEnumerable<T> data)
+    public static T RandomPick<T>(this IEnumerable<T> data,[CallerMemberName]string method = null) where T : struct
     {
         var list = data.ToList();
+        if (!list.Any())
+            throw new InvalidOperationException($"{nameof(RandomPick)} of {method}(): Items is 0!");
         var pick = Random.Range(0, list.Count);
         return list[pick];
     }

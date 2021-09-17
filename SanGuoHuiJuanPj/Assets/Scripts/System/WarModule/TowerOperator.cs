@@ -23,14 +23,17 @@ namespace Assets.System.WarModule
         protected override void StartActions()
         {
             var status = Chessboard.GetStatus(this);
-            var targets = Chessboard.GetFriendlyNeighbors(this).Where(c => c.IsPostedAlive && c.Operator.CardType == GameCardType.Hero).ToArray();
+            var targets = Chessboard.GetFriendlyNeighbors(this)
+                .Where(c => c.IsPostedAlive && c.Operator.CardType == GameCardType.Hero).ToArray();
             if (targets.Length == 0) return;
             var target = targets.OrderBy(c => Chessboard.GetStatus(c.Operator).HpRate).First();
             var tarStat = Chessboard.GetStatus(target.Operator);
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceDamage(healingHp, CombatConduct.FixedDmg)),0, 0);
-            Chessboard.AppendOpActivity(this, target, Activity.Friendly, Helper.Singular(CombatConduct.InstanceHeal(healingHp)), 0,1);
+            Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                Helper.Singular(CombatConduct.InstanceHeal(healingHp)), 0, 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                Helper.Singular(CombatConduct.InstanceDamage(healingHp, CombatConduct.FixedDmg)), -1, -1);
         }
     }
     /// <summary>
@@ -47,7 +50,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(GetStrength)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(Strength)), 0, 1);
             }
         }
     }
@@ -64,7 +67,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                    Helper.Singular(CombatConduct.InstanceHeal(GetStrength)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceHeal(Strength)), 0, 1);
             }
         }
     }
@@ -79,7 +82,7 @@ namespace Assets.System.WarModule
             var maxTargets = DataTable.GetGameValue(18); //箭楼攻击数量
             var pick = chessPoses.Length > maxTargets ? maxTargets : chessPoses.Length;
             //17, 箭楼远射伤害百分比
-            var damage = GetStrength * DataTable.GetGameValue(17);
+            var damage = Strength * DataTable.GetGameValue(17);
             var targets = chessPoses.Select(RandomElement.Instance).Pick(pick).ToArray();
             for (var i = 0; i < targets.Length; i++)
             {
@@ -113,7 +116,7 @@ namespace Assets.System.WarModule
                 .Where(p => p.IsPostedAlive &&
                             p.Operator.CardType == GameCardType.Hero)
                 .OrderBy(p => Chessboard.GetCondition(p.Operator, CardState.Cons.Shield))
-                .Take(GetStrength).ToArray(); //Style.Strength = 最大添加数
+                .Take(Strength).ToArray(); //Style.Strength = 最大添加数
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];

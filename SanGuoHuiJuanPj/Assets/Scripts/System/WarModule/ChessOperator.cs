@@ -31,7 +31,7 @@ namespace Assets.System.WarModule
     {
         public int InstanceId { get; protected set; }
         public abstract CombatStyle Style { get; }
-        public virtual int GetStrength => Style.Strength;
+        public virtual int Strength => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }

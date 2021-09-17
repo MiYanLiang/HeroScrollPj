@@ -99,7 +99,7 @@ namespace Assets.System.WarModule
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(GetStrength);
+                var basicDmg = CombatConduct.InstanceDamage(Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(15))
                     return new[]
@@ -130,7 +130,7 @@ namespace Assets.System.WarModule
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(GetStrength);
+                var basicDmg = CombatConduct.InstanceDamage(Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(16))
                     return new[]
@@ -147,7 +147,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceDamage(GetStrength * Chessboard.ConfigPercentage(9)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceDamage(Strength * Chessboard.ConfigPercentage(9)));
     }
     /// <summary>
     /// 石墙

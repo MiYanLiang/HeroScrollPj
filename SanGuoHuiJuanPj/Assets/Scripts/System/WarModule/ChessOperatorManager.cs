@@ -145,13 +145,15 @@ namespace Assets.System.WarModule
                     op = new ZhanXiangOperator();
                     break; //8   象兵
                 case 9:
-                    op = new XianFengOperator();
-                    break; //9   先锋
+                case 60:
+                    op = new FeiQiOperator();
+                    break; //9   先锋 //60  急先锋
                 case 10:
                     op = new XianDengOperator();
                     break; //10  先登
                 case 11:
-                    op = new BaiMaOperator();
+                    op = new HuBaoQiOperator();
+                    //op = new BaiMaOperator();
                     break; //11  白马
                 case 12:
                     op = new ShenWuOperator();
@@ -173,11 +175,13 @@ namespace Assets.System.WarModule
                     op = new DaFuOperator();
                     break; //18  大斧
                 case 19:
+                case 51:
                     op = new LianNuOperator();
-                    break; //19  连弩
+                    break; //19  连弩  //51  强弩
                 case 20:
+                case 52:
                     op = new GongBingOperator();
-                    break; //20  弓兵
+                    break; //20  弓兵 //52  大弓
                 case 21:
                     op = new ZhanChuanOperator();
                     break; //21  战船
@@ -191,14 +195,12 @@ namespace Assets.System.WarModule
                     op = new TouShiCheOperator();
                     break; //24  投石车
                 case 25:
-                    op = new ChiKeOperator();
+                    op = new CiKeOperator();
                     break; //25  刺客
                 case 26:
-                    op = new JunShiOperator();
-                    break; //26  军师
                 case 27:
-                    op = new DaJunShiOperator();
-                    break; //27  大军师
+                    op = new JunShiOperator();
+                    break; //26  军师 //27  大军师
                 case 28:
                     op = new ShuShiOperator();
                     break; //28  术士
@@ -268,12 +270,6 @@ namespace Assets.System.WarModule
                 case 50:
                     op = new HeroOperator();
                     break; //50  文士
-                case 51:
-                    op = new QiangNuOperator();
-                    break; //51  强弩
-                case 52:
-                    op = new DaGongOperator();
-                    break; //52  大弓
                 case 53:
                     op = new YinShiOperator();
                     break; //53  隐士
@@ -296,9 +292,6 @@ namespace Assets.System.WarModule
                 case 14:
                     op = new ChangQiangOperator();
                     break; //59  短枪
-                case 60:
-                    op = new JiXianFengOperator();
-                    break; //60  急先锋
                 ////61  红颜
                 ////62  妖师
                 ////63  大妖师

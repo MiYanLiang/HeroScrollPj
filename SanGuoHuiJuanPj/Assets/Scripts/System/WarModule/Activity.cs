@@ -265,6 +265,8 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            if (Status == null) return $"活动结果：{resultText}";
             return $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({Status.Buffs.Count})";
         }
 

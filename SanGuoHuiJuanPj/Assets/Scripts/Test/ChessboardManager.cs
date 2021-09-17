@@ -274,6 +274,7 @@ public class ChessboardManager : MonoBehaviour
         {
             var mainTween = DOTween.Sequence().Pause();
             var counterTween = DOTween.Sequence().Pause();
+            //会心一击演示
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
                 yield return FullScreenRouse().WaitForCompletion();
 
@@ -330,6 +331,10 @@ public class ChessboardManager : MonoBehaviour
             //如果没有反击
             if (map.Value.CounterActs == null || map.Value.CounterActs.Count == 0) continue;
 
+            //会心一击演示
+            if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
+                yield return FullScreenRouse().WaitForCompletion();
+
             var counterUnit = GetCardMap(map.Value.CounterActs.First().From);
             yield return CardAnimator.CounterAnimation(counterUnit).WaitForCompletion();
 
@@ -354,20 +359,6 @@ public class ChessboardManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         yield return CardAnimator.FinalizeAnimation(majorCard, chessPos).WaitForCompletion();
     }
-    public class ChessAnimFragment
-    {
-        public enum Types
-        {
-            Offense,
-            Counter
-        }
-
-        public Types Type;
-        public FightCardData Invoker;
-        public FightCardData Target;
-        public List<Activity> Activity = new List<Activity>();
-    }
-
 
     private Dictionary<ChessPos, List<SpriteObj>> SpritePosMap { get; } = new Dictionary<ChessPos, List<SpriteObj>>();
     private Tween OnSpriteEffect(Activity activity)
