@@ -193,7 +193,7 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
             Log($"进程({CurrentProcess.InstanceId})[{opText}]");
-            foreach (var activities in process.CombatMaps.Values.Select(m=>m.Activities.Concat(m.CounterActs)))
+            foreach (var activities in process.CombatMaps.Values.Select(m => m.Activities.Concat(m.CounterActs)))
             {
                 foreach (var activity in activities)
                 {
@@ -329,10 +329,10 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋盘指令，非棋子执行类，一般用于羁绊，buff
         /// </summary>
-        /// <param name="major"></param>
+        /// <param name="major">-1=棋盘活动</param>
         /// <param name="fromChallenger"></param>
         /// <param name="target"></param>
-        /// <param name="intent">参考<see cref="RoundAction"/>的值来表示</param>
+        /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
@@ -566,7 +566,7 @@ namespace Assets.System.WarModule
         public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
-            return (int)(op.GetStrength + op.GetStrength * 0.01f * ratio);
+            return (int)(op.Strength + op.Strength * 0.01f * ratio);
         }
         /// <summary>
         /// 完全动态伤害=进攻方伤害转化(buff,羁绊)
@@ -680,11 +680,16 @@ namespace Assets.System.WarModule
         public void OnArmorReduction(ChessOperator op, CombatConduct conduct)
         {
             float armor = Damage.GetKind(conduct) == Damage.Kinds.Physical ? op.GetPhysicArmor() : op.GetMagicArmor();
+            var addOn = 0;
             //加护甲
-            armor += GetCondition(op, CardState.Cons.DefendUp);
+            addOn += GetCondition(op, CardState.Cons.DefendUp);
+            foreach (var bo in GetBuffOperator(b=>b.IsArmorAddOnTrigger)) 
+                addOn += bo.OnArmorAddOn(armor, op, conduct);
+            var resisted = Math.Min(1 - (armor + addOn) * 0.01f, 1);
+            conduct.Multiply(resisted);
             //伤害或护甲转化buff 例如：流血
-            foreach (var bo in GetBuffOperator(b => b.IsArmorConductTrigger))
-                bo.OnArmorConduct(armor, op, conduct);
+            foreach (var bo in GetBuffOperator(b => b.IsSufferConductTrigger))
+                bo.OnSufferConduct(op, conduct);
         }
 
         public bool OnMainProcessAvailable(ChessOperator op)

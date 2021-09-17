@@ -47,16 +47,15 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual bool IsDisableHeroPerform(HeroOperator op) => false;
 
-        public virtual bool IsArmorConductTrigger => false;
+        public virtual bool IsSufferConductTrigger => false;
 
         /// <summary>
-        /// 配合<see cref="IsArmorConductTrigger"/>改变伤害
+        /// 配合<see cref="IsSufferConductTrigger"/>改变伤害
         /// </summary>
-        /// <param name="armor"></param>
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public virtual void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct) {}
+        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct) {}
 
         public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
         /// <summary>
@@ -113,14 +112,15 @@ namespace Assets.System.WarModule
         /// <param name="element"></param>
         /// <param name="armor"></param>
         /// <returns></returns>
-        public virtual int OnConvertArmor(ChessOperator op,int element, int armor) => armor;
+        public virtual bool IsArmorAddOnTrigger => false;
+        public virtual int OnArmorAddOn(float armor, ChessOperator op, CombatConduct conduct) => 0;
         #region Helper
 
         protected bool IsBuffActive(ChessOperator op) => Chessboard.GetCondition(op, Buff) > 0;
         protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff(Buff, -value);
 
-        protected void SelfConduct(ChessOperator op, CombatConduct[] conducts) =>
-            Chessboard.InstanceChessboardActivity(-1, op.IsChallenger, op, Activity.OuterScope, conducts,
+        protected void SelfConduct(ChessOperator op, int activityIntent, params CombatConduct[] conducts) =>
+            Chessboard.InstanceChessboardActivity(-1, op.IsChallenger, op, activityIntent, conducts,
                 skill: (int)Buff);
         ///// <summary>
         /// 扣除buff值
@@ -152,8 +152,9 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
+                SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
         }
+
     }
     //1 眩晕
     public class StunnedBuff : RoundEndDepleteSelfBuff
@@ -180,7 +181,7 @@ namespace Assets.System.WarModule
     //    }
     //}
     //3 无敌
-    public class InvincibleBuff : RoundEndDepleteSelfBuff
+    public class InvincibleBuff : RoundEndDepleteSelfBuff//回合结束自动去buff
     {
         public override CardState.Cons Buff => CardState.Cons.Invincible;
         
@@ -197,8 +198,8 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsArmorConductTrigger => true;
-        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
+        public override bool IsSufferConductTrigger => true;
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
             conduct.Multiply(DataTable.GetGameValue(117) * 0.01f);
@@ -217,11 +218,10 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op,new CombatConduct[]
-            {
-                CombatConduct.InstanceBuff(Buff,-1),
-                CombatConduct.InstanceDamage(damage,1)
-            });
+            SelfConduct(op, Activity.OuterScope,
+                CombatConduct.InstanceBuff(Buff, -1),
+                CombatConduct.InstanceDamage(damage, 1)
+            );
         }
 
     }
@@ -237,11 +237,8 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(118) * 0.01f;
-            SelfConduct(op, new CombatConduct[]
-            {
-                CombatConduct.InstanceBuff(Buff,-1),
-                CombatConduct.InstanceDamage(damage,1)
-            });
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
         }
     }
 
@@ -290,12 +287,13 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsArmorConductTrigger=> true;
-        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
+        public override bool IsArmorAddOnTrigger=> true;
+        public override int OnArmorAddOn(float armor, ChessOperator op, CombatConduct conduct)
         {
-            if (IsBuffActive(op) && 
-                Damage.GetKind(conduct) == Damage.Kinds.Physical) 
-                conduct.Multiply(0.5f * armor);
+            if (IsBuffActive(op) &&
+                Damage.GetKind(conduct) == Damage.Kinds.Physical)
+                return -(int)(armor * 0.5f);
+            return 0;
         }
     }
 
@@ -311,7 +309,7 @@ namespace Assets.System.WarModule
         public override int OnCriticalRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op,Helper.Singular(DepleteBuff()));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
             return 100;
         }
     }
@@ -327,7 +325,7 @@ namespace Assets.System.WarModule
         public override int OnRouseRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Helper.Singular(DepleteBuff()));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
             return 100;
         }
     }
@@ -340,9 +338,9 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsArmorConductTrigger=> true;
+        public override bool IsSufferConductTrigger=> true;
 
-        public override void OnArmorConduct(float armor, ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op)) return;
             var status = Chessboard.GetStatus(op);

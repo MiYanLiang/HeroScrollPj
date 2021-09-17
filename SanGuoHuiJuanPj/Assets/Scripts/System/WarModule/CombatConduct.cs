@@ -19,10 +19,6 @@ namespace Assets.System.WarModule
         /// 固定伤害，不计算防御类的伤害
         /// </summary>
         public const int FixedDmg = -1;
-        /// <summary>
-        /// 非人类物理伤害，对陷阱伤害双倍
-        /// </summary>
-        public const int NonHumanDmg = -2;
         public const int BasicMagicDmg = 1;
         public const int FireDmg = 2;
         public const int ThunderDmg = 3;
@@ -137,7 +133,6 @@ namespace Assets.System.WarModule
                         case FireDmg: elementText = "火元素"; break;
                         case FixedDmg: elementText = "固伤";break;
                         case BasicMagicDmg: elementText = "基础法伤";break;
-                        case NonHumanDmg: elementText = "非人伤害";break;
                         case PhysicalDmg: elementText = "物理伤害";break;
                         case ThunderDmg: elementText = "雷元素";break;
                         default: elementText = "未知伤害";break;
@@ -205,7 +200,6 @@ namespace Assets.System.WarModule
             switch (conduct.Element)
             {
                 case CombatConduct.PhysicalDmg:
-                case CombatConduct.NonHumanDmg:
                     return Kinds.Physical;
                 case CombatConduct.FixedDmg:
                     return Kinds.Fixed;
