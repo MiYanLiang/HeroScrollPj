@@ -86,8 +86,15 @@ namespace Assets.System.WarModule
         //更新棋子代理反馈的结果
         private ActivityResult ProcessActivityResult(Activity activity, IChessOperator offender)
         {
+            //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-
+            if(activity.Intent == Activity.ChessboardInvocation)
+            {
+                foreach (var conduct in activity.Conducts)
+                    UpdateConduct(conduct);
+                result.SetStatus(Chessboard.GetStatus(this));
+                return result;
+            }
             //直接击杀
             var kills = activity.Conducts.Where(c => c.Kind == CombatConduct.KillingKind).ToArray();
             if (kills.Length > 0)
@@ -126,6 +133,7 @@ namespace Assets.System.WarModule
             if(result.Type == ActivityResult.Types.Suffer||
                result.Type == ActivityResult.Types.EaseShield)
                 OnSufferConduct(offender,activity);
+
             return result;
         }
 
@@ -159,7 +167,8 @@ namespace Assets.System.WarModule
         /// 另外如果来自伤害死亡，将触发<see cref="OnDeadTrigger"/>
         /// </summary>
         /// <param name="conduct"></param>
-        public void UpdateConduct(CombatConduct conduct)
+        /// <param name="chessboardInvocation"></param>
+        private void UpdateConduct(CombatConduct conduct,bool chessboardInvocation = false)
         {
             var conductTotal = (int) conduct.Total;
             var status = Chessboard.GetStatus(this);
@@ -167,7 +176,8 @@ namespace Assets.System.WarModule
             {
                 case CombatConduct.BuffKind:
 
-                    if (conductTotal == -1) //如果buff -1是清除状态
+                    if (conductTotal == -1 || //如果是清除状态不执行转换
+                        chessboardInvocation) //如果是棋盘活动，直接执行
                     {
                         status.AddBuff(conduct.Element,conductTotal);
                         return;
@@ -182,16 +192,23 @@ namespace Assets.System.WarModule
                     status.AddHp(Chessboard.OnHealConvert(this, conduct));
                     break;
                 case CombatConduct.DamageKind:
-                    //伤害执行<see cref="CombatConduct"/>的伤害值转换
-                    int finalDamage = conductTotal;
-                    if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
+                    if(!chessboardInvocation)
                     {
-                        Chessboard.OnArmorReduction(this, conduct);
-                        //自身(武将技)伤害转化
-                        finalDamage = OnMilitaryDamageConvert(conduct);
+                        int finalDamage = conductTotal;
+                        if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
+                        {
+                            Chessboard.OnArmorReduction(this, conduct);
+                            //自身(武将技)伤害转化
+                            finalDamage = OnMilitaryDamageConvert(conduct);
+                        }
+
+                        SubtractHp(finalDamage);
+                        if (IsAlive) OnAfterSubtractHp(finalDamage, conduct);
                     }
-                    SubtractHp(finalDamage);
-                    if(IsAlive) OnAfterSubtractHp(finalDamage, conduct);
+                    else
+                    {
+                        SubtractHp((int)conduct.Total);
+                    }
                     break;
                 case CombatConduct.PlayerDegreeKind://特别类不是棋子维度可执行的
                 case CombatConduct.KillingKind://属于直接提取棋子的类型

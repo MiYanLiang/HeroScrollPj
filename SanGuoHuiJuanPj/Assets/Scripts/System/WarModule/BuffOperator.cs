@@ -119,8 +119,8 @@ namespace Assets.System.WarModule
         protected bool IsBuffActive(ChessOperator op) => Chessboard.GetCondition(op, Buff) > 0;
         protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff(Buff, -value);
 
-        protected void SelfConduct(ChessOperator op, CombatConduct[] conducts) =>
-            Chessboard.InstanceChessboardActivity(-1, op.IsChallenger, op, Activity.OuterScope, conducts,
+        protected void SelfConduct(ChessOperator op, int activityIntent, params CombatConduct[] conducts) =>
+            Chessboard.InstanceChessboardActivity(-1, op.IsChallenger, op, activityIntent, conducts,
                 skill: (int)Buff);
         ///// <summary>
         /// 扣除buff值
@@ -152,7 +152,7 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (IsBuffActive(op))
-                SelfConduct(op, Helper.Singular(DepleteBuff()));
+                SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
         }
     }
     //1 眩晕
@@ -180,7 +180,7 @@ namespace Assets.System.WarModule
     //    }
     //}
     //3 无敌
-    public class InvincibleBuff : RoundEndDepleteSelfBuff
+    public class InvincibleBuff : RoundEndDepleteSelfBuff//回合结束自动去buff
     {
         public override CardState.Cons Buff => CardState.Cons.Invincible;
         
@@ -217,11 +217,10 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op,new CombatConduct[]
-            {
-                CombatConduct.InstanceBuff(Buff,-1),
-                CombatConduct.InstanceDamage(damage,1)
-            });
+            SelfConduct(op, Activity.OuterScope,
+                CombatConduct.InstanceBuff(Buff, -1),
+                CombatConduct.InstanceDamage(damage, 1)
+            );
         }
 
     }
@@ -237,11 +236,8 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(118) * 0.01f;
-            SelfConduct(op, new CombatConduct[]
-            {
-                CombatConduct.InstanceBuff(Buff,-1),
-                CombatConduct.InstanceDamage(damage,1)
-            });
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
         }
     }
 
@@ -311,7 +307,7 @@ namespace Assets.System.WarModule
         public override int OnCriticalRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op,Helper.Singular(DepleteBuff()));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
             return 100;
         }
     }
@@ -327,7 +323,7 @@ namespace Assets.System.WarModule
         public override int OnRouseRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Helper.Singular(DepleteBuff()));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
             return 100;
         }
     }

@@ -329,10 +329,10 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋盘指令，非棋子执行类，一般用于羁绊，buff
         /// </summary>
-        /// <param name="major"></param>
+        /// <param name="major">-1=棋盘活动</param>
         /// <param name="fromChallenger"></param>
         /// <param name="target"></param>
-        /// <param name="intent">参考<see cref="RoundAction"/>的值来表示</param>
+        /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>

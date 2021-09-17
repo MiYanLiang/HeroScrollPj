@@ -15,6 +15,10 @@ namespace Assets.System.WarModule
         public static Activity[] Empty { get; } = Array.Empty<Activity>();
         //注意，负数是非棋子行动。一般都是上升到棋手这个维度的东西如：资源，金币
         /// <summary>
+        /// 棋盘执行活动，如： Buff消减，必须对棋子执行的活动
+        /// </summary>
+        public const int ChessboardInvocation = -2;
+        /// <summary>
         /// 棋手资源类
         /// </summary>
         public const int PlayerResource = -1;

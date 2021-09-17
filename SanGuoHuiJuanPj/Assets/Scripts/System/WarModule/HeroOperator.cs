@@ -501,7 +501,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DaMeiRenOperator : MeiRenOperator
     {
-        protected override CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(CardState.Cons.ShenZhu);
+        protected override CardState.Cons Buff => CardState.Cons.ShenZhu;
     }
 
     /// <summary>
@@ -509,11 +509,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class MeiRenOperator : HeroOperator
     {
-        protected virtual CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(CardState.Cons.Neizhu);
+        protected virtual CardState.Cons Buff => CardState.Cons.Neizhu;
+        private CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(Buff);
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetFriendly(this,
                     p => p.IsPostedAlive &&
+                         Chessboard.GetCondition(p.Operator, Buff) == 0 &&
                          p.Operator.CardType == GameCardType.Hero)
                 .RandomPick();
             if (target == null)
@@ -1606,12 +1608,15 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 5: return 30;
+                case 5: return 100;
                 case 81: return 50;
                 case 82: return 70;
                 default: throw MilitaryNotValidError(this);
             }
         }
+
+        protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
+
         protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
         {
             if ((conduct.Rouse > 0 || conduct.Critical > 0) &&
