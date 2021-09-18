@@ -17,18 +17,10 @@ namespace Assets.System.WarModule
             Cons.Burn,
             Cons.Imprisoned,
             Cons.Cowardly,
-            Cons.Disarmed
+            Cons.Disarmed,
+            Cons.Confuse,
         };
-        public static bool IsNegativeBuff(Cons con)
-        {
-            return con == Cons.Stunned ||
-                   con == Cons.Bleed ||
-                   con == Cons.Poison ||
-                   con == Cons.Burn ||
-                   con == Cons.Imprisoned ||
-                   con == Cons.Cowardly ||
-                   con == Cons.Disarmed;
-        }
+        public static bool IsNegativeBuff(Cons con) => NegativeBuffs.Contains(con);
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
         public static Cons[] ConsArray { get; } = Enum.GetValues(typeof(Cons)).Cast<Cons>().ToArray();
         public static string IconName(Cons con)
@@ -75,9 +67,14 @@ namespace Assets.System.WarModule
                     return StringNameStatic.StateIconPath_shield;
                 case Cons.Forge:
                     return StringNameStatic.StateIconPath_miWuZhenAddtion;
+                case Cons.Stimulate:
+                    break;
+                case Cons.Confuse:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }
+            return string.Empty;
         }
 
         public static bool IsDamageBuff(Cons con)
@@ -105,6 +102,8 @@ namespace Assets.System.WarModule
                 case Cons.ShenZhu:
                 case Cons.EaseShield:
                 case Cons.Forge:
+                case Cons.Stimulate:
+                case Cons.Confuse:
                     return false;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -195,7 +194,11 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 战意
             /// </summary>
-            Stimulate = 21
+            Stimulate = 21,
+            /// <summary>
+            /// 混乱
+            /// </summary>
+            Confuse = 22,
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -300,6 +303,7 @@ namespace Assets.System.WarModule
         /// 迷雾阵-远程闪避加成
         /// </summary>
         [JsonIgnore] public int MiWuZhenAddOn { get => data[20]; set => data[20] = value; }
+        [JsonIgnore] public int Confuse { get => data[22]; set => data[22] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
         public void AddState(Cons con,int value)
@@ -368,6 +372,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Stimulate:
                     Stimulate += MinZeroAlign(Stimulate);
+                    break;
+                case Cons.Confuse:
+                    Confuse += MinZeroAlign(Confuse);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -443,6 +450,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Stimulate:
                     Stimulate = 0;
+                    break;
+                case Cons.Confuse:
+                    Confuse = 0;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);

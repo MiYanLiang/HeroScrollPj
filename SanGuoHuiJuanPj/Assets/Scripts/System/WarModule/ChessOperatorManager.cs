@@ -34,6 +34,7 @@ namespace Assets.System.WarModule
                 new NeiZhuBuff(this),//17 内助
                 new ShenZhuBuff(this),//18 神助
                 new ExtendedShieldBuff(this), // 19 缓冲盾
+                new ConfuseBuff(this),//22 混乱
             };
             JiBan = GetJiBan();
         }
@@ -208,29 +209,21 @@ namespace Assets.System.WarModule
                     op = new DaShuShiOperator();
                     break; //29  大术士
                 case 30:
-                    op = new DuShiOperator();
-                    break; //30  毒士
                 case 31:
-                    op = new DaDuShiOperator();
-                    break; //31  大毒士
+                    op = new DuShiOperator();
+                    break; //30  毒士 //31  大毒士
                 case 32:
-                    op = new TongShuaiOperator();
-                    break; //32  统帅
                 case 33:
-                    op = new DaTongShuaiOperator();
-                    break; //33  大统帅
+                    op = new TongShuaiOperator();
+                    break; //32  统帅//33  大统帅
                 case 34:
-                    op = new BianShiOperator();
-                    break; //34  辩士
                 case 35:
-                    op = new DaBianShiOperator();
-                    break; //35  大辩士
+                    op = new BianShiOperator();
+                    break; //34  辩士 //35  大辩士
                 case 36:
-                    op = new MouShiOperator();
-                    break; //36  谋士
                 case 37:
-                    op = new DaMouShiOperator();
-                    break; //37  大谋士
+                    op = new MouShiOperator();
+                    break; //36  谋士 //37  大谋士
                 case 38:
                     op = new NeiZhengOperator();
                     break; //38  内政
@@ -244,26 +237,22 @@ namespace Assets.System.WarModule
                     op = new GanSiOperator();
                     break; //41  敢死
                 case 42:
-                    op = new YiShiOperator();
-                    break; //42  医师
                 case 43:
-                    op = new DaYiShiOperator();
-                    break; //43  大医师
+                    op = new YiShiOperator();
+                    break; //42  医师 //43  大医师
                 case 44:
                     op = new JingGuoOperator();
                     break; //44  巾帼
                 case 45:
-                    op = new MeiRenOperator();
+                    op = new QingChengOperator();
                     break; //45  美人
                 case 46:
-                    op = new DaMeiRenOperator();
+                    op = new QingGuoOperator();
                     break; //46  大美人
                 case 47:
-                    op = new ShuiKeOperator();
-                    break; //47  说客
                 case 48:
-                    op = new DaShuiKeOperator();
-                    break; //48  大说客
+                    op = new ShuiKeOperator();
+                    break; //47  说客 //48  大说客
                 case 49:
                     op = new HeroOperator();
                     break; //49  弩兵
@@ -271,11 +260,9 @@ namespace Assets.System.WarModule
                     op = new HeroOperator();
                     break; //50  文士
                 case 53:
-                    op = new YinShiOperator();
-                    break; //53  隐士
                 case 54:
-                    op = new DaYinShiOperator();
-                    break; //54  大隐士
+                    op = new YinShiOperator();
+                    break; //53  隐士 //54  大隐士
                 case 55:
                     op = new HuoChuanOperator();
                     break; //55  火船

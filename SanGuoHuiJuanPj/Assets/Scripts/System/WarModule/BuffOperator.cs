@@ -214,14 +214,13 @@ namespace Assets.System.WarModule
         {
         }
         public override bool IsRoundEndTrigger => true;
+
         public override void RoundEnd(ChessOperator op)
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.OuterScope,
-                CombatConduct.InstanceBuff(Buff, -1),
-                CombatConduct.InstanceDamage(damage, 1)
-            );
+            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
         }
 
     }
@@ -232,12 +231,14 @@ namespace Assets.System.WarModule
         public BurnBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+        private int DamageRate => 5;
         public override bool IsRoundEndTrigger => true;
         public override void RoundEnd(ChessOperator op)
         {
-            if (!IsBuffActive(op)) return;
-            var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(118) * 0.01f;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            var stacks = Chessboard.GetCondition(op, CardState.Cons.Burn);
+            if (stacks <= 0) return;
+            var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(stacks));
             SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
         }
     }
@@ -348,5 +349,13 @@ namespace Assets.System.WarModule
             conduct.SetBasic(balance);//缓冲盾会把会心或暴击变成一般攻击
         }
     }
+    //22 混乱
+    public class ConfuseBuff : RoundEndDepleteSelfBuff
+    {
+        public override CardState.Cons Buff => CardState.Cons.Confuse;
+        public ConfuseBuff(ChessboardOperator chessboard) : base(chessboard)
+        {
+        }
 
+    }
 }

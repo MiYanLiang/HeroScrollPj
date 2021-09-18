@@ -166,15 +166,28 @@ namespace Assets.System.WarModule
         /// <param name="pos"></param>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IChessPos GetContraPositionInSequence(IChessOperator chessman,int pos,Func<IChessPos,bool> condition = null)
+        public IChessPos GetContraPositionInSequence(IChessOperator chessman, int pos,
+            Func<IChessPos, bool> condition = null) =>
+            GetContraPositionInSequence(!chessman.IsChallenger, pos, condition);
+
+        /// <summary>
+        /// 获取以对位开始排列的目标,
+        /// 默认 p => p.IsPostedAlive
+        /// </summary>
+        /// <param name="isChallenger"></param>
+        /// <param name="pos"></param>
+        /// <param name="condition"></param>
+        /// <returns></returns>
+        public IChessPos GetContraPositionInSequence(bool isChallenger, int pos, Func<IChessPos, bool> condition = null)
         {
             if (condition == null) condition = p => p.IsPostedAlive;
             var series = AttackPath[pos % 5];
-            return GetRivalScope(chessman).Join(series, p => p.Key, s => s, (p, _) => p.Value).FirstOrDefault(condition);
+            return GetScope(isChallenger).Join(series, p => p.Key, s => s, (p, _) => p.Value).FirstOrDefault(condition);
         }
 
         //public IChessPos GetChessPos(IChessOperator chessman) => GetChessPos(chessman.Pos, chessman.IsPlayer);
-        public int[] GetAttackPath(int pos) => AttackPath[pos % 5];
+        public IChessPos[] GetAttackPath(bool isChallenger, int pos) => GetScope(isChallenger)
+            .Join(AttackPath[pos % 5], d => d.Key, i => i, (d, _) => d.Value).ToArray();
 
         public IChessPos GetChessPos(IChessOperator op,int pos) => GetChessPos(pos, op.IsChallenger);
     }

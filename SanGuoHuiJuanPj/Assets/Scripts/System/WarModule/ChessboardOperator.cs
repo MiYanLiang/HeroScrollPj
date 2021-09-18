@@ -22,7 +22,7 @@ namespace Assets.System.WarModule
             RoundEnd
         }
 
-        private ProcessCondition Condition { get; set; }
+        private ProcessCondition RoundState { get; set; }
         private ChessRound currentRound;
         private Activity currentActivity;
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
@@ -129,9 +129,9 @@ namespace Assets.System.WarModule
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             currentProcesses = new List<ChessProcess>();
             RefreshChessPosses();
-            Condition = ProcessCondition.RoundStart;
+            RoundState = ProcessCondition.RoundStart;
             InvokePreRoundTriggers();
-            Condition = ProcessCondition.Chessman;
+            RoundState = ProcessCondition.Chessman;
             do
             {
                 var op = GetSortedOperator(currentOps); //根据排列逻辑获取执行代理
@@ -169,7 +169,7 @@ namespace Assets.System.WarModule
                 Log($"{winner}");
                 return currentRound;
             }
-            Condition = ProcessCondition.RoundEnd;
+            RoundState = ProcessCondition.RoundEnd;
             InvokeRoundEndTriggers();
 
             return currentRound;
@@ -222,7 +222,7 @@ namespace Assets.System.WarModule
         private void InstanceProcess(ChessProcess.Types type, int major, bool isChallenger)
         {
             CurrentProcess = ChessProcess.Instance(ProcessSeed, currentRound.InstanceId, type, major, isChallenger);
-            switch (Condition)
+            switch (RoundState)
             {
                 case ProcessCondition.RoundStart:
                     currentRound.PreAction.ChessProcesses.Add(CurrentProcess);
@@ -430,7 +430,7 @@ namespace Assets.System.WarModule
         /// 
         /// </summary>
         /// <param name="fromChallenger"></param>
-        /// <param name="targetInstance"></param>
+        /// <param name="targetInstance"> op = InstanceId, <see cref="Activity.Sprite"/> = Pos</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
@@ -446,8 +446,8 @@ namespace Assets.System.WarModule
         /// 
         /// </summary>
         /// <param name="fromChallenger"></param>
-        /// <param name="offender"></param>
-        /// <param name="targetInstance"></param>
+        /// <param name="offender">null = -1 challenger, -2 opponent</param>
+        /// <param name="targetInstance"> op = InstanceId, sprite = Pos</param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
@@ -456,7 +456,6 @@ namespace Assets.System.WarModule
         private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, int intent,
             CombatConduct[] conducts, int skill, int rePos)
         {
-
             RecursiveActionCount++;
             ActivitySeed++;
             var processId = CurrentProcess.InstanceId;
@@ -495,16 +494,14 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
-        /// <param name="lasting"></param>
-        /// <param name="value"></param>
         /// <param name="typeId"></param>
+        /// <param name="value">回合数或宿主id</param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, TerrainSprite.LastingType lasting ,int typeId, int value)
+        public T InstanceSprite<T>(IChessPos target, int typeId, int value)
             where T : TerrainSprite, new()
         {
             var sprite =
-                TerrainSprite.Instance<T>(ChessSpriteSeed,
-                    lasting: lasting,
+                TerrainSprite.Instance<T>(this,ChessSpriteSeed,
                     value: value,
                     pos: target.Pos,
                     typeId: typeId,
@@ -516,21 +513,13 @@ namespace Assets.System.WarModule
 
         private Activity SpriteActivity(TerrainSprite sprite,bool isAdd)
         {
+            if (CurrentProcess == null)
+                InstanceProcess(ChessProcess.Types.Chessboard, sprite.Pos, sprite.IsChallenger);
             var conduct = isAdd
                 ? CombatConduct.AddSprite(sprite.Value, sprite.InstanceId, sprite.TypeId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
-            var activity = Activity.Instance(
-                id: ActivitySeed,
-                processId: CurrentProcess.InstanceId, 
-                @from: sprite.IsChallenger ? -1 : -2,
-                isChallenger: sprite.IsChallenger ? 0 : 1, 
-                to: sprite.Pos,
-                intent: Activity.Sprite,
-                conducts: Helper.Singular(conduct),
-                skill: 1,
-                rePos: -1);
-            ActivitySeed++;
-            return activity;
+            return InstanceActivity(sprite.IsChallenger, sprite.Pos, Activity.Sprite,
+                Helper.Singular(conduct), 1, -1);
         }
 
         private void RegSprite(TerrainSprite sprite)
@@ -589,6 +578,10 @@ namespace Assets.System.WarModule
         {
             foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Lasting == TerrainSprite.LastingType.Relation).ToArray())
             {
+                var op = GetOperator(sprite.Value);
+                if (op == null)
+                    throw new InvalidOperationException(
+                        $"{sprite} 找不到宿主[{sprite.Value}]. 注意如果是依赖型精灵，请在sprite.Value填上宿主id");
                 if (GetOperator(sprite.Value).IsAlive) continue;
                 DepleteSprite(sprite);
             }
@@ -759,6 +752,8 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public int Randomize(int excludedMax) => random.Next(excludedMax);
 
+        public int Randomize(int min, int excludedMax) => random.Next(min, excludedMax);
+
         public bool IsRouseDamagePass(ChessOperator op)
         {
             var ratio = 0;
@@ -808,22 +803,52 @@ namespace Assets.System.WarModule
 
         public IChessPos GetChessPos(IChessOperator op) => Grid.GetChessPos(op, GetStatus(op).Pos);
 
-        public IChessPos GetContraTarget(ChessOperator op,Func<IChessPos,bool> condition = null) => Grid.GetContraPositionInSequence(op, GetStatus(op).Pos, condition);
+        public IChessPos GetContraTarget(ChessOperator op)
+        {
+            return Grid.GetContraPositionInSequence(
+                GetCondition(op, CardState.Cons.Confuse) > 0 ? op.IsChallenger : !op.IsChallenger,
+                GetStatus(op).Pos,
+                p => p.IsPostedAlive && p.Operator != op);
+        }
 
-        public IEnumerable<IChessPos> GetAttackPath(ChessOperator op) => Grid.GetAttackPath(GetStatus(op).Pos).Select(i => Grid.GetChessPos(i, !op.IsChallenger));
+        public IEnumerable<IChessPos> GetAttackPath(ChessOperator op)
+        {
+            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? !op.IsChallenger : op.IsChallenger;
+            return Grid.GetAttackPath(isChallenger, GetStatus(op).Pos).Where(p => p.Operator != op);
+        }
 
-        public IEnumerable<IChessPos> GetFriendlyNeighbors(ChessOperator op) => Grid.GetFriendlyNeighbors(op, GetStatus(op).Pos);
-        
-        public IEnumerable<IChessPos> GetContraNeighbors(ChessOperator op) => Grid.GetNeighbors(GetStatus(op).Pos, !op.IsChallenger);
+        public IEnumerable<IChessPos> GetFriendlyNeighbors(ChessOperator op)
+        {
+            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? !op.IsChallenger : op.IsChallenger;
+            return Grid.GetNeighbors(GetStatus(op).Pos, isChallenger);
+        }
 
-        public IEnumerable<IChessPos> GetRivals(ChessOperator op, Func<IChessPos, bool> condition = null) =>
-            Grid.GetRivalScope(op).Values.Where(condition == null ? p => p.IsPostedAlive : condition);
+        public IEnumerable<IChessPos> GetContraNeighbors(ChessOperator op)
+        {
+            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? !op.IsChallenger : op.IsChallenger;
+            return Grid.GetNeighbors(GetStatus(op).Pos, isChallenger);
+        }
+
+        public IEnumerable<IChessPos> GetRivals(ChessOperator op, Func<IChessPos, bool> condition = null)
+        {
+            var scope = GetCondition(op, CardState.Cons.Confuse) > 0
+                ? Grid.GetRivalScope(!op.IsChallenger)
+                : Grid.GetRivalScope(op);
+            return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
+        }
 
         public IEnumerable<IChessPos> GetNeighbors(IChessPos pos, bool includeUnPost, int surround= 1) => Grid.GetNeighbors(pos, includeUnPost, surround);
-        public IEnumerable<IChessPos> GetFriendly(ChessOperator op, Func<IChessPos, bool> condition = null) =>
-            Grid.GetScope(op).Values.Where(condition == null ? p => p.IsPostedAlive : condition);
+        public IEnumerable<IChessPos> GetFriendly(ChessOperator op, Func<IChessPos, bool> condition = null)
+        {
+            var scope = GetCondition(op,CardState.Cons.Confuse)>0 ? Grid.GetScope(!op.IsChallenger) : Grid.GetScope(op);
+            return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
+        }
+
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
         #endregion
+
+        public IEnumerable<TerrainSprite> GetSpriteInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
+        public IEnumerable<TerrainSprite> GetSpriteInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
 
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 

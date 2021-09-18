@@ -395,7 +395,6 @@ public class ChessboardManager : MonoBehaviour
         //var targetPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
         //targetPos.transform
     }
-
     private void PlaySoundEffect(Activity activity, CombatStyle offense, FightCardData target)
     {
         var offenseSoundEffectId = GetOffenseAudioId(activity, offense);
