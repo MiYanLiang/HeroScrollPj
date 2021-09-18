@@ -81,7 +81,7 @@ public class BaYeManager : MonoBehaviour
             {
                 var cityId = city.EventPoint;
                 var baYeEventId = city.BaYeCityEventTableIds.Select(id =>
-                    new BaYeEventWeightElement(id, DataTable.BaYeCityEvent[id].Weight)).Pick().Id;
+                    new BaYeEventWeightElement(id, DataTable.BaYeCityEvent[id].Weight)).PickOrDefault().Id;
                 //根据地图获取对应的事件id列表，并根据权重随机获取一个事件id
                 var baYeEvent = GetBaYeEvent(baYeEventId, cityId);
                 return new BaYeCityEvent
@@ -165,7 +165,7 @@ public class BaYeManager : MonoBehaviour
                     })
                 };
             })
-            .ToDictionary(e => e.point, e => e.storyEvents.Pick());
+            .ToDictionary(e => e.point, e => e.storyEvents.PickOrDefault());
         PlayerDataForGame.instance.baYe.storyMap = eventPointStoryMap.ToDictionary(m => m.Key, m =>
         {
             var story = m.Value;

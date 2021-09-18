@@ -44,7 +44,8 @@ public class RewardManager : MonoBehaviour
                     var type = gameCardType;
                     var rewardCards = GetWeightList(type,isZyBox, r.Rare);
                     if (rewardCards.Count == 0) return;
-                    var pick = rewardCards.Pick();
+                    var pick = rewardCards.PickOrDefault();
+                    if (pick == null) return;
                     var chips = UnityEngine.Random.Range(r.MinChips, r.ExcMaxChips);
                     RewardCard(type, pick.cardId, chips);
                     list.Add(new CardReward

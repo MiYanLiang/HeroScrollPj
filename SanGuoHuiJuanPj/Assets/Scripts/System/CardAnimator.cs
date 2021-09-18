@@ -114,13 +114,13 @@ public class CardAnimator
     /// 文字特效
     /// </summary>
     /// <param name="target"></param>
-    /// <param name="iconString"></param>
     /// <param name="conduct"></param>
     /// <param name="color"></param>
     /// <returns></returns>
     public static Tween NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
     {
         var value = (int)conduct.Total;
+        if (value == 0) return DOTween.Sequence();
         if (color == default)
             color = CombatConduct.IsPositiveConduct(conduct)
                 ? ColorDataStatic.huiFu_green
@@ -234,6 +234,9 @@ public class CardAnimator
                 break;
             case TerrainSprite.YeHuo:
                 effectId = CardState.IconName(CardState.Cons.Burn);
+                break;
+            case TerrainSprite.YellowBand:
+                effectId = StringNameStatic.StateIconPath_deathFight;
                 break;
         }
         return effectId;
@@ -406,6 +409,8 @@ public class CardAnimator
                         case CardState.Cons.ShenZhu:
                         case CardState.Cons.Neizhu:
                         case CardState.Cons.Forge:
+                        case CardState.Cons.Stimulate:
+                        case CardState.Cons.Confuse:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CorrelateLib;
 using Newtonsoft.Json;
 
@@ -37,27 +38,31 @@ namespace Assets.System.WarModule
         public const int Dodge = 11;
         public const int Critical = 12;
         public const int Rouse = 13;
+        public const int YellowBand = 30;
 
-        public static T Instance<T>(int instanceId,LastingType lasting,int value,int typeId ,int pos, bool isChallenger)
+        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int value,int typeId ,int pos, bool isChallenger)
             where T : TerrainSprite, new()
         {
             return new T
             {
+                Grid = chessboardOp.Grid,
                 InstanceId = instanceId,
-                Lasting = lasting,
                 Value = value,
                 Pos = pos,
                 IsChallenger = isChallenger,
                 TypeId = typeId
             };
         }
-
+        /// <summary>
+        /// ChessboardOperator千万别用来添加活动。它仅仅用在地块查询
+        /// </summary>
+        protected ChessGrid Grid { get; private set; }
         public int InstanceId { get; set; }
         /// <summary>
         /// 类型标签，用来识别单位类型
         /// </summary>
         public int TypeId { get; set; }
-        public LastingType Lasting {  get; set; }
+        public abstract LastingType Lasting { get; }
         /// <summary>
         /// 宿主<see cref="ChessOperator.InstanceId"/>
         /// -1 =回合类型，正数：棋子id
@@ -68,9 +73,7 @@ namespace Assets.System.WarModule
         /// 棋格
         /// </summary>
         public int Pos { get; set; }
-
         public bool IsChallenger { get; set; }
-
         protected TerrainSprite()
         {
             
@@ -103,6 +106,7 @@ namespace Assets.System.WarModule
             {
                 case YeHuo: typeText = "业火";break;
                 case Forge: typeText = "迷雾";break;
+                case YellowBand: typeText = "黄巾";break;
             }
             return $"精灵({InstanceId})({typeText}).{hostText} Pos:{challengerText}";
         }
@@ -113,10 +117,11 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 火精灵
     /// </summary>
-    public class FireSprite : TerrainSprite
+    public class FireSprite : RoundSprite
     {
         public int BuffRatio { get; } = 10;
         public int Damage { get; } = 100;
+
         public override CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
             if (!op.IsAlive) return null;
@@ -126,9 +131,15 @@ namespace Assets.System.WarModule
             return combat.ToArray();
         }
     }
+
+    public abstract class RoundSprite : TerrainSprite
+    {
+        public override LastingType Lasting { get; } = LastingType.Round;
+    }
     // 依赖型精灵
     public abstract class RelationSprite : TerrainSprite
     {
+        public override LastingType Lasting { get; } = LastingType.Relation;
         //依赖类不执行(回合)消耗
     }
     /// <summary>
@@ -268,4 +279,17 @@ namespace Assets.System.WarModule
     {
     }
 
+    public class YellowBandSprite : StrengthSprite
+    {
+        //只给自己生成的黄巾精灵加力量
+        protected override Func<IChessOperator, bool> OpCondition => p => p.InstanceId == Value;
+        private int DamageRate => 20;
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op)
+        {
+            if (buff != CardState.Cons.StrengthUp) return 0;
+            var cluster = Grid.GetScope(op.IsChallenger).Values.SelectMany(p => p.Terrain.Sprites)
+                .Count(s => s.TypeId == YellowBand);
+            return (int)(op.Style.Strength * DamageRate * 0.01f * cluster);
+        }
+    }
 }

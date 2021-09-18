@@ -514,7 +514,7 @@ public class WarsUIManager : MonoBehaviour
         PlayAudioClip(19);
 
         QuizWindow.Show();
-        var pick = DataTable.Quest.Values.Select(q => new WeightElement { Id = q.Id, Weight = q.Weight }).Pick();
+        var pick = DataTable.Quest.Values.Select(q => new WeightElement { Id = q.Id, Weight = q.Weight }).PickOrDefault();
         var quest = DataTable.Quest[pick.Id];
         QuizWindow.SetQuiz(quest, OnAnswerQuiz);
     }
@@ -728,7 +728,7 @@ public class WarsUIManager : MonoBehaviour
         for (int i = 0; i < sanXuan.GameCards.Length; i++)
         {
             var pick = DataTable.Mercenary.Values.Select(m => new WeightElement {Id = m.Id, Weight = m.Weight})
-                .Pick().Id;
+                .PickOrDefault().Id;
             var mercenary = DataTable.Mercenary[pick];
             int btnIndex = i;
             var ui = sanXuan.GameCards[i];
@@ -769,7 +769,7 @@ public class WarsUIManager : MonoBehaviour
     {
         var sanXuan = SanXuanWindow;
             var pick = DataTable.Mercenary.Values.Select(m => new WeightElement {Id = m.Id, Weight = m.Weight})
-                .Pick().Id;
+                .PickOrDefault().Id;
             var mercenary = DataTable.Mercenary[pick];
         for (int i = 0; i < sanXuan.GameCards.Length; i++)
         {
@@ -897,7 +897,7 @@ public class WarsUIManager : MonoBehaviour
             rewardStr = DataTable.GetStringText(58);
             //eventsWindows[2].transform.GetChild(btnIndex).GetChild(0).GetComponent<Text>().color = Color.green;
             var pick = DataTable.QuestReward.Values.Select(r => new WeightElement {Id = r.Id, Weight = r.Weight})
-                .Pick().Id;
+                .PickOrDefault().Id;
             var reward = DataTable.QuestReward[pick].Produce;
 
             var info = RandomPickFromRareClass((GameCardType)reward.CardType, reward.Rarity);
