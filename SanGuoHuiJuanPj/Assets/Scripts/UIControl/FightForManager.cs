@@ -1072,13 +1072,13 @@ public class FightForManager : MonoBehaviour
     {
         if (tran.Find(stateName) == null)
         {
-            GameObject stateIconObj = EffectsPoolingControl.instance.GetStateEffect("stateIcon", tran).gameObject;
+            GameObject stateIconObj = EffectsPoolingControl.instance.GetBuffEffect("stateIcon", tran).gameObject;
             stateIconObj.name = stateName;
             stateIconObj.GetComponent<Image>().sprite = Resources.Load("Image/fightStateIcon/" + stateName, typeof(Sprite)) as Sprite;
         }
         if (isShowEffect && tran.parent.Find(stateName + "Din") == null)
         {
-            GameObject stateDinObj = EffectsPoolingControl.instance.GetStateEffect(stateName, tran.parent).gameObject;
+            GameObject stateDinObj = EffectsPoolingControl.instance.GetBuffEffect(stateName, tran.parent).gameObject;
             stateDinObj.name = stateName + "Din";
         }
     }

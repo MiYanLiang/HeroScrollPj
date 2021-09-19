@@ -12,14 +12,14 @@ namespace Assets.System.WarModule
         protected override Dictionary<ChessOperator, ChessStatus> StatusMap { get; }
         protected Dictionary<int, ChessOperator> ops = new Dictionary<int, ChessOperator>();
         private int cardSeed;
-        protected override List<TerrainSprite> Sprites { get; }
+        protected override List<PosSprite> Sprites { get; }
         protected override BondOperator[] JiBan { get; }
         private BuffOperator[] BuffOps { get; }
 
         public ChessOperatorManager(ChessGrid grid, ILogger log = null) : base(grid, log)
         {
             StatusMap = new Dictionary<ChessOperator, ChessStatus>();
-            Sprites = new List<TerrainSprite>();
+            Sprites = new List<PosSprite>();
             BuffOps = new BuffOperator[]
             {
                 new StunnedBuff(this), //1 眩晕
@@ -35,6 +35,7 @@ namespace Assets.System.WarModule
                 new ShenZhuBuff(this),//18 神助
                 new ExtendedShieldBuff(this), // 19 缓冲盾
                 new ConfuseBuff(this),//22 混乱
+                new ChainedBuff(this),//24 铁骑
             };
             JiBan = GetJiBan();
         }
@@ -485,7 +486,7 @@ namespace Assets.System.WarModule
                 .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
             
             //每个回合开始先计算回合制精灵
-            foreach (var sprite in ChessSprites.Where(s => s.Lasting == TerrainSprite.LastingType.Round).ToArray())
+            foreach (var sprite in ChessSprites.Where(s => s.Host == PosSprite.HostType.Round).ToArray())
             {
                 sprite.Value--;
                 DepleteSprite(sprite);

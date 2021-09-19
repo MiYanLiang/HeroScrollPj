@@ -9,12 +9,12 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 棋格精灵，存在地块上执行任务。与<see cref="BuffOperator"/>不一样的是，它是挂在棋格上的状态
     /// </summary>
-    public abstract class TerrainSprite
+    public abstract class PosSprite
     {
         /// <summary>
         /// 类型
         /// </summary>
-        public enum LastingType
+        public enum HostType
         {
             /// <summary>
             /// 依赖类型
@@ -38,10 +38,9 @@ namespace Assets.System.WarModule
         public const int Dodge = 11;
         public const int Critical = 12;
         public const int Rouse = 13;
-        public const int YellowBand = 30;
 
-        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int value,int typeId ,int pos, bool isChallenger)
-            where T : TerrainSprite, new()
+        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int lasting,int value ,int typeId, int pos,bool isChallenger)
+            where T : PosSprite, new()
         {
             return new T
             {
@@ -50,7 +49,8 @@ namespace Assets.System.WarModule
                 Value = value,
                 Pos = pos,
                 IsChallenger = isChallenger,
-                TypeId = typeId
+                TypeId = typeId,
+                Lasting = lasting,
             };
         }
         /// <summary>
@@ -62,7 +62,11 @@ namespace Assets.System.WarModule
         /// 类型标签，用来识别单位类型
         /// </summary>
         public int TypeId { get; set; }
-        public abstract LastingType Lasting { get; }
+        public abstract HostType Host { get; }
+        /// <summary>
+        /// <see cref="HostType.Round"/> = 回合数，<see cref="HostType.Relation"/> = 宿主Id
+        /// </summary>
+        public int Lasting { get; set; } = -1;
         /// <summary>
         /// 宿主<see cref="ChessOperator.InstanceId"/>
         /// -1 =回合类型，正数：棋子id
@@ -74,9 +78,8 @@ namespace Assets.System.WarModule
         /// </summary>
         public int Pos { get; set; }
         public bool IsChallenger { get; set; }
-        protected TerrainSprite()
+        protected PosSprite()
         {
-            
         }
 
         /// <summary>
@@ -86,29 +89,18 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <returns></returns>
         public virtual int ServedBuff(CardState.Cons buff,IChessOperator op) => 0;
-        ///// <summary>
-        ///// 回合开始动作
-        ///// </summary>
-        //public virtual void RoundStart(){}
-        ///// <summary>
-        ///// 回合结束动作
-        ///// </summary>
-        //public virtual void RoundEnd(){}
-
-        public virtual int GetBuff(CardState.Cons con) => 0;
 
         public override string ToString()
         {
-            var hostText = Lasting == LastingType.Relation ? $"宿主({Value})" : $"回合({Value})";
+            var hostText = Host == HostType.Relation ? $"宿主({Lasting})" : $"回合({Lasting})";
             var challengerText = IsChallenger ? $"玩家({Pos})" : $"对手({Pos})";
             var typeText = "未定";
             switch (TypeId)
             {
                 case YeHuo: typeText = "业火";break;
                 case Forge: typeText = "迷雾";break;
-                case YellowBand: typeText = "黄巾";break;
             }
-            return $"精灵({InstanceId})({typeText}).{hostText} Pos:{challengerText}";
+            return $"精灵({InstanceId})({typeText}).{hostText} [{Value}] Pos:{challengerText}";
         }
 
         public virtual CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard) => null;
@@ -132,34 +124,33 @@ namespace Assets.System.WarModule
         }
     }
 
-    public abstract class RoundSprite : TerrainSprite
+    public abstract class RoundSprite : PosSprite
     {
-        public override LastingType Lasting { get; } = LastingType.Round;
+        public override HostType Host { get; } = HostType.Round;
     }
     // 依赖型精灵
-    public abstract class RelationSprite : TerrainSprite
+    public abstract class RelationSprite : PosSprite
     {
-        public override LastingType Lasting { get; } = LastingType.Relation;
+        public override HostType Host { get; } = HostType.Relation;
+        /// <summary>
+        /// 代理特殊条件
+        /// </summary>
+        protected abstract Func<IChessOperator, bool> OpCondition { get; }
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => OpCondition(op) ? BuffRespond(buff,op) : 0;
         //依赖类不执行(回合)消耗
+        protected abstract int BuffRespond(CardState.Cons con, IChessOperator op);
     }
     /// <summary>
     /// 力量精灵
     /// </summary>
     public abstract class StrengthSprite : RelationSprite
     {
-        /// <summary>
-        /// 代理特殊条件
-        /// </summary>
-        protected abstract Func<IChessOperator, bool> OpCondition { get; }
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => OpCondition(op) ? GetBuff(buff) : 0;
-        public override int GetBuff(CardState.Cons con) => con == CardState.Cons.StrengthUp ? Value : 0;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.StrengthUp ? Value : 0;
     }
     public class ArmorSprite : RelationSprite
     {
-
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => GetBuff(buff);
-
-        public override int GetBuff(CardState.Cons con) => con == CardState.Cons.DefendUp ? Value : 0;
+        protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.ArmorUp ? Value : 0;
     }
     /// <summary>
     /// 近战力量精灵
@@ -180,14 +171,15 @@ namespace Assets.System.WarModule
     /// </summary>
     public class PhysicalSprite : StrengthSprite
     {
-        protected override Func<IChessOperator, bool> OpCondition => op => op.Style.Element <= 0 && op.Style.Element != CombatConduct.FixedDmg;
+        protected override Func<IChessOperator, bool> OpCondition => op => Damage.GetKind(op.Style.Element) == Damage.Kinds.Physical;
     }
     /// <summary>
     /// 法力精灵
     /// </summary>
     public class MagicForceSprite : StrengthSprite
     {
-        protected override Func<IChessOperator, bool> OpCondition => op => op.Style.Element > 0;
+        protected override Func<IChessOperator, bool> OpCondition =>
+            op => Damage.GetKind(op.Style.Element) == Damage.Kinds.Magic;
     }
     /// <summary>
     /// 曹魏精灵
@@ -250,46 +242,69 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DodgeSprite : RelationSprite
     {
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
-            op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
-        public override int GetBuff(CardState.Cons con) => con == CardState.Cons.DodgeUp ? Value : 0;
+        protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
+
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.DodgeUp ? Value : 0;
     }
     /// <summary>
     /// 暴击精灵
     /// </summary>
     public class CriticalSprite : RelationSprite
     {
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
-            op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
-        public override int GetBuff(CardState.Cons con) => con == CardState.Cons.CriticalUp ? Value : 0;
+        protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
+
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.CriticalUp ? Value : 0;
     }
     /// <summary>
     /// 会心精灵
     /// </summary>
     public class RouseSprite : RelationSprite
     {
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
-            op.CardType == GameCardType.Hero ? GetBuff(buff) : 0;
-        public override int GetBuff(CardState.Cons con) => con == CardState.Cons.RouseUp ? Value : 0;
+        protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.RouseUp ? Value : 0;
     }
     /// <summary>
     /// 迷雾精灵
     /// </summary>
     public class ForgeSprite : DodgeSprite
     {
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op) =>
+            con == CardState.Cons.DodgeUp || 
+            con == CardState.Cons.Forge ? Value : 0;
     }
 
     public class YellowBandSprite : StrengthSprite
     {
-        //只给自己生成的黄巾精灵加力量
-        protected override Func<IChessOperator, bool> OpCondition => p => p.InstanceId == Value;
-        private int DamageRate => 20;
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op)
+        protected override Func<IChessOperator, bool> OpCondition => op => op.InstanceId == Lasting;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op)
         {
-            if (buff != CardState.Cons.StrengthUp) return 0;
-            var cluster = Grid.GetScope(op.IsChallenger).Values.SelectMany(p => p.Terrain.Sprites)
-                .Count(s => s.TypeId == YellowBand);
-            return (int)(op.Style.Strength * DamageRate * 0.01f * cluster);
+            if (con == CardState.Cons.YellowBand) return Value;
+            if (!HuangJinOperator.IsYellowBand(op)) return 0;
+            if (con == CardState.Cons.StrengthUp)
+            {
+                var sprites = Grid.GetScope(IsChallenger).Values
+                    .SelectMany(p => p.Terrain.Sprites.Where(s => s.TypeId == TypeId)).ToArray();
+                return op.OnSpritesValueConvert(sprites, con);
+            }
+            return 0;
         }
+    }
+    //链环精灵管理伤害转化
+    public class ChainSprite : RelationSprite
+    {
+        private static int ChainedId = (int)CardState.Cons.Chained;
+        protected override Func<IChessOperator, bool> OpCondition => op=> op.InstanceId == Lasting;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op)
+        {
+            if (con == CardState.Cons.Chained) return Value;
+            if (!TieJiOperator.IsChainable(op)) return 0;
+            if (con != CardState.Cons.ArmorUp && 
+                con != CardState.Cons.StrengthUp) return 0;
+            var chainedList = Grid.GetChained(Pos, IsChallenger, ChainedFilter);
+
+            return Grid.GetChessPos(Pos,IsChallenger).Operator.OnSpritesValueConvert(chainedList.SelectMany(p => p.Terrain.Sprites).ToArray(), con);
+        }
+        public static Func<IChessPos, bool> ChainedFilter =>
+            p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == ChainedId);
     }
 }

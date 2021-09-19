@@ -53,7 +53,7 @@ namespace Assets.System.WarModule
                     return StringNameStatic.StateIconPath_pilitaiAddtion;
                 case Cons.RouseUp:
                     return StringNameStatic.StateIconPath_langyataiAddtion;
-                case Cons.DefendUp:
+                case Cons.ArmorUp:
                     return StringNameStatic.StateIconPath_fenghuotaiAddtion;
                 case Cons.DeathFight:
                     return StringNameStatic.StateIconPath_deathFight;
@@ -66,10 +66,13 @@ namespace Assets.System.WarModule
                 case Cons.EaseShield:
                     return StringNameStatic.StateIconPath_shield;
                 case Cons.Forge:
+                case Cons.YellowBand:
                     return StringNameStatic.StateIconPath_miWuZhenAddtion;
                 case Cons.Stimulate:
                     break;
                 case Cons.Confuse:
+                    break;
+                case Cons.Chained:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -95,7 +98,7 @@ namespace Assets.System.WarModule
                 case Cons.DodgeUp:
                 case Cons.CriticalUp:
                 case Cons.RouseUp:
-                case Cons.DefendUp:
+                case Cons.ArmorUp:
                 case Cons.DeathFight:
                 case Cons.Disarmed:
                 case Cons.Neizhu:
@@ -166,7 +169,7 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 烽火台
             /// </summary>
-            DefendUp = 14,
+            ArmorUp = 14,
             /// <summary>
             /// 死战
             /// </summary>
@@ -199,6 +202,14 @@ namespace Assets.System.WarModule
             /// 混乱
             /// </summary>
             Confuse = 22,
+            /// <summary>
+            /// 黄巾
+            /// </summary>
+            YellowBand = 23,
+            /// <summary>
+            /// 连环
+            /// </summary>
+            Chained = 24,
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -304,6 +315,8 @@ namespace Assets.System.WarModule
         /// </summary>
         [JsonIgnore] public int MiWuZhenAddOn { get => data[20]; set => data[20] = value; }
         [JsonIgnore] public int Confuse { get => data[22]; set => data[22] = value; }
+        [JsonIgnore] public int YellowBand { get => data[23]; set => data[23] = value; }
+        [JsonIgnore] public int Chained { get => data[24]; set => data[24] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
         public void AddState(Cons con,int value)
@@ -349,7 +362,7 @@ namespace Assets.System.WarModule
                 case Cons.RouseUp:
                     RouseUp += MinZeroAlign(RouseUp);
                     break;
-                case Cons.DefendUp:
+                case Cons.ArmorUp:
                     FengHuoTaiAddOn += MinZeroAlign(DodgeUp);
                     break;
                 case Cons.DeathFight:
@@ -375,6 +388,12 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Confuse:
                     Confuse += MinZeroAlign(Confuse);
+                    break;
+                case Cons.YellowBand:
+                    YellowBand += MinZeroAlign(YellowBand);
+                    break;
+                case Cons.Chained:
+                    Chained += MinZeroAlign(Chained);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -427,7 +446,7 @@ namespace Assets.System.WarModule
                 case Cons.RouseUp:
                     RouseUp = 0;
                     break;
-                case Cons.DefendUp:
+                case Cons.ArmorUp:
                     FengHuoTaiAddOn = 0;
                     break;
                 case Cons.DeathFight:
@@ -453,6 +472,12 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Confuse:
                     Confuse = 0;
+                    break;
+                case Cons.YellowBand:
+                    YellowBand = 0;
+                    break;
+                case Cons.Chained:
+                    Chained = 0;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);

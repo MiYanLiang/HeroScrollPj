@@ -259,52 +259,37 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TieJiOperator : HeroOperator
     {
-        protected virtual int ShareRate => DataTable.GetGameValue(50);
-        protected virtual int DamageStackRate => DataTable.GetGameValue(50);
-
-        protected IEnumerable<IChessPos> GetComrades() => Chessboard.GetFriendly(this, p =>
-            p.Operator != null &&
-            p.Operator != this &&
-            p.Operator.IsAlive &&
-            p.Operator.CardType == GameCardType.Hero &&
-            p.Operator.Style.Military == 58);
-
-        protected override void MilitaryPerforms(int skill = 1)
+        public static bool IsChainable(IChessOperator op)
         {
-            var comrades = GetComrades().Count();
-            base.MilitaryPerforms(comrades > 0 ? 1 : 0);
-        }
-
-        protected override CombatConduct[] MilitaryDamages(IChessPos targetPos)
-        {
-            var comrades = GetComrades().Count();
-            var bonus = 0;
-            if (comrades > 0)
-                bonus = (int)(DataTable.GetGameValue(50) * 0.01f * comrades * GeneralDamage());
-
-            return Helper.Singular(InstanceHeroGenericDamage(bonus));
-        }
-
-        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
-        {
-            var comrades = GetComrades().ToArray();
-            var finalDamage = conduct.Total / (comrades.Length + 1);
-            //铁骑要非常注意，如果不用固伤，它将会进入死循环
-            foreach (var comrade in comrades)
+            switch (op.Style.Military)
             {
-                Chessboard.AppendOpActivity(this, comrade, Activity.Friendly, Helper.Singular(CombatConduct.InstanceDamage((int)finalDamage, CombatConduct.FixedDmg)),0, 2);
+                case 58:
+                case 152:
+                case 153:
+                    return true;
+                default:return false;
             }
-            return (int)finalDamage;
+        }
+        private const int Chained = (int)CardState.Cons.Chained;
+        private const int ChainMax = 10;
+        private int ArmorRate => 5;
+        private int StrengthRate => 5;
+
+        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con)
+        {
+            var rate = con == CardState.Cons.ArmorUp ? 
+                ArmorRate : con == CardState.Cons.StrengthUp ? 
+                    StrengthRate : 0;
+            return rate * Math.Min(sprites.Length, ChainMax);
         }
 
-        public override int Strength
+        public override void PreStart()
         {
-            get
-            {
-                var stacks = GetComrades().Count();
-                if (stacks <= 0) return base.Strength;
-                return base.Strength + (int)(0.01f * base.Strength * DamageStackRate * stacks);
-            }
+            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == Chained)) return;
+            var chainedList = Chessboard.GetChainedPos(this,p=>p.IsAliveHero && IsChainable(p.Operator)).ToArray();
+            if (chainedList.Length > 1)
+                Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), Chained,
+                    InstanceId, 1);
         }
     }
 
@@ -313,8 +298,15 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HuangJinOperator : HeroOperator
     {
+        private const int YellowBand = (int)CardState.Cons.YellowBand;
         private const int Max = 10;
-        private bool IsSameMilitary(IChessOperator op)
+        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con)
+        {
+            sprites = sprites.Where(s => s.TypeId == YellowBand).Take(Max).ToArray();
+            return !sprites.Any() ? 0 : sprites.Sum(s => s.Value);
+        }
+
+        public static bool IsYellowBand(IChessOperator op)
         {
             switch (op.Style.Military)
             {
@@ -326,25 +318,18 @@ namespace Assets.System.WarModule
                     return false;
             }
         }
-        public override void OnRoundStart()
+        protected virtual int DamageRate => 20;
+        public override void PreStart()
         {
-            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == TerrainSprite.YellowBand)) return;
+            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == YellowBand)) return;
             var cluster = Chessboard.GetFriendly(this, 
                 p => p.IsAliveHero && 
                      p.Operator!=this && 
-                     IsSameMilitary(p.Operator)).ToArray();
+                     IsYellowBand(p.Operator)).ToArray();
             if (cluster.Length == 0) return;
-            Chessboard.InstanceSprite<YellowBandSprite>(Chessboard.GetChessPos(this), TerrainSprite.YellowBand,
-                InstanceId);
+            Chessboard.InstanceSprite<YellowBandSprite>(Chessboard.GetChessPos(this), YellowBand,
+                InstanceId, DamageRate);
         }
-
-
-        protected virtual int DamageRate => 20;
-        
-        public override int Strength => (int)(Chessboard.GetFriendly(this,
-                p => p.IsPostedAlive &&
-                     p.Operator.CardType == GameCardType.Hero &&
-                     IsSameMilitary(p.Operator)).Count() * base.Strength * DamageRate * 0.01f);
 
     }
 
@@ -1039,7 +1024,7 @@ namespace Assets.System.WarModule
             for (int i = FireRings.Length - 1; i >= 0; i--)
             {
                 var sprite = Chessboard.GetSpriteInChessPos(FireRings[i][0],!IsChallenger)
-                    .FirstOrDefault(s => s.TypeId == TerrainSprite.YeHuo);
+                    .FirstOrDefault(s => s.TypeId == PosSprite.YeHuo);
                 if (sprite == null) continue;
                 ringIndex = i;
                 break;
@@ -1052,7 +1037,7 @@ namespace Assets.System.WarModule
             var burnBuff = CombatConduct.InstanceBuff(CardState.Cons.Burn,3);
             var burnPoses = scope
                 .Join(FireRings.SelectMany(i=>i), p => p.Pos, i => i, (p, _) => p)
-                .All(p => p.Terrain.Sprites.Any(s => s.TypeId == TerrainSprite.YeHuo))
+                .All(p => p.Terrain.Sprites.Any(s => s.TypeId == PosSprite.YeHuo))
                 ? //是否满足满圈条件
                 scope
                 : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
@@ -1062,7 +1047,7 @@ namespace Assets.System.WarModule
                 var combat = new List<CombatConduct> { CombatConduct.InstanceDamage(basicDamage, Style.Element) };
                 if (Chessboard.IsRandomPass(BurnRatio + Chessboard.Randomize(10)))
                     combat.Add(burnBuff);
-                Chessboard.InstanceSprite<FireSprite>(chessPos, typeId: TerrainSprite.YeHuo, value: 2);
+                Chessboard.InstanceSprite<FireSprite>(chessPos, typeId: PosSprite.YeHuo, 2, 5);
                 if (chessPos.Operator == null || Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
                 Chessboard.AppendOpActivity(this, chessPos, Activity.Offensive, combat.ToArray(), 0, 1);
             }

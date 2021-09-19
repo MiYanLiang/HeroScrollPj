@@ -9,22 +9,20 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ChessTerrain
     {
-        private readonly List<TerrainSprite> sprites;
-        public IEnumerable<TerrainSprite> Sprites => sprites;
-
-        public int GetBuff(CardState.Cons con) => Sprites.Sum(s=>s.GetBuff(con));
+        private readonly List<PosSprite> sprites;
+        public IEnumerable<PosSprite> Sprites => sprites;
 
         public int GetServed(CardState.Cons con,IChessOperator op) => Sprites.Sum(o => o.ServedBuff(con, op));
         public ChessTerrain()
         {
-            sprites = new List<TerrainSprite>();
+            sprites = new List<PosSprite>();
         }
 
         /// <summary>
         /// 添加状态
         /// </summary>
 
-        public void AddSprite(TerrainSprite sprite)
+        public void AddSprite(PosSprite sprite)
         {
             if (sprites.Any(s=>s.InstanceId == sprite.InstanceId))
                 throw new InvalidOperationException(
@@ -32,6 +30,6 @@ namespace Assets.System.WarModule
             sprites.Add(sprite);
         }
 
-        public void RemoveSprite(TerrainSprite sprite) => sprites.Remove(sprite);
+        public void RemoveSprite(PosSprite sprite) => sprites.Remove(sprite);
     }
 }

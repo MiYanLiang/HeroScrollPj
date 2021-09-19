@@ -206,7 +206,7 @@ public class EffectsPoolingControl : MonoBehaviour
     /// <summary>
     /// 获取状态特效图标,跟随卡牌动
     /// </summary>
-    public EffectStateUi GetStateEffect(string stateName, Transform usedTran)
+    public EffectStateUi GetBuffEffect(string stateName, Transform usedTran)
     {
         int index = -1;
         for (int i = 0; i < iconNameStr.Length; i++)
@@ -263,26 +263,6 @@ public class EffectsPoolingControl : MonoBehaviour
             go.transform.SetParent(effectContentTran);
             go.SetActive(false);
         }
-    }
-
-    public EffectStateUi GetPosState(CombatConduct sp, ChessPos pos)
-    {
-        EffectStateUi prefab = null;
-        switch (sp.Element)
-        {
-            case TerrainSprite.YeHuo:
-                prefab = GameResources.Instance.StateDin[StringNameStatic.StateIconPath_burned];
-                break;
-            case TerrainSprite.Forge:
-                prefab = GameResources.Instance.StateDin[StringNameStatic.StateIconPath_miWuZhenAddtion];
-                break;
-        }
-
-        if (prefab == null) return null;
-        var effect = Instantiate(prefab, pos.transform);
-        effect.transform.localScale = Vector3.one;
-        effect.transform.localPosition = Vector3.zero;
-        return effect;
     }
 }
 

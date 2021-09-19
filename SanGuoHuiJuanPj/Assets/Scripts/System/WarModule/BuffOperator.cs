@@ -1,10 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Design;
+using System.Linq;
 
 namespace Assets.System.WarModule
 {
     /// <summary>
-    /// 棋子的增益效果，与<see cref="TerrainSprite"/>不同的是<see cref="BuffOperator"/>是在棋子身上挂着的状态
+    /// 棋子的增益效果，与<see cref="PosSprite"/>不同的是<see cref="BuffOperator"/>是在棋子身上挂着的状态
     /// </summary>
     // todo ChessOperator 与buffOperator存在共同管理buff问题，需要统一管理
     public abstract class BuffOperator
@@ -357,5 +358,27 @@ namespace Assets.System.WarModule
         {
         }
 
+    }
+    //链环buff管理防守时分享伤害
+    public class ChainedBuff : BuffOperator
+    {
+        public override CardState.Cons Buff => CardState.Cons.Chained;
+        public ChainedBuff(ChessboardOperator chessboard) : base(chessboard)
+        {
+        }
+        public override bool IsSufferConductTrigger => true;
+
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        {
+            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
+            var poses = Chessboard.GetChainedPos(op, ChainSprite.ChainedFilter).ToArray();
+            var chainCount = poses.Count();
+            if (chainCount == 0) return;
+            conduct.Multiply(1f / chainCount);
+            var fixedDmg =
+                CombatConduct.InstanceDamage(conduct.Basic, conduct.Critical, conduct.Rouse, CombatConduct.FixedDmg);
+            foreach (var pos in poses)
+                Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), -1, -1);
+        }
     }
 }

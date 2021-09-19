@@ -40,8 +40,8 @@ namespace Assets.System.WarModule
 
         protected void RefreshBuffs()
         {
-            if (Buffs.Any(s => s.Value <= 0))
-                Buffs = Buffs.Where(s => s.Value > 0).ToDictionary(s => s.Key, s => s.Value);
+            foreach (var buff in Buffs.ToDictionary(b=>b.Key,b=>b.Value).Where(buff => buff.Value < 0))
+                Buffs[buff.Key] = 0;
         }
 
         public void ClearBuff(CardState.Cons con) => ClearBuff((int) con);

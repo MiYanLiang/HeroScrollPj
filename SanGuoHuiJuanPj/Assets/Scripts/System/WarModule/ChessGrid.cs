@@ -154,9 +154,42 @@ namespace Assets.System.WarModule
             return !scope.ContainsKey(pos) ? null : scope[pos];
         }
 
+        private const int RecursiveProtect = 999;
+
+        /// <summary>
+        /// 根据<see cref="conditionFunc"/>条件获取相邻(链)的位置
+        /// </summary>
+        /// <param name="chessPos"></param>
+        /// <param name="isChallenger"></param>
+        /// <param name="conditionFunc"></param>
+        /// <returns></returns>
+        public IEnumerable<IChessPos> GetChained(int chessPos, bool isChallenger,Func<IChessPos, bool> conditionFunc)
+        {
+            var pos = GetChessPos(chessPos, isChallenger);
+            var chained = new List<IChessPos>();
+            var neighbors = new List<IChessPos> { pos };
+            var test = 0;
+            while (neighbors.Count > 0)
+            {
+                test++;
+                if (test > RecursiveProtect)
+                    throw new StackOverflowException($"精灵[{nameof(ChainSprite)}]死循环!");
+                var nPos = neighbors[0];
+                if (chained.Contains(nPos))
+                {
+                    neighbors.Remove(nPos);
+                    continue;
+                }
+                chained.Add(nPos);
+                neighbors = neighbors.Concat(GetNeighbors(nPos).Where(conditionFunc)).Distinct().ToList();
+                neighbors.Remove(nPos);
+            }
+            return chained;
+        }
+
         public IEnumerable<IChessPos> GetFriendlyNeighbors(IChessOperator chessman,int pos) => GetNeighbors(pos, chessman.IsChallenger);
 
-        public IChessPos GetChessmanInSequence(bool isChallenger,Func<IChessPos,bool> condition) => GetScope(isChallenger).OrderBy(c => c.Key).Select(c => c.Value).FirstOrDefault(condition);
+        public IChessPos GetChessmanInSequence(bool isChallenger,Func<IChessPos, bool> condition) => GetScope(isChallenger).OrderBy(c => c.Key).Select(c => c.Value).FirstOrDefault(condition);
 
         /// <summary>
         /// 获取以对位开始排列的目标,

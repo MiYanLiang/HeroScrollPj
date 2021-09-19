@@ -103,6 +103,7 @@ public class ChessboardManager : MonoBehaviour
     {
         //Sw.Start();
         IsBusy = true;
+        yield return OnPreRoundUpdate(round);
         //回合开始演示
         yield return OnRoundBeginAnimation(round.PreAction);
         //执行回合每一个棋子活动
@@ -141,7 +142,20 @@ public class ChessboardManager : MonoBehaviour
 
         IsBusy = false;
         NewWar.StartButtonShow(true);
+        NewWar.ChessOperator.RoundConfirm();
         //Sw.Stop();
+    }
+
+    private IEnumerator OnPreRoundUpdate(ChessRound round)
+    {
+        var tween = DOTween.Sequence().Pause();
+        foreach (var stat in round.PreRoundStats)
+        {
+            if (!CardMap.ContainsKey(stat.Key)) continue;
+            var card = CardMap[stat.Key];
+            tween.Append(card.ChessmanStyle.UpdateStatusTween(stat.Value, card));
+        }
+        yield return tween.Play().WaitForCompletion();
     }
 
     private IEnumerator OnRoundBeginAnimation(RoundAction action)
@@ -270,10 +284,12 @@ public class ChessboardManager : MonoBehaviour
 
         //var fragments = GenerateAnimFragments(process);
         var majorCard = GetCardMap(Chessboard.GetChessPos(process.Major, process.Scope == 0).Card.InstanceId);
+
         foreach (var map in process.CombatMaps)
         {
             var mainTween = DOTween.Sequence().Pause();
             var counterTween = DOTween.Sequence().Pause();
+
             //会心一击演示
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
                 yield return FullScreenRouse().WaitForCompletion();
@@ -292,6 +308,7 @@ public class ChessboardManager : MonoBehaviour
                 var op = GetCardMap(activity.From);
                 if (major == null)
                     major = op;
+                
                 if (activity.Intent == Activity.Sprite) //精灵活动最高优先，否则target会译为棋子而非棋位
                 {
                     mainTween.Join(OnSpriteEffect(activity));
@@ -380,7 +397,7 @@ public class ChessboardManager : MonoBehaviour
                 if (sp.Value > 0)
                 {
                     if (sp.Obj == null) 
-                        sp.Obj = CardAnimator.AddSpriteEffect(chessPos, conduct);
+                        sp.Obj = CardAnimator.AddPosSpriteEffect(chessPos, conduct);
                     continue;
                 }
 

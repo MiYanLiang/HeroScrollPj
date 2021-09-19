@@ -1047,21 +1047,41 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 8
-  - Id: 14
-    Pos: 1
+  - Id: 5
+    Pos: 6
     Type: 0
     Level: 1
+  - Id: 311
+    Pos: 7
+    Type: 0
+    Level: 1
+  - Id: 13
+    Pos: 9
+    Type: 0
+    Level: 1
+  - Id: 139
+    Pos: 2
+    Type: 0
+    Level: 2
   Enemy:
   - Id: 0
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 106
+  - Id: 0
+    Pos: 1
+    Type: 0
+    Level: 1
+  - Id: 59
     Pos: 2
     Type: 0
     Level: 1
-  - Id: 20
-    Pos: 7
+  - Id: 43
+    Pos: 3
+    Type: 0
+    Level: 1
+  - Id: 802
+    Pos: 4
     Type: 0
     Level: 1
 --- !u!4 &413234022

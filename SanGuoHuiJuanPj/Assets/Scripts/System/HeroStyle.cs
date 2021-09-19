@@ -3,6 +3,7 @@ using System.Linq;
 using Assets.System.WarModule;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.WSA;
 using Random = UnityEngine.Random;
 
 /// <summary>
@@ -50,6 +51,8 @@ public class ChessUiStyle : CombatStyle
 /// </summary>
 public class ChessmanStyle : ChessUiStyle
 {
+    public virtual Tween UpdateStatusTween(ChessStatus chessStatus, FightCardData card) => DOTween.Sequence()
+        .AppendCallback(() => card.UpdateActivityStatus(chessStatus)).Append(CardAnimator.UpdateStateIcon(card));
     /// <summary>
     /// 主行动，施展+反馈
     /// </summary>
@@ -67,19 +70,17 @@ public class SpriteStyle : CombatStyle
 }
 public abstract class CardStyle : ChessmanStyle
 {
-
     public override Tween OffensiveTween(Activity activity,FightCardData offense)
     {
         return DOTween.Sequence()
             .Join(OffenseVText(activity, offense));
     }
 
-    public override Sequence RespondTween(Activity activity, FightCardData target, string effectId = null) => 
+    public override Sequence RespondTween(Activity activity, FightCardData target, string effectId = null) =>
         base.RespondTween(activity, target, effectId)
             .AppendCallback(() => target.UpdateActivityStatus(activity.Result.Status))
             .Append(RespondAnimation(activity, target, effectId))
             .Join(CardAnimator.UpdateStateIcon(target));
-
     protected virtual Tween RespondAnimation(Activity activity, FightCardData target, string effectId)
     {
         var tween = DOTween.Sequence();

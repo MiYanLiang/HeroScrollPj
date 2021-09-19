@@ -31,7 +31,7 @@ public class NewWarManager : MonoBehaviour,ILogger
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid,this);
         RegCards(Player, true);
         RegCards(Enemy, false);
-
+        ChessOperator.RoundConfirm();
         void RegCards(ChessCard[] list, bool isChallenger)
         {
             foreach (var chessCard in list)

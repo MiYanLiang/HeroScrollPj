@@ -17,27 +17,27 @@ namespace Assets.System.WarModule
         public ChessGrid Grid { get; }
         private enum ProcessCondition
         {
+            PreStart,
             RoundStart,
             Chessman,
             RoundEnd
         }
 
-        private ProcessCondition RoundState { get; set; }
+        private ProcessCondition RoundState { get; set; } = ProcessCondition.PreStart;
         private ChessRound currentRound;
         private Activity currentActivity;
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
-        public IEnumerable<TerrainSprite> ChessSprites => Sprites;
-        protected abstract List<TerrainSprite> Sprites { get; }
+        public IEnumerable<PosSprite> ChessSprites => Sprites;
+        protected abstract List<PosSprite> Sprites { get; }
 
         public int ChallengerGold { get; protected set; }
         public int OpponentGold { get; protected set; }
         public List<int> ChallengerChests { get; set; } = new List<int>();
         public List<int> OpponentChests { get; set; } = new List<int>();
         protected abstract BondOperator[] JiBan { get; }
-        
-        public bool IsInit => ProcessSeed > 0;
+
+        public bool IsInit => RoundIdSeed <= 0;
         private int RoundIdSeed;
-        
         private static Random random = new Random();
         private int RecursiveActionCount
         {
@@ -104,8 +104,44 @@ namespace Assets.System.WarModule
             return GetStatus(op).GetBuff(con) +
                    GetChessPos(op).Terrain.GetServed(con, op);
         }
+        public ChessStatus GetFullCondition(ChessOperator op)
+        {
+            var status = GetStatus(op);
+            var pos = GetChessPos(op).Terrain;
+            var dic = new Dictionary<int, int>();
+            foreach (var con in CardState.ConsArray)
+            {
+                var key = (int)con;
+                var value = 0;
+                if (status.Buffs.ContainsKey(key))
+                    value += status.Buffs[key];
+                value += pos.GetServed(con, op);
+                if (value > 0) dic.Add(key, value);
+            }
+
+            return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, status.Speed, dic);
+        }
 
         protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
+
+        public void RoundConfirm()
+        {
+            currentRound = new ChessRound
+            {
+                InstanceId = RoundIdSeed,
+                PreRound = new List<ChessProcess>(),
+                PreAction = new RoundAction(),
+                FinalAction = new RoundAction(),
+                ChallengerJiBans = new List<int>(),
+                OppositeJiBans = new List<int>()
+            };
+            RoundIdSeed++;
+            RoundState = ProcessCondition.PreStart;
+            foreach (var chessOperator in StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key))
+                chessOperator.PreStart();
+            currentRound.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
+                .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
+        }
         public ChessRound StartRound()
         {
             if (IsGameOver) return null;
@@ -114,22 +150,13 @@ namespace Assets.System.WarModule
             //Get all sorted this operators
             //invoke this operations
             //invoke finalization
+            RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
             ActivatedJiBan.Clear();
-            currentRound = new ChessRound
-            {
-                InstanceId = RoundIdSeed,
-                PreAction = new RoundAction(),
-                FinalAction = new RoundAction(),
-                ChallengerJiBans = new List<int>(),
-                OppositeJiBans = new List<int>()
-            };
-            RoundIdSeed++;
             Log($"开始回合[{currentRound.InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             currentProcesses = new List<ChessProcess>();
             RefreshChessPosses();
-            RoundState = ProcessCondition.RoundStart;
             InvokePreRoundTriggers();
             RoundState = ProcessCondition.Chessman;
             do
@@ -232,6 +259,9 @@ namespace Assets.System.WarModule
                     break;
                 case ProcessCondition.RoundEnd:
                     currentRound.FinalAction.ChessProcesses.Add(CurrentProcess);
+                    break;
+                case ProcessCondition.PreStart:
+                    currentRound.PreRound.Add(CurrentProcess);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -495,23 +525,23 @@ namespace Assets.System.WarModule
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
         /// <param name="typeId"></param>
-        /// <param name="value">回合数或宿主id</param>
+        /// <param name="lasting">回合数或宿主id</param>
+        /// <param name="value">buff参数</param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, int typeId, int value)
-            where T : TerrainSprite, new()
+        public T InstanceSprite<T>(IChessPos target, int typeId,int lasting,int value)
+            where T : PosSprite, new()
         {
             var sprite =
-                TerrainSprite.Instance<T>(this,ChessSpriteSeed,
+                PosSprite.Instance<T>(this,ChessSpriteSeed,
                     value: value,
-                    pos: target.Pos,
                     typeId: typeId,
-                    isChallenger: target.IsChallenger);
+                    pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
             RegSprite(sprite);
             ChessSpriteSeed++;
             return sprite;
         }
 
-        private Activity SpriteActivity(TerrainSprite sprite,bool isAdd)
+        private Activity SpriteActivity(PosSprite sprite,bool isAdd)
         {
             if (CurrentProcess == null)
                 InstanceProcess(ChessProcess.Types.Chessboard, sprite.Pos, sprite.IsChallenger);
@@ -522,7 +552,7 @@ namespace Assets.System.WarModule
                 Helper.Singular(conduct), 1, -1);
         }
 
-        private void RegSprite(TerrainSprite sprite)
+        private void RegSprite(PosSprite sprite)
         {
             Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
@@ -535,7 +565,7 @@ namespace Assets.System.WarModule
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
         }
 
-        public void DepleteSprite(TerrainSprite sprite)
+        public void DepleteSprite(PosSprite sprite)
         {
             Log($"移除{sprite}");
             if (sprite.Value <= 0) RemoveSprite(sprite);
@@ -546,7 +576,7 @@ namespace Assets.System.WarModule
             AddToCurrentProcess(activity, 0);
         }
 
-        private void RemoveSprite(TerrainSprite sprite)
+        private void RemoveSprite(PosSprite sprite)
         {
             Sprites.Remove(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.RemoveSprite(sprite);
@@ -576,13 +606,13 @@ namespace Assets.System.WarModule
 
         private void UpdateTerrain(IChessPos pos)
         {
-            foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Lasting == TerrainSprite.LastingType.Relation).ToArray())
+            foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Host == PosSprite.HostType.Relation).ToArray())
             {
-                var op = GetOperator(sprite.Value);
+                var op = GetOperator(sprite.Lasting);
                 if (op == null)
                     throw new InvalidOperationException(
-                        $"{sprite} 找不到宿主[{sprite.Value}]. 注意如果是依赖型精灵，请在sprite.Value填上宿主id");
-                if (GetOperator(sprite.Value).IsAlive) continue;
+                        $"{sprite} 找不到宿主[{sprite.Lasting}]. 注意如果是依赖型精灵，请在sprite.Lasting填上宿主id");
+                if (op.IsAlive) continue;
                 DepleteSprite(sprite);
             }
         }
@@ -649,7 +679,7 @@ namespace Assets.System.WarModule
                 op.ProceedActivity(activity);
             }
 
-            result.Status = GetStatus(op).Clone();
+            result.Status = GetFullCondition(op);
             return result;
         }
 
@@ -672,12 +702,17 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public void OnArmorReduction(ChessOperator op, CombatConduct conduct)
         {
-            float armor = Damage.GetKind(conduct) == Damage.Kinds.Physical ? op.GetPhysicArmor() : op.GetMagicArmor();
+            float armor;
             var addOn = 0;
+            if (Damage.GetKind(conduct) == Damage.Kinds.Physical)
+            {
+                armor = op.GetPhysicArmor();
+                addOn += GetCondition(op, CardState.Cons.ArmorUp);
+                foreach (var bo in GetBuffOperator(b => b.IsArmorAddOnTrigger))
+                    addOn += bo.OnArmorAddOn(armor, op, conduct);
+            }
+            else armor = op.GetMagicArmor();
             //加护甲
-            addOn += GetCondition(op, CardState.Cons.DefendUp);
-            foreach (var bo in GetBuffOperator(b=>b.IsArmorAddOnTrigger)) 
-                addOn += bo.OnArmorAddOn(armor, op, conduct);
             var resisted = Math.Min(1 - (armor + addOn) * 0.01f, 1);
             conduct.Multiply(resisted);
             //伤害或护甲转化buff 例如：流血
@@ -795,8 +830,8 @@ namespace Assets.System.WarModule
             if (replace != null)
                 throw new InvalidOperationException(
                     $"Pos({pos}) has [{replace.CardId}({replace.CardType})] exist!");
-            if (!IsInit) return;
             var chessPos = GetChessPos(op);
+            if (!IsInit) return;
             op.OnPostingTrigger(chessPos);
             UpdateTerrain(chessPos);
         }
@@ -843,12 +878,13 @@ namespace Assets.System.WarModule
             var scope = GetCondition(op,CardState.Cons.Confuse)>0 ? Grid.GetScope(!op.IsChallenger) : Grid.GetScope(op);
             return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
         }
-
+        public IEnumerable<IChessPos> GetChainedPos(IChessOperator op, Func<IChessPos, bool> chainedFilter) =>
+            Grid.GetChained(GetStatus(op).Pos, op.IsChallenger, chainedFilter);
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
         #endregion
 
-        public IEnumerable<TerrainSprite> GetSpriteInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
-        public IEnumerable<TerrainSprite> GetSpriteInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
+        public IEnumerable<PosSprite> GetSpriteInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
+        public IEnumerable<PosSprite> GetSpriteInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
 
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 
@@ -859,5 +895,6 @@ namespace Assets.System.WarModule
             public BondOperator Operator;
             public List<ChessOperator> Chessmen;
         }
+
     }
 }

@@ -26,6 +26,7 @@ namespace Assets.System.WarModule
         bool IsRangeHero { get; }
         
         bool IsAlive { get; }
+        int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con);
     }
     public abstract class ChessOperator : IChessOperator
     {
@@ -50,6 +51,14 @@ namespace Assets.System.WarModule
         public virtual void OnRoundStart() {}
 
         public virtual void OnRoundEnd() {}
+
+        /// <summary>
+        /// 与己方全局地块精灵交互值
+        /// </summary>
+        /// <param name="sprites"></param>
+        /// <param name="cons"></param>
+        /// <returns></returns>
+        public virtual int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons cons) => 0;
 
         /// <summary>
         /// 棋子主进程的行动
@@ -255,6 +264,8 @@ namespace Assets.System.WarModule
         }
         public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
+
+        public virtual void PreStart() { }
     }
 
     public abstract class CardOperator : ChessOperator

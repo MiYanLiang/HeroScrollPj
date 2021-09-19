@@ -1421,7 +1421,7 @@ public class FightForManagerForStart : MonoBehaviour
             if (!cardData.isPlayerCard)
             {
                 //迷雾动画
-                GameObject stateDinObj = EffectsPoolingControl.instance.GetStateEffect(StringNameStatic.StateIconPath_miWuZhenAddtion, cardData.cardObj.transform)?.gameObject;
+                GameObject stateDinObj = EffectsPoolingControl.instance.GetBuffEffect(StringNameStatic.StateIconPath_miWuZhenAddtion, cardData.cardObj.transform)?.gameObject;
                 stateDinObj.name = StringNameStatic.StateIconPath_miWuZhenAddtion + "Din";
                 stateDinObj.transform.position = posListToSetMiWu[CardNearbyAdditionForeach[posIndex][i]].transform.position;
                 stateDinObj.GetComponent<Animator>().enabled = false;
@@ -1691,13 +1691,13 @@ public class FightForManagerForStart : MonoBehaviour
     {
         if (tran.Find(stateName) == null)
         {
-            GameObject stateIconObj = EffectsPoolingControl.instance.GetStateEffect("stateIcon", tran).gameObject;
+            GameObject stateIconObj = EffectsPoolingControl.instance.GetBuffEffect("stateIcon", tran).gameObject;
             stateIconObj.name = stateName;
             stateIconObj.GetComponent<Image>().sprite = Resources.Load("Image/fightStateIcon/" + stateName, typeof(Sprite)) as Sprite;
         }
         if (isShowEffect && tran.parent.Find(stateName + "Din") == null)
         {
-            GameObject stateDinObj = EffectsPoolingControl.instance.GetStateEffect(stateName, tran.parent).gameObject;
+            GameObject stateDinObj = EffectsPoolingControl.instance.GetBuffEffect(stateName, tran.parent).gameObject;
             stateDinObj.name = stateName + "Din";
         }
     }

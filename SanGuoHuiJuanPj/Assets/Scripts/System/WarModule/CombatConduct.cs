@@ -195,9 +195,10 @@ namespace Assets.System.WarModule
             Magic,
             Fixed
         }
-        public static Kinds GetKind(CombatConduct conduct)
+
+        public static Kinds GetKind(int element)
         {
-            switch (conduct.Element)
+            switch (element)
             {
                 case CombatConduct.PhysicalDmg:
                     return Kinds.Physical;
@@ -207,9 +208,12 @@ namespace Assets.System.WarModule
                 case CombatConduct.FireDmg:
                 case CombatConduct.ThunderDmg:
                     return Kinds.Magic;
-                default: throw new ArgumentOutOfRangeException($"Unknown Damage kind ={conduct.Element}!");
+                default: throw new ArgumentOutOfRangeException($"Unknown Damage kind ={element}!");
             }
         }
+
+        public static Kinds GetKind(CombatConduct conduct) => GetKind(conduct.Element);
+
     }
 
 }
