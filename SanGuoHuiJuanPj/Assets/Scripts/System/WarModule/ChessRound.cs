@@ -16,15 +16,12 @@ namespace Assets.System.WarModule
         //[JsonProperty("P")] 
         public RoundAction PreAction { get; set; }
         //[JsonProperty("M")] 
-        public ChessProcess[] Processes { get; set; }
+        public List<ChessProcess> Processes { get; set; }
         //[JsonProperty("F")]
         public RoundAction FinalAction { get; set; }
         //[JsonProperty("L")] 
-        public int LastRound { get; set; }
-        //[JsonIgnore] 
-        public bool IsLastRound => LastRound > 0;
 
         public override string ToString() =>
-            $"{InstanceId}.Process[{Processes.Length}].Pre[{PreAction.ChessProcesses.Count}].Fin[{FinalAction.ChessProcesses.Count}]";
+            $"{InstanceId}.Process[{Processes.Count}].Pre[{PreAction.ChessProcesses.Count}].Fin[{FinalAction.ChessProcesses.Count}]";
     }
 }

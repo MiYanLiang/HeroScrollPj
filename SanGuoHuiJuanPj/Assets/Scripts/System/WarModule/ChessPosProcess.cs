@@ -49,7 +49,7 @@ namespace Assets.System.WarModule
         public Dictionary<int,CombatMapper> CombatMaps { get; set; }
         //[JsonProperty("P")] 
         /// <summary>
-        /// <see cref="Types.Chessman"/>  和 <see cref="Types.Chessboard"/> : -1 = 棋盘活动，正数为棋子InstanceId，
+        /// <see cref="Types.Chessman"/>  和 <see cref="Types.Chessboard"/> : -1 = Challenger, -2 = opponent, 正数为棋子Pos，
         /// <see cref="Types.JiBan"/> = 羁绊Id
         /// </summary>
         public int Major { get; set; }

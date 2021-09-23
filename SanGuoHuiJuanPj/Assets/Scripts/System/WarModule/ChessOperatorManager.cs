@@ -204,11 +204,9 @@ namespace Assets.System.WarModule
                     op = new JunShiOperator();
                     break; //26  军师 //27  大军师
                 case 28:
-                    op = new ShuShiOperator();
-                    break; //28  术士
                 case 29:
-                    op = new DaShuShiOperator();
-                    break; //29  大术士
+                    op = new ShuShiOperator();
+                    break; //28  术士 //29  大术士
                 case 30:
                 case 31:
                     op = new DuShiOperator();
@@ -486,17 +484,17 @@ namespace Assets.System.WarModule
                 .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
             
             //每个回合开始先计算回合制精灵
-            foreach (var sprite in ChessSprites.Where(s => s.Host == PosSprite.HostType.Round).ToArray())
+            foreach (var sprite in ChessSprites.ToArray())
             {
-                sprite.Value--;
-                DepleteSprite(sprite);
+                if (sprite.Host == PosSprite.HostType.Round)
+                    sprite.Lasting--;
+                if(UpdateRemovable(sprite))continue;
 
                 var pos = Grid.GetChessPos(sprite.Pos, sprite.IsChallenger);
                 if (!pos.IsPostedAlive) continue;
-                CombatConduct[] conducts = sprite.RoundStart(pos.Operator,this);
-                if (conducts == null || conducts.Length == 0) continue;
-                InstanceChessboardActivity(-1, sprite.IsChallenger, pos.Operator, Activity.Sprite, conducts);
+                sprite.RoundStart(pos.Operator,this);
             }
+
             //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))

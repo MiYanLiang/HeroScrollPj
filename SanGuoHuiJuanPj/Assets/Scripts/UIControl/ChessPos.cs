@@ -1,4 +1,5 @@
-﻿using Assets.System.WarModule;
+﻿using System.Collections.Generic;
+using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 

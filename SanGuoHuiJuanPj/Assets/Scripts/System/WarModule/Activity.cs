@@ -122,7 +122,6 @@ namespace Assets.System.WarModule
         public ActivityResult Result { get; set; }
 
         //[JsonProperty("OS")]
-        public ChessStatus OffenderStatus { get; set; }
         /// <summary>
         /// 发起方 0 = Challenger, 1 = Opposite
         /// </summary>

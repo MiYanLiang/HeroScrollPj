@@ -56,7 +56,7 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct) {}
+        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct) { }
 
         public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
         /// <summary>
@@ -118,10 +118,10 @@ namespace Assets.System.WarModule
         #region Helper
 
         protected bool IsBuffActive(ChessOperator op) => Chessboard.GetCondition(op, Buff) > 0;
-        protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff(Buff, -value);
+        protected CombatConduct DepleteBuff(ChessOperator op, int value = 1) => CombatConduct.InstanceBuff(op.InstanceId, Buff, -value);
 
         protected void SelfConduct(ChessOperator op, int activityIntent, params CombatConduct[] conducts) =>
-            Chessboard.InstanceChessboardActivity(-1, op.IsChallenger, op, activityIntent, conducts,
+            Chessboard.InstanceChessboardActivity(op.IsChallenger, op, activityIntent, conducts,
                 skill: (int)Buff);
         ///// <summary>
         /// 扣除buff值
@@ -142,7 +142,7 @@ namespace Assets.System.WarModule
 
     }
 
-    public abstract class RoundEndDepleteSelfBuff:BuffOperator
+    public abstract class RoundEndDepleteSelfBuff : BuffOperator
     {
         protected RoundEndDepleteSelfBuff(ChessboardOperator chessboard) : base(chessboard)
         {
@@ -153,7 +153,7 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (IsBuffActive(op))
-                SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+                SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
         }
 
     }
@@ -163,6 +163,15 @@ namespace Assets.System.WarModule
         public override CardState.Cons Buff => CardState.Cons.Stunned;
         public StunnedBuff(ChessboardOperator chessboard) : base(chessboard)
         {
+        }
+
+        public override bool IsSufferConductTrigger => true;
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        {
+            if (conduct.Kind != CombatConduct.DamageKind ||
+                conduct.Element != CombatConduct.ThunderDmg ||
+                !Chessboard.IsRandomPass(conduct.GetRate())) return;
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Stunned)));
         }
 
         public override bool IsMainActionTrigger => true;
@@ -185,7 +194,7 @@ namespace Assets.System.WarModule
     public class InvincibleBuff : RoundEndDepleteSelfBuff//回合结束自动去buff
     {
         public override CardState.Cons Buff => CardState.Cons.Invincible;
-        
+
         public InvincibleBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
@@ -214,14 +223,24 @@ namespace Assets.System.WarModule
         public PoisonBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+
+        public override bool IsSufferConductTrigger => true;
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        {
+            if (conduct.Kind != CombatConduct.DamageKind ||
+                conduct.Element != CombatConduct.PoisonDmg ||
+                !Chessboard.IsRandomPass(conduct.GetRate())) return;
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Poison)));
+        }
+
         public override bool IsRoundEndTrigger => true;
 
         public override void RoundEnd(ChessOperator op)
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
         }
 
     }
@@ -232,15 +251,25 @@ namespace Assets.System.WarModule
         public BurnBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+        public override bool IsSufferConductTrigger => true;
+        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        {
+            if (conduct.Kind != CombatConduct.DamageKind ||
+                conduct.Element != CombatConduct.FireDmg ||
+                !Chessboard.IsRandomPass(conduct.GetRate())) return;
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Burn)));
+        }
+
         private int DamageRate => 5;
         public override bool IsRoundEndTrigger => true;
+
         public override void RoundEnd(ChessOperator op)
         {
             var stacks = Chessboard.GetCondition(op, CardState.Cons.Burn);
             if (stacks <= 0) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(stacks));
-            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(damage, 1));
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op, stacks));
+            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
         }
     }
 
@@ -289,7 +318,7 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsArmorAddOnTrigger=> true;
+        public override bool IsArmorAddOnTrigger => true;
         public override int OnArmorAddOn(float armor, ChessOperator op, CombatConduct conduct)
         {
             if (IsBuffActive(op) &&
@@ -300,7 +329,7 @@ namespace Assets.System.WarModule
     }
 
     //17 内助
-    public class NeiZhuBuff:BuffOperator
+    public class NeiZhuBuff : BuffOperator
     {
         public override CardState.Cons Buff => CardState.Cons.Neizhu;
         public NeiZhuBuff(ChessboardOperator chessboard) : base(chessboard)
@@ -311,7 +340,7 @@ namespace Assets.System.WarModule
         public override int OnCriticalRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
             return 100;
         }
     }
@@ -327,7 +356,7 @@ namespace Assets.System.WarModule
         public override int OnRouseRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff());
+            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
             return 100;
         }
     }
@@ -340,7 +369,7 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsSufferConductTrigger=> true;
+        public override bool IsSufferConductTrigger => true;
 
         public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
         {
@@ -376,7 +405,8 @@ namespace Assets.System.WarModule
             if (chainCount == 0) return;
             conduct.Multiply(1f / chainCount);
             var fixedDmg =
-                CombatConduct.InstanceDamage(conduct.Basic, conduct.Critical, conduct.Rouse, CombatConduct.FixedDmg);
+                CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse,
+                    CombatConduct.FixedDmg);
             foreach (var pos in poses)
                 Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), -1, -1);
         }

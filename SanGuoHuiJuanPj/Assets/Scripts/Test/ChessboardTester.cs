@@ -15,7 +15,6 @@ public class ChessboardTester : ChessboardManager
         DataTable.Init();
         PlayerData.Init();
         gameResources = new GameResources();
-        Sprites = new Dictionary<int, EffectStateUi>();
         CardMap = new Dictionary<int, FightCardData>();
         gameResources.Init();
         EffectsPooling.Init();

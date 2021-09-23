@@ -40,8 +40,10 @@ namespace Assets.System.WarModule
                 case Cons.Burn:
                     return StringNameStatic.StateIconPath_burned;
                 case Cons.BattleSoul:
+                case Cons.Stimulate:
                     return StringNameStatic.StateIconPath_willFight;
                 case Cons.Imprisoned:
+                case Cons.Confuse:
                     return StringNameStatic.StateIconPath_imprisoned;
                 case Cons.Cowardly:
                     return StringNameStatic.StateIconPath_cowardly;
@@ -66,13 +68,12 @@ namespace Assets.System.WarModule
                 case Cons.EaseShield:
                     return StringNameStatic.StateIconPath_shield;
                 case Cons.Forge:
-                case Cons.YellowBand:
+                case Cons.Murderous:
                     return StringNameStatic.StateIconPath_miWuZhenAddtion;
-                case Cons.Stimulate:
-                    break;
-                case Cons.Confuse:
-                    break;
                 case Cons.Chained:
+                    return StringNameStatic.StateIconPath_lianHuan;
+                case Cons.YellowBand:
+                    return Effect.YellowBand65B;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -107,6 +108,9 @@ namespace Assets.System.WarModule
                 case Cons.Forge:
                 case Cons.Stimulate:
                 case Cons.Confuse:
+                case Cons.Murderous:
+                case Cons.YellowBand:
+                case Cons.Chained:
                     return false;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -210,6 +214,10 @@ namespace Assets.System.WarModule
             /// 连环
             /// </summary>
             Chained = 24,
+            /// <summary>
+            /// 杀气
+            /// </summary>
+            Murderous = 25,
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -317,6 +325,7 @@ namespace Assets.System.WarModule
         [JsonIgnore] public int Confuse { get => data[22]; set => data[22] = value; }
         [JsonIgnore] public int YellowBand { get => data[23]; set => data[23] = value; }
         [JsonIgnore] public int Chained { get => data[24]; set => data[24] = value; }
+        [JsonIgnore] public int Murderous { get => data[25]; set => data[25] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
         public void AddState(Cons con,int value)
@@ -394,6 +403,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Chained:
                     Chained += MinZeroAlign(Chained);
+                    break;
+                case Cons.Murderous:
+                    Murderous += MinZeroAlign(Murderous);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -478,6 +490,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Chained:
                     Chained = 0;
+                    break;
+                case Cons.Murderous:
+                    Murderous = 0;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);

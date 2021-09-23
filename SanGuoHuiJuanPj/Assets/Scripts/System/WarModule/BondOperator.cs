@@ -18,7 +18,7 @@ namespace Assets.System.WarModule
 
         protected BondOperator(JiBanTable jiBan, ChessboardOperator chessboard)
         {
-            BondList = jiBan.Cards.Select(c=>c.CardId).ToArray();
+            BondList = jiBan.Cards.Select(c => c.CardId).ToArray();
             BondId = jiBan.Id;
             Chessboard = chessboard;
         }
@@ -44,19 +44,19 @@ namespace Assets.System.WarModule
                 Chessboard.InstanceJiBanActivity(BondId, op.IsChallenger, op, Activity.OuterScope, conducts);
             }
 
-            var rivals = Chessboard.GetRivals(first, 
+            var rivals = Chessboard.GetRivals(first,
                 pos => pos.IsPostedAlive &&
                        pos.IsAliveHero).Select(p => p.Operator);
 
             foreach (var rival in rivals)
             {
-                var result = RoundStartRivalConduct(ops,rival);
+                var result = RoundStartRivalConduct(ops, rival);
                 if (result == null) return;
                 if (!result.PushBackPos)
                 {
                     var conducts = result.Conducts;
                     if (conducts == null || conducts.Length == 0) continue;
-                    Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival,Activity.OuterScope ,conducts);
+                    Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival, Activity.OuterScope, conducts);
                     continue;
                 }
 
@@ -108,7 +108,7 @@ namespace Assets.System.WarModule
             if (!IsInBondList(op)) return null;
             if (!Chessboard.IsRandomPass(ShenZhuRatio) ||
                 Chessboard.GetCondition(op, CardState.Cons.ShenZhu) > 0) return null;
-            return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+            return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.ShenZhu));
         }
 
         public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
@@ -121,7 +121,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 五虎上将
     /// </summary>
-    public class WuHuSHangJiang :BondOperator
+    public class WuHuSHangJiang : BondOperator
     {
         public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
@@ -131,9 +131,10 @@ namespace Assets.System.WarModule
         {
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(149));
-            var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(damage) };
+            var conducts = new List<CombatConduct>
+                { CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage) };
             if (Chessboard.IsRandomPass(DataTable.GetGameValue(150)))
-                conducts.Add(CombatConduct.InstanceBuff(CardState.Cons.Cowardly));
+                conducts.Add(CombatConduct.InstanceBuff(ops.First().IsChallenger ? -1 : -2, CardState.Cons.Cowardly));
             return new ConductResult(conducts.ToArray());
         }
 
@@ -152,8 +153,8 @@ namespace Assets.System.WarModule
         protected override CombatConduct[] RoundStartConducts(ChessOperator op)
         {
             if (!IsInBondList(op)) return null;
-            return Chessboard.IsRandomPass(ShenZhuRatio) ? 
-                Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu)) : null;
+            return Chessboard.IsRandomPass(ShenZhuRatio) ?
+                Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.ShenZhu)) : null;
         }
 
         public override int OnDamageAddOn(ChessOperator[] ops, ChessOperator op, int damage)
@@ -175,7 +176,7 @@ namespace Assets.System.WarModule
         {
             if (IsInBondList(op) &&
                 Chessboard.IsRandomPass(DataTable.GetGameValue(137)))
-                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield));
+                return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.Shield));
             return null;
         }
 
@@ -199,7 +200,7 @@ namespace Assets.System.WarModule
         {
             if (!IsInBondList(op) ||
                 !Chessboard.IsRandomPass(DataTable.GetGameValue(138)))
-                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield));
+                return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.Shield));
             return null;
         }
 
@@ -224,14 +225,15 @@ namespace Assets.System.WarModule
             //干扰系
             if (op.Style.ArmedType != 12 ||
                 !Chessboard.IsRandomPass(DataTable.GetGameValue(139))) return null;
-            return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Neizhu));
+            return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.Neizhu));
         }
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
-            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
+            return new ConductResult(
+                Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, 1)));
         }
     }
     /// <summary>
@@ -253,7 +255,7 @@ namespace Assets.System.WarModule
         {
             if (!IsInBondList(op))
                 return null;
-            return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+            return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.ShenZhu));
         }
     }
     /// <summary>
@@ -269,7 +271,7 @@ namespace Assets.System.WarModule
         {
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
-            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(damage, 1)));
+            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, 1)));
         }
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
@@ -294,7 +296,7 @@ namespace Assets.System.WarModule
         {
             if (IsInBondList(op) &&
                 Chessboard.IsRandomPass(DataTable.GetGameValue(142)))
-                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+                return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.ShenZhu));
             return null;
         }
     }
@@ -311,7 +313,7 @@ namespace Assets.System.WarModule
         {
             if (IsInBondList(op) &&
                 Chessboard.IsRandomPass(DataTable.GetGameValue(143)))
-                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield));
+                return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.Shield));
             return null;
         }
 
@@ -335,7 +337,7 @@ namespace Assets.System.WarModule
         {
             if (IsInBondList(op) &&
                 Chessboard.IsRandomPass(DataTable.GetGameValue(144)))
-                return Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.ShenZhu));
+                return Helper.Singular(CombatConduct.InstanceBuff(op.IsChallenger ? -1 : -2, CardState.Cons.ShenZhu));
             return null;
         }
 

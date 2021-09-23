@@ -31,9 +31,9 @@ namespace Assets.System.WarModule
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
             Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                Helper.Singular(CombatConduct.InstanceHeal(healingHp)), 0, 1);
+                Helper.Singular(CombatConduct.InstanceHeal(healingHp, InstanceId)), 0, 1);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(CombatConduct.InstanceDamage(healingHp, CombatConduct.FixedDmg)), -1, -1);
+                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, healingHp, CombatConduct.FixedDmg)), -1, -1);
         }
     }
     /// <summary>
@@ -50,7 +50,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(Strength)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength)), 0, 1);
             }
         }
     }
@@ -67,7 +67,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                    Helper.Singular(CombatConduct.InstanceHeal(Strength)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceHeal(Strength, InstanceId)), 0, 1);
             }
         }
     }
@@ -88,7 +88,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(damage)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), 0, 1);
             }
         }
 
@@ -121,7 +121,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                    Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield)), 0, 1);
             }
         }
     }
@@ -140,9 +140,9 @@ namespace Assets.System.WarModule
 
         public override void PreStart()
         {
-         //除去所有精灵(如果被移位)
+            //除去所有精灵(如果被移位)
             foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Value == InstanceId))
-                Chessboard.DepleteSprite(sprite);
+                Chessboard.UpdateRemovable(sprite);
             var neighbors = Chessboard.GetNeighbors(Chessboard.GetChessPos(this), true, Surround);
             //在周围生成精灵
             foreach (var pos in neighbors)
@@ -181,7 +181,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class QiXingTanOperator : NeighborSpriteTowerOperator
     {
-        protected override PosSprite InstanceSprite(IChessPos pos) => Chessboard.InstanceSprite<MagicForceSprite>(pos,  PosSprite.Strength, InstanceId,Strength);
+        protected override PosSprite InstanceSprite(IChessPos pos) => Chessboard.InstanceSprite<MagicForceSprite>(pos, PosSprite.Strength, InstanceId, Strength);
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ namespace Assets.System.WarModule
     public class ZhuTieLuOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CriticalSprite>(pos,  PosSprite.Dodge, InstanceId, Strength);
+            Chessboard.InstanceSprite<CriticalSprite>(pos, PosSprite.Dodge, InstanceId, Strength);
     }
 
     /// <summary>

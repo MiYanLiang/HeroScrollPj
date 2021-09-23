@@ -4,6 +4,7 @@ using System.Linq;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 
 namespace Assets.System.WarModule
 {
@@ -24,8 +25,7 @@ namespace Assets.System.WarModule
         }
 
         private ProcessCondition RoundState { get; set; } = ProcessCondition.PreStart;
-        private ChessRound currentRound;
-        private Activity currentActivity;
+
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
         public IEnumerable<PosSprite> ChessSprites => Sprites;
         protected abstract List<PosSprite> Sprites { get; }
@@ -54,7 +54,60 @@ namespace Assets.System.WarModule
         private readonly ChessProcess[] EmptyProcess = Array.Empty<ChessProcess>();
 
         private readonly List<ChessRound> rounds;
-        private List<ChessProcess> currentProcesses;
+        private ChessRound currentRound;
+
+        private ChessRound GetCurrentRound()
+        {
+            if (rounds.Count != 0 &&
+                rounds.Last().InstanceId == RoundIdSeed)
+                return currentRound;
+            currentRound = new ChessRound
+            {
+                InstanceId = RoundIdSeed,
+                PreRound = new List<ChessProcess>(),
+                Processes = new List<ChessProcess>(),
+                PreAction = new RoundAction(),
+                FinalAction = new RoundAction(),
+                ChallengerJiBans = new List<int>(),
+                OppositeJiBans = new List<int>()
+            };
+            rounds.Add(currentRound);
+            return currentRound;
+        }
+
+
+        private struct ChessMajor
+        {
+            public static readonly ChessMajor UnDefined = new ChessMajor(-3, false);
+            public int Pos;
+            public bool IsChallenger;
+            public int GetMajor() => Pos < 0 ? IsChallenger ? -1 : -2 : Pos;
+            public int GetScope() => IsChallenger ? 0 : 1;
+
+            public ChessMajor(int pos, bool isChallenger)
+            {
+                Pos = pos;
+                IsChallenger = isChallenger;
+            }
+        }
+        private ChessMajor CurrentMajor { get; set; }
+        private ChessProcess GetCurrentProcess()
+        {
+            switch (RoundState)
+            {
+                case ProcessCondition.RoundStart:
+                    return GetCurrentRound().PreAction.ChessProcesses.LastOrDefault();
+                case ProcessCondition.Chessman:
+                    return GetCurrentRound().Processes.LastOrDefault();
+                case ProcessCondition.RoundEnd:
+                    return GetCurrentRound().FinalAction.ChessProcesses.LastOrDefault();
+                case ProcessCondition.PreStart:
+                    return GetCurrentRound().PreRound.LastOrDefault();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private int ProcessSeed = 0;
         private int ActivitySeed = 0;
         private int ChessSpriteSeed = 0;
@@ -62,6 +115,7 @@ namespace Assets.System.WarModule
         public bool IsGameOver => IsChallengerWin || IsOppositeWin;
         public bool IsChallengerWin { get; private set; }
         public bool IsOppositeWin { get; private set; }
+
         private ILogger Logger { get; }
         /// <summary>
         /// 单体 一列
@@ -126,25 +180,18 @@ namespace Assets.System.WarModule
 
         public void RoundConfirm()
         {
-            currentRound = new ChessRound
-            {
-                InstanceId = RoundIdSeed,
-                PreRound = new List<ChessProcess>(),
-                PreAction = new RoundAction(),
-                FinalAction = new RoundAction(),
-                ChallengerJiBans = new List<int>(),
-                OppositeJiBans = new List<int>()
-            };
+            //currentRound =
             RoundIdSeed++;
             RoundState = ProcessCondition.PreStart;
             foreach (var chessOperator in StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key))
                 chessOperator.PreStart();
-            currentRound.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
+            GetCurrentRound().PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
                 .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
         }
         public ChessRound StartRound()
         {
             if (IsGameOver) return null;
+            CurrentMajor = ChessMajor.UnDefined;
             //instance Round
             //invoke pre-action
             //Get all sorted this operators
@@ -153,9 +200,8 @@ namespace Assets.System.WarModule
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
             ActivatedJiBan.Clear();
-            Log($"开始回合[{currentRound.InstanceId}]");
+            Log($"开始回合[{GetCurrentRound().InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
-            currentProcesses = new List<ChessProcess>();
             RefreshChessPosses();
             InvokePreRoundTriggers();
             RoundState = ProcessCondition.Chessman;
@@ -169,7 +215,7 @@ namespace Assets.System.WarModule
                     continue;
                 }
 
-                InstanceChessmanProcess(GetStatus(op).Pos, op.IsChallenger);
+                InstanceChessmanProcess(op);
 
                 op.MainActivity();
 
@@ -183,9 +229,10 @@ namespace Assets.System.WarModule
                     PosOperator(deathOp, -1);
                 }
 
-                LogProcess(CurrentProcess);
+                LogProcess(GetCurrentProcess());
             } while (currentOps.Count > 0);
-            currentRound.Processes = currentProcesses.ToArray();
+
+            CurrentMajor = ChessMajor.UnDefined;
             if (IsGameOver)
             {
                 var winner = string.Empty;
@@ -194,32 +241,31 @@ namespace Assets.System.WarModule
                 if (IsOppositeWin)
                     winner += "对方胜利!";
                 Log($"{winner}");
-                return currentRound;
+                return GetCurrentRound();
             }
             RoundState = ProcessCondition.RoundEnd;
             InvokeRoundEndTriggers();
-
-            return currentRound;
+            return GetCurrentRound();
         }
 
         private void LogProcess(ChessProcess process)
         {
             string opText;
-            switch (CurrentProcess.Type)
+            switch (process.Type)
             {
                 case ChessProcess.Types.Chessman:
-                    opText = OperatorText(CurrentProcess);
+                    opText = OperatorText(process);
                     break;
                 case ChessProcess.Types.Chessboard:
                     opText = "棋盘";
                     break;
                 case ChessProcess.Types.JiBan:
-                    opText = $"羁绊[{CurrentProcess.Major}]";
+                    opText = $"羁绊[{process.Major}]";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            Log($"进程({CurrentProcess.InstanceId})[{opText}]");
+            Log($"进程({process.InstanceId})[{opText}]");
             foreach (var activities in process.CombatMaps.Values.Select(m => m.Activities.Concat(m.CounterActs)))
             {
                 foreach (var activity in activities)
@@ -244,29 +290,10 @@ namespace Assets.System.WarModule
             }
         }
 
-        private void InstanceChessmanProcess(int pos, bool isChallenger) =>
-            InstanceProcess(ChessProcess.Types.Chessman, pos, isChallenger);
-        private void InstanceProcess(ChessProcess.Types type, int major, bool isChallenger)
+        private void InstanceChessmanProcess(ChessOperator op)
         {
-            CurrentProcess = ChessProcess.Instance(ProcessSeed, currentRound.InstanceId, type, major, isChallenger);
-            switch (RoundState)
-            {
-                case ProcessCondition.RoundStart:
-                    currentRound.PreAction.ChessProcesses.Add(CurrentProcess);
-                    break;
-                case ProcessCondition.Chessman:
-                    currentProcesses.Add(CurrentProcess);
-                    break;
-                case ProcessCondition.RoundEnd:
-                    currentRound.FinalAction.ChessProcesses.Add(CurrentProcess);
-                    break;
-                case ProcessCondition.PreStart:
-                    currentRound.PreRound.Add(CurrentProcess);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            ProcessSeed++;
+            CurrentMajor = new ChessMajor(GetStatus(op).Pos, op.IsChallenger);
+            GetMajorProcess(ChessProcess.Types.Chessman, CurrentMajor.Pos, CurrentMajor.IsChallenger);
         }
 
         private void CheckIsGameOver()
@@ -300,9 +327,9 @@ namespace Assets.System.WarModule
                         .Join(map,o=>o.CardId,m=>m.Key,(o,_)=>o).ToList()
                 });
                 if (op.IsChallenger)
-                    currentRound.ChallengerJiBans.Add(jb.BondId);
+                    GetCurrentRound().ChallengerJiBans.Add(jb.BondId);
                 else
-                    currentRound.OppositeJiBans.Add(jb.BondId);
+                    GetCurrentRound().OppositeJiBans.Add(jb.BondId);
             }
             return isActivate;
         }
@@ -317,8 +344,8 @@ namespace Assets.System.WarModule
         public void RegResources(ChessOperator op, bool toChallenger, int resourceId, int value)
         {
             var activity = InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
-                Singular(CombatConduct.InstancePlayerResource(resourceId, value)), 0, -1);
-            AddToCurrentProcess(activity, 0);
+                Singular(CombatConduct.InstancePlayerResource(resourceId, op.InstanceId, value)), 0, -1);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, op.IsChallenger ? -1 : -2, activity, -1, false);
             if (resourceId == -1)
                 if (toChallenger)
                     ChallengerGold += value;
@@ -346,8 +373,6 @@ namespace Assets.System.WarModule
 
         #endregion
 
-        private ChessProcess CurrentProcess { get; set; }
-
         protected abstract ChessOperator GetOperator(int id);
         //执行代理的排列逻辑
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
@@ -357,38 +382,32 @@ namespace Assets.System.WarModule
                 .FirstOrDefault();
 
         /// <summary>
-        /// 棋盘指令，非棋子执行类，一般用于羁绊，buff
+        /// 棋盘指令，非棋子执行类，buff,精灵
         /// </summary>
-        /// <param name="major">-1=棋盘活动</param>
         /// <param name="fromChallenger"></param>
         /// <param name="target"></param>
         /// <param name="intent"></param>
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
-        public void InstanceChessboardActivity(int major,bool fromChallenger, IChessOperator target, int intent,
+        public ActivityResult InstanceChessboardActivity(bool fromChallenger, IChessOperator target, int intent,
             CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
-            //棋盘没用字典分类活动顺序，所以不用声明actId
-            if (CurrentProcess == null || CurrentProcess.Type != ChessProcess.Types.Chessman)
-                InstanceProcess(ChessProcess.Types.Chessboard, major, fromChallenger);
-            var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, skill, rePos);
-            AddToCurrentProcess(activity, 0);
+            //棋盘没用字典分类活动顺序，所以直接嵌入上一个活动actId-1
+            var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill, rePos);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, -1, false);
             ProcessActivityResult(activity);
+            return activity.Result;
         }
 
         private static int GetScope(bool isChallenger) => isChallenger ? 0 : 1;
         public void InstanceJiBanActivity(int bondId, bool fromChallenger, IChessOperator target, int intent,
             CombatConduct[] conducts, int rePos = -1)
         {
-
-            if (CurrentProcess == null ||
-                CurrentProcess.Type != ChessProcess.Types.JiBan || 
-                CurrentProcess.Major != bondId ||
-                CurrentProcess.Scope != GetScope(fromChallenger))
-                InstanceProcess(ChessProcess.Types.JiBan, bondId, fromChallenger);
-            var activity = InstanceActivity(fromChallenger, target.InstanceId, intent, conducts, 0, rePos);
-            AddToCurrentProcess(activity, 0);
+            CurrentMajor = new ChessMajor(bondId, fromChallenger);
+            GetMajorProcess(ChessProcess.Types.JiBan, bondId, fromChallenger);
+            var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, 0, rePos);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0, false);
             ProcessActivityResult(activity);
         }
 
@@ -407,13 +426,13 @@ namespace Assets.System.WarModule
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
-            activity.OffenderStatus = GetStatus(target).Clone();
             if (activity.To >= 0 && activity.Result.IsDeath)
             {
-                var op = GetOperator(activity.To);
-                Log($"{op}败退！");
+                var death = GetOperator(activity.To);
+                foreach (var op in StatusMap.Keys.Where(op=>op!=death && op.IsAlive)) 
+                    op.OnSomebodyDie(death);
+                Log($"{death}败退！");
             }
-
             UpdateTerrain(GetChessPos(target));
         }
 
@@ -425,7 +444,6 @@ namespace Assets.System.WarModule
             foreach (var conduct in activity.Conducts) Log($"武技--->{conduct}");
         }
 
-        private bool IsFlagCounter = false;
         /// <summary>
         /// 
         /// </summary>
@@ -442,34 +460,15 @@ namespace Assets.System.WarModule
         {
             if (target == null) return null;
             //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
-            if (!IsFlagCounter) IsFlagCounter = intent == Activity.Counter;
             var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                 conducts, skill, rePos);
-            currentActivity = activity;
-            AddToCurrentProcess(activity, actId);
+            AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId, intent == Activity.Counter);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
                 throw new NullReferenceException(
                     $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
-            ProcessActivityResult(currentActivity);
-            IsFlagCounter = false;
-            return currentActivity.Result;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="fromChallenger"></param>
-        /// <param name="targetInstance"> op = InstanceId, <see cref="Activity.Sprite"/> = Pos</param>
-        /// <param name="intent"></param>
-        /// <param name="conducts"></param>
-        /// <param name="skill"></param>
-        /// <param name="rePos"></param>
-        /// <returns></returns>
-        private Activity InstanceActivity(bool fromChallenger, int targetInstance, int intent, CombatConduct[] conducts,
-            int skill, int rePos)
-        {
-            return InstanceActivity(fromChallenger, null, targetInstance, intent, conducts, skill, rePos);
+            ProcessActivityResult(activity);
+            return activity.Result;
         }
 
         /// <summary>
@@ -488,7 +487,7 @@ namespace Assets.System.WarModule
         {
             RecursiveActionCount++;
             ActivitySeed++;
-            var processId = CurrentProcess.InstanceId;
+            var processId = GetMajorProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), fromChallenger).InstanceId;
             var fromId = offender == null ? fromChallenger ? -1 : -2 : offender.InstanceId;
             var activity = Activity.Instance(
                 ActivitySeed,
@@ -504,20 +503,66 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 加入活动
         /// </summary>
+        /// <param name="type"></param>
+        /// <param name="fromPos"></param>
         /// <param name="activity"></param>
         /// <param name="actId">-1 = 加入上一个活动</param>
-        private void AddToCurrentProcess(Activity activity, int actId)
+        /// <param name="isCounter"></param>
+        private void AddToCurrentProcess(ChessProcess.Types type,int fromPos, Activity activity, int actId, bool isCounter)
         {
+            var process = GetMajorProcess(type, fromPos, Scope(activity));
             if (actId == -1) //如果-1的话就加入上一个活动
-                actId = CurrentProcess.CombatMaps.Count == 0 ? 0 : CurrentProcess.CombatMaps.Last().Key;
-            if (!CurrentProcess.CombatMaps.ContainsKey(actId))
-                CurrentProcess.CombatMaps.Add(actId, new CombatMapper(actId));
-            if(IsFlagCounter)
-                CurrentProcess.CombatMaps[actId].CounterActs.Add(activity);
-            else CurrentProcess.CombatMaps[actId].Activities.Add(activity);
+                actId = process.CombatMaps.Count == 0 ? 0 : process.CombatMaps.Last().Key;
+            if (!process.CombatMaps.ContainsKey(actId))
+                process.CombatMaps.Add(actId, new CombatMapper(actId));
+            if (isCounter)
+                process.CombatMaps[actId].CounterActs.Add(activity);
+            else process.CombatMaps[actId].Activities.Add(activity);
+
+            bool Scope(Activity act) => act.From < 0 ? act.From == -1 : GetOperator(act.From).IsChallenger;
         }
 
-        //private List<Activity> InnerActivities { get; set; }
+        private ChessProcess GetMajorProcess(ChessProcess.Types type, int major, bool isChallenger)
+        {
+            var process = GetCurrentProcess();
+
+            if (process == null || process.Major != CurrentMajor.Pos || process.Scope != CurrentMajor.GetScope())
+            {
+                CurrentMajor = new ChessMajor(major, isChallenger);
+                process = InstanceProcess(CurrentMajor);
+                switch (RoundState)
+                {
+                    case ProcessCondition.RoundStart:
+                    {
+                        GetCurrentRound().PreAction.ChessProcesses.Add(process);
+                        break;
+                    }
+                    case ProcessCondition.Chessman when type != ChessProcess.Types.JiBan:
+                    {
+                        GetCurrentRound().Processes.Add(process);
+                        break;
+                    }
+                    case ProcessCondition.RoundEnd:
+                    {
+                        GetCurrentRound().FinalAction.ChessProcesses.Add(process);
+                        break;
+                    }
+                    case ProcessCondition.PreStart:
+                    {
+                        GetCurrentRound().PreRound.Add(process);
+                        break;
+                    }
+                    default:
+                        throw new InvalidOperationException($"非法执行组合RoundState[{RoundState}] + ProcessType[{type}]!");
+                }
+            }
+
+            ProcessSeed++;
+            return process;
+
+            ChessProcess InstanceProcess(ChessMajor maj) =>
+                ChessProcess.Instance(ProcessSeed, GetCurrentRound().InstanceId, type, maj.Pos, maj.IsChallenger);
+        }
 
         /// <summary>
         /// 生成棋盘精灵
@@ -536,19 +581,36 @@ namespace Assets.System.WarModule
                     value: value,
                     typeId: typeId,
                     pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
-            RegSprite(sprite);
             ChessSpriteSeed++;
+            RegSprite(sprite);
             return sprite;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="op"></param>
+        /// <param name="target"></param>
+        /// <param name="typeId"></param>
+        /// <param name="conducts"></param>
+        /// <param name="lasting">-1 代表即刻销毁精灵</param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public ActivityResult DelegateSpriteActivity<T>(ChessOperator op,IChessPos target, int typeId, CombatConduct[] conducts, int lasting = -1,
+            int value = 0)
+            where T : PosSprite, new()
+        {
+            var sprite = InstanceSprite<T>(target, typeId, lasting, value);
+            return sprite.OnActivity(op, this, conducts);
         }
 
         private Activity SpriteActivity(PosSprite sprite,bool isAdd)
         {
-            if (CurrentProcess == null)
-                InstanceProcess(ChessProcess.Types.Chessboard, sprite.Pos, sprite.IsChallenger);
+            GetMajorProcess(ChessProcess.Types.Chessboard, sprite.Pos, sprite.IsChallenger);
             var conduct = isAdd
-                ? CombatConduct.AddSprite(sprite.Value, sprite.InstanceId, sprite.TypeId)
+                ? CombatConduct.AddSprite(sprite.Value, sprite.TypeId, sprite.InstanceId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
-            return InstanceActivity(sprite.IsChallenger, sprite.Pos, Activity.Sprite,
+            return InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Sprite,
                 Helper.Singular(conduct), 1, -1);
         }
 
@@ -557,23 +619,24 @@ namespace Assets.System.WarModule
             Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
-
-            if (currentRound.InstanceId!= CurrentProcess.RoundId)
-                InstanceProcess(ChessProcess.Types.Chessboard, -1, sprite.IsChallenger);
-            AddToCurrentProcess(activity, 0);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1, false);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
         }
 
-        public void DepleteSprite(PosSprite sprite)
+        public bool UpdateRemovable(PosSprite sprite)
         {
-            Log($"移除{sprite}");
-            if (sprite.Value <= 0) RemoveSprite(sprite);
+            if (sprite.Host == PosSprite.HostType.Relation && 
+                (sprite.Lasting > 0 && GetOperator(sprite.Lasting).IsAlive)) return false;
+
+            if (sprite.Host == PosSprite.HostType.Round && sprite.Lasting > 0) return false;
+
+            RemoveSprite(sprite);
             var activity = SpriteActivity(sprite, false);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
-            if (currentRound.InstanceId != CurrentProcess.RoundId)
-                InstanceProcess(ChessProcess.Types.Chessboard, -1, sprite.IsChallenger);
-            AddToCurrentProcess(activity, 0);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1, false);
+            Log($"移除{sprite}");
+            return true;
         }
 
         private void RemoveSprite(PosSprite sprite)
@@ -606,15 +669,7 @@ namespace Assets.System.WarModule
 
         private void UpdateTerrain(IChessPos pos)
         {
-            foreach (var sprite in pos.Terrain.Sprites.Where(s => s.Host == PosSprite.HostType.Relation).ToArray())
-            {
-                var op = GetOperator(sprite.Lasting);
-                if (op == null)
-                    throw new InvalidOperationException(
-                        $"{sprite} 找不到宿主[{sprite.Lasting}]. 注意如果是依赖型精灵，请在sprite.Lasting填上宿主id");
-                if (op.IsAlive) continue;
-                DepleteSprite(sprite);
-            }
+            foreach (var sprite in pos.Terrain.Sprites.ToArray()) UpdateRemovable(sprite);
         }
 
         public bool OnCounterTriggerPass(ChessOperator op,ChessOperator offender)
@@ -645,7 +700,7 @@ namespace Assets.System.WarModule
                 if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
                 //如果被护盾免伤后，扣除护盾1层
                 AppendOpActivity(op, GetChessPos(op), Activity.Self,
-                    Singular(CombatConduct.InstanceBuff(CardState.Cons.Shield, -1)), -1, 1);
+                    Singular(CombatConduct.InstanceBuff(op.InstanceId,CardState.Cons.Shield, -1)), -1, 1);
                 return ActivityResult.Types.Shield;
             }
             if (GetCondition(op,CardState.Cons.EaseShield) > 0) // 缓冲盾
@@ -700,7 +755,7 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public void OnArmorReduction(ChessOperator op, CombatConduct conduct)
+        public void OnCombatMiddlewareConduct(ChessOperator op, CombatConduct conduct)
         {
             float armor;
             var addOn = 0;
@@ -837,6 +892,7 @@ namespace Assets.System.WarModule
         }
 
         public IChessPos GetChessPos(IChessOperator op) => Grid.GetChessPos(op, GetStatus(op).Pos);
+        public IChessPos GetChessPos(bool isChallenger, int pos) => Grid.GetChessPos(pos, isChallenger);
 
         public IChessPos GetContraTarget(ChessOperator op)
         {

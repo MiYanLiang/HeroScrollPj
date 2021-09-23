@@ -31,7 +31,7 @@ namespace Assets.System.WarModule
         {
             if (IsGongChengChe(offender) ||
                 offender.IsRangeHero) return;
-            InstanceReflection(activity.Conducts.Where(c=>c.Kind == CombatConduct.DamageKind), offender);
+            InstanceReflection(activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind), offender);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive, CounterConducts,0, 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive, CounterConducts, 0, 1);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Assets.System.WarModule
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive,
-                Helper.Singular(CombatConduct.InstanceDamage(reflectDamage)), 0, 1);
+                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, reflectDamage)), 0, 1);
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -80,7 +80,7 @@ namespace Assets.System.WarModule
         protected override void OnDeadTrigger(int conduct)
         {
             var poses = Chessboard.Grid.GetRivalScope(this).Where(c => c.Value.IsPostedAlive)
-                .OrderBy(c => c.Key).Select(c=>c.Value);
+                .OrderBy(c => c.Key).Select(c => c.Value);
             var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
             var max = Chessboard.FrontRows.Length;
             var targets = new List<IChessPos>();
@@ -94,18 +94,18 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(),0, 1);
+                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), 0, 1);
             }
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Strength);
+                var basicDmg = CombatConduct.InstanceDamage(InstanceId, Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(15))
                     return new[]
                     {
                         basicDmg,
-                        CombatConduct.InstanceBuff(CardState.Cons.Stunned)
+                        CombatConduct.InstanceBuff(InstanceId,CardState.Cons.Stunned)
                     };
                 return Helper.Singular(basicDmg);
             }
@@ -125,18 +125,18 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(),0, 1);
+                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), 0, 1);
             }
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(Strength);
+                var basicDmg = CombatConduct.InstanceDamage(InstanceId, Strength);
                 //根据比率给出是否眩晕
                 if (Chessboard.RandomFromConfigTable(16))
                     return new[]
                     {
                         basicDmg,
-                        CombatConduct.InstanceBuff(CardState.Cons.Stunned)
+                        CombatConduct.InstanceBuff(InstanceId,CardState.Cons.Stunned)
                     };
                 return Helper.Singular(basicDmg);
             }
@@ -147,7 +147,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceDamage(Strength * Chessboard.ConfigPercentage(9)));
+        protected override CombatConduct[] CounterConducts =>
+            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength * Chessboard.ConfigPercentage(9)));
     }
     /// <summary>
     /// 石墙
@@ -158,42 +159,42 @@ namespace Assets.System.WarModule
     /// </summary>
     public class BaZhenTuOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Stunned, Chessboard.ConfigValue(133)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, Chessboard.ConfigValue(133)));
     }
     /// <summary>
     /// 金锁阵
     /// </summary>
     public class JinSuoZhenOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Imprisoned, DataTable.GetGameValue(10)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Imprisoned, DataTable.GetGameValue(10)));
     }
     /// <summary>
     /// 鬼兵阵
     /// </summary>
     public class GuiBingZhenOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Cowardly, DataTable.GetGameValue(11)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Cowardly, DataTable.GetGameValue(11)));
     }
     /// <summary>
     /// 火墙
     /// </summary>
     public class FireWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Burn, DataTable.GetGameValue(12)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, DataTable.GetGameValue(12)));
     }
     /// <summary>
     /// 毒泉
     /// </summary>
     public class PoisonSpringOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Poison, DataTable.GetGameValue(13)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, DataTable.GetGameValue(13)));
     }
     /// <summary>
     /// 刀墙
     /// </summary>
     public class BladeWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(CardState.Cons.Bleed, DataTable.GetGameValue(14)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, DataTable.GetGameValue(14)));
     }
     /// <summary>
     /// 金币宝箱

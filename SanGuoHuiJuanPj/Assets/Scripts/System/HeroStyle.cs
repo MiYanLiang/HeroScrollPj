@@ -266,10 +266,18 @@ public class HeroStyle : CardStyle
             case 25: value = Effect.Assassin25A; break; // "25A";刺客
             case 26: value = Effect.Advisor26A; break;// "26A"  军师
             case 27: value = Effect.Advisor26A; break;// "27A"  大军师
-            case 28: value = Effect.Warlock28A; break;// "28A"  术士
-            case 29: value = Effect.Warlock29A; break;// "29A"  大术士
-            case 30: value = Effect.PoisonMaster30A; break;// "30A"  毒士
-            case 31: value = Effect.PoisonMaster31A; break;// "31A"  大毒士
+            case 28:
+            case 29:
+            {
+                switch (activity.Skill)
+                {
+                    case 1: value = Effect.Warlock29A; break; // "29A"  大术士
+                    case 2: value = Effect.Warlock28A; break; // "28A"  术士
+                }
+                break;
+            }
+            case 30: value = Effect.PoisonMaster30A; break; // "31A"  大毒士
+            case 31: value = Effect.PoisonMaster31A; break; // "30A"  毒士
             case 32: value = Effect.FlagBearer32A; break;// "32A"  统帅
             case 33: value = Effect.FlagBearer33A; break;// "33A"  大统帅
             case 34: value = Effect.Debate34A; break; // "34A";辩士
@@ -295,12 +303,8 @@ public class HeroStyle : CardStyle
             case 55:
                 switch (activity.Skill)
                 {
-                    case 1:
-                        value = Effect.FireShip55A;
-                        break;
-                    case 2:
-                        value = Effect.FireShip55A0;
-                        break;
+                    case 1: value = Effect.FireShip55A; break;
+                    case 2: value = Effect.FireShip55A0; break;
                 }
                 break;
             case 56: value = Effect.Barbarians56A; break; // "56A";蛮族
@@ -314,9 +318,10 @@ public class HeroStyle : CardStyle
                     case 1:
                         value = Effect.YellowBand65A;
                         break; // "65A";黄巾
-                    case 2:
-                        value = Effect.YellowBand65B;
-                        break; // "65B";黄巾
+                    //todo 65B 换去状态文件夹
+                    //case 2:
+                    //    value = Effect.YellowBand65B;
+                    //    break; // "65B";黄巾
                 }
                 break;
         }

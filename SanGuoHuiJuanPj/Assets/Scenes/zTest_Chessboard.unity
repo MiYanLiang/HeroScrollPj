@@ -955,6 +955,7 @@ MonoBehaviour:
   - lianHuanState
   - miWuZhenAddtion
   - willFightState
+  - 65B
 --- !u!4 &379474649
 Transform:
   m_ObjectHideFlags: 0
@@ -1051,15 +1052,15 @@ MonoBehaviour:
     Pos: 6
     Type: 0
     Level: 1
-  - Id: 311
+  - Id: 18
     Pos: 7
     Type: 0
     Level: 1
-  - Id: 13
+  - Id: 18
     Pos: 9
     Type: 0
     Level: 1
-  - Id: 139
+  - Id: 413
     Pos: 2
     Type: 0
     Level: 2

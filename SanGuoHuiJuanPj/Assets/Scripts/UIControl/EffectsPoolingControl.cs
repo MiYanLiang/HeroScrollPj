@@ -204,7 +204,7 @@ public class EffectsPoolingControl : MonoBehaviour
     }
 
     /// <summary>
-    /// 获取状态特效图标,跟随卡牌动
+    /// 获取状态特效图标
     /// </summary>
     public EffectStateUi GetBuffEffect(string stateName, Transform usedTran)
     {

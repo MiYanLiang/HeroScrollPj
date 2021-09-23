@@ -17,8 +17,8 @@ public class NewWarManager : MonoBehaviour,ILogger
     public Button StartButton;
     public ChessPos[] PlayerPoses;
     public ChessPos[] EnemyPoses;
-    public ChessCard[] Player;
     public ChessCard[] Enemy;
+    public ChessCard[] Player;
     #endregion
 
     public ChessGrid Grid;

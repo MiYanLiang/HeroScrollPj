@@ -30,6 +30,10 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int YeHuo = 6;
         /// <summary>
+        /// 落雷
+        /// </summary>
+        public const int Thunder = 3;
+        /// <summary>
         /// 迷雾精灵(依赖类)
         /// </summary>
         public const int Forge = 20;
@@ -68,10 +72,8 @@ namespace Assets.System.WarModule
         /// </summary>
         public int Lasting { get; set; } = -1;
         /// <summary>
-        /// 宿主<see cref="ChessOperator.InstanceId"/>
-        /// -1 =回合类型，正数：棋子id
+        /// 状态值
         /// </summary>
-        //public int Host { get; set; }
         public int Value { get; set; }
         /// <summary>
         /// 棋格
@@ -99,11 +101,16 @@ namespace Assets.System.WarModule
             {
                 case YeHuo: typeText = "业火";break;
                 case Forge: typeText = "迷雾";break;
+                case Thunder: typeText = "落雷";break;
             }
             return $"精灵({InstanceId})({typeText}).{hostText} [{Value}] Pos:{challengerText}";
         }
 
-        public virtual CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard) => null;
+        public virtual ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+            CombatConduct[] conducts) => null;
+        public virtual void RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        {
+        }
     }
 
     /// <summary>
@@ -111,16 +118,12 @@ namespace Assets.System.WarModule
     /// </summary>
     public class FireSprite : RoundSprite
     {
-        public int BuffRatio { get; } = 10;
-        public int Damage { get; } = 100;
-
-        public override CombatConduct[] RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
-            if (!op.IsAlive) return null;
-            var combat = new List<CombatConduct> { CombatConduct.InstanceDamage(Damage, CombatConduct.FireDmg) };
-            if (op.CardType == GameCardType.Hero && chessboard.IsRandomPass(BuffRatio))
-                combat.Add(CombatConduct.InstanceBuff(CardState.Cons.Burn));
-            return combat.ToArray();
+            if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
+            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Sprite,
+                Helper.Singular(CombatConduct.InstanceBuff(Host == HostType.Relation ? Lasting : IsChallenger ? -1 : -2,
+                    CardState.Cons.Burn)));
         }
     }
 
@@ -178,8 +181,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class MagicForceSprite : StrengthSprite
     {
-        protected override Func<IChessOperator, bool> OpCondition =>
-            op => Damage.GetKind(op.Style.Element) == Damage.Kinds.Magic;
+        protected override Func<IChessOperator, bool> OpCondition => op => Damage.GetKind(op.Style.Element) == Damage.Kinds.Magic;
     }
     /// <summary>
     /// 曹魏精灵
@@ -292,7 +294,7 @@ namespace Assets.System.WarModule
     //链环精灵管理伤害转化
     public class ChainSprite : RelationSprite
     {
-        private static int ChainedId = (int)CardState.Cons.Chained;
+        private const int ChainedId = (int)CardState.Cons.Chained;
         protected override Func<IChessOperator, bool> OpCondition => op=> op.InstanceId == Lasting;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op)
         {
@@ -306,5 +308,22 @@ namespace Assets.System.WarModule
         }
         public static Func<IChessPos, bool> ChainedFilter =>
             p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == ChainedId);
+    }
+
+    /// <summary>
+    /// 雷精灵
+    /// </summary>
+    public class ThunderSprite : RoundSprite
+    {
+        public override HostType Host => HostType.Round;
+
+        public override ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+            CombatConduct[] conducts)
+        {
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            return target.IsAliveHero ? 
+                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, -1, 0) 
+                : null;
+        }
     }
 }

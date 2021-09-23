@@ -25,7 +25,7 @@ public class CardAnimator
             case CombatStyle.Types.None:
                 break;
             case CombatStyle.Types.Melee:
-                tween.Join(MeleeMoveAnimation(card, target));
+                if (target != null) tween.Join(MeleeMoveAnimation(card, target));
                 break;
             case CombatStyle.Types.Range:
                 tween.Join(RangePreActAnimation(card));
@@ -196,11 +196,13 @@ public class CardAnimator
             return;
         }
 
-        if (!target.StatesUi.ContainsKey(key))//添加效果图
+        if (!target.StatesUi.ContainsKey(key) || target.StatesUi[key] == null)//添加效果图
         {
             var effect = EffectsPoolingControl.instance.GetBuffEffect(CardState.IconName(con),
                 target.cardObj.transform);
-            target.StatesUi.Add(key, effect);
+            if (!target.StatesUi.ContainsKey(key))
+                target.StatesUi.Add(key, null);
+            target.StatesUi[key] = effect;
 
             if (con == CardState.Cons.EaseShield)
             {
@@ -215,12 +217,6 @@ public class CardAnimator
 
     public static EffectStateUi AddPosSpriteEffect(ChessPos pos, CombatConduct conduct)
     {
-        var effectId = GetPosSpriteEffectName(conduct);
-        if (string.IsNullOrWhiteSpace(effectId)) return null;
-        return EffectsPoolingControl.instance.GetBuffEffect(effectId, pos.transform);
-    }
-    private static string GetPosSpriteEffectName(CombatConduct conduct)
-    {
         var effectId = string.Empty;
         switch (conduct.Element)
         {
@@ -230,8 +226,12 @@ public class CardAnimator
             case PosSprite.YeHuo:
                 effectId = CardState.IconName(CardState.Cons.Burn);
                 break;
+            case PosSprite.Thunder:
+                Debug.LogWarning("落雷的buff文件夹有问题!");
+                break;
         }
-        return effectId;
+        if (string.IsNullOrWhiteSpace(effectId)) return null;
+        return EffectsPoolingControl.instance.GetBuffEffect(effectId, pos.transform);
     }
 
     public static Tween DisplayTextEffect(FightCardData target, Activity activity)
@@ -300,6 +300,9 @@ public class CardAnimator
                         case CardState.Cons.Forge:
                         case CardState.Cons.Stimulate:
                         case CardState.Cons.Confuse:
+                        case CardState.Cons.YellowBand:
+                        case CardState.Cons.Chained:
+                        case CardState.Cons.Murderous:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
