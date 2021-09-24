@@ -41,6 +41,11 @@ public class GameResources
     private const string JiBanHTextPath = "Image/JiBan/name_h";
     private const string CardStateIconPath = "Image/fightStateIcon/";
     private const string VTextPath = "Image/battle";
+    private const string BuffPath = "Prefabs/WarEffect/Buff";
+    private const string FloorBuffPath = "Prefabs/WarEffect/FloorBuff";
+    private const string IconPath = "Prefabs/WarEffect/Icon";
+    private const string SparkPath = "Prefabs/WarEffect/Spark";
+    private const string TeamSparkPath = "Prefabs/WarEffect/TeamSpark";
     /// <summary>
     /// Key = heroId, Value = sprite
     /// </summary>
@@ -67,6 +72,11 @@ public class GameResources
     public IReadOnlyDictionary<int, Sprite> JiBanHText => jiBanHText;
     public IReadOnlyDictionary<string, Sprite> StateIcon => stateIcon;
     public IReadOnlyDictionary<string, Sprite> VText => vText;
+    public IReadOnlyDictionary<int, EffectStateUi> Buff => buffMap;
+    public IReadOnlyDictionary<int, EffectStateUi> FloorBuff => floorBuffMap;
+    public IReadOnlyDictionary<int, Sprite> Icon => iconMap;
+    public IReadOnlyDictionary<int, GameObject> Spark => sparkMap;
+    public IReadOnlyDictionary<int, GameObject> TeamSpark => teamSparkMap;
 
     private bool isInit;
 
@@ -90,6 +100,11 @@ public class GameResources
     private IReadOnlyDictionary<int,Sprite> jiBanVText;
     private IReadOnlyDictionary<string, Sprite> stateIcon;
     private IReadOnlyDictionary<string, Sprite> vText;
+    private IReadOnlyDictionary<int, EffectStateUi> buffMap;
+    private IReadOnlyDictionary<int, EffectStateUi> floorBuffMap;
+    private IReadOnlyDictionary<int, Sprite> iconMap;
+    private IReadOnlyDictionary<int, GameObject> sparkMap;
+    private IReadOnlyDictionary<int, GameObject> teamSparkMap;
 
     public void Init(bool forceReload = false)
     {
@@ -150,6 +165,11 @@ public class GameResources
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
         stateIcon = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(CardStateIconPath).ToDictionary(s => s.name, s => s), nameof(stateIcon));
         vText = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(VTextPath).ToDictionary(s => s.name, s => s), nameof(vText));
+        buffMap = new ResourceDataWrapper<int, EffectStateUi>(Resources.LoadAll<EffectStateUi>(BuffPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(buffMap));
+        floorBuffMap = new ResourceDataWrapper<int, EffectStateUi>(Resources.LoadAll<EffectStateUi>(FloorBuffPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(floorBuffMap));
+        iconMap = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(IconPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(iconMap));
+        sparkMap = new ResourceDataWrapper<int, GameObject>(Resources.LoadAll<GameObject>(SparkPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(sparkMap));
+        teamSparkMap = new ResourceDataWrapper<int, GameObject>(Resources.LoadAll<GameObject>(TeamSparkPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(teamSparkMap));
         isInit = true;
     }
 
