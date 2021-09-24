@@ -155,23 +155,23 @@ namespace Assets.System.WarModule
             /// </summary>
             Cowardly = 9,
             /// <summary>
-            /// 攻击力提升
+            /// 力量Up
             /// </summary>
             StrengthUp = 10,
             /// <summary>
-            /// 闪避提升
+            /// 闪避Up
             /// </summary>
             DodgeUp = 11,
             /// <summary>
-            /// 霹雳台
+            /// 暴击Up
             /// </summary>
             CriticalUp = 12,
             /// <summary>
-            /// 琅琊台
+            /// 会心Up
             /// </summary>
             RouseUp = 13,
             /// <summary>
-            /// 烽火台
+            /// 护甲Up
             /// </summary>
             ArmorUp = 14,
             /// <summary>
@@ -191,7 +191,7 @@ namespace Assets.System.WarModule
             /// </summary>
             ShenZhu = 18,
             /// <summary>
-            /// 缓冲盾
+            /// 缓冲,抵消盾
             /// </summary>
             EaseShield = 19,
             /// <summary>
