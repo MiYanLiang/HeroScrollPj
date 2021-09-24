@@ -1,10 +1,14 @@
-﻿public static class Effect
+﻿using System;
+using Assets.System.WarModule;
+
+public static class Effect
 {
     public const string GetGold = "GetGold";
     public const string DropBlood = "dropBlood";
     public const string SpellTextH = "spellTextH";
     public const string SpellTextV = "spellTextV";
-    
+
+    #region 特效 Spark
     public const string Basic0A = "0A";
     public const string Blademail7A = "7A";
     public const string Explode = "201A";
@@ -307,4 +311,228 @@
             default: return false;
         }
     }
+    #endregion
+
+    #region 卡牌状态图标 StateIcon
+    public static int GetStateIconId(CardState.Cons con)
+    {
+        /* 注意：这里的buff必须概括当前所有"状态"
+         * 类似于 力量up, 护甲up 之类的状态，是基础状态。一般用于塔的附加状态。
+         * 一些会影响到这些的状态如黄巾，武魂，是优先显示自身(黄巾，武魂)的状态图标。
+         */
+
+        switch (con)
+        {
+            // 眩晕
+            case CardState.Cons.Stunned:
+                return ;
+            // 护盾
+            case CardState.Cons.Shield:
+                return ;
+            // 无敌
+            case CardState.Cons.Invincible:
+                return ;
+            // 流血
+            case CardState.Cons.Bleed:
+                return ;
+            // 毒
+            case CardState.Cons.Poison:
+                return ;
+            // 灼烧
+            case CardState.Cons.Burn:
+                return ;
+            // 武魂
+            case CardState.Cons.BattleSoul:
+                return ;
+            // 战意
+            case CardState.Cons.Stimulate:
+                return ;
+            // 禁锢
+            case CardState.Cons.Imprisoned:
+                return ;
+            // 混乱
+            case CardState.Cons.Confuse:
+                return ;
+            // 胆怯
+            case CardState.Cons.Cowardly:
+                return ;
+            // 力量Up
+            case CardState.Cons.StrengthUp:
+                return ;
+            // 闪避Up
+            case CardState.Cons.DodgeUp:
+                return ;
+            // 暴击Up
+            case CardState.Cons.CriticalUp:
+                return ;
+            // 会心Up
+            case CardState.Cons.RouseUp:
+                return ;
+            // 护甲Up
+            case CardState.Cons.ArmorUp:
+                return ;
+            // 死战
+            case CardState.Cons.DeathFight:
+                return ;
+            // 卸甲
+            case CardState.Cons.Disarmed:
+                return ;
+            // 内助
+            case CardState.Cons.Neizhu:
+                return ;
+            //神助
+            case CardState.Cons.ShenZhu:
+                return ;
+            // 缓冲、抵消盾
+            case CardState.Cons.EaseShield:
+                return ;
+            // 迷雾
+            case CardState.Cons.Forge:
+                return ;
+            // 杀气
+            case CardState.Cons.Murderous:
+                return ;
+            // 连环
+            case CardState.Cons.Chained:
+                return ;
+            // 黄巾
+            case CardState.Cons.YellowBand:
+                return ;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+
+    }
+    #endregion
+
+    #region 卡牌Buff状态
+
+    /// <summary>
+    /// 获取卡牌buffId，返回-1表示没有buff。
+    /// </summary>
+    /// <param name="con"></param>
+    /// <returns></returns>
+    public int GetBuffId(CardState.Cons con)
+    {
+        /*
+         * 某种程度上来说，
+         * Buff与图标一样都是表示“状态”
+         * 但buff会加强画面效果更直观卡牌状态。
+         * 但有个缺点是它是覆盖整张卡牌，
+         * 所以一般都用在特需buff类，挂上很多buff的时候卡牌画面会很混乱。
+         */
+
+        switch (con)
+        {
+            // 眩晕
+            case CardState.Cons.Stunned:
+                return;
+            // 护盾
+            case CardState.Cons.Shield:
+                return;
+            // 无敌
+            case CardState.Cons.Invincible:
+                return;
+            // 流血
+            case CardState.Cons.Bleed:
+                return;
+            // 毒
+            case CardState.Cons.Poison:
+                return;
+            // 灼烧
+            case CardState.Cons.Burn:
+                return;
+            // 武魂
+            case CardState.Cons.BattleSoul:
+                return;
+            // 战意
+            case CardState.Cons.Stimulate:
+                return;
+            // 禁锢
+            case CardState.Cons.Imprisoned:
+                return;
+            // 混乱
+            case CardState.Cons.Confuse:
+                return;
+            // 胆怯
+            case CardState.Cons.Cowardly:
+                return;
+            // 力量Up
+            case CardState.Cons.StrengthUp:
+                return;
+            // 闪避Up
+            case CardState.Cons.DodgeUp:
+                return;
+            // 暴击Up
+            case CardState.Cons.CriticalUp:
+                return;
+            // 会心Up
+            case CardState.Cons.RouseUp:
+                return;
+            // 护甲Up
+            case CardState.Cons.ArmorUp:
+                return;
+            // 死战
+            case CardState.Cons.DeathFight:
+                return;
+            // 卸甲
+            case CardState.Cons.Disarmed:
+                return;
+            // 内助
+            case CardState.Cons.Neizhu:
+                return;
+            //神助
+            case CardState.Cons.ShenZhu:
+                return;
+            // 缓冲、抵消盾
+            case CardState.Cons.EaseShield:
+                return;
+            // 迷雾
+            case CardState.Cons.Forge:
+                return;
+            // 杀气
+            case CardState.Cons.Murderous:
+                return;
+            // 连环
+            case CardState.Cons.Chained:
+                return;
+            // 黄巾
+            case CardState.Cons.YellowBand:
+                return;
+            default:
+                return -1;//返回-1表示没有buff特效
+        }
+    }
+    #endregion
+    #region 地块Buff状态
+
+    /// <summary>
+    /// 获取卡牌buffId，返回-1表示没有buff。
+    /// 目前类型：
+    /// </summary>
+    /// <param name="id">
+    /// 参考 <see cref="PosSprite"/> 常量
+    /// </param>
+    /// <returns></returns>
+    public int GetFloorBuffId(int id)
+    {
+        /*
+         * FloorBuff(地块状态)与buff差别在于一个在地块，一个在卡牌上。
+         * FloorBuff不会随着卡牌移动(攻击动作等),并且它并不由 CardState.Cons 这个枚举声明,
+         * 它的类型id暂时并不明确，但已用PosSprite(地块精灵这个类)的常量规范了。
+         * todo:注意：只要是针对地块，无论是Spark或是Buff都用FloorBuff控制,
+         * 由于地块上的特效数量比较少，所以就不分是Spark或Buff，因为代码可控制。
+         * 而 落雷 的实现其实就只是让它的Animator不循环就可以实现了。
+         */
+
+        switch (id)
+        {
+            case PosSprite.YeHuo: return;//统帅业火
+            case PosSprite.Thunder: return;//术士落雷
+            case PosSprite.Forge: return;//迷雾
+            default:
+                return -1;//返回-1表示没有buff特效
+        }
+    }
+    #endregion
 }
