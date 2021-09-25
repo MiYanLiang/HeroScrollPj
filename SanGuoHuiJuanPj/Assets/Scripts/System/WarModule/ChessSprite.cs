@@ -315,7 +315,7 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts, int actId, int skill)
         {
             var target = chessboard.GetChessPos(IsChallenger, Pos);
-            return target.IsAliveHero
+            return target.IsPostedAlive
                 ? chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill)
                 : null;
         }

@@ -30,7 +30,7 @@ namespace Assets.System.WarModule
             Buffs[buffId] += value;
             //防护盾最大值
             if (buffId == (int)CardState.Cons.EaseShield)
-                Buffs[buffId] = Math.Min(Buffs[buffId] + value, DataTable.GetGameValue(119));
+                Buffs[buffId] = Math.Min(Buffs[buffId] + value, CardState.EaseShieldMax);
             if (buffId == (int)CardState.Cons.BattleSoul)
                 Buffs[buffId] = Math.Min(Buffs[buffId] + value, 20);//战意最大值10
 
