@@ -161,7 +161,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1410950420}
+  - {fileID: 1940019734}
   m_Father: {fileID: 177614415}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -431,7 +431,7 @@ RectTransform:
   m_Children:
   - {fileID: 236737585}
   - {fileID: 527765036}
-  - {fileID: 778132053}
+  - {fileID: 2028650251}
   - {fileID: 1344297728677034291}
   - {fileID: 426299411}
   - {fileID: 8029966835275358277}
@@ -861,101 +861,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectContentTran: {fileID: 100246581}
   effectsNameStr:
-  - 0A
-  - 3A
-  - 4A
-  - 6A
-  - 8A
-  - 9A
-  - 10A
-  - 11A
-  - 12A
-  - 13A
-  - 14A
-  - 15A
-  - 16A
-  - 17A
-  - 18A
-  - 19A
-  - 20A
-  - 21A
-  - 22A
-  - 23A
-  - 24A
-  - 25A
-  - 26A
-  - 27A
-  - 28A
-  - 29A
-  - 30A
-  - 31A
-  - 32A
-  - 33A
-  - 34A
-  - 35A
-  - 36A
-  - 37A
-  - 38A
-  - 39A
-  - 40A
-  - 42A
-  - 43A
-  - 44A
-  - 45A
-  - 46A
-  - 47A
-  - 48A
-  - 101A
-  - 201A
-  - 209A
+  - spellTextV
+  - spellTextH
   - dropBlood
   - GetGold
-  - spellTextH
-  - spellTextV
-  - 49A
-  - 50A
-  - 7A
-  - toBattle
-  - 53A
-  - 54A
-  - 55A
-  - 56A
-  - 58A
-  - 55A0
-  - 59A
-  - 60A
-  - JB0
-  - JB1
-  - JB2
-  - JB3
-  - JB4
-  - JB5
-  - JB6
-  - JB7
-  - JB8
-  - JB9
-  - JB10
-  - JB11
-  - 57A
-  - 65A
-  - 65B
-  iconNameStr:
-  - stateIcon
-  - bleedState
-  - burnedState
-  - withStandState
-  - cowardlyState
-  - deathFightState
-  - dizzyState
-  - imprisonedState
-  - invincibleState
-  - poisonedState
-  - removeArmorState
-  - shieldState
-  - lianHuanState
-  - miWuZhenAddtion
-  - willFightState
-  - 65B
+  iconNameStr: []
 --- !u!4 &379474649
 Transform:
   m_ObjectHideFlags: 0
@@ -1043,6 +953,27 @@ MonoBehaviour:
   - {fileID: 653596008}
   - {fileID: 690417046}
   - {fileID: 342535828}
+  Enemy:
+  - Id: 0
+    Pos: 17
+    Type: 522
+    Level: 10
+  - Id: 0
+    Pos: 1
+    Type: 0
+    Level: 1
+  - Id: 59
+    Pos: 2
+    Type: 0
+    Level: 1
+  - Id: 43
+    Pos: 3
+    Type: 0
+    Level: 1
+  - Id: 802
+    Pos: 4
+    Type: 0
+    Level: 1
   Player:
   - Id: 0
     Pos: 17
@@ -1064,25 +995,8 @@ MonoBehaviour:
     Pos: 2
     Type: 0
     Level: 2
-  Enemy:
-  - Id: 0
-    Pos: 17
-    Type: 522
-    Level: 10
-  - Id: 0
-    Pos: 1
-    Type: 0
-    Level: 1
-  - Id: 59
-    Pos: 2
-    Type: 0
-    Level: 1
-  - Id: 43
-    Pos: 3
-    Type: 0
-    Level: 1
-  - Id: 802
-    Pos: 4
+  - Id: 66
+    Pos: 8
     Type: 0
     Level: 1
 --- !u!4 &413234022
@@ -1120,7 +1034,7 @@ MonoBehaviour:
   RouseEffectObj: {fileID: 638022218}
   JiBanEffect: {fileID: 2013352517}
   JiBanOffensiveEffects:
-  - {fileID: 778132054}
+  - {fileID: 0}
   - {fileID: 1344297728677034292}
   - {fileID: 426299410}
   - {fileID: 8029966835275358276}
@@ -1939,20 +1853,13 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2832571328910273801, guid: d88052517279b28479c831172a494bfc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d88052517279b28479c831172a494bfc, type: 3}
---- !u!224 &778132053 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 2560763361152855924, guid: d88052517279b28479c831172a494bfc,
-    type: 3}
-  m_PrefabInstance: {fileID: 778132052}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &778132054 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2560763361152855925, guid: d88052517279b28479c831172a494bfc,
-    type: 3}
-  m_PrefabInstance: {fileID: 778132052}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &788589042
 GameObject:
   m_ObjectHideFlags: 0
@@ -3276,6 +3183,12 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1404254554}
   m_CullTransparentMesh: 0
+--- !u!224 &1410388522 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1155158795478919979, guid: 75d4768e884d8dd43a6d526e4aa1b0cc,
+    type: 3}
+  m_PrefabInstance: {fileID: 1557917866}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1410950419
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3395,12 +3308,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 146792cfcc19aa44fb1e1758c9d3aba4, type: 3}
---- !u!224 &1410950420 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 4535867545068773431, guid: 146792cfcc19aa44fb1e1758c9d3aba4,
-    type: 3}
-  m_PrefabInstance: {fileID: 1410950419}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1433161575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3546,12 +3453,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 75d4768e884d8dd43a6d526e4aa1b0cc, type: 3}
---- !u!224 &1557917867 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 3069810206579610947, guid: 75d4768e884d8dd43a6d526e4aa1b0cc,
-    type: 3}
-  m_PrefabInstance: {fileID: 1557917866}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1576171722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3779,7 +3680,7 @@ MonoBehaviour:
   fullScreenEffectObjs:
   - {fileID: 638022218}
   - {fileID: 2013352516}
-  - {fileID: 778132054}
+  - {fileID: 0}
   - {fileID: 1344297728677034292}
   - {fileID: 426299410}
   - {fileID: 8029966835275358276}
@@ -4526,6 +4427,12 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1914814065}
   m_CullTransparentMesh: 0
+--- !u!224 &1940019734 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 4759262364710737204, guid: 146792cfcc19aa44fb1e1758c9d3aba4,
+    type: 3}
+  m_PrefabInstance: {fileID: 1410950419}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1952064019
 GameObject:
   m_ObjectHideFlags: 0
@@ -4777,6 +4684,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5d865b91d211954f800f23a8be09cdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!224 &2028650251 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2832571328910273798, guid: d88052517279b28479c831172a494bfc,
+    type: 3}
+  m_PrefabInstance: {fileID: 778132052}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2036860360
 GameObject:
   m_ObjectHideFlags: 0
@@ -13628,7 +13541,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1557917867}
+  - {fileID: 1410388522}
   m_Father: {fileID: 177614415}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

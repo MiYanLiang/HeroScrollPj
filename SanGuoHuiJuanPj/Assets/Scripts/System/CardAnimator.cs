@@ -179,7 +179,7 @@ public class CardAnimator
         var con = (CardState.Cons)key;
         var status = target.CardState.Data;
         var stateValue = status.ContainsKey(key) ? status[key] : 0;
-        var stateName = CardState.IconName(con);
+        var iconId = Effect.GetStateIconId(con);
         if (stateValue <= 0)
         {
             //更新效果图
@@ -187,10 +187,10 @@ public class CardAnimator
             {
                 var e = target.StatesUi[key];
                 target.StatesUi.Remove(key);
-                EffectsPoolingControl.instance.TakeBackStateIcon(e);
+                EffectsPoolingControl.instance.RecycleStateBuff(e);
             }
             //更新小图标
-            if (target.cardObj.War.CardStates.ContainsKey(stateName))
+            if (target.cardObj.War.CardStates.ContainsKey(iconId))
                 DestroySateIcon(target.cardObj, con);
 
             return;
@@ -198,8 +198,7 @@ public class CardAnimator
 
         if (!target.StatesUi.ContainsKey(key) || target.StatesUi[key] == null)//添加效果图
         {
-            var effect = EffectsPoolingControl.instance.GetBuffEffect(CardState.IconName(con),
-                target.cardObj.transform);
+            var effect = EffectsPoolingControl.instance.GetStateBuff(con, target.cardObj.transform);
             if (!target.StatesUi.ContainsKey(key))
                 target.StatesUi.Add(key, null);
             target.StatesUi[key] = effect;
@@ -211,28 +210,10 @@ public class CardAnimator
             }
         }
 
-        if (!target.cardObj.War.CardStates.ContainsKey(stateName))
+        if (!target.cardObj.War.CardStates.ContainsKey(iconId))
             CreateSateIcon(target.cardObj, con);
     }
 
-    public static EffectStateUi AddPosSpriteEffect(ChessPos pos, CombatConduct conduct)
-    {
-        var effectId = string.Empty;
-        switch (conduct.Element)
-        {
-            case PosSprite.Forge:
-                effectId = CardState.IconName(CardState.Cons.Forge);
-                break;
-            case PosSprite.YeHuo:
-                effectId = CardState.IconName(CardState.Cons.Burn);
-                break;
-            case PosSprite.Thunder:
-                Debug.LogWarning("落雷的buff文件夹有问题!");
-                break;
-        }
-        if (string.IsNullOrWhiteSpace(effectId)) return null;
-        return EffectsPoolingControl.instance.GetBuffEffect(effectId, pos.transform);
-    }
 
     public static Tween DisplayTextEffect(FightCardData target, Activity activity)
     {

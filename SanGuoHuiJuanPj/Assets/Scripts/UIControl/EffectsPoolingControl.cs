@@ -23,8 +23,9 @@ public class EffectsPoolingControl : MonoBehaviour
 
     List<List<EffectStateUi>> iconPoolingList = new List<List<EffectStateUi>>();   //状态特效池
 
-    private Dictionary<string, List<GameObject>> EffectPool;
-
+    private Dictionary<int, List<GameObject>> EffectPool;
+    private Dictionary<int, List<EffectStateUi>> BuffPool;
+    private Dictionary<int, List<EffectStateUi>> FloorBuffPool;
     public bool IsInit { get; private set; }
 
     private void Awake()
@@ -40,7 +41,9 @@ public class EffectsPoolingControl : MonoBehaviour
         if(IsInit)return;
         InitializedEffectsObj();
         InitializedIconsObj();
-        EffectPool = new Dictionary<string, List<GameObject>>();
+        EffectPool = new Dictionary<int, List<GameObject>>();
+        BuffPool = new Dictionary<int, List<EffectStateUi>>();
+        FloorBuffPool = new Dictionary<int, List<EffectStateUi>>();
         IsInit = true;
     }
 
@@ -116,28 +119,28 @@ public class EffectsPoolingControl : MonoBehaviour
         return null;
     }
 
-    public GameObject GetEffect(string effectName, Transform targetTransform, float lasting = 1.5f)
+    public GameObject GetSparkEffect(int sparkId, Transform targetTransform, float lasting = 1.5f)
     {
         GameObject effect = null;
-        if (!EffectPool.ContainsKey(effectName))
-            EffectPool.Add(effectName, new List<GameObject>());
+        if (!EffectPool.ContainsKey(sparkId))
+            EffectPool.Add(sparkId, new List<GameObject>());
         
-        effect = EffectPool[effectName].FirstOrDefault(e => !e.activeSelf);
+        effect = EffectPool[sparkId].FirstOrDefault(e => !e.activeSelf);
         if (effect == null)
         {
-            effect = Instantiate(GameResources.Instance.Effects[effectName]);
-            EffectPool[effectName].Add(effect);
+            effect = Instantiate(GameResources.Instance.Spark[sparkId]);
+            EffectPool[sparkId].Add(effect);
         }
 
         effect.transform.localPosition = Vector3.zero;
         effect.transform.position = targetTransform.position;
         effect.transform.SetParent(targetTransform);
         effect.SetActive(true);
-        if (lasting > 0) StartCoroutine(RecycleEffect(effect, lasting));
+        if (lasting > 0) StartCoroutine(RecycleSpark(effect, lasting));
         return effect;
     }
 
-    public IEnumerator RecycleEffect(GameObject effect, float lasting)
+    public IEnumerator RecycleSpark(GameObject effect, float lasting)
     {
         yield return new WaitForSeconds(lasting);
         RecycleEffect(effect);
@@ -245,9 +248,56 @@ public class EffectsPoolingControl : MonoBehaviour
     }
 
     /// <summary>
+    /// 获取状态特效图标
+    /// </summary>
+    public EffectStateUi GetStateBuff(CardState.Cons con, Transform trans)
+    {
+        var id = Effect.GetBuffId(con);
+        if (id == -1) return null;
+        if (!BuffPool.ContainsKey(id))
+            BuffPool.Add(id, new List<EffectStateUi>());
+        var buff = BuffPool[id].FirstOrDefault(e => !e.gameObject.activeSelf);
+        if (buff == null)
+        {
+            buff = Instantiate(GameResources.Instance.Buff[id], trans);
+            BuffPool[id].Add(buff);
+        }
+
+        buff.transform.position = trans.position;
+        buff.transform.SetParent(trans);
+        buff.gameObject.SetActive(true);
+
+        return buff;
+    }
+    public EffectStateUi GetFloorBuff(int id, Transform trans)
+    {
+        if (id == -1) return null;
+        if (!FloorBuffPool.ContainsKey(id))
+            FloorBuffPool.Add(id, new List<EffectStateUi>());
+        var buff = FloorBuffPool[id].FirstOrDefault(e => !e.gameObject.activeSelf);
+        if (buff == null)
+        {
+            buff = Instantiate(GameResources.Instance.FloorBuff[id], trans);
+            FloorBuffPool[id].Add(buff);
+        }
+
+        buff.transform.position = trans.position;
+        buff.transform.SetParent(trans);
+        buff.gameObject.SetActive(true);
+
+        return buff;
+    }
+
+    public void RecycleStateBuff(EffectStateUi go)
+    {
+        go.transform.SetParent(effectContentTran);
+        go.gameObject.SetActive(false);
+    }
+
+    /// <summary>
     /// 回收状态图标特效
     /// </summary>
-    public void TakeBackStateIcon(EffectStateUi go)
+    public void RecycleEffect(EffectStateUi go)
     {
         go.transform.SetParent(effectContentTran);
         go.gameObject.SetActive(false);

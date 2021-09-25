@@ -41,7 +41,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     }
 
     public States State { get; private set; }
-    public Dictionary<string, Image> CardStates { get; set; } = new Dictionary<string, Image>();
+    public Dictionary<int, Image> CardStates { get; set; } = new Dictionary<int, Image>();
 
     public void Init(DragController drag)
     {
@@ -88,20 +88,20 @@ public class GameCardWarUiOperation : MonoBehaviour
 
     public void CreateStateIco(CardState.Cons con)
     {
-        var stateName = CardState.IconName(con);
-        if (CardStates.ContainsKey(stateName)) return;
+        var iconId = Effect.GetStateIconId(con);
+        if (CardStates.ContainsKey(iconId)) return;
         var icon = Instantiate(PrefabIco, StateContent);
-        icon.sprite = GameResources.Instance.StateIcon[stateName];
+        icon.sprite = GameResources.Instance.Icon[iconId];
         icon.gameObject.SetActive(true);
-        CardStates.Add(stateName, icon);
+        CardStates.Add(iconId, icon);
     }
     public void RemoveStateIco(CardState.Cons con)
     {
-        var stateName = CardState.IconName(con);
-        if(!CardStates.ContainsKey(stateName))return;
-        var icon = CardStates[stateName];
+        var iconId = Effect.GetStateIconId(con);
+        if(!CardStates.ContainsKey(iconId))return;
+        var icon = CardStates[iconId];
         icon.gameObject.SetActive(false);
-        CardStates.Remove(stateName);
+        CardStates.Remove(iconId);
         Destroy(icon.gameObject);
     }
 }

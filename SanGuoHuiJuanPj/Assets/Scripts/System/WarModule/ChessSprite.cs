@@ -115,23 +115,9 @@ namespace Assets.System.WarModule
         }
 
         public virtual ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
-            CombatConduct[] conducts) => null;
+            CombatConduct[] conducts,int actId,int skill) => null;
         public virtual void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
-        }
-    }
-
-    /// <summary>
-    /// 火精灵
-    /// </summary>
-    public class FireSprite : RoundSprite
-    {
-        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
-        {
-            if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
-            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Sprite,
-                Helper.Singular(CombatConduct.InstanceBuff(Host == HostType.Relation ? Lasting : IsChallenger ? -1 : -2,
-                    CardState.Cons.Burn)));
         }
     }
 
@@ -326,12 +312,27 @@ namespace Assets.System.WarModule
         public override HostType Host => HostType.Round;
 
         public override ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
-            CombatConduct[] conducts)
+            CombatConduct[] conducts, int actId, int skill)
         {
             var target = chessboard.GetChessPos(IsChallenger, Pos);
-            return target.IsAliveHero ? 
-                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, -1, 0) 
+            return target.IsAliveHero
+                ? chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill)
                 : null;
         }
     }
+
+    /// <summary>
+    /// 火精灵
+    /// </summary>
+    public class FireSprite : RoundSprite
+    {
+        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        {
+            if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
+            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Sprite,
+                Helper.Singular(CombatConduct.InstanceBuff(Host == HostType.Relation ? Lasting : IsChallenger ? -1 : -2,
+                    CardState.Cons.Burn)));
+        }
+    }
+
 }

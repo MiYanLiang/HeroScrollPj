@@ -210,6 +210,9 @@ namespace Assets.System.WarModule
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
                             Chessboard.OnCombatMiddlewareConduct(this, conduct);
+                            if (conduct.Element == CombatConduct.MechanicalDmg && Style.Military < 0)
+                                conduct.Multiply(2);
+
                             //自身(武将技)伤害转化
                             finalDamage = OnMilitaryDamageConvert(conduct);
                         }
