@@ -222,7 +222,7 @@ public static class Effect
                     case 1://攻击目标
                         value = 005; break;
                     case 2://自身加血
-                        value = 99999; break;//补充资源
+                        value = 043; break;
                 }
                 break;
 
@@ -249,7 +249,7 @@ public static class Effect
                     case 1://自身加盾
                         value = 08702; break;
                     case 2://自身加血
-                        value = 99999; break;//补充资源
+                        value = 043; break;
                 }
                 break;
 
