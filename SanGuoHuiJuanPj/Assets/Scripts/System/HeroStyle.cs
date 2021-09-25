@@ -160,7 +160,7 @@ public abstract class CardStyle : ChessmanStyle
                 }
 
                 //一些效果需要反向显示
-                if (Effect.IsInvertControl(effectId))
+                if (Effect.IsInvertControl(int.Parse(effectId)))
                 {
                     var rotation = target.isPlayerCard ? new Quaternion(0, 0, 180, 0) : Quaternion.identity;
                     effect.transform.localRotation = rotation;
