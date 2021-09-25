@@ -376,7 +376,7 @@ namespace Assets.System.WarModule
             if (!IsBuffActive(op)) return;
             var status = Chessboard.GetStatus(op);
             var balance = status.EaseShieldOffset(conduct.Total);
-            conduct.SetBasic(balance);//缓冲盾会把会心或暴击变成一般攻击
+            conduct.SetBasic(balance);
         }
     }
     //22 混乱

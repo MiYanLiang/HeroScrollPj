@@ -205,7 +205,7 @@ public class CardAnimator
 
             if (con == CardState.Cons.EaseShield)
             {
-                var fade = Math.Max(0.3f, 1f * stateValue / DataTable.GetGameValue(119));
+                var fade = Math.Max(0.3f, 1f * stateValue / CardState.EaseShieldMax);
                 effect.Image.color = new Color(1, 1, 1, fade);
             }
         }

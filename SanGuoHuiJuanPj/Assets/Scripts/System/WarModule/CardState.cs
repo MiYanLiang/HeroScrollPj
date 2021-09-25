@@ -328,6 +328,8 @@ namespace Assets.System.WarModule
         [JsonIgnore] public int Murderous { get => data[25]; set => data[25] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
+        public const int EaseShieldMax = 1000;
+
         public void AddState(Cons con,int value)
         {
             switch (con)

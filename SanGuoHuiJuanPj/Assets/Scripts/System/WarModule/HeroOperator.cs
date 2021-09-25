@@ -1171,7 +1171,7 @@ namespace Assets.System.WarModule
             var attackTimes = isUlti ? UltiAttackTimes() : 1;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -1)), -1, -1);
-            for (var j = 0; j <= attackTimes; j++)
+            for (var j = 0; j < attackTimes; j++)
             {
                 var thunders = Chessboard.Randomize(range[0], range[1]) + addOn;
                 var targetPoses = Chessboard.GetRivals(this, _ => true).Select(pos => new WeightElement<IChessPos>
