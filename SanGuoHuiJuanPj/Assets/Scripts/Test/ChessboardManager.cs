@@ -35,7 +35,7 @@ public class ChessboardManager : MonoBehaviour
 
     protected bool IsBusy { get; set; }
     
-    private static SpriteStyle ChessboardStyle { get; } = new SpriteStyle();
+    private static SpriteStyle SpriteStyle { get; } = new SpriteStyle();
     private List<SpriteObj> Sprites { get; } = new List<SpriteObj>();
 
     //private Stopwatch Sw = Stopwatch.StartNew();
@@ -273,7 +273,7 @@ public class ChessboardManager : MonoBehaviour
             }
             var target = GetCardMap(activity.To);
             target.UpdateActivityStatus(activity.Result.Status);
-            tween.Join(ChessboardStyle.Activity(activity, target));
+            tween.Join(SpriteStyle.Activity(activity, target));
         }
 
         return tween;
@@ -329,7 +329,7 @@ public class ChessboardManager : MonoBehaviour
 
                 if (op == null) //没有施放者多数是buff活动
                 {
-                    mainTween.Join(target.ChessmanStyle.RespondTween(activity, target));
+                    mainTween.Join(target.ChessmanStyle.RespondTween(activity, target, -1));
                     continue;
                 }
 
@@ -396,8 +396,10 @@ public class ChessboardManager : MonoBehaviour
         {
             foreach (var conduct in activity.Conducts.Where(c=>c.Kind == CombatConduct.SpriteKind))
             {
+                var buffId = Effect.GetFloorBuffId(conduct.Element);
+                if (buffId == -1) continue;
                 var sp = Sprites.FirstOrDefault(s => s.SpriteType == conduct.Element && s.Pos == chessPos.Pos && s.SpriteId == conduct.Kind);
-                if (conduct.Total > 0)
+                if (conduct.Total >= 0)
                 {
                     if (sp == null)
                     {
@@ -410,8 +412,8 @@ public class ChessboardManager : MonoBehaviour
                         Sprites.Add(sp);
                     }
 
-                    if (sp.Obj == null) 
-                        sp.Obj = CardAnimator.AddPosSpriteEffect(chessPos, conduct);
+                    if (sp.Obj == null)
+                        sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
                     continue;
                 }
 
@@ -419,7 +421,7 @@ public class ChessboardManager : MonoBehaviour
                 if (sp.Obj != null)
                 {
                     var obj = sp.Obj;
-                    EffectsPoolingControl.instance.TakeBackStateIcon(obj);
+                    EffectsPoolingControl.instance.RecycleEffect(obj);
                     sp.Obj = null;
                 }
                 Sprites.Remove(sp);

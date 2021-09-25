@@ -572,8 +572,9 @@ namespace Assets.System.WarModule
         /// <param name="typeId"></param>
         /// <param name="lasting">回合数或宿主id</param>
         /// <param name="value">buff参数</param>
+        /// <param name="actId"></param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, int typeId,int lasting,int value)
+        public T InstanceSprite<T>(IChessPos target, int typeId,int lasting,int value,int actId)
             where T : PosSprite, new()
         {
             var sprite =
@@ -582,9 +583,10 @@ namespace Assets.System.WarModule
                     typeId: typeId,
                     pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
             ChessSpriteSeed++;
-            RegSprite(sprite);
+            RegSprite(sprite, actId);
             return sprite;
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -593,15 +595,16 @@ namespace Assets.System.WarModule
         /// <param name="target"></param>
         /// <param name="typeId"></param>
         /// <param name="conducts"></param>
-        /// <param name="lasting">-1 代表即刻销毁精灵</param>
+        /// <param name="actId"></param>
+        /// <param name="skill"></param>
+        /// <param name="lasting">1 = 回合数，0 = 即刻销毁, -1 = 去除</param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public ActivityResult DelegateSpriteActivity<T>(ChessOperator op,IChessPos target, int typeId, CombatConduct[] conducts, int lasting = -1,
-            int value = 0)
+        public ActivityResult DelegateSpriteActivity<T>(ChessOperator op,IChessPos target, int typeId, CombatConduct[] conducts,int actId ,int skill,int lasting = 0, int value = 0)
             where T : PosSprite, new()
         {
-            var sprite = InstanceSprite<T>(target, typeId, lasting, value);
-            return sprite.OnActivity(op, this, conducts);
+            var sprite = InstanceSprite<T>(target, typeId, lasting, value, actId);
+            return sprite.OnActivity(op, this, conducts, actId, skill);
         }
 
         private Activity SpriteActivity(PosSprite sprite,bool isAdd)
@@ -614,12 +617,12 @@ namespace Assets.System.WarModule
                 Helper.Singular(conduct), 1, -1);
         }
 
-        private void RegSprite(PosSprite sprite)
+        private void RegSprite(PosSprite sprite,int actId)
         {
             Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1, false);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId, false);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
         }

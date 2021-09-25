@@ -1088,12 +1088,12 @@ public class FightForManager : MonoBehaviour
     {
         Transform tran0 = tran.Find(stateName);
         if (tran0 != null)
-            EffectsPoolingControl.instance.TakeBackStateIcon(tran0.gameObject.GetComponent<EffectStateUi>());
+            EffectsPoolingControl.instance.RecycleEffect(tran0.gameObject.GetComponent<EffectStateUi>());
         if (isShowEffect)
         {
             Transform tran1 = tran.parent.Find(stateName + "Din");
             if (tran1 != null)
-                EffectsPoolingControl.instance.TakeBackStateIcon(tran1.gameObject.GetComponent<EffectStateUi>());
+                EffectsPoolingControl.instance.RecycleEffect(tran1.gameObject.GetComponent<EffectStateUi>());
         }
     }
 

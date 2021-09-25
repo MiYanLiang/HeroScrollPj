@@ -78,98 +78,6 @@ public static class Effect
     public const string VTextInvincible = "A1";//无敌
     public const string VTextShield = "4";//?
     #region 旧特效
-    public static string GetHeroSpark(int military, int skill)
-    {
-        if (skill == 0) return Basic0A;//0 表示非武将技(普通攻击)
-        var value = Basic0A; // "0A" 预设普通
-        switch (military)
-        {
-            case 3: value = FeiJia3A; break; // "3A";飞甲
-            case 1: //近战
-            case 4: value = Shield4A; break; // "4A";大盾
-            case 6: value = SuckBlood6A; break; // "6A";虎卫
-            case 7: value = Blademail7A; break; // "7A";
-            case 8: value = Elephant8A; break; // "8A";象兵
-            case 9: value = Cavalry9A; break; // "9A";先锋
-            case 10: value = Daredevil10A; break; // "10A";先登
-            case 11: value = Knight11A; break; // "11A";白马
-            case 12: value = Stimulate12A; break; // "12A";神武
-            case 13: value = Guard13A; break; // "13A";禁卫
-            case 15: value = Halberd15A; break; // "15A";大戟
-            case 14: value = LongSpear14A; break;//"14A"长枪兵
-            case 16: value = Cavalry16A; break; // "16A";骠骑
-            case 17: value = Blade17A; break; // "17A";大刀
-            case 18: value = Axe18A; break; // "18A";大斧
-            case 19: value = CrossBow19A; break; // "19A";连弩
-            case 20: value = Bow20A; break;// "20A";弓兵
-            case 21: value = Warship21A; break; // "21A";战船
-            case 22: value = Chariot22A; break; // "22A";战车
-            case 23: value = SiegeMachine23A; break; // "23A";攻城车
-            case 24: value = ThrowRocks24A; break; // "24A";投石车
-            case 25: value = Assassin25A; break; // "25A";刺客
-            case 26: value = Advisor26A; break;// "26A"  军师
-            case 27: value = Advisor26A; break;// "27A"  大军师
-            case 28:
-            case 29:
-                {
-                    switch (skill)
-                    {
-                        case 1: value = Warlock29A; break; // "29A"  大术士
-                        case 2: value = Warlock28A; break; // "28A"  术士
-                    }
-                    break;
-                }
-            case 30: value = PoisonMaster30A; break; // "31A"  大毒士
-            case 31: value = PoisonMaster31A; break; // "30A"  毒士
-            case 32: value = FlagBearer32A; break;// "32A"  统帅
-            case 33: value = FlagBearer33A; break;// "33A"  大统帅
-            case 34: value = Debate34A; break; // "34A";辩士
-            case 35: value = Controversy35A; break; // "35A";大辩士
-            case 36: value = Counselor36A; break;//"36"	谋士
-            case 37: value = Counselor37A; break;//"37"  大谋士
-            case 38: value = StateAffairs38A; break; // "38A";
-            case 39: value = Support39A; break; // "39A";辅佐
-            case 40: value = Mechanical40A; break; // "40A";器械
-            case 42: value = Heal42A; break; // "42A";医师
-            case 43: value = Heal43A; break; // "43A";大医师
-            case 44: value = FemaleRider44A; break; // "44A";巾帼
-            case 45: value = Lady45A; break;//"45"	美人
-            case 46: value = Lady46A; break;//"46"  大美人
-            case 47: value = Persuade47A; break; // "47A";说客
-            case 48: value = Convince48A; break; // "48A";大说客
-            case 49: value = Crossbow49A; break; // "49A";弩兵
-            case 50: value = Scribe50A; break; // "50A";文士
-            case 51: value = CrossBow51A; break;// "51A";强弩
-            case 52: value = LongBow52A; break;// "52A";大弓
-            case 53: value = Anchorite53A; break;//"53"	隐士
-            case 54: value = Anchorite54A; break;//"54"  大隐士
-            case 55:
-                switch (skill)
-                {
-                    case 1: value = FireShip55A; break;
-                    case 2: value = FireShip55A0; break;
-                }
-                break;
-            case 56: value = Barbarians56A; break; // "56A";蛮族
-            case 57: value = TengJia57A; break; // "57A";藤甲
-            case 58: value = HeavyCavalry58A; break; // "58A";铁骑
-            case 59: value = Spear59A; break;//"59A"枪兵
-            case 60: value = Cavalry60A; break; // "60A";急先锋
-            case 65:
-                switch (skill)
-                {
-                    case 1:
-                        value = YellowBand65A;
-                        break; // "65A";黄巾
-                               //todo 65B 换去状态文件夹
-                               //case 2:
-                               //    value = Effect.YellowBand65B;
-                               //    break; // "65B";黄巾
-                }
-                break;
-        }
-        return value;
-    }
     #endregion
     public const int Basic001 = 001;
     public static int GetHeroSparkId(int military, int skill)//skill=-1(没有特效)，skill=0(默认特效001),skill>0（技能专属特效）
@@ -671,10 +579,11 @@ public static class Effect
                 return 001;
         }
     }
+
     /// <summary>
     /// 陷阱特效
     /// </summary>
-    /// <param name="towerId"></param>
+    /// <param name="trapId"></param>
     /// <param name="skill"></param>
     /// <returns></returns>
     public static int GetTrapSparkId(int trapId, int skill)
