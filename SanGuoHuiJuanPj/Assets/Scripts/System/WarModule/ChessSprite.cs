@@ -26,13 +26,21 @@ namespace Assets.System.WarModule
             Round
         }
         /// <summary>
-        /// 统帅-业火精灵id(回合制)
+        /// 爆炸+火焰
         /// </summary>
         public const int YeHuo = 6;
+        /// <summary>
+        /// 一般火焰
+        /// </summary>
+        public const int FireFlame = 7;
         /// <summary>
         /// 落雷
         /// </summary>
         public const int Thunder = 3;
+        /// <summary>
+        /// 地震
+        /// </summary>
+        public const int Eerthquake = 8;
         /// <summary>
         /// 迷雾精灵(依赖类)
         /// </summary>
