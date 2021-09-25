@@ -97,13 +97,14 @@ namespace Assets.System.WarModule
         {
             //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-            if(activity.Intent == Activity.ChessboardInvocation)
+            if (activity.Intent == Activity.ChessboardInvocation)
             {
                 foreach (var conduct in activity.Conducts)
                     UpdateConduct(conduct);
                 result.SetStatus(Chessboard.GetStatus(this));
                 return result;
             }
+
             //直接击杀
             var kills = activity.Conducts.Where(c => c.Kind == CombatConduct.KillingKind).ToArray();
             if (kills.Length > 0)
@@ -115,6 +116,7 @@ namespace Assets.System.WarModule
                     result.SetStatus(Chessboard.GetStatus(this));
                     return result;
                 }
+
                 result.Result = (int)ActivityResult.Types.Suffer;
             }
 
@@ -122,26 +124,36 @@ namespace Assets.System.WarModule
             if (Chessboard.OnInvincibleTrigger(this))
             {
                 result.SetStatus(Chessboard.GetStatus(this));
-                result.Result = (int) ActivityResult.Types.Invincible;
+                result.Result = (int)ActivityResult.Types.Invincible;
                 return result;
             }
+
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.Self)
                 result.Result = (int)ActivityResult.Types.Friendly;
 
-            //友军 与 非棋子 的执行结果
-            if (result.Type == ActivityResult.Types.Friendly 
-                || offender == null) 
+
+            if (offender == null)
             {
                 ProceedActivity(activity);
                 result.SetStatus(Chessboard.GetStatus(this));
                 return result;
             }
 
-            //执行对方棋子的攻击
-            result = Chessboard.OnOffensiveActivity(activity, this ,offender);
+            //友军 与 非棋子 的执行结果
+            if (result.Type == ActivityResult.Types.Friendly)
+            {
+                ProceedActivity(activity);
+                result.SetStatus(Chessboard.GetStatus(this));
+            }
+            else
+            {
+                //执行对方棋子的攻击
+                result = Chessboard.OnOffensiveActivity(activity, this, offender);
+            }
 
+            OnSufferConduct(offender, activity);
             return result;
         }
 
