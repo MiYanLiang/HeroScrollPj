@@ -113,7 +113,7 @@ namespace Assets.System.WarModule
                 if (kills.Any(kill => kill.Rate == 0 || Chessboard.IsRandomPass(kill.Rate)))
                 {
                     result.Result = (int)ActivityResult.Types.Kill;
-                    ProceedActivity(activity);
+                    ProceedActivity(activity, result.Type);
                     result.SetStatus(Chessboard.GetStatus(this));
                     return result;
                 }
@@ -137,7 +137,7 @@ namespace Assets.System.WarModule
 
             if (offender == null)
             {
-                ProceedActivity(activity);
+                ProceedActivity(activity, result.Type);
                 result.SetStatus(Chessboard.GetStatus(this));
                 return result;
             }
@@ -145,22 +145,25 @@ namespace Assets.System.WarModule
             //友军 与 非棋子 的执行结果
             if (result.Type == ActivityResult.Types.Friendly)
             {
-                ProceedActivity(activity);
+                ProceedActivity(activity, result.Type);
                 result.SetStatus(Chessboard.GetStatus(this));
             }
             else
             {
                 //执行对方棋子的攻击
                 result = Chessboard.OnOffensiveActivity(activity, this, offender);
+                OnSufferConduct(offender, activity);
             }
 
-            OnSufferConduct(offender, activity);
             return result;
         }
 
-        public void ProceedActivity(Activity activity)
+        public void ProceedActivity(Activity activity, ActivityResult.Types result)
         {
-            foreach (var conduct in activity.Conducts)
+            var conducts = activity.Conducts;
+            if (result == ActivityResult.Types.Shield)
+                conducts = conducts.Where(c => Damage.GetKind(c) != Damage.Kinds.Magic).ToArray();
+            foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
                 UpdateConduct(conduct);
@@ -296,7 +299,6 @@ namespace Assets.System.WarModule
         private IChessman chessman;
         private CombatStyle combatStyle;
         private ChessboardOperator chessboard;
-        private int pos;
 
         protected GameCardInfo Info { get; private set; }
         protected override ChessboardOperator Chessboard => chessboard;

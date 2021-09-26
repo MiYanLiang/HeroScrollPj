@@ -387,6 +387,9 @@ namespace Assets.System.WarModule
         {
         }
 
+        public override bool IsHeroPerformTrigger => true;
+
+        public override bool IsDisableHeroPerform(HeroOperator op) => IsBuffActive(op);
     }
     //链环buff管理防守时分享伤害
     public class ChainedBuff : BuffOperator

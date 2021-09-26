@@ -268,7 +268,7 @@ public class ChessboardManager : MonoBehaviour
         {
             if (activity.Intent == Activity.Sprite)
             {
-                tween.Join(OnSpriteEffect(activity));
+                OnSpriteEffect(activity);
                 continue;
             }
             var target = GetCardMap(activity.To);
@@ -314,18 +314,13 @@ public class ChessboardManager : MonoBehaviour
 
             //施放者活动
             FightCardData major = null;
-            foreach (var activity in map.Value.Activities)
+            foreach (var activity in map.Value.Activities.Where(a=>a.Intent !=Activity.Sprite))
             {
                 var target = GetCardMap(activity.To);
                 var op = GetCardMap(activity.From);
                 if (major == null)
                     major = op;
                 
-                if (activity.Intent == Activity.Sprite) //精灵活动最高优先，否则target会译为棋子而非棋位
-                {
-                    mainTween.Join(OnSpriteEffect(activity));
-                    continue;
-                }
 
                 if (op == null) //没有施放者多数是buff活动
                 {
@@ -334,8 +329,7 @@ public class ChessboardManager : MonoBehaviour
                 }
 
                 //主要活动
-                mainTween.Join(op.ChessmanStyle.OffensiveTween(activity, op))
-                    .Join(target.ChessmanStyle.RespondTween(activity, target,
+                mainTween.Join(target.ChessmanStyle.RespondTween(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity)));
 
                 //击退一格
@@ -346,6 +340,18 @@ public class ChessboardManager : MonoBehaviour
                             PlaySoundEffect(activity, op.ChessmanStyle, target);
                             Chessboard.PlaceCard(activity.RePos, target);
                         }));
+            }
+
+            foreach (var activity in map.Value.Activities)
+            {
+                if (activity.Intent == Activity.Sprite) //精灵活动最高优先，否则target会译为棋子而非棋位
+                {
+                    OnSpriteEffect(activity);
+                    continue;
+                }
+
+                if (major != null)
+                    major.ChessmanStyle.OffensiveEffect(activity, major);
             }
 
             if (major!=null && major.Style.Type == CombatStyle.Types.Melee)
@@ -372,8 +378,8 @@ public class ChessboardManager : MonoBehaviour
             {
                 var target = GetCardMap(activity.To);
                 var op = GetCardMap(activity.From);
-                counterTween.Join(op.ChessmanStyle.OffensiveTween(activity, op))
-                    .Join(target.ChessmanStyle.RespondTween(activity, target,
+                op.ChessmanStyle.OffensiveEffect(activity, op);
+                counterTween.Join(target.ChessmanStyle.RespondTween(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity)));
             }
 
@@ -389,44 +395,43 @@ public class ChessboardManager : MonoBehaviour
         yield return CardAnimator.FinalizeAnimation(majorCard, chessPos).WaitForCompletion();
     }
 
-    private Tween OnSpriteEffect(Activity activity)
+    private void OnSpriteEffect(Activity activity)
     {
         var chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
-        return DOTween.Sequence().AppendCallback(() =>
+        foreach (var conduct in activity.Conducts.Where(c => c.Kind == CombatConduct.SpriteKind))
         {
-            foreach (var conduct in activity.Conducts.Where(c=>c.Kind == CombatConduct.SpriteKind))
+            var buffId = Effect.GetFloorBuffId(conduct.Element);
+            if (buffId == -1) continue;
+            var sp = Sprites.FirstOrDefault(s =>
+                s.SpriteType == conduct.Element && s.Pos == chessPos.Pos && s.SpriteId == conduct.Kind);
+            if (conduct.Total >= 0)
             {
-                var buffId = Effect.GetFloorBuffId(conduct.Element);
-                if (buffId == -1) continue;
-                var sp = Sprites.FirstOrDefault(s => s.SpriteType == conduct.Element && s.Pos == chessPos.Pos && s.SpriteId == conduct.Kind);
-                if (conduct.Total >= 0)
+                if (sp == null)
                 {
-                    if (sp == null)
+                    sp = new SpriteObj
                     {
-                        sp = new SpriteObj
-                        {
-                            SpriteType = conduct.Element,
-                            SpriteId = conduct.Kind,
-                            Pos = chessPos.Pos
-                        };
-                        Sprites.Add(sp);
-                    }
-
-                    if (sp.Obj == null)
-                        sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
-                    continue;
+                        SpriteType = conduct.Element,
+                        SpriteId = conduct.Kind,
+                        Pos = chessPos.Pos
+                    };
+                    Sprites.Add(sp);
                 }
 
-                if (sp == null) continue;
-                if (sp.Obj != null)
-                {
-                    var obj = sp.Obj;
-                    EffectsPoolingControl.instance.RecycleEffect(obj);
-                    sp.Obj = null;
-                }
-                Sprites.Remove(sp);
+                if (sp.Obj == null)
+                    sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
+                continue;
             }
-        });
+
+            if (sp == null) continue;
+            if (sp.Obj != null)
+            {
+                var obj = sp.Obj;
+                EffectsPoolingControl.instance.RecycleEffect(obj);
+                sp.Obj = null;
+            }
+
+            Sprites.Remove(sp);
+        }
         //var targetPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
         //targetPos.transform
     }

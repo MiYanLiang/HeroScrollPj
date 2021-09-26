@@ -736,10 +736,8 @@ namespace Assets.System.WarModule
                 var state = DetermineSufferResult(op, offender);
                 result.Result = (int)state;
 
-                if (state == ActivityResult.Types.Suffer ||
-                    state == ActivityResult.Types.EaseShield)
-                    /***执行Activities***/
-                    op.ProceedActivity(activity);
+                /***执行Activities***/
+                op.ProceedActivity(activity,result.Type);
             }
 
             result.Status = GetFullCondition(op);

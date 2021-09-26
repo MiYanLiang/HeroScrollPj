@@ -244,8 +244,8 @@ namespace Assets.System.WarModule
                     actId == 0 ? 0 : 1);
                 if (result == null) break;
                 if (Chessboard.GetStatus(this).IsDeath) break;
-                if (!result.IsDeath)
-                    combo = hit.Critical > 0 || hit.Rouse > 0;
+                if (target.IsAliveHero)
+                    combo = hit.IsCriticalDamage() || hit.IsRouseDamage();
                 if (!combo) combo = Chessboard.IsRandomPass(ComboRatio());
                 actId++;
             } while (combo);

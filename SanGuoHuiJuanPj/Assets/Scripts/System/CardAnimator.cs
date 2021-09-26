@@ -112,23 +112,19 @@ public class CardAnimator
     /// <param name="conduct"></param>
     /// <param name="color"></param>
     /// <returns></returns>
-    public static Tween NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
+    public static void NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
     {
         var value = (int)conduct.Total;
-        if (value == 0) return DOTween.Sequence();
+        if (value == 0) return;
         if (color == default)
             color = CombatConduct.IsPositiveConduct(conduct)
                 ? ColorDataStatic.huiFu_green
                 : ColorDataStatic.name_deepRed;
-
-        return DOTween.Sequence().AppendCallback(() =>
-        {
-            var effect =
-                EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
-                    target.cardObj.transform);
-            effect.GetComponentInChildren<Text>().text = value.ToString();
-            effect.GetComponentInChildren<Text>().color = color;
-        });
+        var effect =
+            EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
+                target.cardObj.transform);
+        effect.GetComponentInChildren<Text>().text = value.ToString();
+        effect.GetComponentInChildren<Text>().color = color;
     }
 
     /// <summary>
@@ -156,20 +152,18 @@ public class CardAnimator
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStateIcon(FightCardData target, int con = -1)
+    public static void UpdateStateIcon(FightCardData target, int con = -1)
     {
-        return DOTween.Sequence().OnComplete(() =>
-        {
-            if (con == -1)
-                foreach (var state in CardState.ConsArray)
-                    UpdateSingleStateEffect(target, (int)state);
-            else UpdateSingleStateEffect(target, con);
-        });
+        if (con == -1)
+            foreach (var state in CardState.ConsArray)
+                UpdateSingleStateEffect(target, (int)state);
+        else UpdateSingleStateEffect(target, con);
     }
+
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public static Tween UpdateStateIcon(FightCardData target, CardState.Cons con) =>
+    public static void UpdateStateIcon(FightCardData target, CardState.Cons con) =>
         UpdateStateIcon(target, (int)con);
     /// <summary>
     /// 更新棋子上的状态效果
@@ -215,11 +209,10 @@ public class CardAnimator
     }
 
 
-    public static Tween DisplayTextEffect(FightCardData target, Activity activity)
+    public static void DisplayTextEffect(FightCardData target, Activity activity)
     {
-        var tween = DOTween.Sequence();
         if (activity.IsRePos)
-            tween.OnComplete(() => GetHTextEffect(17, target.cardObj.transform, Color.red));
+            GetHTextEffect(17, target.cardObj.transform, Color.red);
         switch (activity.Result.Type)
         {
             case ActivityResult.Types.Suffer:
@@ -230,7 +223,7 @@ public class CardAnimator
             case ActivityResult.Types.Shield:
             case ActivityResult.Types.Invincible:
             case ActivityResult.Types.EaseShield:
-                tween.OnComplete(()=>TextEffectByResult(activity.Result.Type,target));
+                TextEffectByResult(activity.Result.Type, target);
                 break;
             default:
                 break;
@@ -300,14 +293,12 @@ public class CardAnimator
             }
 
             if (tableId >= 0)
-                tween.OnComplete(() => GetHTextEffect(tableId, target.cardObj.transform, color));
+                GetHTextEffect(tableId, target.cardObj.transform, color);
             if (conduct.Critical > 0)
-                tween.OnComplete(() => GetHTextEffect(23, target.cardObj.transform, color));
+                GetHTextEffect(23, target.cardObj.transform, color);
             if (conduct.Rouse > 0)
-                tween.OnComplete(() => GetHTextEffect(22, target.cardObj.transform, color));
+                GetHTextEffect(22, target.cardObj.transform, color);
         }
-
-        return tween;
     }
 
     private static void TextEffectByResult(ActivityResult.Types type, FightCardData target)
@@ -332,8 +323,7 @@ public class CardAnimator
         GetVTextEffect(effectName, target.cardObj.transform);
     }
 
-    public static Tween VTextEffect(string effectName, Transform transform) =>
-        DOTween.Sequence().OnComplete(() => GetVTextEffect(effectName, transform));
+    public static void VTextEffect(string effectName, Transform transform) => GetVTextEffect(effectName, transform);
 
     private static void GetVTextEffect(string effectName, Transform transform)
     {

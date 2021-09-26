@@ -53,14 +53,18 @@ public class ChessUiStyle : CombatStyle
 public class ChessmanStyle : ChessUiStyle
 {
     public virtual Tween UpdateStatusTween(ChessStatus chessStatus, FightCardData card) => DOTween.Sequence()
-        .AppendCallback(() => card.UpdateActivityStatus(chessStatus)).Append(CardAnimator.UpdateStateIcon(card));
+        .AppendCallback(() =>
+        {
+            card.UpdateActivityStatus(chessStatus);
+            CardAnimator.UpdateStateIcon(card);
+        });
     /// <summary>
-    /// 主行动，施展+反馈
+    /// 主行动，施展 方法
     /// </summary>
     /// <param name="activity"></param>
     /// <param name="offense"></param>
     /// <returns></returns>
-    public virtual Tween OffensiveTween(Activity activity, FightCardData offense) => DOTween.Sequence();
+    public virtual void OffensiveEffect(Activity activity, FightCardData offense) => DOTween.Sequence();
 
 }
 public class SpriteStyle : CombatStyle
@@ -78,32 +82,50 @@ public class SpriteStyle : CombatStyle
 }
 public abstract class CardStyle : ChessmanStyle
 {
-    public override Tween OffensiveTween(Activity activity,FightCardData offense)
-    {
-        return DOTween.Sequence()
-            .Join(OffenseVText(activity, offense));
-    }
+    public override void OffensiveEffect(Activity activity,FightCardData offense) => OffenseVText(activity, offense);
 
     public override Sequence RespondTween(Activity activity, FightCardData target, int effectId) =>
-        base.RespondTween(activity, target, effectId)
-            .AppendCallback(() => target.UpdateActivityStatus(activity.Result.Status))
-            .Append(RespondAnimation(activity, target, effectId))
-            .Join(CardAnimator.UpdateStateIcon(target));
-    protected virtual Tween RespondAnimation(Activity activity, FightCardData target, int effectId)
+        DOTween.Sequence().AppendCallback(() =>
+            {
+                target.UpdateActivityStatus(activity.Result.Status);
+                CardAnimator.UpdateStateIcon(target);
+                RespondEffect(activity, target, effectId);
+            })
+            .Append(RespondAnimation(activity, target));
+
+    private Tween RespondAnimation(Activity activity, FightCardData target)
     {
-        var tween = DOTween.Sequence();
+        switch (activity.Result.Type)
+        {
+            case ActivityResult.Types.Suffer when 
+                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
+                                           c.Kind == CombatConduct.KillingKind):
+            case ActivityResult.Types.Friendly when 
+                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
+                                           c.Kind == CombatConduct.KillingKind):
+            case ActivityResult.Types.EaseShield when 
+                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
+                                           c.Kind == CombatConduct.KillingKind):
+                return CardAnimator.SufferShakeAnimation(target);
+            case ActivityResult.Types.Dodge:
+                return CardAnimator.SideDodgeAnimation(target);
+        }
+        return DOTween.Sequence();
+    }
+    protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
+    {
         var conducts = activity.Conducts
             .Where(c => c.Kind == CombatConduct.DamageKind ||
                         c.Kind == CombatConduct.KillingKind ||
                         c.Kind == CombatConduct.HealKind ||
                         c.Kind == CombatConduct.BuffKind
             ).ToArray();
-        if (conducts.Length == 0) return tween;
+        if (conducts.Length == 0) return;
 
         if (effectId >= 0) //如果id==null，没有特效(火花)
-            tween.Join(SparkTween(activity, target, effectId));
+            SparkTween(activity, target, effectId);
 
-        tween.Join(CardAnimator.DisplayTextEffect(target, activity));//文字效果，描述反馈结果：伤害，闪避，格挡
+        CardAnimator.DisplayTextEffect(target, activity);//文字效果，描述反馈结果：伤害，闪避，格挡
 
         //动画演示+上状态效果
         foreach (var conduct in conducts)
@@ -116,69 +138,59 @@ public abstract class CardStyle : ChessmanStyle
                     {
                         case CombatConduct.DamageKind:
                         case CombatConduct.KillingKind:
-                            tween.Join(CardAnimator.NumberEffectTween(target, conduct))
-                                .Join(CardAnimator.SufferShakeAnimation(target));
+                            CardAnimator.NumberEffectTween(target, conduct);
                             break;
                         case CombatConduct.HealKind:
-                            tween.Join(CardAnimator.NumberEffectTween(target, conduct));
+                            CardAnimator.NumberEffectTween(target, conduct);
                             break;
                     }
                     break;
                 case ActivityResult.Types.Dodge:
-                    tween.Join(CardAnimator.SideDodgeAnimation(target));
-                    tween.Join(CardAnimator.VTextEffect(Effect.VTextDodge, target.cardObj.transform));
+                    CardAnimator.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.Shield:
-                    tween.Join(CardAnimator.UpdateStateIcon(target, CardState.Cons.Shield));
-                    //tween.Join(CardAnimator.VTextEffect(Effect.VTextShield, target.cardObj.transform));
+                    CardAnimator.UpdateStateIcon(target, CardState.Cons.Shield);
                     break;
                 case ActivityResult.Types.Invincible:
-                    tween.Join(CardAnimator.VTextEffect(Effect.VTextInvincible, target.cardObj.transform));
+                    CardAnimator.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.EaseShield:
-                    tween.Join(CardAnimator.NumberEffectTween(target, conduct, ColorDataStatic.name_gray))
-                        .Join(CardAnimator.UpdateStateIcon(target, CardState.Cons.EaseShield))
-                        .Join(CardAnimator.SufferShakeAnimation(target));
-                    break;
-                default:
+                    CardAnimator.NumberEffectTween(target, conduct, ColorDataStatic.name_red);
+                    CardAnimator.UpdateStateIcon(target, CardState.Cons.EaseShield);
                     break;
             }
         }
-        return tween;
     }
 
-    private Tween SparkTween(Activity activity,FightCardData target,int effectId)
+    private void SparkTween(Activity activity, FightCardData target, int effectId)
     {
-        return DOTween.Sequence().AppendCallback(() =>
+        foreach (var conduct in activity.Conducts)
         {
-            foreach (var conduct in activity.Conducts)
+            GameObject effect;
+            switch (activity.Skill)
             {
-                GameObject effect;
-                switch (activity.Skill)
-                {
-                    case 0:
-                        effect = EffectsPoolingControl.instance.GetSparkEffect(Effect.Basic001, target.cardObj.transform,
-                            0.5f);
-                        effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
-                        break;
-                    default:
-                        effect = EffectsPoolingControl.instance.GetSparkEffect(effectId, target.cardObj.transform, 1f);
-                        break;
-                    case -1: continue;//-1 = 没有特效
-                }
-
-                //一些效果需要反向显示
-                if (Effect.IsInvertControl(effectId))
-                {
-                    var rotation = target.isPlayerCard ? new Quaternion(0, 0, 180, 0) : Quaternion.identity;
-                    effect.transform.localRotation = rotation;
-                }
-
-                if (conduct.Critical > 0 || conduct.Rouse > 0) //如果会心或暴击 物体变大1.5
-                    effect.transform.localScale = new Vector3(1.5f, 1.5f, 1);
-                else effect.transform.localScale = Vector3.one;
+                case 0:
+                    effect = EffectsPoolingControl.instance.GetSparkEffect(Effect.Basic001, target.cardObj.transform,
+                        0.5f);
+                    effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
+                    break;
+                default:
+                    effect = EffectsPoolingControl.instance.GetSparkEffect(effectId, target.cardObj.transform, 1f);
+                    break;
+                case -1: continue; //-1 = 没有特效
             }
-        });
+
+            //一些效果需要反向显示
+            if (Effect.IsInvertControl(effectId))
+            {
+                var rotation = target.isPlayerCard ? new Quaternion(0, 0, 180, 0) : Quaternion.identity;
+                effect.transform.localRotation = rotation;
+            }
+
+            if (conduct.Critical > 0 || conduct.Rouse > 0) //如果会心或暴击 物体变大1.5
+                effect.transform.localScale = new Vector3(1.5f, 1.5f, 1);
+            else effect.transform.localScale = Vector3.one;
+        }
     }
 
     /// <summary>
@@ -187,24 +199,16 @@ public abstract class CardStyle : ChessmanStyle
     /// <param name="activity"></param>
     /// <param name="offense"></param>
     /// <returns></returns>
-    protected abstract Tween OffenseVText(Activity activity, FightCardData offense);
+    protected abstract void OffenseVText(Activity activity, FightCardData offense);
 }
 
 public class HeroStyle : CardStyle
 {
-    protected override Tween OffenseVText(Activity activity, FightCardData offense)
+    protected override void OffenseVText(Activity activity, FightCardData offense)
     {
-        if (activity.Skill == 0) return DOTween.Sequence();
+        if (activity.Skill == 0) return;
         //武将有自己的攻击特效
-        return HeroOffenseVText(activity, offense);
-    }
-
-    protected virtual Tween HeroOffenseVText(Activity activity, FightCardData offense) =>
         CardAnimator.VTextEffect(MilitaryOffenseVTextId(activity), offense.cardObj.transform);
-
-    protected override Tween RespondAnimation(Activity activity, FightCardData target, int effectId)
-    {
-        return DOTween.Sequence().Join(base.RespondAnimation(activity, target, effectId));
     }
 
     private string MilitaryOffenseVTextId(Activity activity)
@@ -247,10 +251,10 @@ public class TowerStyle : CardStyle
 {
     public override int GetMilitarySparkId(Activity activity) => Effect.GetTowerSparkId(Military, activity.Skill);
 
-    protected override Tween OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
+    protected override void OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
 }
 
 public class TrapStyle : CardStyle
 {
-    protected override Tween OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
+    protected override void OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
 }

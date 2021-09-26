@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Assets.System.WarModule
@@ -162,14 +163,20 @@ namespace Assets.System.WarModule
                     break;
 
             }
-            switch (To)
-            {
-                case -1: toText = "己方";break;
-                case -2: toText = "对方";break;
-                default:
-                    toText = $"单位Id({To})";
-                    break;
-            }
+            if(Intent!=Sprite)
+                switch (To)
+                {
+                    case -1:
+                        toText = "己方";
+                        break;
+                    case -2:
+                        toText = "对方";
+                        break;
+                    default:
+                        toText = $"单位Id({To})";
+                        break;
+                }
+
             return intentText + toText;
         }
         public string StanceText()=>IsChallenger == 0 ? "玩家" : "对方";
@@ -268,7 +275,14 @@ namespace Assets.System.WarModule
 
             if (Status == null) return $"活动结果：{resultText}";
             return
-                $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({Status.Buffs.Where(b => b.Value > 0).Select(b => $"[{b.Key}:{b.Value}]")})";
+                $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({AppendBuffs(Status.Buffs.Where(b => b.Value > 0).Select(b => $"[{b.Key}:{b.Value}]"))})";
+        }
+
+        private string AppendBuffs(IEnumerable<string> texts)
+        {
+            var sb = new StringBuilder();
+            foreach (var text in texts) sb.Append(text);
+            return sb.ToString();
         }
 
         public void SetStatus(ChessStatus status) => Status = status.Clone();

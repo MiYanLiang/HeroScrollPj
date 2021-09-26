@@ -178,8 +178,21 @@ namespace Assets.System.WarModule
                 }
                 case SpriteKind:
                 {
+                    switch (Element)
+                    {
+                        case PosSprite.Thunder: elementText = nameof(PosSprite.Thunder); break;
+                        case PosSprite.Forge: elementText = nameof(PosSprite.Forge); break;
+                        case PosSprite.YeHuo: elementText = nameof(PosSprite.YeHuo); break;
+                        case PosSprite.Strength: elementText = nameof(PosSprite.Strength); break;
+                        case PosSprite.Armor: elementText = nameof(PosSprite.Armor); break;
+                        case PosSprite.Rouse: elementText = nameof(PosSprite.Rouse); break;
+                        case PosSprite.Critical: elementText = nameof(PosSprite.Critical); break;
+                        case PosSprite.FireFlame: elementText = nameof(PosSprite.FireFlame); break;
+                        case PosSprite.Eerthquake: elementText = nameof(PosSprite.Eerthquake); break;
+                        default: elementText = $"类型({Element})"; break;
+                    }
+
                     kindText = "精灵";
-                    elementText = $"类型({Element})";
                     valueText = Basic > 0 ? "添加" : "销毁";
                     break;
                 }
