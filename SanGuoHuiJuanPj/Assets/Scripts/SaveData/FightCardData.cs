@@ -68,7 +68,7 @@ using UnityEngine;
         cardDamageType = info.DamageType;
         combatType = info.CombatType;
         var hp = info.GetHp(card.Level);
-        status = ChessStatus.Instance(hp,hp,Pos,0,new Dictionary<int, int>());
+        status = ChessStatus.Instance(hp,hp,Pos,0,new Dictionary<int, int>(),new List<int>());
         StatesUi = new Dictionary<int, EffectStateUi>();
         var force = -1;
         switch (card.typeIndex)

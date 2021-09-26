@@ -82,7 +82,8 @@ namespace Assets.System.WarModule
         {
             //处理行动
             var result = ProcessActivityResult(activity, offender);
-            if (activity.RePos >= 0) SetPos(activity.RePos);
+            if (activity.RePos >= 0)
+                SetPos(activity.RePos);
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
             if (offender!=null && 
                 activity.Intent == Activity.Offensive &&
@@ -317,9 +318,10 @@ namespace Assets.System.WarModule
                 Info = card.Info;
         }
 
-        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint, chessman.Pos,
+        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint,
             chessman.Pos,
-            new Dictionary<int, int>());
+            chessman.Pos,
+            new Dictionary<int, int>(), new List<int>());
 
         public override string ToString()
         {

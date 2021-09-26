@@ -1,8 +1,7 @@
-﻿using System;
+﻿using CorrelateLib;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
-using CorrelateLib;
 
 namespace Assets.System.WarModule
 {
@@ -203,15 +202,13 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-
-            for (int i = 0; i < ComboTimes(); i++)
+            var combos = Chessboard.IsRandomPass(ComboRate) ? ComboTimes() : 1;
+            for (int i = 0; i < combos; i++)
             {
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(InstanceHeroGenericDamage()), i, i == 0 ? 0 : 1);
+                    Helper.Singular(InstanceHeroGenericDamage()), i, 1);
                 if (Chessboard.GetStatus(this).IsDeath) break;
                 if (Chessboard.GetStatus(target.Operator).IsDeath) break;
-                if (!Chessboard.IsRandomPass(ComboRate))
-                    break;//如果不触发，就直接停止
             }
         }
 
@@ -413,7 +410,7 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            if (target.IsAliveHero)
+            if (!target.IsAliveHero)
             {
                 base.MilitaryPerforms(0);
                 return;
@@ -522,7 +519,11 @@ namespace Assets.System.WarModule
                 .Take(Targets())
                 .ToArray();
 
-            if (targets.Length == 0) base.MilitaryPerforms(0);
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
 
             for (var i = 0; i < targets.Length; i++)
             {
@@ -545,7 +546,7 @@ namespace Assets.System.WarModule
                     //continue;
                 }
 
-                Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), 1, rePos);
+                Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), 0, 1, rePos);
             }
         }
     }
@@ -696,7 +697,7 @@ namespace Assets.System.WarModule
             }
 
             var basicDamage = InstanceHeroGenericDamage();
-            float rate = Chessboard.Randomize(1, 5);
+            float rate = 1;//Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
             var heal = (int)(rate * Strength);
@@ -830,7 +831,7 @@ namespace Assets.System.WarModule
             }
 
             var basicDamage = InstanceHeroGenericDamage();
-            float rate = Chessboard.Randomize(1, 5);
+            float rate = 1;// Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
             var shield = rate * Strength;
@@ -1175,7 +1176,7 @@ namespace Assets.System.WarModule
             {
                 var thunders = Chessboard.Randomize(range[0], range[1]) + addOn;
                 var targetPoses = Chessboard.GetRivals(this, _ => true).Select(pos => new WeightElement<IChessPos>
-                    { Obj = pos, Weight = WeightElement<IChessPos>.Random.Next(1, 4) }).Pick(thunders).ToArray();
+                { Obj = pos, Weight = WeightElement<IChessPos>.Random.Next(1, 4) }).Pick(thunders).ToArray();
                 for (int index = 0; index < targetPoses.Length; index++)
                 {
                     var pos = targetPoses[index];
@@ -1309,7 +1310,7 @@ namespace Assets.System.WarModule
             for (int i = 0; i < ComboRate(); i++)
             {
                 var target = targets.RandomPick();
-                var randomValue = Chessboard.Randomize(5);
+                var randomValue = 1;// Chessboard.Randomize(1,5);
                 damage.Multiply(randomValue);
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
                     Helper.Singular(damage), 0, 1);
@@ -1441,7 +1442,7 @@ namespace Assets.System.WarModule
         }
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var targets = Chessboard.GetRivals(this).Take(Targets()).ToArray();
+            var targets = Chessboard.GetRivals(this).OrderBy(p => p.Pos).Take(Targets()).ToArray();
             if (targets.Length == 0) return;
             var addOn = 0.5f * GeneralDamage();
             var perform = InstanceHeroGenericDamage(addOn);
@@ -1470,19 +1471,19 @@ namespace Assets.System.WarModule
         }
 
         private int ComboRate => 50;
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()), 0, 1);
-            if (Chessboard.IsRandomPass(ComboRate))
-                for (int i = 0; i < Combo(); i++)
-                {
-                    var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                        Helper.Singular(InstanceHeroGenericDamage()), i + 1, 1);
-                    if (result == null || result.IsDeath) return;
-                    if (!Chessboard.IsRandomPass(ComboRate))
-                        break;
-                }
+            var combo = Chessboard.IsRandomPass(ComboRate) ? Combo() : 1;
+            for (int i = 0; i < combo; i++)
+            {
+                var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
+                    Helper.Singular(InstanceHeroGenericDamage()), i, 1);
+                if (result == null || result.IsDeath) return;
+                if (!Chessboard.IsRandomPass(ComboRate))
+                    break;
+            }
         }
     }
 
@@ -1981,8 +1982,10 @@ namespace Assets.System.WarModule
         }
         public override void OnRoundStart()
         {
-            Chessboard.InstanceChessboardActivity(IsChallenger, this, Activity.Self,
-                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, ShieldRate())));
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, ShieldRate())), -1, 1);
+            //Chessboard.InstanceChessboardActivity(IsChallenger, this, Activity.Self,
+            //    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, ShieldRate())));
         }
 
         protected override void MilitaryPerforms(int skill = 1)
@@ -1995,7 +1998,7 @@ namespace Assets.System.WarModule
             if (damage.Any(c => c.Rouse > 0))
                 shield++;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, shield)), -1, 1);
+                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, shield)), -1, 2);
         }
     }
 

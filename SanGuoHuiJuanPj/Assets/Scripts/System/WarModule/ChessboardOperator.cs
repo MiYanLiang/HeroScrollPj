@@ -173,7 +173,8 @@ namespace Assets.System.WarModule
                 if (value > 0) dic.Add(key, value);
             }
 
-            return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, status.Speed, dic);
+            return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, status.Speed, dic,
+                status.LastSuffers.ToList());
         }
 
         protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
@@ -703,7 +704,7 @@ namespace Assets.System.WarModule
                 if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
                 //如果被护盾免伤后，扣除护盾1层
                 AppendOpActivity(op, GetChessPos(op), Activity.Self,
-                    Singular(CombatConduct.InstanceBuff(op.InstanceId,CardState.Cons.Shield, -1)), -1, 1);
+                    Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Shield, -1)), -1, -1);
                 return ActivityResult.Types.Shield;
             }
             if (GetCondition(op,CardState.Cons.EaseShield) > 0) // 缓冲盾
@@ -732,9 +733,13 @@ namespace Assets.System.WarModule
                 result.Result = (int)ActivityResult.Types.Dodge;
             else
             {
-                result.Result = (int)DetermineSufferResult(op, offender);
-                /***执行Activities***/
-                op.ProceedActivity(activity);
+                var state = DetermineSufferResult(op, offender);
+                result.Result = (int)state;
+
+                if (state == ActivityResult.Types.Suffer ||
+                    state == ActivityResult.Types.EaseShield)
+                    /***执行Activities***/
+                    op.ProceedActivity(activity);
             }
 
             result.Status = GetFullCondition(op);
@@ -907,7 +912,7 @@ namespace Assets.System.WarModule
 
         public IEnumerable<IChessPos> GetAttackPath(ChessOperator op)
         {
-            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? !op.IsChallenger : op.IsChallenger;
+            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? op.IsChallenger : !op.IsChallenger;
             return Grid.GetAttackPath(isChallenger, GetStatus(op).Pos).Where(p => p.Operator != op);
         }
 
