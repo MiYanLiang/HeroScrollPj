@@ -82,7 +82,8 @@ namespace Assets.System.WarModule
         {
             //处理行动
             var result = ProcessActivityResult(activity, offender);
-            if (activity.RePos >= 0) SetPos(activity.RePos);
+            if (activity.RePos >= 0)
+                SetPos(activity.RePos);
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
             if (offender!=null && 
                 activity.Intent == Activity.Offensive &&
@@ -97,13 +98,14 @@ namespace Assets.System.WarModule
         {
             //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-            if(activity.Intent == Activity.ChessboardInvocation)
+            if (activity.Intent == Activity.ChessboardInvocation)
             {
                 foreach (var conduct in activity.Conducts)
                     UpdateConduct(conduct);
                 result.SetStatus(Chessboard.GetStatus(this));
                 return result;
             }
+
             //直接击杀
             var kills = activity.Conducts.Where(c => c.Kind == CombatConduct.KillingKind).ToArray();
             if (kills.Length > 0)
@@ -115,6 +117,7 @@ namespace Assets.System.WarModule
                     result.SetStatus(Chessboard.GetStatus(this));
                     return result;
                 }
+
                 result.Result = (int)ActivityResult.Types.Suffer;
             }
 
@@ -122,26 +125,36 @@ namespace Assets.System.WarModule
             if (Chessboard.OnInvincibleTrigger(this))
             {
                 result.SetStatus(Chessboard.GetStatus(this));
-                result.Result = (int) ActivityResult.Types.Invincible;
+                result.Result = (int)ActivityResult.Types.Invincible;
                 return result;
             }
+
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.Self)
                 result.Result = (int)ActivityResult.Types.Friendly;
 
-            //友军 与 非棋子 的执行结果
-            if (result.Type == ActivityResult.Types.Friendly 
-                || offender == null) 
+
+            if (offender == null)
             {
                 ProceedActivity(activity);
                 result.SetStatus(Chessboard.GetStatus(this));
                 return result;
             }
 
-            //执行对方棋子的攻击
-            result = Chessboard.OnOffensiveActivity(activity, this ,offender);
+            //友军 与 非棋子 的执行结果
+            if (result.Type == ActivityResult.Types.Friendly)
+            {
+                ProceedActivity(activity);
+                result.SetStatus(Chessboard.GetStatus(this));
+            }
+            else
+            {
+                //执行对方棋子的攻击
+                result = Chessboard.OnOffensiveActivity(activity, this, offender);
+            }
 
+            OnSufferConduct(offender, activity);
             return result;
         }
 
@@ -305,9 +318,10 @@ namespace Assets.System.WarModule
                 Info = card.Info;
         }
 
-        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint, chessman.Pos,
+        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint,
             chessman.Pos,
-            new Dictionary<int, int>());
+            chessman.Pos,
+            new Dictionary<int, int>(), new List<int>());
 
         public override string ToString()
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace Assets.System.WarModule
@@ -266,7 +267,8 @@ namespace Assets.System.WarModule
             }
 
             if (Status == null) return $"活动结果：{resultText}";
-            return $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({Status.Buffs.Count})";
+            return
+                $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({Status.Buffs.Where(b => b.Value > 0).Select(b => $"[{b.Key}:{b.Value}]")})";
         }
 
         public void SetStatus(ChessStatus status) => Status = status.Clone();

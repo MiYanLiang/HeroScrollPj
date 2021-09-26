@@ -9,8 +9,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ChessStatus : BuffStatus
     {
-        public static ChessStatus Instance(int hp, int maxHp, int pos, int speed, Dictionary<int, int> states) =>
-            new ChessStatus(hp, maxHp, pos, speed, states);
+        public static ChessStatus Instance(int hp, int maxHp, int pos, int speed, Dictionary<int, int> states,
+            List<int> last) =>
+            new ChessStatus(hp, maxHp, pos, speed, states, last);
 
         public static ChessStatus Instance(ChessStatus ps) => new ChessStatus
         {
@@ -32,13 +33,14 @@ namespace Assets.System.WarModule
         {
             
         }
-        private ChessStatus(int hp, int maxHp, int pos,int speed, Dictionary<int, int> buffs)
+        private ChessStatus(int hp, int maxHp, int pos,int speed, Dictionary<int, int> buffs,List<int> last)
         {
             Hp = hp;
             Buffs = buffs;
             Pos = pos;
             MaxHp = maxHp;
             Speed = speed;
+            LastSuffers = last;
         }
 
         public ChessStatus Clone() => Instance(this);
