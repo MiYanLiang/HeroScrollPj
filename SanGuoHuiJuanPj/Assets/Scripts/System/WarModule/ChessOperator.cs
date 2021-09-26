@@ -315,7 +315,6 @@ namespace Assets.System.WarModule
             chessman = card;
             combatStyle = card.GetStyle();
             chessboard = chessboardOp;
-            pos = card.Pos;
             if (card.CardType != GameCardType.Base)
                 Info = card.Info;
         }
