@@ -53,9 +53,25 @@ namespace Assets.System.WarModule
 
         private readonly ChessProcess[] EmptyProcess = Array.Empty<ChessProcess>();
 
+        #region Round and Process methods
+
+        private struct ChessMajor
+        {
+            public static readonly ChessMajor UnDefined = new ChessMajor(-3, false);
+            public int Pos;
+            public bool IsChallenger;
+            public int GetMajor() => Pos < 0 ? IsChallenger ? -1 : -2 : Pos;
+            public int GetScope() => IsChallenger ? 0 : 1;
+
+            public ChessMajor(int pos, bool isChallenger)
+            {
+                Pos = pos;
+                IsChallenger = isChallenger;
+            }
+        }
+        private ChessMajor CurrentMajor { get; set; }
         private readonly List<ChessRound> rounds;
         private ChessRound currentRound;
-
         private ChessRound GetCurrentRound()
         {
             if (rounds.Count != 0 &&
@@ -75,22 +91,6 @@ namespace Assets.System.WarModule
             return currentRound;
         }
 
-
-        private struct ChessMajor
-        {
-            public static readonly ChessMajor UnDefined = new ChessMajor(-3, false);
-            public int Pos;
-            public bool IsChallenger;
-            public int GetMajor() => Pos < 0 ? IsChallenger ? -1 : -2 : Pos;
-            public int GetScope() => IsChallenger ? 0 : 1;
-
-            public ChessMajor(int pos, bool isChallenger)
-            {
-                Pos = pos;
-                IsChallenger = isChallenger;
-            }
-        }
-        private ChessMajor CurrentMajor { get; set; }
         private ChessProcess GetCurrentProcess()
         {
             switch (RoundState)
@@ -107,6 +107,8 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        #endregion
 
         private int ProcessSeed = 0;
         private int ActivitySeed = 0;
@@ -141,6 +143,9 @@ namespace Assets.System.WarModule
             Grid = grid;
             Logger = log;
         }
+        protected abstract ChessOperator GetOperator(int id);
+
+        #region Status & Condition
 
         public ChessStatus GetStatus(IChessOperator op) => GetStatus(GetOperator(op.InstanceId));
 
@@ -158,7 +163,7 @@ namespace Assets.System.WarModule
             return GetStatus(op).GetBuff(con) +
                    GetChessPos(op).Terrain.GetServed(con, op);
         }
-        public ChessStatus GetFullCondition(ChessOperator op)
+        public ChessStatus GetFullCondition(IChessOperator op)
         {
             var status = GetStatus(op);
             var pos = GetChessPos(op).Terrain;
@@ -177,7 +182,9 @@ namespace Assets.System.WarModule
                 status.LastSuffers.ToList());
         }
 
-        protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
+        #endregion
+
+        #region Round
 
         public void RoundConfirm()
         {
@@ -249,34 +256,6 @@ namespace Assets.System.WarModule
             return GetCurrentRound();
         }
 
-        private void LogProcess(ChessProcess process)
-        {
-            string opText;
-            switch (process.Type)
-            {
-                case ChessProcess.Types.Chessman:
-                    opText = OperatorText(process);
-                    break;
-                case ChessProcess.Types.Chessboard:
-                    opText = "棋盘";
-                    break;
-                case ChessProcess.Types.JiBan:
-                    opText = $"羁绊[{process.Major}]";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            Log($"进程({process.InstanceId})[{opText}]");
-            foreach (var activities in process.CombatMaps.Values.Select(m => m.Activities.Concat(m.CounterActs)))
-            {
-                foreach (var activity in activities)
-                {
-                    LogActivity(activity);
-                    LogConducts(activity);
-                    Log(activity.Result.ToString());
-                }
-            }
-        }
 
         private void RefreshChessPosses()
         {
@@ -304,6 +283,8 @@ namespace Assets.System.WarModule
             IsChallengerWin = Grid.Opposite.Values
                 .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).All(p => GetStatus(p.Operator).IsDeath);
         }
+
+        #endregion
 
         #region RoundActivities
 
@@ -372,9 +353,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        #endregion
 
-        protected abstract ChessOperator GetOperator(int id);
         //执行代理的排列逻辑
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
             list.Where(o => !GetStatus(o).IsDeath)
@@ -396,54 +375,24 @@ namespace Assets.System.WarModule
         {
             //棋盘没用字典分类活动顺序，所以直接嵌入上一个活动actId-1
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill, rePos);
+            activity.TargetStatus = GetFullCondition(target);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, -1, false);
             ProcessActivityResult(activity);
             return activity.Result;
         }
 
-        private static int GetScope(bool isChallenger) => isChallenger ? 0 : 1;
         public void InstanceJiBanActivity(int bondId, bool fromChallenger, IChessOperator target, int intent,
             CombatConduct[] conducts, int rePos = -1)
         {
             CurrentMajor = new ChessMajor(bondId, fromChallenger);
             GetMajorProcess(ChessProcess.Types.JiBan, bondId, fromChallenger);
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, 0, rePos);
+
+            activity.TargetStatus = GetFullCondition(target);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0, false);
             ProcessActivityResult(activity);
         }
 
-        private string OperatorText(int instanceId) => OpText(GetOperator(instanceId));
-        private string OperatorText(ChessProcess process) => OpText(Grid.GetChessPos(process.Major, process.Scope == 0).Operator);
-
-        private string OpText(IChessOperator op)
-        {
-            if (op == null) return string.Empty;
-            var stat = GetStatus(op);
-            return $"{op.InstanceId}.{op}[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
-        }
-        
-        private void ProcessActivityResult(Activity activity)
-        {
-            var target = GetOperator(activity.To);
-            var offender = activity.From < 0 ? null : GetOperator(activity.From);
-            activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
-            if (activity.To >= 0 && activity.Result.IsDeath)
-            {
-                var death = GetOperator(activity.To);
-                foreach (var op in StatusMap.Keys.Where(op=>op!=death && op.IsAlive)) 
-                    op.OnSomebodyDie(death);
-                Log($"{death}败退！");
-            }
-            UpdateTerrain(GetChessPos(target));
-        }
-
-        private void LogActivity(Activity activity) =>
-            Log($"活动-->{activity.StanceText()}@{activity.IntentText()} 目标：{OperatorText(activity.To)}");
-
-        private void LogConducts(Activity activity)
-        {
-            foreach (var conduct in activity.Conducts) Log($"武技--->{conduct}");
-        }
 
         /// <summary>
         /// 
@@ -463,6 +412,8 @@ namespace Assets.System.WarModule
             //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
             var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                 conducts, skill, rePos);
+            if (target.Operator != null)
+                activity.TargetStatus = GetFullCondition(target.Operator);
             AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId, intent == Activity.Counter);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
@@ -496,7 +447,7 @@ namespace Assets.System.WarModule
                 fromId,
                 fromChallenger ? 0 : 1,
                 targetInstance,
-                intent, conducts, skill, rePos);
+                intent, conducts.Select(c => c.Clone()).ToArray(), skill, rePos);
             //Log($"生成{activity}");
             return activity;
         }
@@ -649,6 +600,100 @@ namespace Assets.System.WarModule
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.RemoveSprite(sprite);
         }
 
+        private void UpdateTerrain(IChessPos pos)
+        {
+            foreach (var sprite in pos.Terrain.Sprites.ToArray()) UpdateRemovable(sprite);
+        }
+
+        #endregion
+
+        #region Logs
+
+        protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
+
+        private void LogProcess(ChessProcess process)
+        {
+            string opText;
+            switch (process.Type)
+            {
+                case ChessProcess.Types.Chessman:
+                    opText = OperatorText(process, true);
+                    break;
+                case ChessProcess.Types.Chessboard:
+                    opText = "棋盘";
+                    break;
+                case ChessProcess.Types.JiBan:
+                    opText = $"羁绊[{process.Major}]";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            Log($"**********进程({process.InstanceId})[{opText}]**********");
+            foreach (var activities in process.CombatMaps.Values.Select(m => m.Activities.Concat(m.CounterActs)))
+            {
+                foreach (var activity in activities)
+                {
+                    LogActivity(activity);
+                    LogConducts(activity);
+                    Log(activity.Result.ToString());
+                }
+            }
+        }
+
+        private string OperatorText(int instanceId, bool withHp) => OpText(GetOperator(instanceId), withHp);
+
+        private string OperatorText(ChessProcess process, bool withHp) =>
+            OpText(Grid.GetChessPos(process.Major, process.Scope == 0).Operator, withHp);
+
+        private string OpText(IChessOperator op,bool withHp)
+        {
+            if (op == null) return string.Empty;
+            var statText = string.Empty;
+            if(withHp)
+            {
+                var stat = GetStatus(op);
+                statText = $"[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
+            }
+            return $"{op.InstanceId}.{op}{statText}";
+        }
+        
+        private void ProcessActivityResult(Activity activity)
+        {
+            var target = GetOperator(activity.To);
+            var offender = activity.From < 0 ? null : GetOperator(activity.From);
+            activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
+            if (activity.To >= 0 && activity.Result.IsDeath)
+            {
+                var death = GetOperator(activity.To);
+                foreach (var op in StatusMap.Keys.Where(op=>op!=death && op.IsAlive)) 
+                    op.OnSomebodyDie(death);
+                Log($"{death}败退！");
+            }
+            UpdateTerrain(GetChessPos(target));
+        }
+
+        private void LogActivity(Activity activity)
+        {
+            var statText = string.Empty;
+            if (activity.TargetStatus != null)
+            {
+                var stat = activity.TargetStatus;
+                statText = $"[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
+            }
+            var targetText = string.Empty;
+            if (activity.Intent != Activity.Sprite)
+                targetText = $"目标：{OperatorText(activity.To, false)}{statText}";
+            Log($"【活动】{activity.StanceText()}@{activity.IntentText()} {targetText}");
+        }
+
+        private void LogConducts(Activity activity)
+        {
+            foreach (var conduct in activity.Conducts) Log($"一招--->{conduct}");
+        }
+        #endregion
+
+        #region ChessboardConductPipeline
+
         public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
@@ -671,10 +716,6 @@ namespace Assets.System.WarModule
             return damage;
         }
 
-        private void UpdateTerrain(IChessPos pos)
-        {
-            foreach (var sprite in pos.Terrain.Sprites.ToArray()) UpdateRemovable(sprite);
-        }
 
         public bool OnCounterTriggerPass(ChessOperator op,ChessOperator offender)
         {
@@ -687,6 +728,27 @@ namespace Assets.System.WarModule
             return !GetBuffOperator(b => b.IsDisableCounter(op)).Any();
         }
 
+        public ActivityResult OnOffensiveActivity(Activity activity, ChessOperator op, IChessOperator off)
+        {
+            var offender = GetOperator(off.InstanceId);
+            var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
+            //闪避判定
+            if (offender.CardType == GameCardType.Hero &&
+                OnDodgeTriggerPass(op, offender))
+                result.Result = (int)ActivityResult.Types.Dodge;
+            else
+            {
+                var state = ShieldFilter(op, offender, activity);
+                result.Result = (int)state;
+
+                /***执行Activities***/
+                op.ProceedActivity(activity, result.Type);
+            }
+
+            result.Status = GetFullCondition(op);
+            return result;
+        }
+
         public bool OnDodgeTriggerPass(ChessOperator op, ChessOperator offender)
         {
             if (op.CardType != GameCardType.Hero) return false;
@@ -697,14 +759,15 @@ namespace Assets.System.WarModule
             return IsRandomPass(rate);
         }
 
-        private ActivityResult.Types DetermineSufferResult(ChessOperator op, ChessOperator offender)
+        private ActivityResult.Types ShieldFilter(ChessOperator op, ChessOperator offender, Activity activity)
         {
             if (GetCondition(op,CardState.Cons.Shield) > 0)
             {
                 if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
+                if (activity.Conducts.All(c => Damage.GetKind(c) != Damage.Kinds.Physical))
+                    return ActivityResult.Types.Suffer;
                 //如果被护盾免伤后，扣除护盾1层
-                AppendOpActivity(op, GetChessPos(op), Activity.Self,
-                    Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Shield, -1)), -1, -1);
+                activity.Conducts.Add(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Shield, -1));
                 return ActivityResult.Types.Shield;
             }
             if (GetCondition(op,CardState.Cons.EaseShield) > 0) // 缓冲盾
@@ -722,27 +785,6 @@ namespace Assets.System.WarModule
         }
 
         public bool OnInvincibleTrigger(ChessOperator op) => GetCondition(op, CardState.Cons.Invincible) > 0;
-
-        public ActivityResult OnOffensiveActivity(Activity activity, ChessOperator op, IChessOperator off)
-        {
-            var offender = GetOperator(off.InstanceId);
-            var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-            //闪避判定
-            if (offender.CardType == GameCardType.Hero &&
-                OnDodgeTriggerPass(op, offender))
-                result.Result = (int)ActivityResult.Types.Dodge;
-            else
-            {
-                var state = DetermineSufferResult(op, offender);
-                result.Result = (int)state;
-
-                /***执行Activities***/
-                op.ProceedActivity(activity,result.Type);
-            }
-
-            result.Status = GetFullCondition(op);
-            return result;
-        }
 
         public int OnHealConvert(ChessOperator op, CombatConduct conduct)
         {
@@ -800,18 +842,9 @@ namespace Assets.System.WarModule
 
         protected abstract IEnumerable<BuffOperator> GetBuffOperator(Func<BuffOperator, bool> func);
 
-        /// <summary>
-        /// 找出该回合中指定的对象
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="isSelf"></param>
-        /// <returns></returns>
-        private int ResourceTarget(ChessOperator op, bool isSelf)
-        {
-            var isChallenger = op.IsChallenger;
-            if (isSelf) isChallenger = !isChallenger;
-            return isChallenger ? -1 : -2;
-        }
+        #endregion
+
+        #region Ratio Methods
 
         /// <summary>
         /// 从数据表调出触发率，并给出随机判断
@@ -869,6 +902,8 @@ namespace Assets.System.WarModule
                 ratio += bo.OnCriticalRatioAddOn(op);
             return IsRandomPass(ratio);
         }
+
+        #endregion
 
         #region Grid Proxy
         public int[] FrontRows => Grid.FrontRows;
@@ -943,11 +978,11 @@ namespace Assets.System.WarModule
         public IEnumerable<IChessPos> GetChainedPos(IChessOperator op, Func<IChessPos, bool> chainedFilter) =>
             Grid.GetChained(GetStatus(op).Pos, op.IsChallenger, chainedFilter);
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
-        #endregion
 
         public IEnumerable<PosSprite> GetSpriteInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
         public IEnumerable<PosSprite> GetSpriteInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
 
+        #endregion
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 
         private List<JiBanController> ActivatedJiBan { get; } = new List<JiBanController>();

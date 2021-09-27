@@ -41,22 +41,37 @@ public class ChessboardManager : MonoBehaviour
     //private Stopwatch Sw = Stopwatch.StartNew();
     public void Init()
     {
+        Chessboard.Init();
         NewWar.StartButton.onClick.AddListener(InvokeCard);
     }
-    protected void InitCardUi()
-    {
-        Chessboard.Init();//确定阵容生,成operators
-        NewWar.Init();//初始化计算器
 
-        foreach (var card in NewWar.CardData.Values)
-        {
-            var gc = GameCard.Instance(card.cardId, card.cardType, card.Level);
-            var ui = Instantiate(card.CardType == GameCardType.Base ? HomePrefab : PrefabUi);
-            card.cardObj = ui;
-            Chessboard.PlaceCard(card.Pos, card);
-            CardMap.Add(card.InstanceId, card);
-            if (card.CardType != GameCardType.Base) ui.Init(gc);
-        }
+    public void SetPlayerChess(FightCardData playerBase, ChessCard[] playerCards)
+    {
+        NewWar.Player = playerCards;
+        NewWar.RegCard(playerBase);
+    }
+
+    public void SetEnemyChess(FightCardData enemyBase, ChessCard[] enemyCards)
+    {
+        NewWar.Enemy = enemyCards;
+        NewWar.RegCard(enemyBase);
+    }
+    /// <summary>
+    /// 根据已确定的player与enemy表实现卡牌UI
+    /// </summary>
+    protected void GenerateChessmanFromList()
+    {
+        foreach (var card in NewWar.CardData.Values) InstanceChessmanUi(card);
+    }
+
+    private void InstanceChessmanUi(FightCardData card)
+    {
+        var gc = GameCard.Instance(card.cardId, card.cardType, card.Level);
+        var ui = Instantiate(card.CardType == GameCardType.Base ? HomePrefab : PrefabUi);
+        card.cardObj = ui;
+        Chessboard.PlaceCard(card.Pos, card);
+        CardMap.Add(card.InstanceId, card);
+        if (card.CardType != GameCardType.Base) ui.Init(gc);
     }
 
     protected void InvokeCard()
@@ -95,6 +110,7 @@ public class ChessboardManager : MonoBehaviour
         fireUIObj.SetActive(false);
         gongKeUIObj.SetActive(false);
         yield return new WaitForSeconds(0.1f);
+
 
         Time.timeScale = 1;
     }

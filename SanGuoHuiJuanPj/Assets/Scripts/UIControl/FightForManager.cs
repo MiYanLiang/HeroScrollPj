@@ -67,7 +67,7 @@ public class FightForManager : MonoBehaviour
 
         //玩家羁绊集合初始化
         CardManager.ResetJiBan(FightController.instance.playerJiBanAllTypes);
-        chessboard.Init();
+
         CreatePlayerHomeCard();
     }
     [SkipRename]
@@ -85,116 +85,9 @@ public class FightForManager : MonoBehaviour
         UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
     }
 
-    public FightCardData ResetPlayerBaseHp()
-    {
-        var baseConfig = DataTable.BaseLevel[WarsUIManager.instance.cityLevel];
-        var playerLvlCfg = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level];
-        var playerBase = GetCard(17, true);
-        playerBase.ResetHp(baseConfig.BaseHp + playerLvlCfg.BaseHpAddOn);
-        return playerBase;
-    }
-
     /// <summary>
     /// 初始化敌方卡牌到战斗位上
     /// </summary>
-
-    public void InitChessboard(GameStage stage)
-    {
-        //初始化敌方羁绊原始集合
-        CardManager.ResetJiBan(FightController.instance.enemyJiBanAllTypes);
-
-        battleIdIndex = stage.BattleEvent.Id;
-        var playerBase = ResetPlayerBaseHp();
-        playerBase.UpdateHpUi();
-        chessboard.ClearEnemyCards();
-        FightController.instance.ClearEmTieQiCardList();
-
-        var battle = stage.BattleEvent;
-        var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
-        //随机敌人卡牌
-        if (battle.IsStaticEnemies > 0)
-        {
-            var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
-            //固定敌人卡牌
-            for (int i = 0; i < 20; i++)
-            {
-                var chessman = enemies[i];
-                if (chessman == null) continue;
-                if (chessman.Star <= 0)
-                    throw new InvalidOperationException(
-                        $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
-                var card = CreateEnemyFightUnit(i,1, true, chessman);
-                PlaceCardOnBoard(card, i, false);
-            }
-        }
-        else
-        {
-            var enemies = DataTable.Enemy[enemyRandId].Poses();
-            for (int i = 0; i < 20; i++)
-            {
-                var enemyId = enemies[i];
-                if (enemyId == 0) continue;
-                var card = CreateEnemyFightUnit(enemyId, i, false);
-                PlaceCardOnBoard(card,i,false);
-            }
-        }
-
-        var enemyBase = new FightCardData();
-        enemyBase.cardObj = Instantiate(homeCardObj, transform);
-        enemyBase.ResetHp(stage.BattleEvent.BaseHp);
-        enemyBase.hpr = 0;
-        enemyBase.cardType = 522;
-        enemyBase.isPlayerCard = false;
-        enemyBase.activeUnit = false;
-        enemyBase.CardState = new CardState();
-        PlaceCardOnBoard(enemyBase, 17, false);
-
-        FightController.instance.InitStartFight();
-
-        //调整游戏速度
-        var speed = GamePref.PrefWarSpeed;
-        Time.timeScale = speed;
-        speedBtnText.text = Multiply + speed;
-        //创建敌方卡牌战斗单位数据
-        FightCardData CreateEnemyFightUnit(int pos, int unitId, bool isFixed, Chessman chessman = null)
-        {
-            var fCard = new FightCardData();
-            fCard.cardObj = PrefabManager.NewWarGameCardUi(transform); //Instantiate(fightCardPre, enemyCardsBox);
-            fCard.CardState = new CardState();
-            fCard.unitId = unitId;
-            var enemy = DataTable.EnemyUnit[unitId];
-            //是否是固定阵容
-            if (isFixed)
-            {
-                fCard.cardType = chessman.CardType;
-                fCard.cardId = chessman.CardId;
-                fCard.cardGrade = chessman.Star;
-            }
-            else
-            {
-                fCard.cardType = DataTable.EnemyUnit[unitId].CardType;
-                fCard.cardId = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity).Id;
-                fCard.cardGrade = enemy.Star;
-            }
-
-            var card = GameCard.Instance(fCard.cardId, fCard.cardType, fCard.cardGrade);
-            var info = card.GetInfo();
-            fCard.cardObj.Init(card);
-            fCard.cardObj.tag = GameSystem.UnTagged;
-            fCard.posIndex = pos;
-            fCard.isPlayerCard = false;
-            fCard.damage = info.GetDamage(fCard.cardGrade);
-            fCard.hpr = info.GameSetRecovery;
-            fCard.ResetHp(info.GetHp(fCard.cardGrade));
-            fCard.activeUnit = info.Type == GameCardType.Hero || ((info.Type == GameCardType.Tower) &&
-                                                                (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
-                                                                 info.Id == 3 || info.Id == 6));
-            fCard.combatType = info.CombatType;
-            fCard.cardDamageType = info.DamageType;
-            GiveGameObjEventForHoldOn(fCard.cardObj, info.About);
-            return fCard;
-        }
-    }
 
     //主动塔行动
     public void ActiveTowerFight(FightCardData cardData, bool isPlayer)
@@ -1104,24 +997,6 @@ public class FightForManager : MonoBehaviour
 
     public bool IsPlayerAvailableToPlace(int index) => chessboard.PlayerCardsOnBoard < WarsUIManager.instance.maxHeroNums && chessboard.IsPlayerScopeAvailable(index);
 
-    [SerializeField]
-    Text speedBtnText;
-
-    private const string Multiply = "×";
-    //改变游戏速度
-    public void ChangeTimeScale()
-    {
-        var warScale = GamePref.PrefWarSpeed;
-        warScale *= 2;
-        if (warScale > 2)
-            warScale = 1;
-        GamePref.SetPrefWarSpeed(warScale);
-        Time.timeScale = warScale;
-        speedBtnText.text = Multiply + warScale;
-    }
-
-    [SerializeField]
-    GameObject bZCardInfoObj;   //阵上卡牌详情展示位
 
     [HideInInspector]
     public bool isNeedAutoHideInfo;  //是否需要自动隐藏卡牌详情
@@ -1129,29 +1004,6 @@ public class FightForManager : MonoBehaviour
     //private FightCardData[] enemyCards;
     //private FightCardData[] playerCards;
 
-    //展示卡牌详细信息
-    private void ShowInfoOfCardOrArms(string infoStr)
-    {
-
-        bZCardInfoObj.GetComponentInChildren<Text>().text = infoStr;
-        bZCardInfoObj.SetActive(true);
-
-        //StartCoroutine(ShowOrHideCardInfoWin());
-    }
-    //隐藏卡牌详细信息
-    private void HideInfoOfCardOrArms()
-    {
-        //isNeedAutoHideInfo = false;
-
-        bZCardInfoObj.SetActive(false);
-    }
-
-    //卡牌附加按下抬起方法
-    public void GiveGameObjEventForHoldOn(WarGameCardUi obj, string str)
-    {
-        EventTriggerListener.Get(obj.gameObject).onDown += _ => ShowInfoOfCardOrArms(str);
-        EventTriggerListener.Get(obj.gameObject).onUp += _ => HideInfoOfCardOrArms();
-    }
 
     public IReadOnlyList<FightCardData> GetCardList(bool isPlayer) =>
         chessboard.GetScope(isPlayer).Where(o => o.Card != null).Select(o => o.Card).ToArray();

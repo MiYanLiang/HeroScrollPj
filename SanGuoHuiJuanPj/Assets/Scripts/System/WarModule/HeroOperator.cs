@@ -1000,7 +1000,6 @@ namespace Assets.System.WarModule
                 rate += RouseRate;
             if (damage.IsCriticalDamage())
                 rate += CriticalRate;
-
             for (var i = 0; i < targets.Length; i++)
             {
                 var buff = 0;
@@ -1108,11 +1107,11 @@ namespace Assets.System.WarModule
                     Weight = WeightElement<IChessPos>.Random.Next(1, 4)
                 }).Pick(Targets()).ToArray();
             if (targets.Length == 0) base.MilitaryPerforms(0);
+            var damage = InstanceHeroGenericDamage();
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                var damage = InstanceHeroGenericDamage();
-                damage.Rate = Chessboard.Randomize(10);
+                //damage.Rate = Chessboard.Randomize(10);
                 damage.Element = CombatConduct.PoisonDmg;
                 Chessboard.AppendOpActivity(this, target.Obj, Activity.Offensive, Helper.Singular(damage), 0, 1);
             }
@@ -1984,8 +1983,6 @@ namespace Assets.System.WarModule
         {
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, ShieldRate())), -1, 1);
-            //Chessboard.InstanceChessboardActivity(IsChallenger, this, Activity.Self,
-            //    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, ShieldRate())));
         }
 
         protected override void MilitaryPerforms(int skill = 1)

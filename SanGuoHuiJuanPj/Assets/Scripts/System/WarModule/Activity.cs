@@ -66,7 +66,7 @@ namespace Assets.System.WarModule
         /// <param name="skill">技能值，普通攻击为0</param>
         /// <param name="rePos">换位</param>
         /// <returns></returns>
-        public static Activity Instance(int id,int processId,int from ,int isChallenger,int to ,int intent, CombatConduct[] conducts,int skill,int rePos)
+        public static Activity Instance(int id,int processId,int from ,int isChallenger,int to ,int intent, IList<CombatConduct> conducts,int skill,int rePos)
         {
             return new Activity()
             {
@@ -75,7 +75,7 @@ namespace Assets.System.WarModule
                 From = from,
                 IsChallenger = isChallenger,
                 To = to,
-                Conducts = conducts,
+                Conducts = conducts.ToList(),
                 Intent = intent,
                 Skill = skill,
                 RePos = rePos,
@@ -119,8 +119,9 @@ namespace Assets.System.WarModule
         //[JsonProperty("PI")] 
         public int ProcessId { get; set; }
         //[JsonProperty("C")] 
-        public CombatConduct[] Conducts { get; set; }
+        public List<CombatConduct> Conducts { get; set; }
         //[JsonProperty("R")] 
+        public ChessStatus TargetStatus { get; set; }
         public ActivityResult Result { get; set; }
 
         //[JsonProperty("OS")]
@@ -182,9 +183,10 @@ namespace Assets.System.WarModule
         public string StanceText()=>IsChallenger == 0 ? "玩家" : "对方";
         public override string ToString()
         {
+            var targetText = TargetStatus == null ? string.Empty : TargetStatus.ToString();
             var result = Result == null ? string.Empty : Result.Type.ToString();
-            var conducts = Conducts == null ? string.Empty : Conducts.Length.ToString();
-            return $"({InstanceId}):[{StanceText()}]{IntentText()}: 武技={conducts} 结果[{result}]";
+            var conducts = Conducts == null ? string.Empty : Conducts.Count.ToString();
+            return $"({InstanceId}):[{StanceText()}]{IntentText()}: 武技={conducts} {targetText} 结果[{result}]";
         }
     }
 
@@ -241,21 +243,25 @@ namespace Assets.System.WarModule
         public Types Type => (Types)Result;
         //[JsonIgnore] 
         public bool IsDeath => Status.IsDeath;
+
         public override string ToString()
         {
             var resultText = string.Empty;
+            var lastText = string.Empty;
             switch (Type)
             {
                 case Types.ChessPos:
                     break;
                 case Types.Suffer:
                     resultText = "承受";
+                    lastText = GenerateLastText();
                     break;
                 case Types.Dodge:
                     resultText = "闪避";
                     break;
                 case Types.Friendly:
                     resultText = "同伴";
+                    lastText = GenerateLastText();
                     break;
                 case Types.Shield:
                     resultText = "护盾";
@@ -265,6 +271,7 @@ namespace Assets.System.WarModule
                     break;
                 case Types.EaseShield:
                     resultText = "缓冲盾";
+                    lastText = GenerateLastText();
                     break;
                 case Types.Kill:
                     resultText = "击杀";
@@ -275,8 +282,15 @@ namespace Assets.System.WarModule
 
             if (Status == null) return $"活动结果：{resultText}";
             return
-                $"活动结果：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({AppendBuffs(Status.Buffs.Where(b => b.Value > 0).Select(b => $"[{b.Key}:{b.Value}]"))})";
+                $"【活动结果】：{resultText}.Sta[{Status.Hp}/{Status.MaxHp}]Buffs({AppendBuffs(Status.Buffs.Where(b => b.Value > 0).Select(b => $"[{b.Key}:{b.Value}]"))}){lastText}";
+
+            string GenerateLastText()
+            {
+                var last = Status?.LastSuffers?.LastOrDefault();
+                return last != null ? $"[上个伤害:{last}]" : string.Empty;
+            }
         }
+
 
         private string AppendBuffs(IEnumerable<string> texts)
         {

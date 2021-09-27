@@ -10,6 +10,28 @@ using UnityEngine;
 
 [Serializable]public class FightCardData : ICardDrag,IChessman
 {
+    public static FightCardData PlayerBaseCard(int level, int cityLevel = 1)
+    {
+        var baseConfig = DataTable.BaseLevel[cityLevel];
+        var playerLvlCfg = DataTable.PlayerLevelConfig[level];
+        var hp = playerLvlCfg.BaseHpAddOn + baseConfig.BaseHp;
+
+        var baseCard = new FightCardData();
+        baseCard.cardType = (int)GameCardType.Base;
+        baseCard.isPlayerCard = true;
+        baseCard.ResetHp(hp);
+        return baseCard;
+    }
+
+    public static FightCardData BaseCard(bool isPlayer, int hp)
+    {
+        var baseCard = new FightCardData(); //GetCard(17, true);
+        baseCard.cardType = (int)GameCardType.Base;
+        baseCard.isPlayerCard = isPlayer;
+        baseCard.ResetHp(hp);
+        return baseCard;
+    }
+
     //单位id,为0表示null
     public int unitId;
 
@@ -144,10 +166,7 @@ using UnityEngine;
         void UpdateHp() => cardObj.War.SetHp(status.HpRate);
     }
 
-    public void ResetHp(int maxHp)
-    {
-        status.ResetHp(maxHp);
-    }
+    public void ResetHp(int maxHp) => status.ResetHp(maxHp);
 
     int IChessman.InstanceId
     {

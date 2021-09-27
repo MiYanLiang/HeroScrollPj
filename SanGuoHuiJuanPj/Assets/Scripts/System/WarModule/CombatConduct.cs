@@ -150,12 +150,12 @@ namespace Assets.System.WarModule
                     kindText = "伤害";
                     switch (Element)
                     {
-                        case FireDmg: elementText = "火元素"; break;
-                        case FixedDmg: elementText = "固伤";break;
-                        case BasicMagicDmg: elementText = "基础法伤";break;
-                        case PhysicalDmg: elementText = "物理伤害";break;
-                        case ThunderDmg: elementText = "雷元素";break;
-                        default: elementText = "未知伤害";break;
+                        case FireDmg: elementText = "[火元素]"; break;
+                        case FixedDmg: elementText = "[固伤]";break;
+                        case BasicMagicDmg: elementText = "[基础法伤]";break;
+                        case PhysicalDmg: elementText = "[物理伤害]";break;
+                        case ThunderDmg: elementText = "[雷元素]";break;
+                        default: elementText = "[未知伤害]";break;
                     }
 
                     var str = new StringBuilder($"基础={Basic},");
@@ -171,9 +171,9 @@ namespace Assets.System.WarModule
                 {
                     kindText = "玩家资源";
                     if (Element == -1)
-                        elementText = "金币";
-                    else if (Element >= 0) elementText = "宝箱";
-                    else elementText = "未知资源";
+                        elementText = "[金币]";
+                    else if (Element >= 0) elementText = "[宝箱]";
+                    else elementText = "[未知资源]";
                     break;
                 }
                 case SpriteKind:
@@ -189,7 +189,7 @@ namespace Assets.System.WarModule
                         case PosSprite.Critical: elementText = nameof(PosSprite.Critical); break;
                         case PosSprite.FireFlame: elementText = nameof(PosSprite.FireFlame); break;
                         case PosSprite.Eerthquake: elementText = nameof(PosSprite.Eerthquake); break;
-                        default: elementText = $"类型({Element})"; break;
+                        default: elementText = $"[类型({Element})]"; break;
                     }
 
                     kindText = "精灵";
