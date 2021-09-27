@@ -311,11 +311,10 @@ public class ChessboardManager : MonoBehaviour
         //var fragments = GenerateAnimFragments(process);
         var majorCard = GetCardMap(Chessboard.GetChessPos(process.Major, process.Scope == 0).Card.InstanceId);
 
-        foreach (var map in process.CombatMaps)
+        foreach (var map in process.CombatMaps.OrderBy(c=>c.Key))
         {
             var mainTween = DOTween.Sequence().Pause();
             var counterTween = DOTween.Sequence().Pause();
-
             //会心一击演示
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0))
                 yield return FullScreenRouse().WaitForCompletion();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
@@ -327,7 +327,7 @@ namespace Assets.System.WarModule
         {
             var activity = InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
                 Singular(CombatConduct.InstancePlayerResource(resourceId, op.InstanceId, value)), 0, -1);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, op.IsChallenger ? -1 : -2, activity, -1, false);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, op.IsChallenger ? -1 : -2, activity, -1);
             if (resourceId == -1)
                 if (toChallenger)
                     ChallengerGold += value;
@@ -376,8 +376,8 @@ namespace Assets.System.WarModule
             //棋盘没用字典分类活动顺序，所以直接嵌入上一个活动actId-1
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill, rePos);
             activity.TargetStatus = GetFullCondition(target);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, -1, false);
-            ProcessActivityResult(activity);
+            var actId = AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, -1);
+            ProcessActivityResult(actId, activity);
             return activity.Result;
         }
 
@@ -389,8 +389,8 @@ namespace Assets.System.WarModule
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, 0, rePos);
 
             activity.TargetStatus = GetFullCondition(target);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0, false);
-            ProcessActivityResult(activity);
+            var actId = AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0);
+            ProcessActivityResult(actId, activity);
         }
 
 
@@ -414,12 +414,12 @@ namespace Assets.System.WarModule
                 conducts, skill, rePos);
             if (target.Operator != null)
                 activity.TargetStatus = GetFullCondition(target.Operator);
-            AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId, intent == Activity.Counter);
+            actId = AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId);
             var op = GetOperator(target.Operator.InstanceId);
             if (op == null)
                 throw new NullReferenceException(
                     $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
-            ProcessActivityResult(activity);
+            ProcessActivityResult(actId, activity);
             return activity.Result;
         }
 
@@ -451,7 +451,7 @@ namespace Assets.System.WarModule
             //Log($"生成{activity}");
             return activity;
         }
-
+        private CombatMapper CurrentCombatMapper { get; set; }
         /// <summary>
         /// 加入活动
         /// </summary>
@@ -459,19 +459,31 @@ namespace Assets.System.WarModule
         /// <param name="fromPos"></param>
         /// <param name="activity"></param>
         /// <param name="actId">-1 = 加入上一个活动</param>
-        /// <param name="isCounter"></param>
-        private void AddToCurrentProcess(ChessProcess.Types type,int fromPos, Activity activity, int actId, bool isCounter)
+        private int AddToCurrentProcess(ChessProcess.Types type, int fromPos, Activity activity, int actId)
         {
             var process = GetMajorProcess(type, fromPos, Scope(activity));
             if (actId == -1) //如果-1的话就加入上一个活动
                 actId = process.CombatMaps.Count == 0 ? 0 : process.CombatMaps.Last().Key;
+            
             if (!process.CombatMaps.ContainsKey(actId))
-                process.CombatMaps.Add(actId, new CombatMapper(actId));
-            if (isCounter)
-                process.CombatMaps[actId].CounterActs.Add(activity);
-            else process.CombatMaps[actId].Activities.Add(activity);
+            {
+                CurrentCombatMapper = new CombatMapper(actId);
+                process.CombatMaps.Add(actId, CurrentCombatMapper);
+            }
+            else CurrentCombatMapper = process.CombatMaps[actId];
+
+            MapperAdd(activity);
+            return actId;
 
             bool Scope(Activity act) => act.From < 0 ? act.From == -1 : GetOperator(act.From).IsChallenger;
+
+            void MapperAdd(Activity act)
+            {
+                if (act.Intent == Activity.Counter)
+                    CurrentCombatMapper.CounterActs.Add(act);
+                else
+                    CurrentCombatMapper.Activities.Add(act);
+            }
         }
 
         private ChessProcess GetMajorProcess(ChessProcess.Types type, int major, bool isChallenger)
@@ -574,7 +586,7 @@ namespace Assets.System.WarModule
             Log($"添加{sprite}");
             var activity = SpriteActivity(sprite, true);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId, false);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
         }
@@ -589,7 +601,7 @@ namespace Assets.System.WarModule
             RemoveSprite(sprite);
             var activity = SpriteActivity(sprite, false);
             activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1, false);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1);
             Log($"移除{sprite}");
             return true;
         }
@@ -656,12 +668,18 @@ namespace Assets.System.WarModule
             }
             return $"{op.InstanceId}.{op}{statText}";
         }
-        
-        private void ProcessActivityResult(Activity activity)
+        private void ProcessActivityResult(int actId, Activity activity)
         {
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             activity.Result = GetOperator(target.InstanceId).Respond(activity, offender);
+
+            if (CurrentCombatMapper?.Id == actId)
+            {
+                var last = CurrentCombatMapper.Activities.LastOrDefault();
+                if (last != null) last.Result = activity.Result;
+            }
+
             if (activity.To >= 0 && activity.Result.IsDeath)
             {
                 var death = GetOperator(activity.To);
