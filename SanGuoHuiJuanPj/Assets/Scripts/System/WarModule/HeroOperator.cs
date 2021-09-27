@@ -1540,8 +1540,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 17: return 15;
-                case 104: return 30;
-                case 105: return 45;
+                case 104: return 20;
+                case 105: return 30;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1878,8 +1878,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 7: return 1f;
-                case 76: return 1.2f;
-                case 77: return 1.5f;
+                case 76: return 1.5f;
+                case 77: return 2f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1907,9 +1907,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 6: return 5;
-                case 74: return 7;
-                case 75: return 10;
+                case 6: return 3;
+                case 74: return 5;
+                case 75: return 7;
                 default: throw MilitaryNotValidError(this);
             }
         }
