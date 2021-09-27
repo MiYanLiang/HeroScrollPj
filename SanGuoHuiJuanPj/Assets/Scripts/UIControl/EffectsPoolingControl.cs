@@ -40,7 +40,6 @@ public class EffectsPoolingControl : MonoBehaviour
     {
         if(IsInit)return;
         InitializedEffectsObj();
-        InitializedIconsObj();
         EffectPool = new Dictionary<int, List<GameObject>>();
         BuffPool = new Dictionary<int, List<EffectStateUi>>();
         FloorBuffPool = new Dictionary<int, List<EffectStateUi>>();
@@ -59,22 +58,6 @@ public class EffectsPoolingControl : MonoBehaviour
                 effectList.Add(effectObj);
             }
             effectsPoolingList.Add(effectList);
-        }
-    }
-
-    private void InitializedIconsObj()
-    {
-        for (int i = 0; i < iconNameStr.Length; i++)
-        {
-            //Debug.Log("i = :" + i);
-            var iconList = new List<EffectStateUi>();
-            for (int j = 0; j < maxCount; j++)
-            {
-                var iconObj = Instantiate(GameResources.Instance.StateDin[iconNameStr[i]], effectContentTran);
-                iconObj.gameObject.SetActive(false);
-                iconList.Add(iconObj);
-            }
-            iconPoolingList.Add(iconList);
         }
     }
 

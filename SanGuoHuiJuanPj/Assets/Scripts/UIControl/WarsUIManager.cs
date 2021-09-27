@@ -16,20 +16,16 @@ using Random = UnityEngine.Random;
 public class WarsUIManager : MonoBehaviour
 {
     public static WarsUIManager instance;
-
+    
     public Transform herosCardListTran;
     public ScrollRect herosCardListScrollRect;
     public bool isDragDelegated;
-
-    //[SerializeField]
-    //GameObject playerInfoObj;   //玩家信息obj
+    [SerializeField] private ChessboardManager chessboardManager;
     [SerializeField] private PlayerInfoUis infoUis;//玩家信息UI
     [SerializeField]
     GameObject cityLevelObj;   //主城信息obj
     [SerializeField]
     public HorizontalLayoutGroup PlayerCardsRack; //武将卡牌架
-    //[SerializeField]
-    //WarGameCardUi playerGameCardUiPrefab; //列表卡牌预制件
     [SerializeField]
     GuanQiaUi guanQiaPreObj;   //关卡按钮预制件
     [SerializeField] Button operationButton;    //关卡执行按钮
@@ -37,11 +33,11 @@ public class WarsUIManager : MonoBehaviour
     [SerializeField]
     GameObject upLevelBtn;   //升级城池btn
 
-    //public GameObject[] eventsWindows; //各种事件窗口 0-战斗；1-故事；2-答题；3-奇遇；4-通用
     [SerializeField] GameObject Chessboard;
     [SerializeField] SanXuanWindowUi SanXuanWindow;
     [SerializeField] WarQuizWindowUi QuizWindow;//答题
     [SerializeField] GenericWarWindow GenericWindow;
+    [SerializeField] AboutCardUi aboutCardUi;   //阵上卡牌详情展示位
 
     public WarMiniWindowUI gameOverWindow;//战役结束ui
     public Dictionary<int, GameStage> StagesMap { get; } = new Dictionary<int, GameStage>();
@@ -202,9 +198,7 @@ public class WarsUIManager : MonoBehaviour
         InitCardListShow();
 
         InitGuanQiaShow();
-        FightController.instance.Init();
-        FightForManager.instance.Init();
-
+        chessboardManager.Init();
     }
 
     //初始化关卡
@@ -488,6 +482,71 @@ public class WarsUIManager : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    Text speedBtnText;
+
+    private const string Multiply = "×";
+    //改变游戏速度
+    public void ChangeTimeScale()
+    {
+        var warScale = GamePref.PrefWarSpeed;
+        warScale *= 2;
+        if (warScale > 2)
+            warScale = 1;
+        GamePref.SetPrefWarSpeed(warScale);
+        Time.timeScale = warScale;
+        speedBtnText.text = Multiply + warScale;
+    }
+
+    public void InitChessboard(GameStage stage)
+    {
+        var playerBase = FightCardData.PlayerBaseCard(PlayerDataForGame.instance.pyData.Level, cityLevel);
+        var enemyBase = FightCardData.BaseCard(false, stage.BattleEvent.BaseHp);
+
+        var battle = stage.BattleEvent;
+        var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
+        var enemyCards = new List<ChessCard>();
+        //随机敌人卡牌
+        if (battle.IsStaticEnemies > 0)
+        {
+            var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
+            //固定敌人卡牌
+            for (int i = 0; i < 20; i++)
+            {
+                var chessman = enemies[i];
+                if (chessman == null) continue;
+                if (chessman.Star <= 0)
+                    throw new InvalidOperationException(
+                        $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
+                //var card = CreateEnemyFightUnit(i,1, true, chessman);
+                //PlaceCardOnBoard(card, i, false);
+                enemyCards.Add(ChessCard.Instance(chessman.CardId, chessman.CardType, chessman.Star, i));
+            }
+
+        }
+        else
+        {
+            var enemies = DataTable.Enemy[enemyRandId].Poses();
+            for (int i = 0; i < 20; i++)
+            {
+                var enemyId = enemies[i];
+                if (enemyId == 0) continue;
+                var enemy = DataTable.EnemyUnit[enemyId];
+                var cardType = enemy.CardType;
+                var cardId = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity).Id;
+                var level = enemy.Star;
+                ChessCard.Instance(cardId, cardType, level, i);
+            }
+        }
+
+        //chessboardManager.SetPlayerChess(playerBase, enemyBase, Array.Empty<ChessCard>(), enemyCards.ToArray());
+        //调整游戏速度
+        var speed = GamePref.PrefWarSpeed;
+        Time.timeScale = speed;
+        speedBtnText.text = Multiply + speed;
+
+    }
+
     /// <summary>
     /// 进入战斗
     /// </summary>
@@ -501,7 +560,7 @@ public class WarsUIManager : MonoBehaviour
         AudioController1.instance.isNeedPlayLongMusic = true;
         AudioController1.instance.ChangeAudioClip(audioClipsFightBack[bgmIndex], audioVolumeFightBack[bgmIndex]);
         AudioController1.instance.PlayLongBackMusInit();
-        FightForManager.instance.InitChessboard(stage);
+        InitChessboard(stage);
         Chessboard.SetActive(true);
     }
 
@@ -959,7 +1018,7 @@ public class WarsUIManager : MonoBehaviour
         ui.Init(card);
         ui.SetSize(Vector3.one);
         ui.tag = GameSystem.PyCard;
-        FightForManager.instance.GiveGameObjEventForHoldOn(ui, info.About);
+        GiveGameObjEventForHoldOn(ui, info.About);
         FightCardData fightCard = new FightCardData();
         fightCard.unitId = 1;
         fightCard.cardObj = ui;
@@ -980,6 +1039,28 @@ public class WarsUIManager : MonoBehaviour
         fightCard.cardDamageType = info.DamageType;
         cardDrag.Init(fightCard, herosCardListTran, herosCardListScrollRect);
         playerCardsDatas.Add(fightCard);
+    }
+    //展示卡牌详细信息
+    private void ShowInfoOfCardOrArms(string text)
+    {
+
+        aboutCardUi.InfoText.text = text;
+        aboutCardUi.gameObject.SetActive(true);
+
+        //StartCoroutine(ShowOrHideCardInfoWin());
+    }
+    //隐藏卡牌详细信息
+    private void HideInfoOfCardOrArms()
+    {
+        //isNeedAutoHideInfo = false;
+        aboutCardUi.gameObject.SetActive(false);
+    }
+
+    //卡牌附加按下抬起方法
+    public void GiveGameObjEventForHoldOn(WarGameCardUi obj, string str)
+    {
+        EventTriggerListener.Get(obj.gameObject).onDown += _ => ShowInfoOfCardOrArms(str);
+        EventTriggerListener.Get(obj.gameObject).onUp += _ => HideInfoOfCardOrArms();
     }
 
     //匹配稀有度边框
