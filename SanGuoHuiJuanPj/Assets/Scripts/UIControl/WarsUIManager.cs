@@ -988,9 +988,11 @@ public class WarsUIManager : MonoBehaviour
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
-            PlayerDataForGame.instance.fightHeroId.Select(id=> new GameCard().Instance(GameCardType.Hero,id,1))
-                .Concat(PlayerDataForGame.instance.fightTowerId.Select(id=> new GameCard().Instance(GameCardType.Tower,id,1)))
-                .Concat(PlayerDataForGame.instance.fightTrapId.Select(id=> new GameCard().Instance(GameCardType.Trap,id,1)))
+            PlayerDataForGame.instance.fightHeroId.Select(id => new GameCard().Instance(GameCardType.Hero, id, 1))
+                .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
+                    new GameCard().Instance(GameCardType.Tower, id, 1)))
+                .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
+                    new GameCard().Instance(GameCardType.Trap, id, 1)))
                 .ToList().ForEach(CreateCardToList);
             return;
         }
@@ -1019,24 +1021,24 @@ public class WarsUIManager : MonoBehaviour
         ui.SetSize(Vector3.one);
         ui.tag = GameSystem.PyCard;
         GiveGameObjEventForHoldOn(ui, info.About);
-        FightCardData fightCard = new FightCardData();
-        fightCard.unitId = 1;
-        fightCard.cardObj = ui;
-        fightCard.cardType = card.typeIndex;
-        fightCard.cardId = card.id;
-        fightCard.posIndex = -1;
-        fightCard.cardGrade = card.level;
-        fightCard.CardState = new CardState();
-        fightCard.damage = info.GetDamage(fightCard.cardGrade);
-        fightCard.hpr = info.GameSetRecovery;
-        fightCard.ResetHp(info.GetHp(fightCard.cardGrade));
-        fightCard.activeUnit = info.Type == GameCardType.Hero || (info.Type == GameCardType.Tower &&
-                                                               (fightCard.cardId == 0 || fightCard.cardId == 1 ||
-                                                                fightCard.cardId == 2 || fightCard.cardId == 3 ||
-                                                                fightCard.cardId == 6));
+        var fightCard = new FightCardData(card);
+        //fightCard.unitId = 1;
+        //fightCard.cardObj = ui;
+        //fightCard.cardType = card.typeIndex;
+        //fightCard.cardId = card.id;
+        //fightCard.posIndex = -1;
+        //fightCard.cardGrade = card.level;
+        //fightCard.CardState = new CardState();
+        //fightCard.damage = info.GetDamage(fightCard.cardGrade);
+        //fightCard.hpr = info.GameSetRecovery;
+        //fightCard.ResetHp(info.GetHp(fightCard.cardGrade));
+        //fightCard.activeUnit = info.Type == GameCardType.Hero || (info.Type == GameCardType.Tower &&
+        //                                                       (fightCard.cardId == 0 || fightCard.cardId == 1 ||
+        //                                                        fightCard.cardId == 2 || fightCard.cardId == 3 ||
+                                                                //fightCard.cardId == 6));
         fightCard.isPlayerCard = true;
-        fightCard.combatType = info.CombatType;
-        fightCard.cardDamageType = info.DamageType;
+        //fightCard.combatType = info.CombatType;
+        //fightCard.cardDamageType = info.DamageType;
         cardDrag.Init(fightCard, herosCardListTran, herosCardListScrollRect);
         playerCardsDatas.Add(fightCard);
     }
