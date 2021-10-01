@@ -12436,7 +12436,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 145.33325}
+  m_AnchoredPosition: {x: 0, y: 145.33301}
   m_SizeDelta: {x: -360, y: 217.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2595742471046625198
@@ -17177,9 +17177,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7322335858056159363}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 720, y: 1280, z: 0}
-  m_LocalScale: {x: 1.3333334, y: 1.3333334, z: 1.3333334}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6647452183815926919}
   - {fileID: 8825025191082119043}
@@ -17242,6 +17242,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCardUi: {fileID: 3122890704471373157, guid: 46e11a93c6a42e6429b404fba5836adf,
     type: 3}
+  warGameCardUi: {fileID: 824321453738017661, guid: d67d29869bed7aa4fb28530f98831218,
+    type: 3}
 --- !u!114 &7322335858056159362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17257,10 +17259,14 @@ MonoBehaviour:
   warId: 3
   gold: 100
   cityLevel: 1
-  isCustomCard: 0
+  isCustomCard: 1
   force: 0
   playerData: {fileID: 3751974375526295851}
-  heroes: []
+  heroes:
+  - CardId: 3
+    Level: 10
+  - CardId: 16
+    Level: 1
   towers: []
   traps: []
 --- !u!1 &7490549416039282546

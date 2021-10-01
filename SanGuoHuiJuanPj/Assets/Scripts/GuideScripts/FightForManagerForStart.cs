@@ -599,7 +599,7 @@ public class FightForManagerForStart : MonoBehaviour
         data.cardObj = PrefabManager.NewWarGameCardUi(cardsBoxTran); //Instantiate(isPlayerCard ? fightCardPyPre : fightCardPre, cardsBoxTran);
         data.cardType = chessman.CardType;
         data.cardId = chessman.CardId;
-        data.cardGrade = chessman.Star;
+        data.level = chessman.Star;
         data.CardState = new CardState();
         var cardType = (GameCardType) chessman.CardType;
         var card = new GameCard().Instance(cardType, chessman.CardId, chessman.Star);
@@ -727,7 +727,7 @@ public class FightForManagerForStart : MonoBehaviour
                 ZouYueTaiAddtionFun(cardData, cardsDatas);
                 break;
             case 3://箭楼
-                FightControlForStart.instance.JianLouYuanSheSkill(cardData, GetTowerAddValue(cardData.cardId, cardData.cardGrade));
+                FightControlForStart.instance.JianLouYuanSheSkill(cardData, GetTowerAddValue(cardData.cardId, cardData.level));
                 break;
             case 6://轩辕台
                 XuanYuanTaiAddtionFun(cardData, cardsDatas);
@@ -787,7 +787,7 @@ public class FightForManagerForStart : MonoBehaviour
     private void TouShiTaiAttackFun(FightCardData cardData)
     {
         FightCardData[] attackedUnits = cardData.isPlayerCard ? enemyFightCardsDatas : playerFightCardsDatas;
-        int damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.cardGrade)); //造成的伤害
+        int damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.level)); //造成的伤害
         FightControlForStart.instance.indexAttackType = 0;
 
         FightControlForStart.instance.PlayAudioForSecondClip(24, 0);
@@ -830,7 +830,7 @@ public class FightForManagerForStart : MonoBehaviour
     //奏乐台血量回复
     private void ZouYueTaiAddtionFun(FightCardData cardData, FightCardData[] cardsDatas)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //回复血量基值
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);    //回复血量基值
         addtionNums = (int)(addtionNums * DataTable.GetGameValue(123) / 100f);
         FightControlForStart.instance.indexAttackType = 0;
         FightControlForStart.instance.PlayAudioForSecondClip(42, 0);
@@ -851,7 +851,7 @@ public class FightForManagerForStart : MonoBehaviour
     private void XuanYuanTaiAddtionFun(FightCardData cardData, FightCardData[] cardsDatas)
     {
         FightControlForStart.instance.PlayAudioForSecondClip(4, 0);
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //添加护盾的单位最大数
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);    //添加护盾的单位最大数
         for (int i = 0; i < CardNearbyAdditionForeach[cardData.posIndex].Length; i++)
         {
             FightCardData addedFightCard = cardsDatas[CardNearbyAdditionForeach[cardData.posIndex][i]];
@@ -1114,7 +1114,7 @@ public class FightForManagerForStart : MonoBehaviour
             
             if (addtionCard != null && addtionCard.cardType == 2 && addtionCard.Hp > 0)
             {
-                int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.cardGrade);
+                int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.level);
                 var armedType = MilitaryInfo.GetInfo(cardData.cardId).ArmedType;
                 switch (addtionCard.cardId)
                 {
@@ -1319,7 +1319,7 @@ public class FightForManagerForStart : MonoBehaviour
     //烽火台加成技能
     private void FengHuoTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
@@ -1350,7 +1350,7 @@ public class FightForManagerForStart : MonoBehaviour
     //狼牙台加成技能
     private void LangYaTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
@@ -1381,7 +1381,7 @@ public class FightForManagerForStart : MonoBehaviour
     //霹雳台加成技能
     private void PiLiTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
@@ -1412,7 +1412,7 @@ public class FightForManagerForStart : MonoBehaviour
     //迷雾阵加成技能
     private void miWuZhenAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         List<GameObject> posListToSetMiWu = cardData.isPlayerCard ? playerCardsPos : enemyCardsPos;
 
@@ -1465,7 +1465,7 @@ public class FightForManagerForStart : MonoBehaviour
     //风神台加成技能
     private void FengShenTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         for (int i = 0; i < CardNearbyAdditionForeach[posIndex].Length; i++)
         {
@@ -1496,7 +1496,7 @@ public class FightForManagerForStart : MonoBehaviour
     //战鼓台(10-13塔)加成技能
     private void ZhanGuTaiAddtionFun(FightCardData cardData, int posIndex, FightCardData[] cardDatas, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         switch (cardData.cardId)
         {

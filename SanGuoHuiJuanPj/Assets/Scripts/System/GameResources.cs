@@ -33,7 +33,7 @@ public class GameResources
     private const string StateDinPath = "Prefabs/stateDin/";
     private const string ForceFlagsPath = "Image/shiLi/Flag";
     private const string ForceNamePath = "Image/shiLi/Name";
-    private const string CityFlagPath = "Image/City/Flag";
+    //private const string CityFlagPath = "Image/City/Flag";
     private const string CityIconPath = "Image/City/Icon";
     private const string AvatarPath = "Image/Player/Icon";
     private const string JiBanBgPath = "Image/JiBan/art";
@@ -157,8 +157,8 @@ public class GameResources
             Resources.LoadAll<GameObject>(EffectsGameObjectPath).ToDictionary(g => g.name, g => g), nameof(effectsMap));
         stateDinMap = new ResourceDataWrapper<string, EffectStateUi>(
             Resources.LoadAll<EffectStateUi>(StateDinPath).ToDictionary(g => g.name, g => g), nameof(stateDinMap));
-        cityFlag = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(CityFlagPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(stateDinMap));
-        cityIcon = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(CityIconPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(stateDinMap));
+        cityFlag = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(ForceFlagsPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(cityFlag));
+        cityIcon = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(CityIconPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(cityIcon));
         avatar = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(AvatarPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(avatar));
         jiBanBg = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanBgPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanBg));
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));

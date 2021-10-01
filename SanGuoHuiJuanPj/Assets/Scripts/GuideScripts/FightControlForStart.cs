@@ -252,7 +252,7 @@ public class FightControlForStart : MonoBehaviour
                 if (isCanFightBack && attackUnit.combatType == 0)  //踩地雷的是近战
                 {
                     var dmg = GameCardInfo.GetInfo(GameCardType.Trap, attackUnit.cardId)
-                        .GetDamage(attackUnit.cardGrade);
+                        .GetDamage(attackUnit.level);
                     //todo : 这里的代码与FightController(351)不同
                     int dileiDamage = (int)(dmg * DataTable.GetGameValue(9) / 100f);
                     dileiDamage = DefDamageProcessFun(attackedUnit, attackUnit, dileiDamage);
@@ -1598,7 +1598,7 @@ public class FightControlForStart : MonoBehaviour
                 TakeToImprisoned(fightCardDatas[attackedIndexList[i]],
                     indexAttackType == 1 ?
                     DataTable.GetGameValue(66) :
-                    (DataTable.GetGameValue(68) * attackUnit.cardGrade + DataTable.GetGameValue(67)));
+                    (DataTable.GetGameValue(68) * attackUnit.level + DataTable.GetGameValue(67)));
             }
         }
     }
@@ -1637,7 +1637,7 @@ public class FightControlForStart : MonoBehaviour
                 TakeToCowardly(fightCardDatas[attackedIndexList[i]],
                     indexAttackType == 1 ?
                     DataTable.GetGameValue(69) :
-                    (DataTable.GetGameValue(71) * attackUnit.cardGrade + DataTable.GetGameValue(70)));
+                    (DataTable.GetGameValue(71) * attackUnit.level + DataTable.GetGameValue(70)));
             }
         }
     }
@@ -1836,7 +1836,7 @@ public class FightControlForStart : MonoBehaviour
     {
         FightCardData[] fightCardDatas = attackUnit.isPlayerCard ? FightForManagerForStart.instance.playerFightCardsDatas : FightForManagerForStart.instance.enemyFightCardsDatas;
 
-        int prop = DataTable.GetGameValue(127) * attackUnit.cardGrade + DataTable.GetGameValue(126);
+        int prop = DataTable.GetGameValue(127) * attackUnit.level + DataTable.GetGameValue(126);
 
         int cardIndex = -1;
         int cardIndex2 = -1;    //非普通攻击
@@ -2027,7 +2027,7 @@ public class FightControlForStart : MonoBehaviour
 
         PlayAudioForSecondClip(classType, 0);
 
-        int prop = DataTable.GetGameValue(129) * attackUnit.cardGrade + DataTable.GetGameValue(128);
+        int prop = DataTable.GetGameValue(129) * attackUnit.level + DataTable.GetGameValue(128);
         int fightNums = 1;  //添加单位数量
         if (indexAttackType != 0)
         {
@@ -2165,7 +2165,7 @@ public class FightControlForStart : MonoBehaviour
             }
 
             //眩晕概率
-            int propNums = DataTable.GetGameValue(83) * attackUnit.cardGrade + DataTable.GetGameValue(82);
+            int propNums = DataTable.GetGameValue(83) * attackUnit.level + DataTable.GetGameValue(82);
             if (indexAttackType == 2)
             {
                 propNums += DataTable.GetGameValue(84);
@@ -2219,7 +2219,7 @@ public class FightControlForStart : MonoBehaviour
                 PlayAudioForSecondClip(31, 0);
             }
 
-            int prop = DataTable.GetGameValue(89) * attackUnit.cardGrade + DataTable.GetGameValue(88);
+            int prop = DataTable.GetGameValue(89) * attackUnit.level + DataTable.GetGameValue(88);
             if (indexAttackType != 0)
             {
                 if (indexAttackType == 1)

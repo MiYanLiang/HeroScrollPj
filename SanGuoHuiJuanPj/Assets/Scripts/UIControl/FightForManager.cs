@@ -1,15 +1,14 @@
-﻿using Beebyte.Obfuscator;
+﻿using Assets.System.WarModule;
+using Beebyte.Obfuscator;
 using CorrelateLib;
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.System.WarModule;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
 
 public class FightForManager : MonoBehaviour
@@ -82,12 +81,92 @@ public class FightForManager : MonoBehaviour
         playerBase.activeUnit = false;
         playerBase.CardState = new CardState();
         chessboard.PlaceCard(17, playerBase);
-        UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+        UpdateChessmanAmount(WarsUIManager.instance.maxHeroNums);
     }
 
     /// <summary>
     /// 初始化敌方卡牌到战斗位上
     /// </summary>
+
+    public void InitChessboard(GameStage stage)
+    {
+        //初始化敌方羁绊原始集合
+        CardManager.ResetJiBan(FightController.instance.enemyJiBanAllTypes);
+
+        //battleIdIndex = stage.BattleEvent.Id;
+        //var baseConfig = DataTable.BaseLevel[WarsUIManager.instance.cityLevel];
+        //var playerLvlCfg = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level];
+        //playerFightCardsDatas[17].fullHp = playerFightCardsDatas[17].nowHp = baseConfig.BaseHp + playerLvlCfg.BaseHpAddOn;
+        //FightController.instance.UpdateUnitHpShow(playerFightCardsDatas[17]);
+        //FightController.instance.ClearEmTieQiCardList();
+
+        //for (int i = 0; i < enemyFightCardsDatas.Length; i++)
+        //{
+        //    if (enemyFightCardsDatas[i] != null)
+        //    {
+        //        Destroy(enemyFightCardsDatas[i].cardObj);
+        //        enemyFightCardsDatas[i] = null;
+        //    }
+        //}
+
+        //var battle = stage.BattleEvent;
+        //var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
+        ////随机敌人卡牌
+        //if (battle.IsStaticEnemies > 0)
+        //{
+        //    var enemies = DataTable.StaticArrangement[enemyRandId].Poses();
+        //    //固定敌人卡牌
+        //    for (int i = 0; i < 20; i++)
+        //    {
+        //        var chessman = enemies[i];
+        //        if (chessman == null) continue;
+        //        if (chessman.Star <= 0)
+        //            throw new InvalidOperationException(
+        //                $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
+        //        FightCardData data = CreateEnemyFightUnit(1, true, chessman);
+        //        data.posIndex = i;
+        //        data.isPlayerCard = false;
+        //        data.cardObj.transform.position = enemyCardsPos[i].transform.position;
+        //        enemyFightCardsDatas[i] = data;
+        //        CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
+        //    }
+        //}
+        //else
+        //{
+        //    var enemies = DataTable.Enemy[enemyRandId].Poses();
+        //    for (int i = 0; i < 20; i++)
+        //    {
+        //        var enemyId = enemies[i];
+        //        if (enemyId == 0) continue;
+        //        FightCardData data = CreateEnemyFightUnit(enemyId, false);
+        //        data.posIndex = i;
+        //        data.isPlayerCard = false;
+        //        data.cardObj.transform.position = enemyCardsPos[i].transform.position;
+        //        enemyFightCardsDatas[i] = data;
+        //        CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
+        //    }
+        //}
+
+
+        //FightCardData enemyHomeData = new FightCardData();
+        //enemyHomeData.cardObj = Instantiate(homeCardObj, enemyCardsBox);
+        //enemyHomeData.cardObj.transform.position = enemyCardsPos[17].transform.position;
+        //enemyHomeData.fullHp = enemyHomeData.nowHp = battle.BaseHp;
+        //enemyHomeData.hpr = 0;
+        //enemyHomeData.cardType = 522;
+        //enemyHomeData.posIndex = 17;
+        //enemyHomeData.isPlayerCard = false;
+        //enemyHomeData.activeUnit = false;
+        //enemyHomeData.fightState = new FightState();
+        //enemyFightCardsDatas[17] = enemyHomeData;
+
+        //FightController.instance.InitStartFight();
+
+        ////调整游戏速度
+        //var speed = GamePref.PrefWarSpeed;
+        //Time.timeScale = speed;
+        //speedBtnText.text = Multiply + speed;
+    }
 
     //主动塔行动
     public void ActiveTowerFight(FightCardData cardData, bool isPlayer)
@@ -104,7 +183,7 @@ public class FightForManager : MonoBehaviour
                 ZouYueTaiAddtionFun(cardData, isPlayer);
                 break;
             case 3://箭楼
-                FightController.instance.JianLouYuanSheSkill(cardData, GetTowerAddValue(cardData.cardId, cardData.cardGrade));
+                FightController.instance.JianLouYuanSheSkill(cardData, GetTowerAddValue(cardData.cardId, cardData.level));
                 break;
             case 6://轩辕台
                 XuanYuanTaiAddtionFun(cardData, isPlayer);
@@ -114,7 +193,7 @@ public class FightForManager : MonoBehaviour
         }
     }
 
-    public void NeighborsLoop(int pos,UnityAction<int> function)
+    public void NeighborsLoop(int pos, UnityAction<int> function)
     {
         var neighbors = chessboard.GetNeighborIndexes(pos);
         for (var i = 0; i < neighbors.Length; i++) function(neighbors[i]);
@@ -122,12 +201,12 @@ public class FightForManager : MonoBehaviour
 
     public FightCardData[] GetNeighbors(int pos, bool isPlayer, Func<FightCardData, bool> function = null)
     {
-        if(function==null)return chessboard.GetNeighborIndexes(pos).Select(i => GetCard(i, isPlayer)).ToArray();
+        if (function == null) return chessboard.GetNeighborIndexes(pos).Select(i => GetCard(i, isPlayer)).ToArray();
         return chessboard.GetNeighborIndexes(pos).Where(i => function(GetCard(i, isPlayer)))
             .Select(i => GetCard(i, isPlayer)).ToArray();
     }
 
-    public FightCardData[] GetFriendlyNeighbors(int pos,FightCardData card, Func<FightCardData, bool> func = null) => GetNeighbors(pos, card.isPlayerCard, func);
+    public FightCardData[] GetFriendlyNeighbors(int pos, FightCardData card, Func<FightCardData, bool> func = null) => GetNeighbors(pos, card.isPlayerCard, func);
 
     //营寨行动
     private void YingZhaiFun(FightCardData card, bool isPlayer)
@@ -165,7 +244,7 @@ public class FightForManager : MonoBehaviour
     private void TouShiTaiAttackFun(FightCardData cardData)
     {
         var targets = GetCardList(!cardData.isPlayerCard);
-        var damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.cardGrade)); //造成的伤害
+        var damage = (int)(DataTable.GetGameValue(122) / 100f * GetTowerAddValue(cardData.cardId, cardData.level)); //造成的伤害
         FightController.instance.indexAttackType = 0;
 
         FightController.instance.PlayAudioForSecondClip(24, 0);
@@ -198,7 +277,7 @@ public class FightForManager : MonoBehaviour
     //奏乐台血量回复
     private void ZouYueTaiAddtionFun(FightCardData cardData, bool isPlayer)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //回复血量基值
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);    //回复血量基值
         addtionNums = (int)(addtionNums * DataTable.GetGameValue(123) / 100f);
         FightController.instance.indexAttackType = 0;
         FightController.instance.PlayAudioForSecondClip(42, 0);
@@ -220,7 +299,7 @@ public class FightForManager : MonoBehaviour
     private void XuanYuanTaiAddtionFun(FightCardData cardData, bool isPlayer)
     {
         FightController.instance.PlayAudioForSecondClip(4, 0);
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);    //添加护盾的单位最大数
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);    //添加护盾的单位最大数
         NeighborsLoop(cardData.PosIndex, i =>
         {
             var addedFightCard = GetCardList(isPlayer)[i];
@@ -365,14 +444,14 @@ public class FightForManager : MonoBehaviour
     {
         chessboard.RemoveCard(card.PosIndex, card.isPlayerCard);
         OnBoardReactSet(card, card.posIndex, false, refresh);
-        UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+        UpdateChessmanAmount(WarsUIManager.instance.maxHeroNums);
     }
 
     public void PlaceCardOnBoard(FightCardData card, int posIndex, bool refresh = true)
     {
         OnBoardReactSet(card, posIndex, true, refresh);
         chessboard.PlaceCard(posIndex, card);
-        UpdateFightNumTextShow(WarsUIManager.instance.maxHeroNums);
+        UpdateChessmanAmount(WarsUIManager.instance.maxHeroNums);
     }
 
     //上阵卡牌特殊相关处理
@@ -507,7 +586,7 @@ public class FightForManager : MonoBehaviour
         {
             var addtionCard = GetCardList(card.isPlayerCard)[i];
             if (addtionCard == null || addtionCard.cardType != 2 || addtionCard.Hp <= 0) return;
-            int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.cardGrade);
+            int addtionNums = GetTowerAddValue(addtionCard.cardId, addtionCard.level);
             switch (addtionCard.cardId)
             {
                 case 2://奏乐台
@@ -716,7 +795,7 @@ public class FightForManager : MonoBehaviour
     //烽火台加成技能
     private void FengHuoTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
         NeighborsLoop(posIndex, i =>
         {
             var addedFightCard = GetCardList(isPlayer)[i];
@@ -741,7 +820,7 @@ public class FightForManager : MonoBehaviour
     //狼牙台加成技能
     private void LangYaTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
         NeighborsLoop(posIndex, i =>
         {
             var addedFightCard = GetCardList(isPlayer)[i];
@@ -767,7 +846,7 @@ public class FightForManager : MonoBehaviour
     //霹雳台加成技能
     private void PiLiTaiAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         NeighborsLoop(posIndex, i =>
         {
@@ -794,7 +873,7 @@ public class FightForManager : MonoBehaviour
     //迷雾阵加成技能
     private void miWuZhenAddtionFun(FightCardData cardData, int posIndex, bool isPlayer, bool isAdd)
     {
-        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
+        int addtionNums = GetTowerAddValue(cardData.cardId, cardData.level);
 
         var posListToSetMiWu = cardData.isPlayerCard ? playerCardsPos : enemyCardsPos;
 
@@ -847,7 +926,7 @@ public class FightForManager : MonoBehaviour
     //风神台加成技能
     private void FengShenTaiAddtionFun(FightCardData card, int posIndex, bool isPlayer, bool isAdd)
     {
-        var towerAddValue = GetTowerAddValue(card.cardId, card.cardGrade);
+        var towerAddValue = GetTowerAddValue(card.cardId, card.level);
         NeighborsLoop(posIndex, i =>
         {
             var addedFightCard = GetCardList(isPlayer)[i];
@@ -872,8 +951,8 @@ public class FightForManager : MonoBehaviour
     //战鼓台(10-13塔)加成技能
     private void ZhanGuTaiAddtionFun(FightCardData cardData, int targetPos, bool isPlayer, bool isAdd)
     {
-        var addOn = GetTowerAddValue(cardData.cardId, cardData.cardGrade);
-        void WhileNeighborsTrueAddOn(Func<FightCardData,bool> condition)
+        var addOn = GetTowerAddValue(cardData.cardId, cardData.level);
+        void WhileNeighborsTrueAddOn(Func<FightCardData, bool> condition)
         {
             NeighborsLoop(targetPos, pos =>
             {
@@ -881,7 +960,7 @@ public class FightForManager : MonoBehaviour
                 if (card == null ||
                     card.cardType != 0 ||
                     card.Hp <= 0) return;
-                if(condition(card)) DamageTowerAdditionFun(card, isAdd, addOn);
+                if (condition(card)) DamageTowerAdditionFun(card, isAdd, addOn);
             });
         }
 
@@ -891,16 +970,16 @@ public class FightForManager : MonoBehaviour
                 WhileNeighborsTrueAddOn(c => true);
                 break;
             case 10://号角台
-                WhileNeighborsTrueAddOn(c=>c.combatType == 0);
+                WhileNeighborsTrueAddOn(c => c.combatType == 0);
                 break;
             case 11://瞭望台
-                WhileNeighborsTrueAddOn(c=>c.combatType == 1);
+                WhileNeighborsTrueAddOn(c => c.combatType == 1);
                 break;
             case 12://七星坛
-                WhileNeighborsTrueAddOn(c=>c.cardDamageType == 1);
+                WhileNeighborsTrueAddOn(c => c.cardDamageType == 1);
                 break;
             case 13://斗神台
-                WhileNeighborsTrueAddOn(c=>c.cardDamageType == 0);
+                WhileNeighborsTrueAddOn(c => c.cardDamageType == 0);
                 break;
             case 14://曹魏旗
                 WhileNeighborsTrueAddOn(c => DataTable.Hero[c.cardId].ForceTableId == 1);
@@ -993,7 +1072,7 @@ public class FightForManager : MonoBehaviour
     /// <summary>
     /// 更新上阵数量显示
     /// </summary>
-    public void UpdateFightNumTextShow(int maxCards) => heroNumText.text = string.Format(DataTable.GetStringText(24), chessboard.PlayerCardsOnBoard, maxCards);
+    public void UpdateChessmanAmount(int maxCards) => heroNumText.text = string.Format(DataTable.GetStringText(24), chessboard.PlayerCardsOnBoard, maxCards);
 
     public bool IsPlayerAvailableToPlace(int index) => chessboard.PlayerCardsOnBoard < WarsUIManager.instance.maxHeroNums && chessboard.IsPlayerScopeAvailable(index);
 

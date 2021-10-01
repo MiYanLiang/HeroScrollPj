@@ -52,12 +52,16 @@ public class ChessUiStyle : CombatStyle
 /// </summary>
 public class ChessmanStyle : ChessUiStyle
 {
-    public virtual Tween UpdateStatusTween(ChessStatus chessStatus, FightCardData card) => DOTween.Sequence()
-        .AppendCallback(() =>
-        {
-            card.UpdateActivityStatus(chessStatus);
-            CardAnimator.UpdateStateIcon(card);
-        });
+    public virtual Tween UpdateStatusTween(ChessStatus chessStatus, FightCardData card)
+    {
+        return DOTween.Sequence()
+            .AppendCallback(() =>
+            {
+                card.UpdateActivityStatus(chessStatus);
+                CardAnimator.UpdateStateIcon(card);
+            });
+    }
+
     /// <summary>
     /// 主行动，施展 方法
     /// </summary>
@@ -215,9 +219,9 @@ public class HeroStyle : CardStyle
     {
         if (activity.Skill == 0)
             return null;
-        
         switch (Military)
         {
+            case 0: return null;
             case 13: return null;
             case 58: //铁骑
                 if(activity.Skill == 2)

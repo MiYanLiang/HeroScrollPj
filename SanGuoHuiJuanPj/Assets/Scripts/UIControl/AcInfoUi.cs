@@ -12,7 +12,7 @@ public class AcInfoUi : SignInBaseUi
     public override void ResetUi()
     {
         username.text = GamePref.Username;
-        password.text = string.Empty;
+        password.text = GamePref.Password == null ? string.Empty : GamePref.Password;
         changePasswordBtn.onClick.RemoveAllListeners();
         backBtn.onClick.RemoveAllListeners();
         base.ResetUi();

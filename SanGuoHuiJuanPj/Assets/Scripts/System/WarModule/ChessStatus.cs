@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using NotImplementedException = System.NotImplementedException;
 
 namespace Assets.System.WarModule
 {
@@ -85,5 +86,7 @@ namespace Assets.System.WarModule
             Hp = maxHp;
             MaxHp = maxHp;
         }
+
+        public void SetHp(int hp) => Hp = hp;
     }
 }

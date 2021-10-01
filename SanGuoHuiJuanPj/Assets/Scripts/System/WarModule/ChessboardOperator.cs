@@ -18,13 +18,13 @@ namespace Assets.System.WarModule
         public ChessGrid Grid { get; }
         private enum ProcessCondition
         {
-            PreStart,
+            PlaceActions,
             RoundStart,
             Chessman,
             RoundEnd
         }
 
-        private ProcessCondition RoundState { get; set; } = ProcessCondition.PreStart;
+        private ProcessCondition RoundState { get; set; } = ProcessCondition.PlaceActions;
 
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
         public IEnumerable<PosSprite> ChessSprites => Sprites;
@@ -72,11 +72,17 @@ namespace Assets.System.WarModule
         private ChessMajor CurrentMajor { get; set; }
         private readonly List<ChessRound> rounds;
         private ChessRound currentRound;
-        private ChessRound GetCurrentRound()
+
+        private ChessRound GetActiveRound()
         {
             if (rounds.Count != 0 &&
-                rounds.Last().InstanceId == RoundIdSeed)
+                !rounds.Last().IsEnd)
                 return currentRound;
+            return InstanceRound();
+        }
+
+        private ChessRound InstanceRound()
+        {
             currentRound = new ChessRound
             {
                 InstanceId = RoundIdSeed,
@@ -88,6 +94,7 @@ namespace Assets.System.WarModule
                 OppositeJiBans = new List<int>()
             };
             rounds.Add(currentRound);
+            RoundIdSeed++;
             return currentRound;
         }
 
@@ -96,13 +103,13 @@ namespace Assets.System.WarModule
             switch (RoundState)
             {
                 case ProcessCondition.RoundStart:
-                    return GetCurrentRound().PreAction.ChessProcesses.LastOrDefault();
+                    return GetActiveRound().PreAction.ChessProcesses.LastOrDefault();
                 case ProcessCondition.Chessman:
-                    return GetCurrentRound().Processes.LastOrDefault();
+                    return GetActiveRound().Processes.LastOrDefault();
                 case ProcessCondition.RoundEnd:
-                    return GetCurrentRound().FinalAction.ChessProcesses.LastOrDefault();
-                case ProcessCondition.PreStart:
-                    return GetCurrentRound().PreRound.LastOrDefault();
+                    return GetActiveRound().FinalAction.ChessProcesses.LastOrDefault();
+                case ProcessCondition.PlaceActions:
+                    return GetActiveRound().PreRound.LastOrDefault();
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -136,6 +143,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         private static float GetRatio(float value, int ratio) => ratio * 0.01f * value;
         #endregion
+        /// <summary>
+        /// 是否是新摆入的棋子
+        /// </summary>
+        protected List<ChessOperator> PlaceList = new List<ChessOperator>();
 
         protected ChessboardOperator(ChessGrid grid, ILogger log = null)
         {
@@ -186,20 +197,20 @@ namespace Assets.System.WarModule
 
         #region Round
 
-        public void RoundConfirm()
-        {
-            //currentRound =
-            RoundIdSeed++;
-            RoundState = ProcessCondition.PreStart;
-            foreach (var chessOperator in StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key))
-                chessOperator.PreStart();
-            GetCurrentRound().PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
-                .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
-        }
         public ChessRound StartRound()
         {
             if (IsGameOver) return null;
             CurrentMajor = ChessMajor.UnDefined;
+
+            RoundState = ProcessCondition.PlaceActions;
+            foreach (var op in PlaceList.ToArray())
+            {
+                PlaceList.Remove(op);
+                op.OnPlaceInvocation();
+            }
+
+            GetActiveRound().PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
+                .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
             //instance Round
             //invoke pre-action
             //Get all sorted this operators
@@ -208,7 +219,7 @@ namespace Assets.System.WarModule
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
             ActivatedJiBan.Clear();
-            Log($"开始回合[{GetCurrentRound().InstanceId}]");
+            Log($"开始回合[{currentRound.InstanceId}]");
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             RefreshChessPosses();
             InvokePreRoundTriggers();
@@ -249,11 +260,13 @@ namespace Assets.System.WarModule
                 if (IsOppositeWin)
                     winner += "对方胜利!";
                 Log($"{winner}");
-                return GetCurrentRound();
+                currentRound.IsEnd = true;
+                return currentRound;
             }
             RoundState = ProcessCondition.RoundEnd;
             InvokeRoundEndTriggers();
-            return GetCurrentRound();
+            currentRound.IsEnd = true;
+            return currentRound;
         }
 
 
@@ -309,9 +322,9 @@ namespace Assets.System.WarModule
                         .Join(map,o=>o.CardId,m=>m.Key,(o,_)=>o).ToList()
                 });
                 if (op.IsChallenger)
-                    GetCurrentRound().ChallengerJiBans.Add(jb.BondId);
+                    GetActiveRound().ChallengerJiBans.Add(jb.BondId);
                 else
-                    GetCurrentRound().OppositeJiBans.Add(jb.BondId);
+                    GetActiveRound().OppositeJiBans.Add(jb.BondId);
             }
             return isActivate;
         }
@@ -498,22 +511,22 @@ namespace Assets.System.WarModule
                 {
                     case ProcessCondition.RoundStart:
                     {
-                        GetCurrentRound().PreAction.ChessProcesses.Add(process);
+                        GetActiveRound().PreAction.ChessProcesses.Add(process);
                         break;
                     }
                     case ProcessCondition.Chessman when type != ChessProcess.Types.JiBan:
                     {
-                        GetCurrentRound().Processes.Add(process);
+                        GetActiveRound().Processes.Add(process);
                         break;
                     }
                     case ProcessCondition.RoundEnd:
                     {
-                        GetCurrentRound().FinalAction.ChessProcesses.Add(process);
+                        GetActiveRound().FinalAction.ChessProcesses.Add(process);
                         break;
                     }
-                    case ProcessCondition.PreStart:
+                    case ProcessCondition.PlaceActions:
                     {
-                        GetCurrentRound().PreRound.Add(process);
+                        GetActiveRound().PreRound.Add(process);
                         break;
                     }
                     default:
@@ -525,7 +538,7 @@ namespace Assets.System.WarModule
             return process;
 
             ChessProcess InstanceProcess(ChessMajor maj) =>
-                ChessProcess.Instance(ProcessSeed, GetCurrentRound().InstanceId, type, maj.Pos, maj.IsChallenger);
+                ChessProcess.Instance(ProcessSeed, GetActiveRound().InstanceId, type, maj.Pos, maj.IsChallenger);
         }
 
         /// <summary>
@@ -685,7 +698,7 @@ namespace Assets.System.WarModule
                 var death = GetOperator(activity.To);
                 foreach (var op in StatusMap.Keys.Where(op=>op!=death && op.IsAlive)) 
                     op.OnSomebodyDie(death);
-                Log($"{death}败退！");
+                Log($"@@@@【{death}败退】@@@@！");
             }
             UpdateTerrain(GetChessPos(target));
         }
