@@ -138,7 +138,7 @@ namespace Assets.System.WarModule
         /// </summary>
         protected virtual int Surround { get; } = 1;
 
-        public override void PreStart()
+        public override void OnPlaceInvocation()
         {
             //除去所有精灵(如果被移位)
             foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Value == InstanceId))

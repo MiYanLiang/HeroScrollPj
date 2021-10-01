@@ -5,7 +5,7 @@ using CorrelateLib;
 using Newtonsoft.Json;
 using UnityEngine;
 
-public class ChessboardTester : ChessboardManager
+public class ChessboardVisualizeTester : ChessboardVisualizeManager
 {
     [SerializeField] private DataTable DataTable;
     [SerializeField] private EffectsPoolingControl EffectsPooling;
@@ -17,15 +17,14 @@ public class ChessboardTester : ChessboardManager
         DataTable.Init();
         PlayerData.Init();
         gameResources = new GameResources();
-        CardMap = new Dictionary<int, FightCardData>();
         gameResources.Init();
         EffectsPooling.Init();
 
         NewWar.StartButton.onClick.AddListener(InvokeCard);
         Init();
-        NewWar.Init();
-        NewWar.ConfirmPlayer();
+        NewWar.NewGame();
         NewWar.ConfirmEnemy();
+        NewWar.ConfirmPlayer();
         GenerateChessmanFromList();
         //var playerBase = NewWar.Player.FirstOrDefault(c => c.Type == GameCardType.Base);
         //if (playerBase == null) Debug.LogError("玩家老巢未设置。");
@@ -36,4 +35,10 @@ public class ChessboardTester : ChessboardManager
         //SetPlayerChess(pBase, NewWar.Player);
         //SetEnemyChess(eBase, NewWar.Enemy);
     }
+
+    private void GenerateChessmanFromList()
+    {
+        foreach (var card in NewWar.CardData.Values) InstanceChessmanUi(card);
+    }
+
 }

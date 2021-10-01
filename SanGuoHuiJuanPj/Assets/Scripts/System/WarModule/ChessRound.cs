@@ -19,6 +19,8 @@ namespace Assets.System.WarModule
         public List<ChessProcess> Processes { get; set; }
         //[JsonProperty("F")]
         public RoundAction FinalAction { get; set; }
+
+        public bool IsEnd { get; set; }
         //[JsonProperty("L")] 
 
         public override string ToString() =>

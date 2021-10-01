@@ -15,19 +15,17 @@ using UnityEngine;
         var baseConfig = DataTable.BaseLevel[cityLevel];
         var playerLvlCfg = DataTable.PlayerLevelConfig[level];
         var hp = playerLvlCfg.BaseHpAddOn + baseConfig.BaseHp;
-
-        var baseCard = new FightCardData();
-        baseCard.cardType = (int)GameCardType.Base;
-        baseCard.isPlayerCard = true;
-        baseCard.ResetHp(hp);
+        var baseCard = BaseCard(true, hp, cityLevel);
+        baseCard.level = level;
         return baseCard;
     }
 
-    public static FightCardData BaseCard(bool isPlayer, int hp)
+    public static FightCardData BaseCard(bool isPlayer, int hp,int level)
     {
-        var baseCard = new FightCardData(); //GetCard(17, true);
-        baseCard.cardType = (int)GameCardType.Base;
+        var baseCard = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level)); //GetCard(17, true);
         baseCard.isPlayerCard = isPlayer;
+        baseCard.posIndex = 17;
+        baseCard.status = ChessStatus.Instance(hp, hp, 17, 0, new Dictionary<int, int>(), new List<int>());
         baseCard.ResetHp(hp);
         return baseCard;
     }
@@ -35,7 +33,7 @@ using UnityEngine;
     //单位id,为0表示null
     public int unitId;
 
-    [JsonIgnore]public WarGameCardUi cardObj;
+    public WarGameCardUi cardObj;
     //卡牌obj
     //public GameObject cardObj;
     //卡牌类型
@@ -43,7 +41,7 @@ using UnityEngine;
     //卡牌id
     public int cardId;
     //等级
-    public int cardGrade;
+    public int level;
     //伤害
     public int damage;
 
@@ -84,7 +82,7 @@ using UnityEngine;
         unitId = 1;
         cardType = card.typeIndex;
         cardId = card.CardId;
-        cardGrade = card.Level;
+        level = card.Level;
         damage = info.GetDamage(card.Level);
         hpr = info.GameSetRecovery;
         cardDamageType = info.DamageType;
@@ -128,12 +126,12 @@ using UnityEngine;
         }
     }
 
-    [JsonIgnore] public int PosIndex => posIndex;
+    public int PosIndex => posIndex;
     public int CardId => cardId;
-    [JsonIgnore] public GameCardType CardType => (GameCardType) cardType;
+    public GameCardType CardType => (GameCardType) cardType;
     public GameCardInfo Info => info;
     public int HitPoint => status.MaxHp;
-    public int Level => cardGrade;
+    public int Level => level;
     private CombatStyle style;
     public CombatStyle Style => style;
     private int instanceId;
@@ -143,7 +141,7 @@ using UnityEngine;
     public CombatStyle GetStyle() => style;
 
 
-    [JsonIgnore] public Dictionary<int, EffectStateUi> StatesUi { get; }
+    public Dictionary<int, EffectStateUi> StatesUi { get; }
 
     public void UpdatePos(int pos)
     {
@@ -175,10 +173,10 @@ using UnityEngine;
     }
     public int InstanceId => instanceId;
 
-    [JsonIgnore]public int Pos => PosIndex;
-    [JsonIgnore]public bool IsPlayer => isPlayerCard;
-    [JsonIgnore]public bool IsActed => isActionDone;
-    [JsonIgnore] public ChessStatus Status => status;
+    public int Pos => PosIndex;
+    public bool IsPlayer => isPlayerCard;
+    public bool IsActed => isActionDone;
+    public ChessStatus Status => status;
     public void SetActed(bool isActed = true) => isActionDone = isActed;
     public void UpdateActivityStatus(ChessStatus stat)
     {

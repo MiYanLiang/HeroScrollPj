@@ -76,6 +76,7 @@ namespace Assets.System.WarModule
             StatusMap.Add(op, op.GenerateStatus());
             ops.Add(op.InstanceId,op);
             op.SetPos(card.Pos);
+            PlaceList.Add(op);
             return card;
         }
 
@@ -87,6 +88,7 @@ namespace Assets.System.WarModule
             var op = ops[card.InstanceId];
             ops.Remove(op.InstanceId);
             StatusMap.Remove(op);
+            PlaceList.Remove(op);
             return op;
         }
 

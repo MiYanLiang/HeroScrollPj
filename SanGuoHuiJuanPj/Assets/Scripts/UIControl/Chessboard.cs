@@ -59,7 +59,6 @@ public class Chessboard : MonoBehaviour
         if (scope[index].Card != null) RemoveCard(index, card.isPlayerCard);//移除目标位置上的卡牌
         scope[index].PlaceCard(card, true);
         card.UpdatePos(index);
-        if (card.isPlayerCard) card.cardObj.DragComponent?.ResetPos();
     }
 
     public FightCardData RemoveCard(int index, bool isPlayer)
@@ -70,8 +69,6 @@ public class Chessboard : MonoBehaviour
         var card = scope[index].Card;
         scope[index].RemoveCard();
         card.UpdatePos(-1);
-        if (isPlayer && card.cardObj.DragComponent!=null) 
-            card.cardObj.DragComponent.ResetPos();
         return card;
     }
 

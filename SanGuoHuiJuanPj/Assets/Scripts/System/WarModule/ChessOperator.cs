@@ -289,7 +289,7 @@ namespace Assets.System.WarModule
         public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
 
-        public virtual void PreStart() { }
+        public virtual void OnPlaceInvocation() { }
 
         public virtual void OnSomebodyDie(ChessOperator death){}
     }

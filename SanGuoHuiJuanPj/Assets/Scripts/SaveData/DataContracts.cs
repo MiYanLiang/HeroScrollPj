@@ -121,7 +121,6 @@ public class RCode
 public class GameCard : IGameCard,IComparable<GameCard>
 {
     public static GameCard Instance(GameCardDto dto) => Instance(dto.CardId,(int)dto.Type,dto.Level,dto.Chips);
-
     public static GameCard Instance(int cardId,int type,int level,int chips = 0)
     {
         return new GameCard

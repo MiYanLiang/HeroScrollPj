@@ -14049,6 +14049,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCardUi: {fileID: 3122890704471373157, guid: 46e11a93c6a42e6429b404fba5836adf,
     type: 3}
+  warGameCardUi: {fileID: 824321453738017661, guid: d67d29869bed7aa4fb28530f98831218,
+    type: 3}
 --- !u!1 &8144984802089118909
 GameObject:
   m_ObjectHideFlags: 0

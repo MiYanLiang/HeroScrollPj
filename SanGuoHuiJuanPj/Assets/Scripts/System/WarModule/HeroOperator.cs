@@ -287,7 +287,7 @@ namespace Assets.System.WarModule
             return rate * Math.Min(sprites.Length, ChainMax);
         }
 
-        public override void PreStart()
+        public override void OnPlaceInvocation()
         {
             if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == Chained)) return;
             var chainedList = Chessboard.GetChainedPos(this, p => p.IsAliveHero && IsChainable(p.Operator)).ToArray();
@@ -325,7 +325,7 @@ namespace Assets.System.WarModule
             }
         }
         protected virtual int DamageRate => 20;
-        public override void PreStart()
+        public override void OnPlaceInvocation()
         {
             if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == YellowBand)) return;
             var cluster = Chessboard.GetFriendly(this,
@@ -371,19 +371,21 @@ namespace Assets.System.WarModule
         }
 
         private float[] PenetrateDecreases = new[] { 0.75f, 0.5f, 0.25f };
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
             var damage = InstanceHeroGenericDamage();
 
             Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage), actId: 0, skill: 1);
-
             for (var i = 1; i < PenetrateUnits() + 1; i++)
             {
                 var backPos = Chessboard.BackPos(target);
                 target = backPos;
-                if (backPos.Operator == null) continue;
-                Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(damage.Clone(PenetrateDecreases[i])), actId: 0, skill: -1);
+                if (target == null) break;
+                if (target.Operator == null) continue;
+                Chessboard.AppendOpActivity(this, target, Activity.Offensive,
+                    Helper.Singular(damage.Clone(PenetrateDecreases[i])), actId: 0, skill: -1);
             }
         }
     }
@@ -560,7 +562,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 41: return 1;
+                case 47: return 1;
                 case 48: return 3;
                 case 222: return 5;
                 default: throw MilitaryNotValidError(this);

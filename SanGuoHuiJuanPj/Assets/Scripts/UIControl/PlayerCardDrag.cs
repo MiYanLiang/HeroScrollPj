@@ -15,6 +15,7 @@ public class PlayerCardDrag : DragController
     public override void BeginDrag(BaseEventData data)
     {
         if (IsLocked) return;
+        if (WarsUIManager.instance.isDragDisable) return;
 
         Vector2 deltaPosition = Vector2.zero;
 #if UNITY_EDITOR
@@ -46,16 +47,12 @@ public class PlayerCardDrag : DragController
     public override void OnDrag(BaseEventData data)
     {
         if (IsLocked) return;
+        if (WarsUIManager.instance.isDragDisable) return;
 
         if (!WarsUIManager.instance.isDragDelegated)
         {
             var eventData = data as PointerEventData;
             Rack.OnDrag(eventData);
-            return;
-        }
-        if (FightController.instance.recordWinner != 0)
-        {
-            EndDrag(data);
             return;
         }
         transform.position = Input.mousePosition;
@@ -64,6 +61,11 @@ public class PlayerCardDrag : DragController
     public override void EndDrag(BaseEventData data)
     {
         if (IsLocked) return;
+        if (WarsUIManager.instance.isDragDisable)
+        {
+            ResetPos();
+            return;
+        }
 
         if (!(data is PointerEventData eventData)) return;
 
@@ -73,7 +75,8 @@ public class PlayerCardDrag : DragController
             return;
         }
 
-        if (eventData.pointerCurrentRaycast.gameObject == null || FightController.instance.isRoundBegin) //战斗回合突然开始
+        if (eventData.pointerCurrentRaycast.gameObject == null || 
+            WarsUIManager.instance.chessboardManager.IsBusy) //战斗回合突然开始
         {
             ResetPos();
             return;
@@ -86,7 +89,6 @@ public class PlayerCardDrag : DragController
             return;
         }
 
-        var fMgr = FightForManager.instance;
         var targetPosIndex = -1;
         if (posObj.CompareTag(GameSystem.CardPos)) targetPosIndex = posObj.GetComponent<ChessPos>().Pos;
         else
@@ -101,7 +103,7 @@ public class PlayerCardDrag : DragController
         {
             if (PosIndex != targetPosIndex)//从在棋盘上摘下来
             {
-                fMgr.RemoveCardFromBoard(FightCard, true);
+                WarsUIManager.instance.RemoveCardFromBoard(FightCard);
                 return;
             }
 
@@ -114,7 +116,7 @@ public class PlayerCardDrag : DragController
         if (PosIndex == -1)
         {
             //是否可以上阵
-            if (!fMgr.IsPlayerAvailableToPlace(targetPosIndex))
+            if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex))
             {
                 //Debug.Log("上阵位已满");
                 ResetPos();
@@ -135,26 +137,24 @@ public class PlayerCardDrag : DragController
         PlaceCard(targetPosIndex);
     }
 
-    private void PlaceCard(int targetIndex)
+    private void PlaceCard(int targetPos)
     {
-        FightForManager.instance.PlaceCardOnBoard(FightCard, targetIndex, true);
+        FightCard.posIndex = targetPos;
+        WarsUIManager.instance.PlaceCardOnTemp(FightCard);
         Ui.SetHighLight(true);
 
-        FightController.instance.PlayAudioForSecondClip(85, 0);
+        WarsUIManager.instance.PlayAudioForSecondClip(85, 0);
 
         EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f,
-            FightForManager.instance.playerCardsPos[PosIndex].transform);
+            WarsUIManager.instance.Chessboard.GetChessPos(targetPos, true).transform);
         CardBody.raycastTarget = !IsLocked;
     }
 
     public override void ResetPos()
     {
-        if(WarsUIManager.instance!=null && FightForManager.instance!=null)
+        if (WarsUIManager.instance != null && transform != null)
         {
-            transform.SetParent(PosIndex == -1
-                ? WarsUIManager.instance.PlayerCardsRack.transform
-                : FightForManager.instance.GetChessPos(PosIndex, true));
-            transform.localPosition = Vector3.zero;
+            if (PosIndex == -1) transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
             Ui.SetSelected(false);
             CardBody.raycastTarget = !IsLocked;
         }

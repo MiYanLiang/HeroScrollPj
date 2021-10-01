@@ -1,5 +1,6 @@
 ﻿using System;
 using Assets.System.WarModule;
+using CorrelateLib;
 
 public static class Effect
 {
@@ -841,5 +842,255 @@ public static class Effect
                 return -1;//返回-1表示没有buff特效
         }
     }
+    #endregion
+
+    #region 音效
+    /// <summary>
+    /// 武将音效, -1 = 没音效
+    /// </summary>
+    /// <param name="military"></param>
+    /// <param name="skill"></param>
+    /// <returns></returns>
+    public static int GetHeroAudioId(int military,int skill)
+    {
+        var audioId = -1;
+        if (skill == 0) return 0;//普通攻击音效为 0
+        switch (military)
+        {
+            case 3://飞甲
+                audioId = 3;
+                break;
+            case 4://大盾
+                audioId = 4;
+                break;
+            case 6://虎卫
+                audioId = 6;
+                break;
+            case 8://象兵
+                audioId = 8;
+                break;
+            case 9://先锋
+            case 60:
+                audioId = 9;
+                break;
+            case 10://死士
+                audioId = 10;
+                break;
+            case 11:
+                audioId = 11;
+                break;
+            case 12:
+                audioId = 12;
+                break;
+            case 14:
+            case 59:
+                audioId = 14;
+                break;
+            case 15:
+                audioId = 15;
+                break;
+            case 16:
+                audioId = 16;
+                break;
+            case 17:
+                audioId = 17;
+                break;
+            case 18:
+                audioId = 18;
+                break;
+            case 19:
+            case 51:
+                audioId = 19;
+                break;
+            case 20:
+            case 52:
+                audioId = 20;
+                break;
+            case 21:
+                audioId = 21;
+                break;
+            case 22:
+                audioId = 22;
+                break;
+            case 23:
+                audioId = 23;
+                break;
+            case 24:
+                audioId = 24;
+                break;
+            case 25:
+                audioId = 25;
+                break;
+            case 26:
+                audioId = 26;
+                break;
+            case 27:
+                audioId = 27;
+                break;
+            case 30:
+                audioId = 30;
+                break;
+            case 31:
+                audioId = 31;
+                break;
+            case 32:
+                break;
+            case 33:
+                break;
+            case 34:
+                audioId = 34;
+                break;
+            case 35:
+                audioId = 35;
+                break;
+            case 36:
+                audioId = 36;
+                break;
+            case 37:
+                audioId = 37;
+                break;
+            case 38:
+                audioId = 38;
+                break;
+            case 39:
+                audioId = 39;
+                break;
+            case 40:
+                audioId = -1;
+                break;
+            case 42:
+                audioId = 42;
+                break;
+            case 43:
+                audioId = 43;
+                break;
+            case 44:
+                audioId = 44;
+                break;
+            case 45:
+                audioId = 45;
+                break;
+            case 46:
+                audioId = 46;
+                break;
+            case 47:
+                audioId = 47;
+                break;
+            case 48:
+                audioId = 48;
+                break;
+            case 49:
+                audioId = 49;
+                break;
+            case 50:
+                audioId = 50;
+                break;
+            case 53:
+                audioId = 53;
+                break;
+            case 54:
+                audioId = 54;
+                break;
+            case 55:
+                audioId = skill == 2 ? 84 : 55;
+                break;
+            case 56:
+                audioId = 56;
+                break;
+            case 57:
+                audioId = 57;
+                break;
+            case 58:
+                audioId = 58;
+                break;
+            case 65:
+                audioId = 65;
+                break;
+            case 28:
+            case 29:
+            default:
+                audioId = 0;
+                break;
+        }
+
+        return audioId;
+    }
+    /// <summary>
+    /// 塔音效, -1 = 没音效
+    /// </summary>
+    /// <param name="towerId"></param>
+    /// <returns></returns>
+    public static int GetTowerAudioId(int towerId)
+    {
+        switch (towerId)
+        {
+            case 0: //营寨
+            case 2: //奏乐台
+                return 42;
+            case 1: //投石台
+                return 24;
+            case 3: //箭楼
+                return 20;
+            case 6: //轩辕台
+                return 4;
+        }
+        return -1;
+    }
+    /// <summary>
+    /// 陷阱音效, -1 = 没音效
+    /// </summary>
+    /// <param name="trapId"></param>
+    /// <returns></returns>
+    public static int GetTrapAudioId(int trapId)
+    {
+        switch (trapId)
+        {
+            case 0://拒马
+                return 89;
+            case 1://地雷
+                return 88;
+            case 2://石墙
+            case 3://八阵图
+            case 4://金锁阵
+            case 5://鬼兵阵
+            case 6://火墙
+            case 7://毒泉
+            case 8://刀墙
+            case 9://滚石
+            case 10://滚木
+                break;
+            case 11://金币宝箱
+            case 12://宝箱
+                return  98;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// 活动结果音效
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static int ResultAudioId(ActivityResult.Types type)
+    {
+        switch (type)
+        {
+            case ActivityResult.Types.ChessPos:
+            case ActivityResult.Types.Suffer:
+            case ActivityResult.Types.Friendly:
+            case ActivityResult.Types.Kill:
+            case ActivityResult.Types.EaseShield:
+                return -1;//这些结果都是直接播放兵种音效
+
+            case ActivityResult.Types.Dodge:
+                return 97;
+            case ActivityResult.Types.Shield:
+            case ActivityResult.Types.Invincible:
+                return 96;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
+    }
+
     #endregion
 }

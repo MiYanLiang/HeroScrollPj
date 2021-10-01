@@ -16,43 +16,51 @@ public class NewWarManager : MonoBehaviour, ILogger
     public ChessPos[] PlayerPoses;
     public ChessPos[] EnemyPoses;
     public ChessCard[] Enemy;
-    public ChessCard[] Player;
+    public List<ChessCard> Player;
     #endregion
 
     public ChessGrid Grid;
     public ChessOperatorManager<FightCardData> ChessOperator;
     public Dictionary<int, FightCardData> CardData { get; } = new Dictionary<int, FightCardData>();
 
-    public void Init()
-    {
-        Grid = new ChessGrid(PlayerPoses, EnemyPoses);
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
-    }
-    private void RegChessman(ChessCard[] list, bool isChallenger)
-    {
-        foreach (var chessCard in list)
-        {
-            var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
-            card.UpdatePos(chessCard.Pos);
-            card.isPlayerCard = isChallenger;
-            //card = ChessOperator.RegOperator(card);
-            RegCard(card);
-        }
+    public void Init() => Grid = new ChessGrid(PlayerPoses, EnemyPoses);
 
-        var playerBase = CardData.Values.FirstOrDefault(c => c.isPlayerCard && c.CardType == GameCardType.Base);
-        var enemyBase = CardData.Values.FirstOrDefault(c => !c.isPlayerCard && c.CardType == GameCardType.Base);
-        if (playerBase != null && !playerBase.Status.IsDeath &&
-            enemyBase != null && !enemyBase.Status.IsDeath)
-            ChessOperator.RoundConfirm();
+    /// <summary>
+    /// 棋盘3部曲 1.新游戏
+    /// </summary>
+    public void NewGame()
+    {
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
+        CardData.Clear();
+    }
+
+    private List<FightCardData> RegChessmanList(ChessCard[] list, bool isChallenger)
+    {
+        var cards = new List<FightCardData>();
+        foreach (var chessCard in list) cards.Add(RegChessCard(chessCard, isChallenger));
+        return cards;
+    }
+
+    public FightCardData RegChessCard(ChessCard chessCard, bool isChallenger)
+    {
+        var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
+        card.UpdatePos(chessCard.Pos);
+        card.isPlayerCard = isChallenger;
+        //card = ChessOperator.RegOperator(card);
+        RegCard(card);
+        return card;
     }
     /// <summary>
-    /// 读取Player列表的卡牌信息
+    /// 棋盘3部曲 3b. 读取Player列表的卡牌信息
+    /// (如果不用列表可以一个一个玩家注册)<see cref="RegCard"/>
     /// </summary>
-    public void ConfirmPlayer() => RegChessman(Player, true);
+    public void ConfirmPlayer() => RegChessmanList(Player.ToArray(), true);
+
     /// <summary>
+    /// 棋盘3部曲 2.
     /// 读取enemy列表的卡牌信息
     /// </summary>
-    public void ConfirmEnemy() => RegChessman(Enemy, false);
+    public List<FightCardData> ConfirmEnemy() => RegChessmanList(Enemy, false);
 
     public void RegCard(FightCardData card)
     {
@@ -64,7 +72,6 @@ public class NewWarManager : MonoBehaviour, ILogger
         StartButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
         StartButton.interactable = show;
     }
-
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
