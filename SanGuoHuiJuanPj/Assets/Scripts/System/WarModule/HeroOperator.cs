@@ -1032,9 +1032,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 32: return 1f;
-                case 33: return 1.2f;
-                case 209: return 1.5f;
+                case 32: return 0.3f;
+                case 33: return 0.5f;
+                case 209: return 1.0f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1293,7 +1293,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 24: return 1;
+                case 24: return 2;//测试
                 case 178: return 2;
                 case 179: return 3;
                 default: throw MilitaryNotValidError(this);
@@ -1326,9 +1326,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 23: return 2;
-                case 176: return 3;
-                case 177: return 5;
+                case 23: return 1;
+                case 176: return 2;
+                case 177: return 3;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1508,8 +1508,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 18: return 5;
-                case 106: return 7;
-                case 107: return 9;
+                case 106: return 10;
+                case 107: return 15;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1734,9 +1734,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 10: return 2f;
-                case 85: return 2.5f;
-                case 86: return 3f;
+                case 10: return 1f;
+                case 85: return 1.5f;
+                case 86: return 2f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1783,15 +1783,15 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 8:
-                    if (major) return 50;
+                    if (major) return 30;
                     switch (state)
                     {
-                        case DamageState.Critical: rate = 10; break;
-                        case DamageState.Rouse: rate = 15; break;
+                        case DamageState.Critical: rate = 20; break;
+                        case DamageState.Rouse: rate = 30; break;
                     }
                     break;
                 case 174:
-                    if (major) return 70;
+                    if (major) return 50;
                     switch (state)
                     {
                         case DamageState.Critical: rate = 25; break;
@@ -1799,7 +1799,7 @@ namespace Assets.System.WarModule
                     }
                     break;
                 case 175:
-                    if (major) return 90;
+                    if (major) return 70;
                     switch (state)
                     {
                         case DamageState.Critical: rate = 30; break;
@@ -1817,22 +1817,22 @@ namespace Assets.System.WarModule
                 case 8:
                     switch (state)
                     {
-                        case DamageState.Critical: return 10;
-                        case DamageState.Rouse: return 15;
+                        case DamageState.Critical: return 20;
+                        case DamageState.Rouse: return 20;
                     }
                     break;
                 case 174:
                     switch (state)
                     {
-                        case DamageState.Critical: return 20;
+                        case DamageState.Critical: return 30;
                         case DamageState.Rouse: return 30;
                     }
                     break;
                 case 175:
                     switch (state)
                     {
-                        case DamageState.Critical: return 30;
-                        case DamageState.Rouse: return 45;
+                        case DamageState.Critical: return 50;
+                        case DamageState.Rouse: return 50;
                     }
                     break;
                 default: throw MilitaryNotValidError(this);
