@@ -857,58 +857,102 @@ public static class Effect
         if (skill == 0) return 0;//普通攻击音效为 0
         switch (military)
         {
-            case 3://飞甲
+            case 3:
+            case 72:
+            case 73://飞甲
                 audioId = 3;
                 break;
-            case 4://大盾
+
+            case 4:
+            case 68:
+            case 69://大盾
                 audioId = 4;
                 break;
-            case 6://虎卫
+
+            case 6:
+            case 74:
+            case 75://虎卫
                 audioId = 6;
                 break;
-            case 8://象兵
+
+            case 8:
+            case 174:
+            case 175://象兵
                 audioId = 8;
                 break;
-            case 9://先锋
+
+            case 9:
             case 60:
+            case 136://飞骑
                 audioId = 9;
                 break;
-            case 10://死士
+
+            case 10:
+            case 85:
+            case 86://先登死士
                 audioId = 10;
                 break;
+
             case 11:
+            case 140:
+            case 141://虎豹骑
                 audioId = 11;
                 break;
+
             case 12:
+            case 114:
+            case 115://神武
                 audioId = 12;
                 break;
+
             case 14:
             case 59:
+            case 101://长枪
                 audioId = 14;
                 break;
+
             case 15:
+            case 102:
+            case 103://大戟
                 audioId = 15;
                 break;
+
             case 16:
+            case 142:
+            case 143://骠骑
                 audioId = 16;
                 break;
+
             case 17:
+            case 104:
+            case 105://大刀
                 audioId = 17;
                 break;
+
             case 18:
+            case 106:
+            case 107://大斧
                 audioId = 18;
                 break;
+
             case 19:
             case 51:
+            case 180://连弩
                 audioId = 19;
                 break;
+
             case 20:
             case 52:
+            case 184://大弓
                 audioId = 20;
                 break;
+
             case 21:
+            case 194:
+            case 195://艨艟
                 audioId = 21;
                 break;
+
             case 22:
                 audioId = 22;
                 break;

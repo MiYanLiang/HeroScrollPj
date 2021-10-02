@@ -13,6 +13,6 @@ public class GameSystemMock : GameSystem
     {
         yield return new WaitUntil(() => IsInit);
         if(UIManager.instance!=null) UIManager.instance.Init();
-        EffectsPoolingControl.instance.Init();
+        //EffectsPoolingControl.instance.Init();
     }
 }
