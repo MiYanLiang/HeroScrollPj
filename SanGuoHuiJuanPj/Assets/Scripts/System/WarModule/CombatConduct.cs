@@ -123,7 +123,7 @@ namespace Assets.System.WarModule
         /// <param name="refId"></param>
         /// <returns></returns>
         public static CombatConduct InstancePlayerResource(int resourceId, int refId, int value = 1) =>
-            Instance(value, 0, 0, resourceId, PlayerDegreeKind, 0, refId);
+            Instance(value, 0, 0, element: resourceId, kind: PlayerDegreeKind, 0, refId);
 
         public void Multiply(float ratio)
         {

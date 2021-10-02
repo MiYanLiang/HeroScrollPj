@@ -153,7 +153,7 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (IsBuffActive(op))
-                SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
+                SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
         }
 
     }
@@ -239,10 +239,9 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
         }
-
     }
     //6 灼烧
     public class BurnBuff : RoundEndDepleteSelfBuff
@@ -268,8 +267,8 @@ namespace Assets.System.WarModule
             var stacks = Chessboard.GetCondition(op, CardState.Cons.Burn);
             if (stacks <= 0) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op, stacks));
-            SelfConduct(op, Activity.OuterScope, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op, stacks));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
         }
     }
 
@@ -340,7 +339,7 @@ namespace Assets.System.WarModule
         public override int OnCriticalRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
             return 100;
         }
     }
@@ -356,7 +355,7 @@ namespace Assets.System.WarModule
         public override int OnRouseRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardInvocation, DepleteBuff(op));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
             return 100;
         }
     }

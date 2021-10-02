@@ -157,7 +157,6 @@ namespace Assets.System.WarModule
                     break; //10  先登
                 case 11:
                     op = new HuBaoQiOperator();
-                    //op = new BaiMaOperator();
                     break; //11  白马
                 case 12:
                     op = new ShenWuOperator();

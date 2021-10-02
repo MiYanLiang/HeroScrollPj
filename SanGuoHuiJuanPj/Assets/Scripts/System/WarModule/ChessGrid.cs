@@ -122,7 +122,7 @@ namespace Assets.System.WarModule
             var list = NeighborCards[pos].ToList();
             for (var i = 1; i < surround; i++)
             {
-                foreach (var n in list)
+                foreach (var n in list.ToArray())
                 foreach (var p in NeighborCards[n])
                 {
                     if (!list.Contains(p))
