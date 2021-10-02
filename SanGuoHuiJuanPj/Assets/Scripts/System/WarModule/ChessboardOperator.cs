@@ -135,13 +135,7 @@ namespace Assets.System.WarModule
         protected static T[] Singular<T>(T t) => new[] {t};
 
         #region Helper
-        /// <summary>
-        /// 计算比率值(不包括原来的值)
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="ratio"></param>
-        /// <returns></returns>
-        private static float GetRatio(float value, int ratio) => ratio * 0.01f * value;
+
         #endregion
         /// <summary>
         /// 是否是新摆入的棋子
@@ -278,7 +272,7 @@ namespace Assets.System.WarModule
                 var o = GetOperator(pos.Operator.InstanceId);
                 var status = GetStatus(o);
                 if (status.Pos != pos.Pos)
-                    PosOperator(o,pos.Pos);
+                    PosOperator(o, pos.Pos);
                 UpdateTerrain(pos);
             }
         }
@@ -399,7 +393,7 @@ namespace Assets.System.WarModule
         {
             CurrentMajor = new ChessMajor(bondId, fromChallenger);
             GetMajorProcess(ChessProcess.Types.JiBan, bondId, fromChallenger);
-            var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, 0, rePos);
+            var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill: 0, rePos);
 
             activity.TargetStatus = GetFullCondition(target);
             var actId = AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0);

@@ -19,7 +19,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 棋盘执行活动，如： Buff消减，必须对棋子执行的活动
         /// </summary>
-        public const int ChessboardInvocation = -2;
+        public const int ChessboardBuffing = -2;
         /// <summary>
         /// 棋手资源类
         /// </summary>
@@ -33,9 +33,13 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Counter = 1;
         /// <summary>
+        /// 反伤
+        /// </summary>
+        public const int Reflect = 2;
+        /// <summary>
         /// 同阵营行动
         /// </summary>
-        public const int Friendly = 2;
+        public const int Friendly = 3;
         /// <summary>
         /// 对自己的行动
         /// </summary>
@@ -45,13 +49,9 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Sprite = 5;
         /// <summary>
-        /// 反伤
+        /// 不可避免(闪避)
         /// </summary>
-        public const int Reflect = 6;
-        /// <summary>
-        /// 局外影响(棋盘)，无法闪避
-        /// </summary>
-        public const int OuterScope = 7;
+        public const int Inevitable = 7;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -112,7 +112,8 @@ namespace Assets.System.WarModule
         //[JsonProperty("P")] 
         public int RePos { get; set; } = -1;
         /// <summary>
-        /// 技能值，普通攻击=0，其余的值是根据兵种标记
+        /// 技能值，普通攻击=0，其余的值是根据兵种标记,
+        /// 羁绊技能值会一直保持 0，而buff伤害技能值是<see cref="CardState.Cons"/>Id
         /// </summary>
         //[JsonProperty("S")] 
         public int Skill { get; set; }

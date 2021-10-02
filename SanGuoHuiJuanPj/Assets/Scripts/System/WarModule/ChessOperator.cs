@@ -98,7 +98,7 @@ namespace Assets.System.WarModule
         {
             //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-            if (activity.Intent == Activity.ChessboardInvocation)
+            if (activity.Intent == Activity.ChessboardBuffing)
             {
                 foreach (var conduct in activity.Conducts)
                     UpdateConduct(conduct);

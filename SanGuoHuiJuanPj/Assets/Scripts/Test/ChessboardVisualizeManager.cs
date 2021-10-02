@@ -41,12 +41,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public event Func<bool> OnRoundBegin;
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
+    public UnityEvent<FightCardData> OnCardDefeated = new CardDefeatedEvent();
 
     //private Stopwatch Sw = Stopwatch.StartNew();
     public void Init()
     {
         Chessboard.Init();
-        NewWar.Init();
         NewWar.StartButton.onClick.AddListener(InvokeCard);
     }
 
@@ -58,7 +58,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
             CardMap.Remove(card.Key);
             Destroy(card.Value.cardObj.gameObject);
         }
+
+        foreach (var sp in Sprites.ToArray()) RemoveSpriteObj(sp);
         NewWar.NewGame();
+        Chessboard.ResetChessboard();
     }
 
     public void SetPlayerBase(FightCardData playerBase)
@@ -129,7 +132,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         gongKeUIObj.SetActive(false);
         yield return new WaitForSeconds(0.1f);
 
-
         Time.timeScale = 1;
     }
 
@@ -156,14 +158,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (process.CombatMaps.Any(c => c.Value.Activities.Any() || c.Value.CounterActs.Any()))
                 yield return ChessmanAnimation(process);
             //更新棋位和棋子状态(提取死亡棋子)
-            foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
+            foreach (var tmp in CardMap.ToDictionary(c => c.Key, c => c.Value))
             {
-                Chessboard.ResetPos(card.Value);
-                if (card.Value.CardType == GameCardType.Base) continue;
-                if (!card.Value.Status.IsDeath) continue;
-                var ui = CardMap[card.Key];
-                CardMap.Remove(card.Key);
-                Destroy(ui.cardObj.gameObject);
+                Chessboard.ResetPos(tmp.Value);
+                if (tmp.Value.CardType == GameCardType.Base) continue;
+                if (!tmp.Value.Status.IsDeath) continue;
+                var card = CardMap[tmp.Key];
+                CardMap.Remove(tmp.Key);
+                OnCardDefeated.Invoke(card);
+                Destroy(card.cardObj.gameObject);
             }
         }
         //回合结束演示
@@ -350,6 +353,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var audio = new AudioSection();
             foreach (var activity in map.Value.Activities)
             {
+                SetAudioSection(audio, activity);
                 if (IsSpriteActivity(activity)) continue;
                 if (IsPlayerResourcesActivity(activity)) continue;
                 var target = GetCardMap(activity.To);
@@ -371,7 +375,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 mainTween.Join(target.ChessmanStyle.RespondTween(activity, target,
                     op.ChessmanStyle.GetMilitarySparkId(activity)));
 
-                SetAudioSection(audio, activity, major);
 
                 //施展方演示注入
                 major.ChessmanStyle.OffensiveEffect(activity, major);
@@ -411,6 +414,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //反击活动更新
             foreach (var activity in map.Value.CounterActs)
             {
+                SetAudioSection(audio, activity);
                 if (IsPlayerResourcesActivity(activity)) continue;
                 if (IsSpriteActivity(activity)) continue;
                 var target = GetCardMap(activity.To);
@@ -418,7 +422,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 op.ChessmanStyle.OffensiveEffect(activity, op);
                 counterTween.Join(target.ChessmanStyle.RespondTween(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity)));
-                SetAudioSection(audio, activity, op);
             }
             //会心演示
             if (map.Value.CounterActs.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
@@ -436,14 +439,44 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     }
 
-    void SetAudioSection(AudioSection section, Activity activity, FightCardData major)
+    private void SetAudioSection(AudioSection section, Activity activity)
     {
-        var audioId = GetSoundEffect(activity, major.ChessmanStyle);
-        if (audioId >= 0 && !section.Offensive.Contains(audioId))
-            section.Offensive.Add(audioId);
-        var actResultId = Effect.ResultAudioId(activity.Result.Type);
-        if (actResultId >= 0) section.Result = actResultId;
+        //棋子活动
+        int audioId = -1;
+        if (activity.Intent != Activity.Sprite && activity.From >= 0)
+        {
+            if (activity.Intent == Activity.Inevitable)//羁绊，Buff 类型的伤害
+            {
+                audioId = Effect.GetInevitableAudioId((CardState.Cons)activity.Skill);
+                AddToSection();
+            }
+            else // 棋子伤害
+            {
+                var major = GetCardMap(activity.From);
+                audioId = GetCardSoundEffect(activity, major.ChessmanStyle);
+            }
+            AddToSection();
+            var actResultId = Effect.ResultAudioId(activity.Result.Type);
+            //只获取第一棋子结果音效
+            if (section.Result == -1) section.Result = actResultId;
+        }
+
+        if (activity.Intent == Activity.PlayerResource)
+        {
+            foreach (var conduct in activity.Conducts)
+            {
+                audioId = Effect.GetPlayerResourceEffectId(conduct.Element);
+                AddToSection();
+            }
+        }
+
+        void AddToSection()
+        {
+            if (audioId >= 0 && !section.Offensive.Contains(audioId))
+                section.Offensive.Add(audioId);
+        }
     }
+
 
     private bool IsPlayerResourcesActivity(Activity activity)
     {
@@ -485,19 +518,24 @@ public class ChessboardVisualizeManager : MonoBehaviour
             }
 
             if (sp == null) continue;
-            if (sp.Obj != null)
-            {
-                var obj = sp.Obj;
-                EffectsPoolingControl.instance.RecycleEffect(obj);
-                sp.Obj = null;
-            }
-
-            Sprites.Remove(sp);
+            RemoveSpriteObj(sp);
         }
         //var targetPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
         //targetPos.transform
     }
-    private int GetSoundEffect(Activity activity, CombatStyle offense)
+
+    private void RemoveSpriteObj(SpriteObj sp)
+    {
+        if (sp.Obj != null)
+        {
+            var obj = sp.Obj;
+            EffectsPoolingControl.instance.RecycleEffect(obj);
+            sp.Obj = null;
+        }
+        Sprites.Remove(sp);
+    }
+
+    private int GetCardSoundEffect(Activity activity, CombatStyle offense)
     {
         var offensiveAudio = -1;
         if (offense.ArmedType == -2) offensiveAudio = Effect.GetTowerAudioId(offense.Military);
@@ -771,7 +809,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var id in section.Offensive.Where(id => id >= 0)) PlayAudio(id, 0);
         if (section.Result >= 0)
-            PlayAudio(section.Result, 0.2f);
+            PlayAudio(section.Result, 0.1f);
     }
 
     private void PlayAudio(int clipIndex, float delayedTime)
@@ -804,4 +842,5 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     public class PlayerResourceEvent:UnityEvent<bool,int,int> { }
     public class GameSetEvent:UnityEvent<bool> { }
+    public class CardDefeatedEvent:UnityEvent<FightCardData> {  }
 }

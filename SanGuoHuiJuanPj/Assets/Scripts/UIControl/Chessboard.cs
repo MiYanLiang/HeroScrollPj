@@ -26,6 +26,12 @@ public class Chessboard : MonoBehaviour
         for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
     }
+
+    public void ResetChessboard()
+    {
+        foreach (var chessPos in PlayerScope.Concat(EnemyScope)) chessPos.ResetPos();
+        data.Clear();
+    }
     /// <summary>
     /// 棋子控件置高，避免被其它UI挡到
     /// </summary>

@@ -148,11 +148,11 @@ public class WarsUIManager : MonoBehaviour
     public void Init()
     {
         StartCoroutine(Initialize());
-        if (EffectsPoolingControl.instance.IsInit) return;
-        EffectsPoolingControl.instance.Init();
+        if (!EffectsPoolingControl.instance.IsInit) EffectsPoolingControl.instance.Init();
         chessboardManager.Init();
         chessboardManager.OnRoundBegin += OnChessRoundBegin;
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
+        chessboardManager.OnCardDefeated.AddListener(OnCardDefeated);
         chessboardManager.OnGameSet.AddListener(FinalizeWar);
     }
 
@@ -521,33 +521,80 @@ public class WarsUIManager : MonoBehaviour
         speedBtnText.text = Multiply + warScale;
     }
 
+    #region 棋子暂存区与棋盘区
+
+    /**
+     * 主要目的：
+     * 1.当棋子拖动摆放的时候，记录在暂存区，因为棋子还可以随意提取，在按下开始游戏之前，是不确定的。
+     * 2.当棋局结束的时候，将残余的棋子提取以便在新棋局重复使用。(维持当前血量)
+     * 3.统计当前玩家手上已上阵的棋子。(死亡忽略)
+     */
+
     //记录当前在棋盘上的卡牌与UI，棋局结束后会统计并销毁死亡的卡牌
-    private Dictionary<FightCardData, WarGameCardUi> ChessboardCards { get; set; } =
+    private Dictionary<FightCardData, WarGameCardUi> PlayerScope { get; set; } =
         new Dictionary<FightCardData, WarGameCardUi>();
     //记录暂时摆放的卡牌与位置，直到点击开始战斗的时候会把卡牌记录到棋盘上
-    private Dictionary<FightCardData, WarGameCardUi> CardPlacingScope { get; set; } =
+    private Dictionary<FightCardData, WarGameCardUi> TempScope { get; set; } =
         new Dictionary<FightCardData, WarGameCardUi>();
+    private void OnCardDefeated(FightCardData defeatedCard)
+    {
+        if (!defeatedCard.IsPlayer ||
+            defeatedCard.CardType == GameCardType.Base) return;//老巢不提取棋子
+        var ui = PlayerScope[defeatedCard];
+        PlayerScope.Remove(defeatedCard);
+        Destroy(ui);
+        UpdateHeroEnlistText();
+    }
+
     private bool OnChessRoundBegin()
     {
         //从暂存区，交接到棋盘区
-        foreach (var tmp in CardPlacingScope.ToDictionary(c=>c.Key,c=>c.Value))
+        foreach (var tmp in TempScope.ToDictionary(c=>c.Key,c=>c.Value))
         {
             var card = tmp.Key;
             var ui = tmp.Value;
             ui.transform.SetParent(Chessboard.transform);
-            ChessboardCards.Add(card, ui);
-            CardPlacingScope.Remove(card);
+            PlayerScope.Add(card, ui);
+            TempScope.Remove(card);
             ui.gameObject.SetActive(false);
             chessboardManager.SetPlayerChess(card);
             chessboardManager.InstanceChessmanUi(card);
         }
         return true;
     }
+    //让所有棋子回到暂存区
+    private void ResetChessboardPlacingScope()
+    {
+        foreach (var gc in PlayerScope.ToDictionary(c => c.Key, c => c.Value))
+        {
+            var card = gc.Key;
+            var ui = gc.Value;
+            var chessman = card.cardObj;
+            PlayerScope.Remove(card);
+            if (card.Status.IsDeath)//死亡棋子直接销毁
+            {
+                Destroy(ui.gameObject);
+                continue;
+            }
 
+            TempScope.Add(card, ui);
+            ui.transform.position = chessman.transform.position; //被改位置重置
+            var hp = Math.Max(card.Status.Hp + card.Info.GameSetRecovery, card.Status.MaxHp);
+            card.Status.SetHp(hp);
+            //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
+            ui.War.SetHp(card.Status.HpRate);
+            ui.gameObject.SetActive(true);
+            UpdateHeroEnlistText();
+        }
+    }
+    /// <summary>
+    /// 把棋子放入暂存区
+    /// </summary>
+    /// <param name="card"></param>
     public void PlaceCardOnTemp(FightCardData card)
     {
-        if (!CardPlacingScope.ContainsKey(card))
-            CardPlacingScope.Add(card, card.cardObj);
+        if (!TempScope.ContainsKey(card))
+            TempScope.Add(card, card.cardObj);
 
         if (card.Pos > -1)
         {
@@ -556,13 +603,14 @@ public class WarsUIManager : MonoBehaviour
         }
         else
         {
-            CardPlacingScope.Remove(card);
+            TempScope.Remove(card);
             card.cardObj.transform.position = Vector3.zero;
         }
 
         UpdateHeroEnlistText();
     }
 
+    #endregion
     private List<int> TempChest { get; } = new List<int>();
     private int TempGold { get; set; }
     private WarGameCardUi playerBaseObj { get; set; }
@@ -573,14 +621,12 @@ public class WarsUIManager : MonoBehaviour
         if (!isChallenger) return;
         if (id == -1) TempGold += value;
         if (id >= 0)
-        {
-            for (int i = 0; i < value; i++) TempChest.Add(id);
-        }
+            for (int i = 0; i < value; i++)
+                TempChest.Add(id);
     }
-
     public void FinalizeWar(bool isChallengerWin)
     {
-        ResetChessboard();
+        ResetChessboardPlacingScope();
         if (!isChallengerWin)
         {
             ExpeditionFinalize(false);
@@ -593,30 +639,6 @@ public class WarsUIManager : MonoBehaviour
         var warReward = PlayerDataForGame.instance.WarReward;
         foreach (var id in TempChest)
             warReward.Chests.Add(id);
-    }
-
-    private void ResetChessboard()
-    {
-        foreach (var gc in ChessboardCards.ToDictionary(c => c.Key, c => c.Value))
-        {
-            var card = gc.Key;
-            var ui = gc.Value;
-            var chessman = card.cardObj;
-            ChessboardCards.Remove(card);
-            if (card.Status.IsDeath)
-            {
-                Destroy(ui.gameObject);
-                continue;
-            }
-
-            CardPlacingScope.Add(card, ui);
-            ui.transform.position = chessman.transform.position; //被改位置重置
-            var hp = Math.Max(card.Status.Hp + card.Info.GameSetRecovery, card.Status.MaxHp);
-            card.Status.SetHp(hp);
-            //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
-            ui.War.SetHp(card.Status.HpRate);
-            ui.gameObject.SetActive(true);
-        }
     }
 
     public void InitChessboard(GameStage stage)
@@ -1218,7 +1240,7 @@ public class WarsUIManager : MonoBehaviour
 
     public bool IsPlayerAvailableToPlace(int targetPos)
     {
-        return CardPlacingScope.Count + ChessboardCards.Count < maxHeroNums &&
+        return TempScope.Count + PlayerScope.Count < maxHeroNums &&
                Chessboard.IsPlayerScopeAvailable(targetPos);
     }
 
@@ -1283,7 +1305,7 @@ public class WarsUIManager : MonoBehaviour
 
     private void UpdateHeroEnlistText() => heroEnlistText.text = 
         string.Format(DataTable.GetStringText(24),
-        CardPlacingScope.Count, 
+        TempScope.Count, 
         maxHeroNums);
 
 
