@@ -1079,6 +1079,47 @@ public static class Effect
     }
 
     /// <summary>
+    /// 精灵附buff音效
+    /// </summary>
+    /// <param name="con"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static int GetBuffingAudioId(CardState.Cons con)
+    {
+        switch (con)
+        {
+            case CardState.Cons.Burn:
+                return -1;
+            case CardState.Cons.Poison:
+            case CardState.Cons.Bleed:
+            case CardState.Cons.Stunned:
+            case CardState.Cons.Shield:
+            case CardState.Cons.Invincible:
+            case CardState.Cons.BattleSoul:
+            case CardState.Cons.Imprisoned:
+            case CardState.Cons.Cowardly:
+            case CardState.Cons.StrengthUp:
+            case CardState.Cons.DodgeUp:
+            case CardState.Cons.CriticalUp:
+            case CardState.Cons.RouseUp:
+            case CardState.Cons.ArmorUp:
+            case CardState.Cons.DeathFight:
+            case CardState.Cons.Disarmed:
+            case CardState.Cons.Neizhu:
+            case CardState.Cons.ShenZhu:
+            case CardState.Cons.EaseShield:
+            case CardState.Cons.Forge:
+            case CardState.Cons.Stimulate:
+            case CardState.Cons.Confuse:
+            case CardState.Cons.YellowBand:
+            case CardState.Cons.Chained:
+            case CardState.Cons.Murderous:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+        }
+    }
+
+    /// <summary>
     /// 不可避免类型，buff伤
     /// </summary>
     /// <param name="con"></param>
@@ -1145,4 +1186,5 @@ public static class Effect
     }
 
     #endregion
+
 }

@@ -443,6 +443,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         //棋子活动
         int audioId = -1;
+        if (activity.Intent == Activity.Sprite && activity.From < 0)//精灵buff
+        {
+            foreach (var conduct in activity.Conducts)
+            {
+                if (!(conduct.Total > 0)) continue;
+                audioId = Effect.GetBuffingAudioId((CardState.Cons)conduct.Element);
+                AddToSection();
+            }
+        }
         if (activity.Intent != Activity.Sprite && activity.From >= 0)
         {
             if (activity.Intent == Activity.Inevitable)//羁绊，Buff 类型的伤害

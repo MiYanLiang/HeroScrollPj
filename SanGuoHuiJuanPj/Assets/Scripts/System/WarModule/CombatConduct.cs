@@ -106,7 +106,7 @@ namespace Assets.System.WarModule
         /// <param name="rate"></param>
         /// <returns></returns>
         public static CombatConduct InstanceBuff(int refId, CardState.Cons con, float value = 1, int rate = 0) =>
-            Instance(value, 0, 0, (int)con, BuffKind, rate, refId);
+            Instance(value, 0, 0, element: (int)con, BuffKind, rate, refId);
 
         public static CombatConduct InstanceDamage(int refId,float damage, int element = 0) =>
             Instance(damage, 0, 0, element, DamageKind, 0, refId);
