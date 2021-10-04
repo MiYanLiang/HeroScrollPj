@@ -28,6 +28,7 @@ public class ChessPos : MonoBehaviour,IChessPos
     {
         Terrain = new ChessTerrain();
         Card = null;
+        Operator = null;
     }
     void IChessPos.SetPos(IChessOperator op)
     {

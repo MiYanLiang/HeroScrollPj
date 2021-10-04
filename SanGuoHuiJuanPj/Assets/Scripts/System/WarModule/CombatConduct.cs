@@ -143,7 +143,7 @@ namespace Assets.System.WarModule
                 case BuffKind:
                 {
                     kindText = "Buff";
-                    elementText = $"{(CardState.Cons)Element}";
+                    elementText = $"[{(CardState.Cons)Element}]";
                     break;
                 }
                 case DamageKind:

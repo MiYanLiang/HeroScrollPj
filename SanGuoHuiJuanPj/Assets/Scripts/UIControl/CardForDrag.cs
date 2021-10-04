@@ -11,21 +11,19 @@ public abstract class DragController : MonoBehaviour
     protected const string Mouse_Y = "Mouse Y";
     public int PosIndex => FightCard.posIndex;  //上场位置记录
     public bool IsLocked { get;  set; } = false; //记录是否是上阵卡牌
-    /// <summary>
-    /// 场景中的Panel，设置拖拽过程中的父物体
-    /// </summary>
-    protected Transform Parent { get; private set; }
+    
+    protected Transform CardListTransform { get; private set; }
     /// <summary>
     /// Scroll View上的Scroll Rect组件
     /// </summary>
-    protected ScrollRect Rack { get; private set; }
+    protected ScrollRect ScrollRect { get; private set; }
 
     protected FightCardData FightCard { get; private set; }
 
-    public virtual void Init(FightCardData fightCard, Transform parent, ScrollRect scrollRect)
+    public virtual void Init(FightCardData fightCard, Transform cardListTrans, ScrollRect scrollRect)
     {
-        Parent = parent;
-        Rack = scrollRect;
+        CardListTransform = cardListTrans;
+        ScrollRect = scrollRect;
         FightCard = fightCard;
     }
 
@@ -34,6 +32,8 @@ public abstract class DragController : MonoBehaviour
     public abstract void EndDrag(BaseEventData data);
 
     public abstract void ResetPos();
+
+    public abstract void Disable();
 }
 
 public class CardForDrag : DragController
@@ -63,14 +63,14 @@ public class CardForDrag : DragController
             WarsUIManager.instance.isDragDelegated = false;
             PointerEventData _eventData = data as PointerEventData;
             //调用Scroll的OnBeginDrag方法，有了区分，就不会被item的拖拽事件屏蔽
-            Rack.OnBeginDrag(_eventData);
+            ScrollRect.OnBeginDrag(_eventData);
         }
 
         if (!WarsUIManager.instance.isDragDelegated)
         {
             return;
         }
-        transform.SetParent(Parent);
+        transform.SetParent(CardListTransform);
         transform.SetAsLastSibling();   //设置为同父物体的最从底层，也就是不会被其同级遮挡。
         if (transform.GetComponent<Image>().raycastTarget)
             transform.GetComponent<Image>().raycastTarget = false;
@@ -87,7 +87,7 @@ public class CardForDrag : DragController
         if (!WarsUIManager.instance.isDragDelegated)
         {
             PointerEventData _eventData = data as PointerEventData;
-            Rack.OnDrag(_eventData);
+            ScrollRect.OnDrag(_eventData);
             return;
         }
         if (FightController.instance.recordWinner != 0)
@@ -109,7 +109,7 @@ public class CardForDrag : DragController
         if (!WarsUIManager.instance.isDragDelegated)    //判断是否拖动的是滑动列表
         {
             PointerEventData eventData = data as PointerEventData;
-            Rack.OnEndDrag(eventData);
+            ScrollRect.OnEndDrag(eventData);
             return;
         }
 
@@ -288,6 +288,11 @@ public class CardForDrag : DragController
     }
 
     public override void ResetPos()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void Disable()
     {
         throw new System.NotImplementedException();
     }
