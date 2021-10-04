@@ -182,7 +182,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// (9)先锋 - 骑马舞枪，攻击时，有概率连续攻击2次。
+    /// (9)飞骑 - 骑马舞枪，攻击时，有概率连续攻击2次。
     /// </summary>
     public class FeiQiOperator : HeroOperator
     {
@@ -303,7 +303,7 @@ namespace Assets.System.WarModule
     public class HuangJinOperator : HeroOperator
     {
         private const int YellowBand = (int)CardState.Cons.YellowBand;
-        private const int Max = 10;
+        private const int Max = 15;
         public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con)
         {
             sprites = sprites.Where(s => s.TypeId == YellowBand).Take(Max).ToArray();
@@ -352,7 +352,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 59  短枪 - 手持短枪，攻击时，可穿刺攻击目标身后1个单位。
+    /// 59  长枪 - 手持长枪，攻击时，可穿刺攻击目标身后1个单位。
     /// </summary>
     public class ChangQiangOperator : HeroOperator
     {
@@ -503,9 +503,9 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private int PushBackRate => 10;
-        private int CriticalRate => 20;
-        private int RouseRate => 30;
+        private int PushBackRate => 50;
+        private int CriticalRate => 5;
+        private int RouseRate => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -641,9 +641,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 44: return 40;
-                case 144: return 60;
-                case 145: return 80;
+                case 44: return 50;
+                case 144: return 70;
+                case 145: return 90;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1396,7 +1396,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 21  战船 - 驾驭战船，攻击时可击退敌方武将。否则对其造成双倍伤害。
+    /// 21  艨艟 - 驾驭战船，攻击时可击退敌方武将。否则对其造成双倍伤害。
     /// </summary>
     public class ZhanChuanOperator : HeroOperator
     {
@@ -1427,7 +1427,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 20  弓兵 - 乱箭齐发，最多攻击3个目标。目标数量越少，造成伤害越高。
+    /// 20  大弓 - 乱箭齐发，最多攻击3个目标。目标数量越少，造成伤害越高。
     /// </summary>
     public class GongBingOperator : HeroOperator
     {
@@ -1769,7 +1769,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// (8)象兵 - 践踏战场。攻击时可让敌方武将【眩晕】。
+    /// (8)战象 - 践踏战场。攻击时可让敌方武将【眩晕】。
     /// </summary>
     public class ZhanXiangOperator : HeroOperator
     {
@@ -1870,7 +1870,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// (7)刺甲 - 装备刺甲，武将受到近战伤害时，可将伤害反弹。
+    /// (7)刺盾 - 装备刺甲，武将受到近战伤害时，可将伤害反弹。
     /// </summary>
     public class CiDunOperator : HeroOperator
     {
