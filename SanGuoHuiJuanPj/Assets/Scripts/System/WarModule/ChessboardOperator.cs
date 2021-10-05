@@ -14,7 +14,7 @@ namespace Assets.System.WarModule
     public abstract class ChessboardOperator 
     {
         public const int HeroDodgeLimit = 75;
-        public const int HeroArmorLimit = 90;
+        public const int HeroArmorLimit = 100;
         public ChessGrid Grid { get; }
         private enum ProcessCondition
         {
