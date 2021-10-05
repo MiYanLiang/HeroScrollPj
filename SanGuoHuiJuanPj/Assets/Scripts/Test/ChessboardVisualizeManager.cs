@@ -397,7 +397,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
 
                 //施展方演示注入
-                major.ChessmanStyle.OffensiveEffect(activity, major);
+                major.ChessmanStyle.ActivityEffect(activity, major);
 
                 //击退一格注入
                 if (activity.IsRePos)
@@ -439,7 +439,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 if (IsSpriteActivity(activity)) continue;
                 var target = GetCardMap(activity.To);
                 var op = GetCardMap(activity.From);
-                op.ChessmanStyle.OffensiveEffect(activity, op);
+                op.ChessmanStyle.ActivityEffect(activity, op);
                 counterTween.Join(target.ChessmanStyle.RespondTween(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity)));
             }
@@ -474,15 +474,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         if (activity.Intent != Activity.Sprite && activity.From >= 0)
         {
-            if (activity.Intent == Activity.Inevitable)//羁绊，Buff 类型的伤害
-            {
+            if (activity.Intent == Activity.Inevitable) //羁绊，Buff 类型的伤害
                 audioId = Effect.GetInevitableAudioId((CardState.Cons)activity.Skill);
-                AddToSection();
-            }
             else // 棋子伤害
             {
                 var major = GetCardMap(activity.From);
-                audioId = GetCardSoundEffect(activity, major.ChessmanStyle);
+                if (major != null) audioId = GetCardSoundEffect(activity, major.ChessmanStyle);
             }
             AddToSection();
             var actResultId = Effect.ResultAudioId(activity.Result.Type);
@@ -571,10 +568,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         else if (offense.ArmedType == -3) offensiveAudio = Effect.GetTrapAudioId(offense.Military);
         else if (offense.ArmedType >= 0) offensiveAudio = Effect.GetHeroAudioId(offense.Military, activity.Skill);
         return offensiveAudio;
-        //var offenseSoundEffectId = GetOffenseAudioId(activity, offense);
-        //if (offenseSoundEffectId >= 0) PlayAudio(offenseSoundEffectId, 0);
-        //var defSoundEffectId = GetDefendAudioId(activity, offense, target);
-        //if (defSoundEffectId >= 0) PlayAudio(defSoundEffectId, 0.2f);
     }
 
     private class AudioSection
