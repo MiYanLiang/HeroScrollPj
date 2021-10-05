@@ -617,6 +617,12 @@ public static class Effect
     }
     #endregion
 
+    #region VText
+
+    
+
+    #endregion
+
     #region 卡牌状态图标 StateIcon
     public static int GetStateIconId(CardState.Cons con)
     {

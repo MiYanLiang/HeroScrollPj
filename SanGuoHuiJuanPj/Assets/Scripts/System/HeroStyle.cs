@@ -58,7 +58,7 @@ public class ChessmanStyle : ChessUiStyle
             .AppendCallback(() =>
             {
                 card.UpdateActivityStatus(chessStatus);
-                CardAnimator.UpdateStateIcon(card);
+                CardAnimator.instance.UpdateStateIcon(card);
             });
     }
 
@@ -75,7 +75,7 @@ public class SpriteStyle : CombatStyle
 {
     public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence()
         .Join(target.ChessmanStyle.RespondTween(activity, target, GetSpriteSpark(activity)))
-        .AppendCallback(() => CardAnimator.UpdateStateIcon(target));
+        .AppendCallback(() => CardAnimator.instance.UpdateStateIcon(target));
 
     private int GetSpriteSpark(Activity activity)
     {
@@ -92,7 +92,7 @@ public abstract class CardStyle : ChessmanStyle
         DOTween.Sequence().AppendCallback(() =>
             {
                 target.UpdateActivityStatus(activity.Result.Status);
-                CardAnimator.UpdateStateIcon(target);
+                CardAnimator.instance.UpdateStateIcon(target);
                 RespondEffect(activity, target, effectId);
             })
             .Append(RespondAnimation(activity, target));
@@ -110,9 +110,9 @@ public abstract class CardStyle : ChessmanStyle
             case ActivityResult.Types.EaseShield when 
                 activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
                                            c.Kind == CombatConduct.KillingKind):
-                return CardAnimator.SufferShakeAnimation(target);
+                return CardAnimator.instance.SufferShakeAnimation(target);
             case ActivityResult.Types.Dodge:
-                return CardAnimator.SideDodgeAnimation(target);
+                return CardAnimator.instance.SideDodgeAnimation(target);
         }
         return DOTween.Sequence();
     }
@@ -129,7 +129,7 @@ public abstract class CardStyle : ChessmanStyle
         if (effectId >= 0) //如果id==null，没有特效(火花)
             SparkTween(activity, target, effectId);
 
-        CardAnimator.DisplayTextEffect(target, activity);//文字效果，描述反馈结果：伤害，闪避，格挡
+        CardAnimator.instance.DisplayTextEffect(target, activity);//文字效果，描述反馈结果：伤害，闪避，格挡
 
         //动画演示+上状态效果
         foreach (var conduct in conducts)
@@ -142,25 +142,25 @@ public abstract class CardStyle : ChessmanStyle
                     {
                         case CombatConduct.DamageKind:
                         case CombatConduct.KillingKind:
-                            CardAnimator.NumberEffectTween(target, conduct);
+                            CardAnimator.instance.NumberEffectTween(target, conduct);
                             break;
                         case CombatConduct.HealKind:
-                            CardAnimator.NumberEffectTween(target, conduct);
+                            CardAnimator.instance.NumberEffectTween(target, conduct);
                             break;
                     }
                     break;
                 case ActivityResult.Types.Dodge:
-                    CardAnimator.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
+                    CardAnimator.instance.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.Shield:
-                    CardAnimator.UpdateStateIcon(target, CardState.Cons.Shield);
+                    CardAnimator.instance.UpdateStateIcon(target, CardState.Cons.Shield);
                     break;
                 case ActivityResult.Types.Invincible:
-                    CardAnimator.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
+                    CardAnimator.instance.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.EaseShield:
-                    CardAnimator.NumberEffectTween(target, conduct, ColorDataStatic.name_red);
-                    CardAnimator.UpdateStateIcon(target, CardState.Cons.EaseShield);
+                    CardAnimator.instance.NumberEffectTween(target, conduct, ColorDataStatic.name_red);
+                    CardAnimator.instance.UpdateStateIcon(target, CardState.Cons.EaseShield);
                     break;
             }
         }
@@ -212,7 +212,7 @@ public class HeroStyle : CardStyle
     {
         if (activity.Skill == 0) return;
         //武将有自己的攻击特效
-        CardAnimator.VTextEffect(MilitaryOffenseVTextId(activity), offense.cardObj.transform);
+        CardAnimator.instance.VTextEffect(MilitaryOffenseVTextId(activity), offense.cardObj.transform);
     }
 
     private string MilitaryOffenseVTextId(Activity activity)

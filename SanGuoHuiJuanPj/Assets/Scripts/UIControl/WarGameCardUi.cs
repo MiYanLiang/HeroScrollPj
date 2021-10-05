@@ -25,6 +25,8 @@ public class WarGameCardUi : GameCardUiBase
         if (isActive) obj.gameObject.SetActive(false);//如果物件是开着状态，先关掉再开启以触发播放
         obj.gameObject.SetActive(isActive);
     }
+
+    public void DragDisable() => DragComponent?.Disable();
 }
 
 public class GameCardUiBase : MonoBehaviour

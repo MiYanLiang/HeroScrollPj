@@ -889,6 +889,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 413234022}
+  - component: {fileID: 413234024}
   - component: {fileID: 413234023}
   - component: {fileID: 413234021}
   m_Layer: 0
@@ -958,20 +959,8 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 0
-    Pos: 1
-    Type: 0
-    Level: 1
   - Id: 59
-    Pos: 2
-    Type: 0
-    Level: 1
-  - Id: 43
-    Pos: 3
-    Type: 0
-    Level: 1
-  - Id: 802
-    Pos: 4
+    Pos: 1
     Type: 0
     Level: 1
   Player:
@@ -979,24 +968,8 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 8
-  - Id: 5
-    Pos: 6
-    Type: 0
-    Level: 1
-  - Id: 18
+  - Id: 59
     Pos: 7
-    Type: 0
-    Level: 1
-  - Id: 18
-    Pos: 9
-    Type: 0
-    Level: 1
-  - Id: 413
-    Pos: 2
-    Type: 0
-    Level: 2
-  - Id: 66
-    Pos: 8
     Type: 0
     Level: 1
 --- !u!4 &413234022
@@ -1034,7 +1007,7 @@ MonoBehaviour:
   RouseEffectObj: {fileID: 638022218}
   JiBanEffect: {fileID: 2013352517}
   JiBanOffensiveEffects:
-  - {fileID: 0}
+  - {fileID: 1080463624}
   - {fileID: 1344297728677034292}
   - {fileID: 426299410}
   - {fileID: 8029966835275358276}
@@ -1046,6 +1019,31 @@ MonoBehaviour:
   DataTable: {fileID: 1144099187}
   EffectsPooling: {fileID: 379474648}
   PlayerData: {fileID: 1144099189}
+--- !u!114 &413234024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 413234020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 758f10a2f0b96544b9998139e332a0b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meleeMove: 0.2
+  meleeStop: 0.15
+  meleeStepBack: 0.3
+  meleeCharge: 0.4
+  meleeHit: 0.1
+  meleeReturn: 0.15
+  stepBackDistance: 1
+  rangePreAct: 0.5
+  counterTempo: 0.3
+  counterStepBack: 0.3
+  counterCharge: 0.1
+  dodgeDistance: 0.3
+  dodgeDuration: 0.2
 --- !u!1 &426299410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 787100996886803183, guid: 2a9a19f9e29a23648ab70875b63e8ef1,
@@ -2362,6 +2360,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   posIndex: -1
+--- !u!1 &1080463624 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2832571328910273801, guid: d88052517279b28479c831172a494bfc,
+    type: 3}
+  m_PrefabInstance: {fileID: 778132052}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1099502986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3630,8 +3634,6 @@ MonoBehaviour:
   oneDisY: 0
   gridLayoutGroup: {fileID: 0}
   battleIdIndex: 0
-  speedBtnText: {fileID: 1193645451}
-  bZCardInfoObj: {fileID: 0}
   isNeedAutoHideInfo: 0
   forward: 0.2
   back: 0.3

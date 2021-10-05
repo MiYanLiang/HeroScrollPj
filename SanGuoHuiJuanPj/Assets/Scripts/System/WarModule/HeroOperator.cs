@@ -242,8 +242,9 @@ namespace Assets.System.WarModule
                 var hit = InstanceHeroGenericDamage();
                 var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(hit), actId,
                     actId == 0 ? 0 : 1);
-                if (result == null) break;
+                if (result == null || result.IsDeath) break;
                 if (Chessboard.GetStatus(this).IsDeath) break;
+                if (target.Operator == null || Chessboard.GetStatus(target.Operator).IsDeath) break;
                 if (target.IsAliveHero)
                     combo = hit.IsCriticalDamage() || hit.IsRouseDamage();
                 if (!combo) combo = Chessboard.IsRandomPass(ComboRatio());

@@ -11,6 +11,7 @@ public class PlayerCardDrag : DragController
 {
     [SerializeField] private Image CardBody;
     [SerializeField] private WarGameCardUi Ui;
+    private ChessPos LastPos { get; set; }
 
     public override void BeginDrag(BaseEventData data)
     {
@@ -32,13 +33,13 @@ public class PlayerCardDrag : DragController
             WarsUIManager.instance.isDragDelegated = false;
             var eventData = data as PointerEventData;
             //调用Scroll的OnBeginDrag方法，有了区分，就不会被item的拖拽事件屏蔽
-            Rack.OnBeginDrag(eventData);
+            ScrollRect.OnBeginDrag(eventData);
             return;
         }
 
         WarsUIManager.instance.isDragDelegated = true;
 
-        transform.SetParent(Parent);
+        transform.SetParent(CardListTransform);
         transform.SetAsLastSibling(); //设置为同父物体的最从底层，也就是不会被其同级遮挡。
         if (CardBody.raycastTarget)
             CardBody.raycastTarget = false;
@@ -52,7 +53,7 @@ public class PlayerCardDrag : DragController
         if (!WarsUIManager.instance.isDragDelegated)
         {
             var eventData = data as PointerEventData;
-            Rack.OnDrag(eventData);
+            ScrollRect.OnDrag(eventData);
             return;
         }
         transform.position = Input.mousePosition;
@@ -71,7 +72,7 @@ public class PlayerCardDrag : DragController
 
         if (!WarsUIManager.instance.isDragDelegated) //判断是否拖动的是滑动列表
         {
-            Rack.OnEndDrag(eventData);
+            ScrollRect.OnEndDrag(eventData);
             return;
         }
 
@@ -89,8 +90,13 @@ public class PlayerCardDrag : DragController
             return;
         }
 
+        ChessPos targetPos = null;
         var targetPosIndex = -1;
-        if (posObj.CompareTag(GameSystem.CardPos)) targetPosIndex = posObj.GetComponent<ChessPos>().Pos;
+        if (posObj.CompareTag(GameSystem.CardPos))
+        {
+            targetPos = posObj.GetComponent<ChessPos>();
+            targetPosIndex = targetPos.Pos;
+        }
         else
         {
             var war = posObj.GetComponent<GameCardWarUiOperation>();
@@ -98,22 +104,21 @@ public class PlayerCardDrag : DragController
         }
 
 
-        //是否拖放在 战斗格子 或 卡牌上
+        //目标位置不是棋格
         if (targetPosIndex == -1)
         {
             if (PosIndex != targetPosIndex)//从在棋盘上摘下来
             {
+                LastPos = null;
                 WarsUIManager.instance.RemoveCardFromBoard(FightCard);
-                return;
             }
 
             ResetPos();
             return;
         }
 
-        //放在 战斗格子上
-        //拖动牌原位置 在上阵位
-        if (PosIndex == -1)
+        //原位置在架子上，目标是棋格
+        if (PosIndex == -1 && targetPos != null)
         {
             //是否可以上阵
             if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex))
@@ -123,40 +128,55 @@ public class PlayerCardDrag : DragController
                 return;
             }
 
-            PlaceCard(targetPosIndex);
+            PlaceCard(targetPos);
             return;
         }
 
         //目标位置编号
-        if (PosIndex == targetPosIndex) //上阵位置没改变
+        if (PosIndex == targetPos?.Pos) //上阵位置没改变
         {
             ResetPos();
             return;
         }
 
-        PlaceCard(targetPosIndex);
+        //到这里是原位是棋格上，但是位置变化了
+        PlaceCard(targetPos);
     }
 
-    private void PlaceCard(int targetPos)
+    private void PlaceCard(ChessPos pos)
     {
-        FightCard.posIndex = targetPos;
+        FightCard.posIndex = pos.Pos;
+        LastPos = pos;
         WarsUIManager.instance.PlaceCardOnTemp(FightCard);
         Ui.SetHighLight(true);
 
         WarsUIManager.instance.PlayAudioForSecondClip(85, 0);
 
         EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f,
-            WarsUIManager.instance.Chessboard.GetChessPos(targetPos, true).transform);
-        CardBody.raycastTarget = !IsLocked;
+            WarsUIManager.instance.Chessboard.GetChessPos(pos.Pos, true).transform);
+        CardBody.raycastTarget = true;
     }
 
+    /***
+     * 重置位置
+     * 1.知道上一个位置，恢复到那个位置的状态：
+     * -a.回到架子上(pos = -1)
+     * -b.回到地块上(pos >= 0)
+     */
     public override void ResetPos()
     {
         if (WarsUIManager.instance != null && transform != null)
         {
-            if (PosIndex == -1) transform.SetParent(WarsUIManager.instance.PlayerCardsRack.transform);
+            transform.SetParent(PosIndex == -1 ? ScrollRect.content.transform : LastPos.transform);
             Ui.SetSelected(false);
-            CardBody.raycastTarget = !IsLocked;
+            CardBody.raycastTarget = true;
+            transform.localPosition = Vector3.zero;
         }
+    }
+
+    public override void Disable()
+    {
+        CardBody.raycastTarget = false;
+        IsLocked = true;
     }
 }

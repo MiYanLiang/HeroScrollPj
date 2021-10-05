@@ -553,6 +553,7 @@ public class WarsUIManager : MonoBehaviour
         {
             var card = tmp.Key;
             var ui = tmp.Value;
+            ui.DragDisable();
             ui.transform.SetParent(Chessboard.transform);
             PlayerScope.Add(card, ui);
             TempScope.Remove(card);
@@ -1246,7 +1247,8 @@ public class WarsUIManager : MonoBehaviour
 
     public void RemoveCardFromBoard(FightCardData card)
     {
-        Chessboard.RemoveCard(card.PosIndex, card.isPlayerCard);
+        card.posIndex = -1;
+        TempScope.Remove(card);
         UpdateHeroEnlistText();
     }
 

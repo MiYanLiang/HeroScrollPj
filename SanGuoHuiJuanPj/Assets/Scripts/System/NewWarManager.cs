@@ -23,12 +23,16 @@ public class NewWarManager : MonoBehaviour, ILogger
     public ChessOperatorManager<FightCardData> ChessOperator;
     public Dictionary<int, FightCardData> CardData { get; } = new Dictionary<int, FightCardData>();
 
+    public void Init()
+    {
+        Grid = new ChessGrid(PlayerPoses, EnemyPoses);
+    }
     /// <summary>
     /// 棋盘3部曲 1.新游戏
     /// </summary>
     public void NewGame()
     {
-        Grid = new ChessGrid(PlayerPoses, EnemyPoses);
+        foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
         CardData.Clear();
     }
