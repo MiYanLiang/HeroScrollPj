@@ -68,7 +68,7 @@ public class ChessmanStyle : ChessUiStyle
     /// <param name="activity"></param>
     /// <param name="offense"></param>
     /// <returns></returns>
-    public virtual void OffensiveEffect(Activity activity, FightCardData offense) => DOTween.Sequence();
+    public virtual void ActivityEffect(Activity activity, FightCardData offense) => DOTween.Sequence();
 
 }
 public class SpriteStyle : CombatStyle
@@ -86,7 +86,7 @@ public class SpriteStyle : CombatStyle
 }
 public abstract class CardStyle : ChessmanStyle
 {
-    public override void OffensiveEffect(Activity activity,FightCardData offense) => OffenseVText(activity, offense);
+    public override void ActivityEffect(Activity activity,FightCardData offense) => ActivityVText(activity, offense);
 
     public override Sequence RespondTween(Activity activity, FightCardData target, int effectId) =>
         DOTween.Sequence().AppendCallback(() =>
@@ -150,13 +150,13 @@ public abstract class CardStyle : ChessmanStyle
                     }
                     break;
                 case ActivityResult.Types.Dodge:
-                    CardAnimator.instance.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
+                    //CardAnimator.instance.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.Shield:
                     CardAnimator.instance.UpdateStateIcon(target, CardState.Cons.Shield);
                     break;
                 case ActivityResult.Types.Invincible:
-                    CardAnimator.instance.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
+                    //CardAnimator.instance.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
                     break;
                 case ActivityResult.Types.EaseShield:
                     CardAnimator.instance.NumberEffectTween(target, conduct, ColorDataStatic.name_red);
@@ -164,6 +164,8 @@ public abstract class CardStyle : ChessmanStyle
                     break;
             }
         }
+
+        CardAnimator.instance.VTextEffect(Effect.ActivityResultVText(activity.Result), target.cardObj.transform);
     }
 
     private void SparkTween(Activity activity, FightCardData target, int effectId)
@@ -203,48 +205,16 @@ public abstract class CardStyle : ChessmanStyle
     /// <param name="activity"></param>
     /// <param name="offense"></param>
     /// <returns></returns>
-    protected abstract void OffenseVText(Activity activity, FightCardData offense);
+    protected abstract void ActivityVText(Activity activity, FightCardData offense);
 }
 
 public class HeroStyle : CardStyle
 {
-    protected override void OffenseVText(Activity activity, FightCardData offense)
+    protected override void ActivityVText(Activity activity, FightCardData offense)
     {
         if (activity.Skill == 0) return;
         //武将有自己的攻击特效
-        CardAnimator.instance.VTextEffect(MilitaryOffenseVTextId(activity), offense.cardObj.transform);
-    }
-
-    private string MilitaryOffenseVTextId(Activity activity)
-    {
-        if (activity.Skill == 0)
-            return null;
-        switch (Military)
-        {
-            case 0: return null;
-            case 13: return null;
-            case 58: //铁骑
-                if(activity.Skill == 2)
-                    return "58_0";
-                break;
-            case 55: //火船
-                if (activity.Skill == 2)
-                    return "55_0"; //火船爆炸
-                break;
-            case 19: //弩兵
-            case 51: //强弩
-                switch (activity.Skill)
-                {
-                    default:
-                        return 19.ToString();//二连
-                    case 2:
-                        return 51.ToString();//三连
-                }
-            case 65: //黄巾
-                break;
-        }
-
-        return Military.ToString();
+        CardAnimator.instance.VTextEffect(Effect.HeroActivityVText(Military,activity.Skill), offense.cardObj.transform);
     }
 
     //武将特效
@@ -255,10 +225,10 @@ public class TowerStyle : CardStyle
 {
     public override int GetMilitarySparkId(Activity activity) => Effect.GetTowerSparkId(Military, activity.Skill);
 
-    protected override void OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
+    protected override void ActivityVText(Activity activity, FightCardData offense) => CardAnimator.instance.VTextEffect(Effect.TowerActivityVText(Military, activity.Skill), offense.cardObj.transform);
 }
 
 public class TrapStyle : CardStyle
 {
-    protected override void OffenseVText(Activity activity, FightCardData offense) => DOTween.Sequence();
+    protected override void ActivityVText(Activity activity, FightCardData offense) => CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, activity.Skill), offense.cardObj.transform);
 }

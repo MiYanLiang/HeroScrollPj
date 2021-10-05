@@ -172,11 +172,11 @@ public class CardAnimator : MonoBehaviour
     /// </summary>
     public Tween ChessboardConduct(Chessboard chessboard)
     {
-        var transform = chessboard.transform;
-        var origin = transform.position;
-        return DOTween.Sequence().Join(transform.DOShakePosition(0.25f, chessboardShakeIntensity))
+        var trans = chessboard.transform;
+        var origin = trans.position;
+        return DOTween.Sequence().Join(trans.DOShakePosition(0.25f, chessboardShakeIntensity))
             .AppendInterval(0.3f)
-            .OnComplete(() => transform.DOMove(origin, 0));
+            .OnComplete(() => trans.DOMove(origin, 0));
     }
 
     private static Vector2 GetWorldSize(Transform transform) =>
@@ -356,18 +356,18 @@ public class CardAnimator : MonoBehaviour
         GetVTextEffect(effectName, target.cardObj.transform);
     }
 
-    public void VTextEffect(string effectName, Transform transform) => GetVTextEffect(effectName, transform);
+    public void VTextEffect(string effectName, Transform trans) => GetVTextEffect(effectName, trans);
 
-    private void GetVTextEffect(string effectName, Transform transform)
+    private void GetVTextEffect(string effectName, Transform trans)
     {
         if (string.IsNullOrWhiteSpace(effectName)) return;
-        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, transform);
+        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, trans);
         effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[effectName];
     }
 
-    private void GetHTextEffect(int id,Transform transform, Color color)
+    private void GetHTextEffect(int id,Transform trans, Color color)
     {
-        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, transform);
+        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, trans);
         effectObj.GetComponentInChildren<Text>().text = DataTable.GetStringText(id);
         effectObj.GetComponentInChildren<Text>().color = color;
     }

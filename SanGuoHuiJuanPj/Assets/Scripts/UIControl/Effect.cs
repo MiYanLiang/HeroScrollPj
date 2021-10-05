@@ -618,8 +618,169 @@ public static class Effect
     #endregion
 
     #region VText
+    /// <summary>
+    /// 武将竖文字，null = 无
+    /// </summary>
+    /// <param name="military"></param>
+    /// <param name="skill"></param>
+    /// <returns></returns>
+    public static string HeroActivityVText(int military, int skill)
+    {
+        if (skill == 0) return null;
+        switch (military)
+        {
 
-    
+            case 0: return null;
+            case 13: return null;
+            case 58: //铁骑
+                if (skill == 2) return "58_0";
+                break;
+            case 55: //火船
+                if (skill == 2) return "55_0"; //火船爆炸
+                break;
+            case 19: //弩兵
+            case 51: //强弩
+                switch (skill)
+                {
+                    default:
+                        return 19.ToString(); //二连
+                    case 2:
+                        return 51.ToString(); //三连
+                }
+            case 65: //黄巾
+                break;
+        }
+        return null;
+    }
+    /// <summary>
+    /// 塔竖文字，null = 无
+    /// </summary>
+    /// <param name="towerId"></param>
+    /// <param name="skill"></param>
+    /// <returns></returns>
+    public static string TowerActivityVText(int towerId, int skill)
+    {
+        if (skill == 0) return null;
+        switch (towerId)
+        {
+            //营寨
+            case 0:
+                break;
+            //投石台
+            case 1:
+                break;
+            //奏乐台
+            case 2:
+                break;
+            //箭楼
+            case 3:
+                break;
+            //战鼓台
+            case 4:
+                break;
+            //风神台
+            case 5:
+                break;
+            //轩辕台
+            case 6:
+                break;
+            //铸铁炉
+            case 7:
+                break;
+            //四方鼎
+            case 8:
+                break;
+            //烽火台
+            case 9:
+                break;
+            //号角台
+            case 10:
+                break;
+            //瞭望塔
+            case 11:
+                break;
+            //七星坛
+            case 12:
+                break;
+            //演武场
+            case 13:
+                break;
+            //曹魏旗
+            case 14:
+                break;
+            //蜀汉旗
+            case 15:
+                break;
+            //东吴旗
+            case 16:
+                break;
+            //迷雾阵
+            case 18:
+            //迷雾阵 
+            case 17:
+                break;
+            //骑兵营
+            case 19:
+                break;
+            //弓弩营
+            case 20:
+                break;
+            //步兵营
+            case 21:
+                break;
+            //长持营
+            case 22:
+                break;
+            //战船营
+            case 23:
+                break;
+        }
+
+        return null;
+    }
+    /// <summary>
+    /// 陷阱竖文字，null = 无
+    /// </summary>
+    /// <param name="trapId"></param>
+    /// <param name="skill"></param>
+    /// <returns></returns>
+    public static string TrapActivityVText(int trapId, int skill)
+    {
+        if (skill == 0) return null;
+        switch (trapId)
+        {
+
+        }
+
+        return null;
+    }
+
+    public static string ActivityResultVText(ActivityResult result)
+    {
+        switch (result.Type)
+        {
+            case ActivityResult.Types.ChessPos://地块结果，一般为释放精灵
+                break;
+            case ActivityResult.Types.Suffer://承受结果
+                break;
+            case ActivityResult.Types.Dodge://闪避结果
+                break;
+            case ActivityResult.Types.Friendly://友军
+                break;
+            case ActivityResult.Types.Shield://护盾
+                break;
+            case ActivityResult.Types.Invincible://无敌
+                break;
+            case ActivityResult.Types.EaseShield://抵消盾
+                break;
+            case ActivityResult.Types.Kill://击杀
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return null;
+    }
 
     #endregion
 
@@ -1236,5 +1397,4 @@ public static class Effect
     }
 
     #endregion
-
 }
