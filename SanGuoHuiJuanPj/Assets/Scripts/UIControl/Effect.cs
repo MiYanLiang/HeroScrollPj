@@ -706,7 +706,7 @@ public static class Effect
     /// <param name="military"></param>
     /// <param name="skill"></param>
     /// <returns></returns>
-    public static string HeroActivityVText(int military, int skill)
+    public static int HeroActivityVText(int military, int skill)
     {
         if (skill == 0) return null;
         switch (military)
@@ -1241,7 +1241,7 @@ public static class Effect
     /// <param name="towerId"></param>
     /// <param name="skill"></param>
     /// <returns></returns>
-    public static string TowerActivityVText(int towerId, int skill)
+    public static int TowerActivityVText(int towerId, int skill)
     {
         if (skill == 0) return null;
         switch (towerId)
@@ -1327,7 +1327,7 @@ public static class Effect
     /// <param name="trapId"></param>
     /// <param name="skill"></param>
     /// <returns></returns>
-    public static string TrapActivityVText(int trapId, int skill)
+    public static int TrapActivityVText(int trapId, int skill)
     {
         if (skill == 0) return null;
         switch (trapId)
@@ -1338,7 +1338,7 @@ public static class Effect
         return null;
     }
 
-    public static string ActivityResultVText(ActivityResult result)
+    public static int ActivityResultVText(ActivityResult result)
     {
         switch (result.Type)
         {

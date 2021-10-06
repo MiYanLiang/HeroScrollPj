@@ -222,7 +222,7 @@ namespace Assets.System.WarModule
                 {
                     if (!chessboardInvocation)
                     {
-                        int finalDamage = conductTotal;
+                        var finalDamage = conductTotal;
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
                             Chessboard.OnCombatMiddlewareConduct(this, conduct);
@@ -292,6 +292,8 @@ namespace Assets.System.WarModule
         public virtual void OnPlaceInvocation() { }
 
         public virtual void OnSomebodyDie(ChessOperator death){}
+
+        public virtual bool IsNotCounterAble(ChessOperator op) => false;
     }
 
     public abstract class CardOperator : ChessOperator

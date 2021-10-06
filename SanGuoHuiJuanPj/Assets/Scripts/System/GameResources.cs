@@ -33,14 +33,12 @@ public class GameResources
     private const string StateDinPath = "Prefabs/stateDin/";
     private const string ForceFlagsPath = "Image/shiLi/Flag";
     private const string ForceNamePath = "Image/shiLi/Name";
-    //private const string CityFlagPath = "Image/City/Flag";
     private const string CityIconPath = "Image/City/Icon";
     private const string AvatarPath = "Image/Player/Icon";
     private const string JiBanBgPath = "Image/JiBan/art";
     private const string JiBanVTextPath = "Image/JiBan/name_v";
     private const string JiBanHTextPath = "Image/JiBan/name_h";
-    private const string CardStateIconPath = "Image/fightStateIcon/";
-    private const string VTextPath = "Image/battle";
+    private const string VTextPath = "Image/BattleTJ";
     private const string BuffPath = "Prefabs/WarEffect/Buff";
     private const string FloorBuffPath = "Prefabs/WarEffect/FloorBuff";
     private const string IconPath = "Prefabs/WarEffect/Icon";
@@ -70,8 +68,7 @@ public class GameResources
     public IReadOnlyDictionary<int, Sprite> JiBanBg => jiBanBg;
     public IReadOnlyDictionary<int, Sprite> JiBanVText => jiBanVText;
     public IReadOnlyDictionary<int, Sprite> JiBanHText => jiBanHText;
-    public IReadOnlyDictionary<string, Sprite> StateIcon => stateIcon;
-    public IReadOnlyDictionary<string, Sprite> VText => vText;
+    public IReadOnlyDictionary<int, Sprite> VText => vText;
     public IReadOnlyDictionary<int, EffectStateUi> Buff => buffMap;
     public IReadOnlyDictionary<int, EffectStateUi> FloorBuff => floorBuffMap;
     public IReadOnlyDictionary<int, Sprite> Icon => iconMap;
@@ -98,8 +95,7 @@ public class GameResources
     private IReadOnlyDictionary<int, Sprite> jiBanBg;
     private IReadOnlyDictionary<int,Sprite> jiBanHText;
     private IReadOnlyDictionary<int,Sprite> jiBanVText;
-    private IReadOnlyDictionary<string, Sprite> stateIcon;
-    private IReadOnlyDictionary<string, Sprite> vText;
+    private IReadOnlyDictionary<int, Sprite> vText;
     private IReadOnlyDictionary<int, EffectStateUi> buffMap;
     private IReadOnlyDictionary<int, EffectStateUi> floorBuffMap;
     private IReadOnlyDictionary<int, Sprite> iconMap;
@@ -163,8 +159,7 @@ public class GameResources
         jiBanBg = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanBgPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanBg));
         jiBanHText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanHTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanHText));
         jiBanVText= new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(JiBanVTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(jiBanVText));
-        stateIcon = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(CardStateIconPath).ToDictionary(s => s.name, s => s), nameof(stateIcon));
-        vText = new ResourceDataWrapper<string, Sprite>(Resources.LoadAll<Sprite>(VTextPath).ToDictionary(s => s.name, s => s), nameof(vText));
+        vText = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(VTextPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(vText));
         buffMap = new ResourceDataWrapper<int, EffectStateUi>(Resources.LoadAll<EffectStateUi>(BuffPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(buffMap));
         floorBuffMap = new ResourceDataWrapper<int, EffectStateUi>(Resources.LoadAll<EffectStateUi>(FloorBuffPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(floorBuffMap));
         iconMap = new ResourceDataWrapper<int, Sprite>(Resources.LoadAll<Sprite>(IconPath).ToDictionary(s => int.Parse(s.name), s => s), nameof(iconMap));

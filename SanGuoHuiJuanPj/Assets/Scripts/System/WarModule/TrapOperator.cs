@@ -25,7 +25,7 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="chess"></param>
         /// <returns></returns>
-        protected bool IsGongChengChe(IChessOperator chess) => chess.Style.Military == 23;
+        protected bool IsGongChengChe(IChessOperator chess) => GongChengCheOperator.IsGongChengChe(chess);
 
         protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {

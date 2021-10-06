@@ -102,7 +102,7 @@ public class CardAnimator : MonoBehaviour
     public Tween CounterAnimation(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
-        return StepBackAndHit(card, CounterStepBack, CounterTempo, CounterCharge).OnComplete(() => GetVTextEffect(13.ToString(), card.cardObj.transform));
+        return StepBackAndHit(card, CounterStepBack, CounterTempo, CounterCharge).OnComplete(() => GetVTextEffect(13, card.cardObj.transform));
     }
 
     //退后向前进攻模式
@@ -246,21 +246,6 @@ public class CardAnimator : MonoBehaviour
     {
         if (activity.IsRePos)
             GetHTextEffect(17, target.cardObj.transform, Color.red);
-        switch (activity.Result.Type)
-        {
-            case ActivityResult.Types.Suffer:
-                break;
-            case ActivityResult.Types.Friendly:
-                break;
-            case ActivityResult.Types.Dodge:
-            case ActivityResult.Types.Shield:
-            case ActivityResult.Types.Invincible:
-            case ActivityResult.Types.EaseShield:
-                TextEffectByResult(activity.Result.Type, target);
-                break;
-            default:
-                break;
-        }
 
         foreach (var conduct in activity.Conducts)
         {
@@ -334,35 +319,13 @@ public class CardAnimator : MonoBehaviour
         }
     }
 
-    private void TextEffectByResult(ActivityResult.Types type, FightCardData target)
-    {
-        var effectName = string.Empty;
-        switch (type)
-        {
-            case ActivityResult.Types.Suffer:
-            case ActivityResult.Types.Friendly:
-                break;
-            case ActivityResult.Types.Dodge:
-                effectName = DataTable.GetStringText(19);
-                break;
-            case ActivityResult.Types.Shield:
-            case ActivityResult.Types.Invincible:
-                case ActivityResult.Types.EaseShield:
-                effectName = DataTable.GetStringText(18);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type), type, null);
-        }
-        GetVTextEffect(effectName, target.cardObj.transform);
-    }
+    public void VTextEffect(int vTextId, Transform trans) => GetVTextEffect(vTextId, trans);
 
-    public void VTextEffect(string effectName, Transform trans) => GetVTextEffect(effectName, trans);
-
-    private void GetVTextEffect(string effectName, Transform trans)
+    private void GetVTextEffect(int vTextId , Transform trans)
     {
-        if (string.IsNullOrWhiteSpace(effectName)) return;
+        if (vTextId == -1) return;
         var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, trans);
-        effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[effectName];
+        effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[vTextId];
     }
 
     private void GetHTextEffect(int id,Transform trans, Color color)

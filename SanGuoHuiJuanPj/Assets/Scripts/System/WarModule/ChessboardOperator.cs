@@ -742,15 +742,16 @@ namespace Assets.System.WarModule
         }
 
 
-        public bool OnCounterTriggerPass(ChessOperator op,ChessOperator offender)
+        public bool OnCounterTriggerPass(ChessOperator counterOp,ChessOperator counterTarget)
         {
-            if (GetStatus(offender).IsDeath ||
-                GetStatus(op).IsDeath ||
-                offender.Style.Type == CombatStyle.Types.Range ||
-                offender.Style.ArmedType < 0 ||
-                op.Style.Type == CombatStyle.Types.Range)
+            if (GetStatus(counterTarget).IsDeath ||
+                GetStatus(counterOp).IsDeath ||
+                counterTarget.Style.Type == CombatStyle.Types.Range ||
+                counterTarget.Style.ArmedType < 0 ||
+                counterOp.Style.Type == CombatStyle.Types.Range || 
+                counterTarget.IsNotCounterAble(counterOp))
                 return false;
-            return !GetBuffOperator(b => b.IsDisableCounter(op)).Any();
+            return !GetBuffOperator(b => b.IsDisableCounter(counterOp)).Any();
         }
 
         public ActivityResult OnOffensiveActivity(Activity activity, ChessOperator op, IChessOperator off)
@@ -966,6 +967,47 @@ namespace Assets.System.WarModule
                 GetCondition(op, CardState.Cons.Confuse) > 0 ? op.IsChallenger : !op.IsChallenger,
                 GetStatus(op).Pos,
                 p => p.IsPostedAlive && p.Operator != op);
+        }
+
+        public enum Targeting
+        {
+            /// <summary>
+            /// 对位
+            /// </summary>
+            Contra,
+            /// <summary>
+            /// 任何目标
+            /// </summary>
+            Any,
+            /// <summary>
+            /// 任何英雄
+            /// </summary>
+            AnyHero,
+            LowHp,
+
+        }
+
+        public IChessPos GetTargetByMode(ChessOperator op,Targeting mode)
+        {
+            IChessPos chessPos = null;
+            switch (mode)
+            {
+                case Targeting.Contra:
+                    chessPos = GetContraTarget(op);break;
+                case Targeting.Any:
+                    chessPos = GetRivals(op).RandomPick();
+                    if (chessPos == null)
+                        chessPos = GetContraTarget(op);
+                    break;
+                case Targeting.AnyHero:
+                    chessPos = GetRivals(op, p => p.IsAliveHero).RandomPick();
+                    if (chessPos == null)
+                        chessPos = GetContraTarget(op);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
+            return chessPos;
         }
 
         public IEnumerable<IChessPos> GetAttackPath(ChessOperator op)
