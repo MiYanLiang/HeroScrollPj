@@ -765,7 +765,12 @@ namespace Assets.System.WarModule
             {
                 var state = ShieldFilter(op, offender, activity);
                 result.Result = (int)state;
-
+                //元素特性
+                foreach (var conduct in activity.Conducts)
+                {
+                    foreach (var bo in GetBuffOperator(b => b.IsElementTrigger))
+                        bo.OnElementConduct(op, conduct);
+                }
                 /***执行Activities***/
                 op.ProceedActivity(activity, result.Type);
             }

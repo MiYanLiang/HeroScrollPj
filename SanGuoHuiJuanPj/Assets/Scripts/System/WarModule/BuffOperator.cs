@@ -48,15 +48,15 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual bool IsDisableHeroPerform(HeroOperator op) => false;
 
-        public virtual bool IsSufferConductTrigger => false;
+        public virtual bool IsElementTrigger => false;
 
         /// <summary>
-        /// 配合<see cref="IsSufferConductTrigger"/>改变伤害
+        /// 配合<see cref="IsElementTrigger"/>改变伤害
         /// </summary>
         /// <param name="op"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct) { }
+        public virtual void OnElementConduct(ChessOperator op, CombatConduct conduct) { }
 
         public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
         /// <summary>
@@ -109,11 +109,10 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 根据攻击元素改变免伤值
         /// </summary>
-        /// <param name="op"></param>
-        /// <param name="element"></param>
-        /// <param name="armor"></param>
         /// <returns></returns>
         public virtual bool IsArmorAddOnTrigger => false;
+
+
         public virtual int OnArmorAddOn(float armor, ChessOperator op, CombatConduct conduct) => 0;
         #region Helper
 
@@ -123,13 +122,6 @@ namespace Assets.System.WarModule
         protected void SelfConduct(ChessOperator op, int activityIntent, params CombatConduct[] conducts) =>
             Chessboard.InstanceChessboardActivity(op.IsChallenger, op, activityIntent, conducts,
                 skill: (int)Buff);
-        ///// <summary>
-        /// 扣除buff值
-        /// </summary>
-        /// <param name="op"></param>
-        /// <param name="value"></param>
-        //protected void DepleteBuff(ChessOperator op, int value = 1) => op.Status.AddBuff(Buff, -value);
-        //protected void IncreaseBuff(ChessOperator op, int value = 1) => op.Status.AddBuff(Buff, value);
         #endregion
 
         public virtual bool IsHealingTrigger(ChessOperator op) => false;
@@ -140,6 +132,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual int OnHealingConvert(int value) => value;
 
+        public virtual bool IsSufferConductTrigger => false;
+        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        {
+        }
     }
 
     public abstract class RoundEndDepleteSelfBuff : BuffOperator
@@ -165,8 +161,8 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsSufferConductTrigger => true;
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override bool IsElementTrigger => true;
+        public override void OnElementConduct(ChessOperator op, CombatConduct conduct)
         {
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.ThunderDmg ||
@@ -209,6 +205,7 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsSufferConductTrigger => true;
+
         public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
@@ -224,8 +221,8 @@ namespace Assets.System.WarModule
         {
         }
 
-        public override bool IsSufferConductTrigger => true;
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override bool IsElementTrigger => true;
+        public override void OnElementConduct(ChessOperator op, CombatConduct conduct)
         {
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.PoisonDmg ||
@@ -239,7 +236,7 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, CombatConduct.BasicMagicDmg));
             SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
         }
     }
@@ -250,8 +247,8 @@ namespace Assets.System.WarModule
         public BurnBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
-        public override bool IsSufferConductTrigger => true;
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override bool IsElementTrigger => true;
+        public override void OnElementConduct(ChessOperator op, CombatConduct conduct)
         {
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.FireDmg ||
@@ -268,7 +265,7 @@ namespace Assets.System.WarModule
             if (stacks <= 0) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
             SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op, stacks));
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, 1));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, CombatConduct.BasicMagicDmg));
         }
     }
 
@@ -369,7 +366,6 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsSufferConductTrigger => true;
-
         public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op)) return;
@@ -394,9 +390,11 @@ namespace Assets.System.WarModule
     public class ChainedBuff : BuffOperator
     {
         public override CardState.Cons Buff => CardState.Cons.Chained;
+
         public ChainedBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+
         public override bool IsSufferConductTrigger => true;
 
         public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)

@@ -233,7 +233,7 @@ namespace Assets.System.WarModule
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
             return new ConductResult(
-                Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, 1)));
+                Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, CombatConduct.BasicMagicDmg)));
         }
     }
     /// <summary>
@@ -271,7 +271,7 @@ namespace Assets.System.WarModule
         {
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DataTable.GetGameValue(154));
-            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, 1)));
+            return new ConductResult(Helper.Singular(CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, CombatConduct.BasicMagicDmg)));
         }
 
         protected override CombatConduct[] RoundStartConducts(ChessOperator op) => null;
