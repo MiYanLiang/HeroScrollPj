@@ -42,6 +42,8 @@ public class CardAnimator : MonoBehaviour
     [Header("反击蓄力(秒)")][SerializeField] private float counterCharge= 0.1f;
     [Header("闪避")][SerializeField] private float dodgeDistance= 0.3f;
     [SerializeField] private float dodgeDuration = 0.2f;
+    [Header("竖文字显示(秒)")][SerializeField] private float VTextLasting = 1.5f;
+    [Header("数字显示(秒)")][SerializeField] private float HTextLasting = 1.5f;
 
     void Awake()
     {
@@ -154,7 +156,7 @@ public class CardAnimator : MonoBehaviour
                 ? ColorDataStatic.huiFu_green
                 : ColorDataStatic.name_deepRed;
         var effect =
-            EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f,
+            EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, HTextLasting,
                 target.cardObj.transform);
         effect.GetComponentInChildren<Text>().text = value.ToString();
         effect.GetComponentInChildren<Text>().color = color;
@@ -324,13 +326,13 @@ public class CardAnimator : MonoBehaviour
     private void GetVTextEffect(int vTextId , Transform trans)
     {
         if (vTextId == -1) return;
-        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, trans);
+        var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextV, VTextLasting, trans);
         effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[vTextId];
     }
 
     private void GetHTextEffect(int id,Transform trans, Color color)
     {
-        var effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, trans);
+        var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextH, VTextLasting, trans);
         effectObj.GetComponentInChildren<Text>().text = DataTable.GetStringText(id);
         effectObj.GetComponentInChildren<Text>().color = color;
     }

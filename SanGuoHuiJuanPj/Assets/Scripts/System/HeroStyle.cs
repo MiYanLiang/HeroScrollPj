@@ -42,7 +42,7 @@ public class ChessUiStyle : CombatStyle
     /// <param name="target"></param>
     /// <param name="effectId"></param>
     /// <returns></returns>
-    public virtual Sequence RespondTween(Activity activity, FightCardData target, int effectId) => DOTween.Sequence();
+    public virtual Sequence EffectTween(Activity activity, FightCardData target, int effectId) => DOTween.Sequence();
 
     public virtual int GetMilitarySparkId(Activity activity) => Effect.Basic001;
 
@@ -70,11 +70,14 @@ public class ChessmanStyle : ChessUiStyle
     /// <returns></returns>
     public virtual void ActivityEffect(Activity activity, FightCardData offense) => DOTween.Sequence();
 
+    public virtual Tween ResultAnimation(ActivityResult result, FightCardData target) => DOTween.Sequence();
+
+    public virtual void ResultEffectTween(ActivityResult result, FightCardData card){}
 }
-public class SpriteStyle : CombatStyle
+public class InstantEffectStyle : CombatStyle
 {
     public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence()
-        .Join(target.ChessmanStyle.RespondTween(activity, target, GetSpriteSpark(activity)))
+        .Join(target.ChessmanStyle.EffectTween(activity, target, GetSpriteSpark(activity)))
         .AppendCallback(() => CardAnimator.instance.UpdateStateIcon(target));
 
     private int GetSpriteSpark(Activity activity)
@@ -88,34 +91,20 @@ public abstract class CardStyle : ChessmanStyle
 {
     public override void ActivityEffect(Activity activity,FightCardData offense) => ActivityVText(activity, offense);
 
-    public override Sequence RespondTween(Activity activity, FightCardData target, int effectId) =>
+    public override Sequence EffectTween(Activity activity, FightCardData target, int effectId) =>
         DOTween.Sequence().AppendCallback(() =>
             {
-                target.UpdateActivityStatus(activity.Result.Status);
                 CardAnimator.instance.UpdateStateIcon(target);
                 RespondEffect(activity, target, effectId);
-            })
-            .Append(RespondAnimation(activity, target));
+            });
 
-    private Tween RespondAnimation(Activity activity, FightCardData target)
+    public override Tween ResultAnimation(ActivityResult result, FightCardData target)
     {
-        switch (activity.Result.Type)
-        {
-            case ActivityResult.Types.Suffer when 
-                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
-                                           c.Kind == CombatConduct.KillingKind):
-            case ActivityResult.Types.Friendly when 
-                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
-                                           c.Kind == CombatConduct.KillingKind):
-            case ActivityResult.Types.EaseShield when 
-                activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
-                                           c.Kind == CombatConduct.KillingKind):
-                return CardAnimator.instance.SufferShakeAnimation(target);
-            case ActivityResult.Types.Dodge:
-                return CardAnimator.instance.SideDodgeAnimation(target);
-        }
-        return DOTween.Sequence();
+        return result.Type == ActivityResult.Types.Dodge
+            ? CardAnimator.instance.SideDodgeAnimation(target)
+            : CardAnimator.instance.SufferShakeAnimation(target);
     }
+
     protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
     {
         var conducts = activity.Conducts
@@ -134,38 +123,40 @@ public abstract class CardStyle : ChessmanStyle
         //动画演示+上状态效果
         foreach (var conduct in conducts)
         {
-            switch (activity.Result.Type)
+            switch (conduct.Kind)
             {
-                case ActivityResult.Types.Suffer:
-                case ActivityResult.Types.Friendly:
-                    switch (conduct.Kind)
-                    {
-                        case CombatConduct.DamageKind:
-                        case CombatConduct.KillingKind:
-                            CardAnimator.instance.NumberEffectTween(target, conduct);
-                            break;
-                        case CombatConduct.HealKind:
-                            CardAnimator.instance.NumberEffectTween(target, conduct);
-                            break;
-                    }
+                case CombatConduct.DamageKind:
+                case CombatConduct.KillingKind:
+                    CardAnimator.instance.NumberEffectTween(target, conduct);
                     break;
-                case ActivityResult.Types.Dodge:
-                    //CardAnimator.instance.VTextEffect(Effect.VTextDodge, target.cardObj.transform);
-                    break;
-                case ActivityResult.Types.Shield:
-                    CardAnimator.instance.UpdateStateIcon(target, CardState.Cons.Shield);
-                    break;
-                case ActivityResult.Types.Invincible:
-                    //CardAnimator.instance.VTextEffect(Effect.VTextInvincible, target.cardObj.transform);
-                    break;
-                case ActivityResult.Types.EaseShield:
-                    CardAnimator.instance.NumberEffectTween(target, conduct, ColorDataStatic.name_red);
-                    CardAnimator.instance.UpdateStateIcon(target, CardState.Cons.EaseShield);
+                case CombatConduct.HealKind:
+                    CardAnimator.instance.NumberEffectTween(target, conduct);
                     break;
             }
         }
+    }
 
-        CardAnimator.instance.VTextEffect(Effect.ActivityResultVText(activity.Result), target.cardObj.transform);
+    public override void ResultEffectTween(ActivityResult result, FightCardData card)
+    {
+        var vTextId = Effect.ActivityResultVText(result);
+        if (vTextId == -1) return;
+        CardAnimator.instance.VTextEffect(vTextId, card.cardObj.transform);
+
+        switch (result.Type)
+        {
+            case ActivityResult.Types.Suffer:
+            case ActivityResult.Types.Friendly:
+            case ActivityResult.Types.Dodge:
+            case ActivityResult.Types.Invincible:
+                break;
+            case ActivityResult.Types.Shield:
+                CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.Shield);
+                break;
+            case ActivityResult.Types.EaseShield:
+                CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.EaseShield);
+                break;
+        }
+
     }
 
     private void SparkTween(Activity activity, FightCardData target, int effectId)

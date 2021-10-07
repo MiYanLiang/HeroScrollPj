@@ -61,9 +61,9 @@ public class EffectsPoolingControl : MonoBehaviour
         }
     }
 
-    public GameObject GetEffectToFight(string effectName, float takeBackTime, WarGameCardUi ui) =>
-        GetEffectToFight(effectName, takeBackTime, ui.transform);
-    public GameObject GetEffectToFight(string effectName, float takeBackTime, Transform trans)
+    public GameObject GetVTextEffect(string effectName, float takeBackTime, WarGameCardUi ui) =>
+        GetVTextEffect(effectName, takeBackTime, ui.transform);
+    public GameObject GetVTextEffect(string effectName, float takeBackTime, Transform trans)
     {
         var index = -1;
         for (int i = 0; i < effectsNameStr.Length; i++)

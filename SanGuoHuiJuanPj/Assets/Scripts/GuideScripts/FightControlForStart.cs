@@ -341,7 +341,7 @@ public class FightControlForStart : MonoBehaviour
     {
         if (attackedUnit.Hp <= 0)
         {
-            GameObject obj = EffectsPoolingControl.instance.GetEffectToFight(Effect.GetGold, 1.5f, attackedUnit.cardObj);
+            GameObject obj = EffectsPoolingControl.instance.GetVTextEffect(Effect.GetGold, 1.5f, attackedUnit.cardObj);
             obj.GetComponentInChildren<Text>().text = string.Format(DataTable.GetStringText(8), DataTable.EnemyUnit[attackedUnit.unitId].GoldReward);
             PlayAudioForSecondClip(98, 0);
         }
@@ -3015,12 +3015,12 @@ public class FightControlForStart : MonoBehaviour
 
         if (isPuGong)
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.Basic0A, 0.5f, attackedUnit.cardObj);
+            effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.Basic0A, 0.5f, attackedUnit.cardObj);
             effectObj.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
         }
         else
         {
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight(effectName, 1f, attackedUnit.cardObj);
+            effectObj = EffectsPoolingControl.instance.GetVTextEffect(effectName, 1f, attackedUnit.cardObj);
         }
 
         if (indexAttackType != 0) //非普通攻击
@@ -3052,7 +3052,7 @@ public class FightControlForStart : MonoBehaviour
         GameObject effectObj = new GameObject();
         PlayerDataForGame.garbageStationObjs.Add(effectObj);
 
-        effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.DropBlood, 1.5f, attackedUnit.cardObj);
+        effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, 1.5f, attackedUnit.cardObj);
         if (isAdd)
         {
             effectObj.GetComponentInChildren<Text>().text = "+" + Mathf.Abs(cutHpNum);
@@ -3149,7 +3149,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextH, 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextH, 1.5f, ui);
             effectObj.GetComponentInChildren<Text>().text = showTextName;
             effectObj.GetComponentInChildren<Text>().color = isRed ? Color.red : ColorDataStatic.huiFu_green;
         }
@@ -3160,7 +3160,7 @@ public class FightControlForStart : MonoBehaviour
             {
                 go.gameObject.SetActive(false);
             }
-            effectObj = EffectsPoolingControl.instance.GetEffectToFight(Effect.SpellTextV, 1.5f, ui);
+            effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextV, 1.5f, ui);
             effectObj.GetComponentsInChildren<Image>()[1].sprite = Resources.Load("Image/battle/" + showTextName, typeof(Sprite)) as Sprite;
         }
     }

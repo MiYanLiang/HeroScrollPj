@@ -25,6 +25,10 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int PlayerResource = -1;
         /// <summary>
+        /// 精灵类型
+        /// </summary>
+        public const int Sprite = -3;
+        /// <summary>
         /// 进攻行动
         /// </summary>
         public const int Offensive = 0;
@@ -44,10 +48,6 @@ namespace Assets.System.WarModule
         /// 对自己的行动
         /// </summary>
         public const int Self = 4;
-        /// <summary>
-        /// 精灵类型
-        /// </summary>
-        public const int Sprite = 5;
         /// <summary>
         /// 不可避免(闪避)
         /// </summary>
@@ -123,7 +123,7 @@ namespace Assets.System.WarModule
         public List<CombatConduct> Conducts { get; set; }
         //[JsonProperty("R")] 
         public ChessStatus TargetStatus { get; set; }
-        public ActivityResult Result { get; set; }
+        //public ActivityResult Result { get; set; }
 
         //[JsonProperty("OS")]
         /// <summary>
@@ -185,9 +185,10 @@ namespace Assets.System.WarModule
         public override string ToString()
         {
             var targetText = TargetStatus == null ? string.Empty : TargetStatus.ToString();
-            var result = Result == null ? string.Empty : Result.Type.ToString();
+            //var result = Result == null ? string.Empty : Result.Type.ToString();
             var conducts = Conducts == null ? string.Empty : Conducts.Count.ToString();
-            return $"({InstanceId}):[{StanceText()}]{IntentText()}: 武技={conducts} {targetText} 结果[{result}]";
+            return $"({InstanceId}):[{StanceText()}]{IntentText()}: 武技={conducts} {targetText}";
+                   //+ $" 结果[{result}]";
         }
     }
 

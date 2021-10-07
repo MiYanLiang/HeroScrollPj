@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using Assets.System.WarModule;
+﻿using Assets.System.WarModule;
 using CorrelateLib;
 using DG.Tweening;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using Debug = UnityEngine.Debug;
@@ -21,7 +19,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public GameObject RouseEffectObj;
     public JiBanEffectUi JiBanEffect;
     public GameObject[] JiBanOffensiveEffects;
-    
+
     [SerializeField] private AudioSource audioSource;
 
     [SerializeField] private GameObject fireUIObj;
@@ -32,11 +30,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     protected FightCardData GetCardMap(int id) => CardMap.ContainsKey(id) ? CardMap[id] : null;
 
-    protected Dictionary<int, FightCardData> CardMap { get; set; }= new Dictionary<int, FightCardData>();
+    protected Dictionary<int, FightCardData> CardMap { get; set; } = new Dictionary<int, FightCardData>();
 
     public bool IsBusy { get; set; }
-    
-    private static SpriteStyle SpriteStyle { get; } = new SpriteStyle();
+
+    private static InstantEffectStyle InstantEffectStyle { get; } = new InstantEffectStyle();
     private List<SpriteObj> Sprites { get; } = new List<SpriteObj>();
     public event Func<bool> OnRoundBegin;
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
@@ -54,7 +52,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public IDictionary<int, FightCardData> CardData => NewWar.CardData;
     public void NewGame()
     {
-        foreach (var card in CardMap.ToDictionary(c=>c.Key,c=>c.Value))
+        foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
             CardMap.Remove(card.Key);
             Destroy(card.Value.cardObj.gameObject);
@@ -77,9 +75,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         NewWar.Enemy = enemyCards;
         NewWar.RegCard(enemyBase);
-       var list = NewWar.ConfirmEnemy();
-       list.Add(enemyBase);
-       return list;
+        var list = NewWar.ConfirmEnemy();
+        list.Add(enemyBase);
+        return list;
     }
     /// <summary>
     /// 初始化卡牌UI
@@ -138,7 +136,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     }
 
     //演示回合
-    private IEnumerator AnimateRound(ChessRound round,ChessboardOperator chess)
+    private IEnumerator AnimateRound(ChessRound round, ChessboardOperator chess)
     {
         //Sw.Start();
         IsBusy = true;
@@ -146,11 +144,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             try
             {
-            var card = GetCardMap(stat.Key);
-            if (card.HitPoint != stat.Value.Hp)
-            {
-                Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
-            }
+                var card = GetCardMap(stat.Key);
+                if (card.HitPoint != stat.Value.Hp)
+                {
+                    Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
+                }
 
             }
             catch (Exception e)
@@ -181,8 +179,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             }
         }
         //回合结束演示
-        yield return OnInstantEffects(round.FinalAction.ChessProcesses
-            .SelectMany(p => p.CombatMaps.Values.SelectMany(m => m.Activities)).ToList());
+        yield return OnInstantUpdate(round.FinalAction.ChessProcesses.SelectMany(p => p.CombatMaps.Values).ToArray());
 
         if (chess.IsGameOver)
         {
@@ -215,30 +212,37 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var process in action.ChessProcesses)
         {
-            if (process.Type == ChessProcess.Types.JiBan)
+            switch (process.Type)
             {
-                var jb = DataTable.JiBan[process.Major];
-                yield return DOTween.Sequence()
-                    .Append(OnJiBanEffect(process.Scope == 0, jb))
-                    .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
-                    .Join(OnInstantEffects(process.CombatMaps.Values.SelectMany(a => a.Activities).ToList()))
-                    .WaitForCompletion();
-                yield return new WaitForSeconds(1);
-                continue;
+                case ChessProcess.Types.JiBan:
+                {
+                    var jb = DataTable.JiBan[process.Major];
+                    yield return DOTween.Sequence()
+                        .Append(OnJiBanEffect(process.Scope == 0, jb))
+                        .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
+                        .Join(OnInstantUpdate(process.CombatMaps.Values.ToArray()))
+                        .WaitForCompletion();
+                    yield return new WaitForSeconds(1);
+                    continue;
+                }
+                case ChessProcess.Types.Chessman:
+                case ChessProcess.Types.Chessboard:
+                default:
+                    yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
+                    break;
             }
-
-            yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(a => a.Activities).ToList()).WaitForCompletion();
         }
     }
 
-    private Tween OnJiBanEffect(bool isChallenger,JiBanTable jb)
+    private Tween OnJiBanEffect(bool isChallenger, JiBanTable jb)
     {
         var jbCards = Chessboard.Data.Values
-            .Where(c=>c.isPlayerCard == isChallenger)
+            .Where(c => c.isPlayerCard == isChallenger)
             .Join(jb.Cards, c => (c.cardId, c.cardType), j => (j.CardId, j.CardType), (c, _) => c).ToArray();
         //Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanEffect)} [{Sw.Elapsed}]");
         return DOTween.Sequence()
-            .AppendCallback(() => {
+            .AppendCallback(() =>
+            {
                 foreach (var card in jbCards) card.cardObj.SetHighLight(true);
             }).AppendInterval(0.5f)
             .AppendCallback(() =>
@@ -251,9 +255,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .AppendInterval(1f)
             .OnComplete(() => JiBanEffect.gameObject.SetActive(false));
     }
-    void DisplayJiBanObj(bool isPlayer,Transform obj)
+    void DisplayJiBanObj(bool isPlayer, Transform obj)
     {
-        var targetTransform =  isPlayer? JiBanEffect.Player : JiBanEffect.Opposite;
+        var targetTransform = isPlayer ? JiBanEffect.Player : JiBanEffect.Opposite;
         obj.SetParent(targetTransform);
         obj.gameObject.SetActive(true);
         obj.localPosition = Vector3.zero;
@@ -304,29 +308,37 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 });
     }
 
-    private Tween OnInstantEffects(IList<Activity> activities)
+    private Tween OnInstantUpdate(IList<CombatMapper> combats)
     {
         //Debug.Log($"{nameof(OnInstantEffects)} acts[{activities.Count}][{Sw.Elapsed}]");
         var tween = DOTween.Sequence();
-        foreach (var activity in activities)
+        foreach (var map in combats)
         {
-            if(IsPlayerResourcesActivity(activity))continue;
-            if(IsSpriteActivity(activity))continue;
-            try
+            UpdateActivityTarget(null, map.Activities,
+                (target, act) => tween.Join(InstantEffectStyle.Activity(act, target)));
+            foreach (var result in map.ResultMapper)
             {
-            var target = GetCardMap(activity.To);
-            target.UpdateActivityStatus(activity.Result.Status);
-            tween.Join(SpriteStyle.Activity(activity, target));
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
+                var target = GetCardMap(result.Key);
+                target.UpdateActivityStatus(result.Value.Status);
             }
         }
 
         return tween;
+    }
+
+    private void UpdateActivityTarget(AudioSection audioSection,IEnumerable<Activity> activities, UnityAction<FightCardData, Activity> action)
+    {
+        foreach (var activity in activities)
+        {
+            if (audioSection != null) SetAudioSection(audioSection, activity);
+            if (IsPlayerResourcesActivity(activity)) continue;
+            if (IsSpriteActivity(activity)) continue;
+
+            var target = GetCardMap(activity.To);
+            if (target == null)
+                throw new InvalidOperationException($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
+            action(target, activity);
+        }
     }
 
     private bool IsSpriteActivity(Activity activity)
@@ -342,7 +354,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             throw new InvalidOperationException("棋子行动不允许调用羁绊。");
         if (process.Type == ChessProcess.Types.Chessboard)
         {
-            yield return OnInstantEffects(process.CombatMaps.Values.SelectMany(m => m.Activities.Concat(m.CounterActs)).ToArray()).WaitForCompletion();
+            yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
             yield break;
         }
 
@@ -352,7 +364,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         //var fragments = GenerateAnimFragments(process);
         var majorCard = GetCardMap(Chessboard.GetChessPos(process.Major, process.Scope == 0).Card.InstanceId);
 
-        foreach (var map in process.CombatMaps.OrderBy(c=>c.Key))
+        foreach (var map in process.CombatMaps.OrderBy(c => c.Key))
         {
             var mainTween = DOTween.Sequence().Pause();
             var counterTween = DOTween.Sequence().Pause();
@@ -370,46 +382,42 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             //施放者活动
             FightCardData major = null;
-            var audio = new AudioSection();
-            foreach (var activity in map.Value.Activities)
+            var audioSection = new AudioSection();
+            UpdateActivityTarget(audioSection, map.Value.Activities, (target, activity) =>
             {
-                SetAudioSection(audio, activity);
-                if (IsSpriteActivity(activity)) continue;
-                if (IsPlayerResourcesActivity(activity)) continue;
-                var target = GetCardMap(activity.To);
                 var op = GetCardMap(activity.From);
                 if (major == null)
                     major = op;
-                if (target == null)
-                {
-                    continue;
-                }
-
-                if (op == null) //没有施放者更新状态
-                {
-                    mainTween.Join(target.ChessmanStyle.UpdateStatusTween(activity.Result.Status, target));
-                    continue;
-                }
 
                 //承受方状态演示注入
-                mainTween.Join(target.ChessmanStyle.RespondTween(activity, target,
-                    op.ChessmanStyle.GetMilitarySparkId(activity)));
-
-
-                //施展方演示注入
-                major.ChessmanStyle.ActivityEffect(activity, major);
+                mainTween.Join(target.ChessmanStyle.EffectTween(activity, target,
+                        op.ChessmanStyle.GetMilitarySparkId(activity)))
+                    .OnComplete(() =>
+                        //施展方演示注入
+                        major.ChessmanStyle.ActivityEffect(activity, major)
+                    );
 
                 //击退一格注入
                 if (activity.IsRePos)
-                    mainTween.Join(CardAnimator.instance.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                    mainTween.Join(CardAnimator.instance
+                        .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
                         .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target)));
+            });
+
+            foreach (var result in map.Value.ResultMapper)
+            {
+                var card = GetCardMap(result.Key);
+                mainTween.Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card))
+                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card))
+                    .OnComplete(()=>card.ChessmanStyle.ResultEffectTween(result.Value, card));
+                SetResultAudio(audioSection, result.Value);
             }
-            
+
             //***演示开始***
             //施展方如果近战，前摇(后退，前冲)
-            if (major!=null && major.Style.Type == CombatStyle.Types.Melee)
+            if (major != null && major.Style.Type == CombatStyle.Types.Melee)
                 yield return CardAnimator.instance.StepBackAndHit(major)
-                    .OnComplete(()=>PlayAudio(audio))
+                    .OnComplete(() => PlayAudio(audioSection))
                     .WaitForCompletion();
 
             //如果会心，调用棋盘摇晃效果
@@ -430,26 +438,24 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var counterUnit = GetCardMap(map.Value.CounterActs.First().From);
             yield return CardAnimator.instance.CounterAnimation(counterUnit).WaitForCompletion();
 
-            audio = new AudioSection();
+            audioSection = new AudioSection();
             //反击活动更新
-            foreach (var activity in map.Value.CounterActs)
+
+            UpdateActivityTarget(audioSection, map.Value.CounterActs, (target, activity) =>
             {
-                SetAudioSection(audio, activity);
-                if (IsPlayerResourcesActivity(activity)) continue;
-                if (IsSpriteActivity(activity)) continue;
-                var target = GetCardMap(activity.To);
                 var op = GetCardMap(activity.From);
                 op.ChessmanStyle.ActivityEffect(activity, op);
-                counterTween.Join(target.ChessmanStyle.RespondTween(activity, target,
-                        op.ChessmanStyle.GetMilitarySparkId(activity)));
-            }
+                counterTween.Join(target.ChessmanStyle.EffectTween(activity, target,
+                    op.ChessmanStyle.GetMilitarySparkId(activity)));
+            });
+
             //会心演示
             if (map.Value.CounterActs.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
                 counterTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard));
 
             //播放反击的注入活动
-            var counterAudio = audio;
-            yield return counterTween.Play().OnComplete(()=>PlayAudio(counterAudio)).WaitForCompletion();//播放反击
+            var counterAudio = audioSection;
+            yield return counterTween.Play().OnComplete(() => PlayAudio(counterAudio)).WaitForCompletion();//播放反击
         }
 
         var chessPos = Chessboard.GetChessPos(majorCard).transform.position;
@@ -482,9 +488,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 if (major != null) audioId = GetCardSoundEffect(activity, major.ChessmanStyle);
             }
             AddToSection();
-            var actResultId = Effect.ResultAudioId(activity.Result.Type);
-            //只获取第一棋子结果音效
-            if (section.Result == -1) section.Result = actResultId;
         }
 
         if (activity.Intent == Activity.PlayerResource)
@@ -503,13 +506,20 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
     }
 
+    private static void SetResultAudio(AudioSection section, ActivityResult result)
+    {
+        var actResultId = Effect.ResultAudioId(result.Type);
+        //只获取第一棋子结果音效
+        if (section.Result == -1) section.Result = actResultId;
+    }
+
 
     private bool IsPlayerResourcesActivity(Activity activity)
     {
         if (activity.Intent != Activity.PlayerResource) return false;
         foreach (var conduct in activity.Conducts)
         {
-            if(conduct.Kind == CombatConduct.PlayerDegreeKind)
+            if (conduct.Kind == CombatConduct.PlayerDegreeKind)
                 OnResourceUpdate.Invoke(activity.To == -1, conduct.Element, (int)conduct.Total);
         }
         return true;
@@ -576,249 +586,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         public int Result = -1;
     }
 
-    private int GetDefendAudioId(Activity activity,CombatStyle offense, FightCardData target)
-    {
-        var audioId = -1;
-        var isMeleeHero = offense.Type == CombatStyle.Types.Melee &&
-                          offense.ArmedType >= 0;
-        var isMachine = offense.ArmedType == 7;//器械系
-        if (target.Style.ArmedType == -3)//陷阱
-        {
-            switch (target.Style.Military)
-            {
-                case 0://拒马
-                    if (isMeleeHero && !isMachine)
-                        audioId = 89;
-                    break;
-                case 1://地雷
-                    if (isMeleeHero)
-                        audioId = 88;
-                    break;
-                case 2://石墙
-                case 3://八阵图
-                case 4://金锁阵
-                case 5://鬼兵阵
-                case 6://火墙
-                case 7://毒泉
-                case 8://刀墙
-                case 9://滚石
-                case 10://滚木
-                    break;
-                case 11://金币宝箱
-                case 12://宝箱
-                    if (!target.Status.IsDeath)break;
-                    audioId = 98;
-                    break;
-            }
-            return audioId;
-        }
-        if (target.Style.ArmedType <= 0) return audioId;
-        switch (activity.Result.Type)
-        {
-            case ActivityResult.Types.Suffer:
-            case ActivityResult.Types.Friendly:
-            case ActivityResult.Types.EaseShield:
-            case ActivityResult.Types.Kill:
-                break;
-            case ActivityResult.Types.Dodge:
-                audioId = 97;
-                break;
-            case ActivityResult.Types.Shield:
-            case ActivityResult.Types.Invincible:
-                audioId = 96;
-                break;
-            case ActivityResult.Types.ChessPos:
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        return audioId;
-    }
-
-    private int GetOffenseAudioId(Activity activity,CombatStyle offense)
-    {
-        var audioId = -1;
-        if (offense.ArmedType == -3) return audioId; //陷阱不会进攻
-        if (offense.ArmedType == -2) //塔
-        {
-            switch (offense.Military)
-            {
-                case 0: //营寨
-                case 2: //奏乐台
-                    return 42;
-                case 1: //投石台
-                    return 24;
-                case 3: //箭楼
-                    return 20;
-                case 6: //轩辕台
-                    return 4;
-            }
-            return audioId;
-        }
-
-        if (offense.ArmedType < 0) return audioId;
-        if (activity.Skill == 0) return 0;
-        switch (offense.Military)
-        {
-            case 3://飞甲
-                audioId = 3;
-                break;
-            case 4://大盾
-                audioId =4;
-                break;
-            case 6://虎卫
-                audioId =6;
-                break;
-            case 8://象兵
-                audioId = 8;
-                break;
-            case 9://先锋
-            case 60:
-                audioId = 9;
-                break;
-            case 10://死士
-                audioId = 10;
-                break;
-            case 11:
-                audioId = 11;
-                break;
-            case 12:
-                audioId = 12;
-                break;
-            case 14:
-            case 59:
-                audioId = 14;
-                break;
-            case 15:
-                audioId = 15;
-                break;
-            case 16:
-                audioId =16;
-                break;
-            case 17:
-                audioId = 17;
-                break;
-            case 18:
-                audioId = 18;
-                break;
-            case 19:
-            case 51:
-                audioId = 19;
-                break;
-            case 20:
-            case 52:
-                audioId = 20;
-                break;
-            case 21:
-                audioId = 21;
-                break;
-            case 22:
-                audioId = 22;
-                break;
-            case 23:
-                audioId = 23;
-                break;
-            case 24:
-                audioId = 24;
-                break;
-            case 25:
-                audioId = 25;
-                break;
-            case 26:
-                audioId = 26;
-                break;
-            case 27:
-                audioId = 27;
-                break;
-            case 30:
-                audioId = 30;
-                break;
-            case 31:
-                audioId = 31;
-                break;
-            case 32:
-                break;
-            case 33:
-                break;
-            case 34:
-                audioId = 34;
-                break;
-            case 35:
-                audioId = 35;
-                break;
-            case 36:
-                audioId = 36;
-                break;
-            case 37:
-                audioId = 37;
-                break;
-            case 38:
-                audioId = 38;
-                break;
-            case 39:
-                audioId = 39;
-                break;
-            case 40:
-                audioId = -1;
-                break;
-            case 42:
-                audioId = 42;
-                break;
-            case 43:
-                audioId = 43;
-                break;
-            case 44:
-                audioId = 44;
-                break;
-            case 45:
-                audioId = 45;
-                break;
-            case 46:
-                audioId = 46;
-                break;
-            case 47:
-                audioId = 47;
-                break;
-            case 48:
-                audioId = 48;
-                break;
-            case 49:
-                audioId = 49;
-                break;
-            case 50:
-                audioId = 50;
-                break;
-            case 53:
-                audioId = 53;
-                break;
-            case 54:
-                audioId = 54;
-                break;
-            case 55:
-                audioId = activity.Skill == 2 ? 84 : 55;
-                break;
-            case 56:
-                audioId = 56;
-                break;
-            case 57:
-                audioId = 57;
-                break;
-            case 58:
-                audioId = 58;
-                break;
-            case 65:
-                audioId = 65;
-                break;
-            case 28:
-            case 29:
-            default:
-                audioId = 0;
-                break;
-        }
-
-        return audioId;
-    }
-
     private Tween FullScreenRouse() =>
         DOTween.Sequence().AppendCallback(() =>
         {
@@ -862,7 +629,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         public EffectStateUi Obj;
     }
 
-    public class PlayerResourceEvent:UnityEvent<bool,int,int> { }
-    public class GameSetEvent:UnityEvent<bool> { }
-    public class CardDefeatedEvent:UnityEvent<FightCardData> {  }
+    public class PlayerResourceEvent : UnityEvent<bool, int, int> { }
+    public class GameSetEvent : UnityEvent<bool> { }
+    public class CardDefeatedEvent : UnityEvent<FightCardData> { }
 }
