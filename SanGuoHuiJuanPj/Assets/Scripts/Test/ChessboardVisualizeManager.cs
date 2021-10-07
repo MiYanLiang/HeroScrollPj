@@ -564,7 +564,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private int GetCardSoundEffect(Activity activity, CombatStyle offense)
     {
         var offensiveAudio = -1;
-        if (offense.ArmedType == -2) offensiveAudio = Effect.GetTowerAudioId(offense.Military);
+        if (offense.ArmedType == -2) offensiveAudio = Effect.GetTowerAudioId(offense.Military, activity.Skill);
         else if (offense.ArmedType == -3) offensiveAudio = Effect.GetTrapAudioId(offense.Military);
         else if (offense.ArmedType >= 0) offensiveAudio = Effect.GetHeroAudioId(offense.Military, activity.Skill);
         return offensiveAudio;
