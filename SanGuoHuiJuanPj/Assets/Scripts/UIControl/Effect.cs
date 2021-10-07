@@ -262,7 +262,14 @@ public static class Effect
             case 12:
             case 114:
             case 115://神武
-                value = 013;break;
+                switch (skill) 
+                {
+                    case 1://破势
+                        value = 013;break;
+                    case 2://武魂
+                        value = -1;break;
+                }
+                break;
 
             case 116:
             case 117:
@@ -1714,204 +1721,546 @@ public static class Effect
         if (skill == 0) return 0;//普通攻击音效为 0
         switch (military)
         {
-            case 3:
-            case 72:
-            case 73://飞甲
-                audioId = 3;
-                break;
+            case 0://武夫
+                audioId = 0; break;
+
+            case 49://短弓
+                audioId = 0; break;
+
+            case 50://文士
+                audioId = 0; break;
+
+            case 1:
+            case 66:
+            case 67: //近战
+                audioId = 47; break;
 
             case 4:
             case 68:
             case 69://大盾
-                audioId = 4;
+                switch (skill)
+                {
+                    case 1://持盾 回合开始前加盾
+                        audioId = 47; break;
+                    case 2://战盾 攻击时加盾
+                        audioId = 47; break;
+                }
                 break;
+
+            case 2:
+            case 70:
+            case 71://铁卫
+                audioId = 0; break;
+
+            case 3:
+            case 72:
+            case 73://飞甲
+                audioId = 11; break;
 
             case 6:
             case 74:
             case 75://虎卫
-                audioId = 6;
+                switch (skill)
+                {
+                    case 1://攻击目标
+                        audioId = 9; break;
+                    case 2://自身加血
+                        audioId = 57; break;
+                }
                 break;
 
-            case 8:
-            case 174:
-            case 175://象兵
-                audioId = 8;
-                break;
+            case 7:
+            case 76:
+            case 77://刺盾
+                audioId = 24; break;
 
-            case 9:
-            case 60:
-            case 136://飞骑
-                audioId = 9;
+            case 78:
+            case 79:
+            case 80://血衣
+                audioId = 0; break;
+
+            case 5:
+            case 81:
+            case 82://陷阵
+                audioId = 47; break;//自身加盾
+
+            case 41:
+            case 83:
+            case 84://敢死
+                switch (skill)
+                {
+                    case 1://自身加盾
+                        audioId = 47; break;
+                    case 2://自身加血
+                        audioId = 57; break;
+                }
                 break;
 
             case 10:
             case 85:
-            case 86://先登死士
-                audioId = 10;
+            case 86://先登
+                switch (skill)
+                {
+                    case 1://普通
+                        audioId = 0; break;
+                    case 2://血祭
+                        audioId = 18; break;
+                }
                 break;
 
-            case 11:
-            case 140:
-            case 141://虎豹骑
-                audioId = 11;
+            case 87:
+            case 88:
+            case 89://青州
+                switch (skill)
+                {
+                    case 1://普通
+                        audioId = -1; break;
+                    case 2://卸甲归田
+                        audioId = -1; break;
+                }
                 break;
 
-            case 12:
-            case 114:
-            case 115://神武
-                audioId = 12;
+            case 90:
+            case 91:
+            case 92://链锁
+                switch (skill)
+                {
+                    case 1://普通
+                        audioId = -1; break;
+                    case 2://捆缚
+                        audioId = -1; break;
+                }
                 break;
 
-            case 14:
+            case 93:
+            case 94:
+            case 95://解烦
+                switch (skill)
+                {
+                    case 1://引燃
+                        audioId = -1; break;
+                    case 2://自爆
+                        audioId = -1; break;
+                }
+                break;
+
+            case 57:
+            case 96:
+            case 97://藤甲
+                audioId = 0; break;
+
+            case 98:
+            case 99:
+            case 100://鬼兵
+                switch (skill)
+                {
+                    case 1://普通
+                        audioId = -1; break;
+                    case 2://还魂
+                        audioId = -1; break;
+                    case 3://借尸
+                        audioId = -1; break;
+                }
+                break;
+
             case 59:
+            case 14:
             case 101://长枪
-                audioId = 14;
-                break;
+                audioId = 53; break;
 
             case 15:
             case 102:
             case 103://大戟
-                audioId = 15;
-                break;
-
-            case 16:
-            case 142:
-            case 143://骠骑
-                audioId = 16;
-                break;
+                audioId = 7; break;
 
             case 17:
             case 104:
             case 105://大刀
-                audioId = 17;
-                break;
+                audioId = 2; break;
 
             case 18:
             case 106:
             case 107://大斧
-                audioId = 18;
+                audioId = 19; break;
+
+            case 108:
+            case 109:
+            case 110://狼牙棒
+                audioId = -1; break;
+
+            case 111:
+            case 112:
+            case 113://魔王
+                audioId = -1; break;
+
+            case 12:
+            case 114:
+            case 115://神武
+                switch (skill) 
+                {
+                    case 1://破势
+                        audioId = 4;break;
+                    case 2://武魂
+                        audioId = 57;break;
+                }
                 break;
+
+            case 116:
+            case 117:
+            case 118://白毦
+                audioId = 0; break;
+
+            case 119:
+            case 120:
+            case 121://朴刀
+                audioId = 0; break;
+
+            case 13:
+            case 122:
+            case 123://羽林
+                switch (skill)
+                {
+                    case 1://普通攻击
+                        audioId = 22; break;
+                    case 2://反击
+                        audioId = 22; break;
+                }
+                break;
+
+            case 124:
+            case 125:
+            case 126://双戟
+                audioId = 0; break;
+
+            case 65:
+            case 127:
+            case 128://黄巾
+                audioId = 33; break;//群起攻击
+
+            case 25:
+            case 129:
+            case 130://刺客
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        audioId = 0; break;
+                    case 2://攻击武将士兵
+                        audioId = 12; break;
+                }
+                break;
+
+            case 56:
+            case 131:
+            case 132://蛮族
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        audioId = 0; break;
+                    case 2://攻击武将士兵
+                        audioId = 54; break;
+                }
+                break;
+
+            case 133:
+            case 134:
+            case 135://丹阳
+                audioId = 0; break;
+
+            case 9:
+            case 60:
+            case 136://飞骑
+                audioId = 29; break;
+
+            case 137:
+            case 138:
+            case 139://白马
+                audioId = 28; break;
+
+            case 11:
+            case 140:
+            case 141://虎豹骑
+                audioId = 9; break;
+
+            case 16:
+            case 142:
+            case 143://骠骑
+                audioId = 27; break;
+
+            case 44:
+            case 144:
+            case 145://巾帼
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        audioId = 0; break;
+                    case 2://攻击武将士兵
+                        audioId = 30; break;
+                }
+                break;
+
+            case 146:
+            case 147:
+            case 148://弓骑
+                audioId = 0; break;
+
+            case 149:
+            case 150:
+            case 151://狼骑
+                audioId = 0; break;
+
+            case 58:
+            case 152:
+            case 153://铁骑
+                audioId = 27; break;
+
+            case 154:
+            case 155:
+            case 156://骁骑
+                audioId = 28; break;
+
+            case 157:
+            case 158:
+            case 159://彪骑
+                audioId = 29; break;
+
+            case 160:
+            case 161:
+            case 162://枪骑
+                audioId = 27; break;
+
+            case 163:
+            case 164:
+            case 165://斧骑
+                audioId = 28; break;
+
+            case 166:
+            case 167:
+            case 168://飞熊骑
+                audioId = 29; break;
+
+            case 169:
+            case 170:
+            case 171://匈奴骑
+                audioId = 27; break;
+
+            case 22:
+            case 172:
+            case 173://战车
+                audioId = 15; break;
+
+            case 8:
+            case 174:
+            case 175://战象
+                switch (skill)
+                {
+                    case 1://普通攻击
+                        audioId = 8; break;
+                    case 2://暴击或会心
+                        audioId = 8; break;
+                }
+                break;
+
+            case 23:
+            case 176:
+            case 177://攻城车
+                audioId = 15; break;//攻击建筑或陷阱
+
+            case 24:
+            case 178:
+            case 179://投石车
+                audioId = 31; break;
 
             case 19:
             case 51:
             case 180://连弩
-                audioId = 19;
-                break;
+                audioId = 25; break;
+
+            case 181:
+            case 182:
+            case 183://元戎弩
+                audioId = 25; break;
 
             case 20:
             case 52:
             case 184://大弓
-                audioId = 20;
-                break;
+                audioId = 26; break;
+
+            case 185:
+            case 186:
+            case 187://火弓
+                audioId = 26; break;
+
+            case 188:
+            case 189:
+            case 190://重弩
+                audioId = 25; break;
+
+            case 191:
+            case 192:
+            case 193://无当
+                audioId = 26; break;
 
             case 21:
             case 194:
             case 195://艨艟
-                audioId = 21;
+                audioId = 36; break;
+
+            case 55:
+            case 196:
+            case 197://火船
+                switch (skill)
+                {
+                    case 1://引燃
+                        audioId = 16; break;
+                    case 2://自爆
+                        audioId = 38; break;
+                }
                 break;
 
-            case 22:
-                audioId = 22;
-                break;
-            case 23:
-                audioId = 23;
-                break;
-            case 24:
-                audioId = 24;
-                break;
-            case 25:
-                audioId = 25;
-                break;
+            case 64:
+            case 198:
+            case 199://锦帆
+                audioId = 0; break;
+
+            case 200:
+            case 201:
+            case 202://蛟鳄军
+                audioId = 0; break;
+
             case 26:
-                audioId = 26;
-                break;
             case 27:
-                audioId = 27;
-                break;
-            case 30:
-                audioId = 30;
-                break;
-            case 31:
-                audioId = 31;
-                break;
-            case 32:
-                break;
-            case 33:
-                break;
-            case 34:
-                audioId = 34;
-                break;
-            case 35:
-                audioId = 35;
-                break;
-            case 36:
-                audioId = 36;
-                break;
-            case 37:
-                audioId = 37;
-                break;
-            case 38:
-                audioId = 38;
-                break;
-            case 39:
-                audioId = 39;
-                break;
-            case 40:
-                audioId = -1;
-                break;
-            case 42:
-                audioId = 42;
-                break;
-            case 43:
-                audioId = 43;
-                break;
-            case 44:
-                audioId = 44;
-                break;
-            case 45:
-                audioId = 45;
-                break;
-            case 46:
-                audioId = 46;
-                break;
-            case 47:
-                audioId = 47;
-                break;
-            case 48:
-                audioId = 48;
-                break;
-            case 49:
-                audioId = 49;
-                break;
-            case 50:
-                audioId = 50;
-                break;
-            case 53:
-                audioId = 53;
-                break;
-            case 54:
-                audioId = 54;
-                break;
-            case 55:
-                audioId = skill == 2 ? 84 : 55;
-                break;
-            case 56:
-                audioId = 56;
-                break;
-            case 57:
-                audioId = 57;
-                break;
-            case 58:
-                audioId = 58;
-                break;
-            case 65:
-                audioId = 65;
-                break;
+            case 203://军师
+                audioId = 39; break;
+
             case 28:
             case 29:
-            default:
-                audioId = 0;
+            case 204://术士
+                switch (skill)
+                {
+                    case 1://小技能
+                        audioId = 43; break;
+                    case 2://大技能
+                        audioId = 42; break;
+                }
                 break;
+
+            case 205:
+            case 206:
+            case 207://妖王
+                audioId = 0; break;
+
+            case 30:
+            case 31:
+            case 208://毒士
+                audioId = 46; break;
+
+            case 32:
+            case 33:
+            case 209://统帅
+                audioId = 38;break;
+
+            case 53:
+            case 54:
+            case 210://隐士
+                audioId = 13; break;
+
+            case 211:
+            case 212:
+            case 213://妖师
+                audioId = 46; break;
+
+            case 214:
+            case 215:
+            case 216://狂士
+                switch (skill)
+                {
+                    case 1://小技能
+                        audioId = 43; break;
+                    case 2://大技能
+                        audioId = 42; break;
+                }
+                break;
+
+            case 36:
+            case 37:
+            case 217://谋士
+                audioId = 43; break;
+
+            case 218:
+            case 219:
+            case 220://巫祝
+                audioId = 0; break;
+
+            case 34:
+            case 35:
+            case 221://辩士
+                audioId = 44; break;
+
+            case 47:
+            case 48:
+            case 222://说客
+                audioId = 45; break;
+
+            case 223:
+            case 224:
+            case 225://方士
+                audioId = 0; break;
+
+            case 61:
+            case 62:
+            case 63://红颜
+                audioId = 0; break;
+
+            case 38:
+            case 226:
+            case 227://内政
+                audioId = 57; break;
+
+            case 228:
+            case 229:
+            case 230://天师
+                audioId = 0; break;
+
+            case 45:
+            case 231:
+            case 232://倾城
+                audioId = 20; break;
+
+            case 46:
+            case 233:
+            case 234://倾国
+                audioId = 40; break;
+
+            case 235:
+            case 236:
+            case 237://督军
+                audioId = 0; break;
+
+            case 39:
+            case 238:
+            case 239://辅佐
+                audioId = 50; break;
+
+            case 40:
+            case 240:
+            case 241://器械
+                audioId = 52; break;
+
+            case 42:
+            case 43:
+            case 242://医士
+                audioId = 56; break;
+
+            case 243://壮士
+                audioId = 0; break;
+
+            case 244://短弩
+                audioId = 25; break;
+
+            case 245:
+            case 246:
+            case 247://修真
+                audioId = 0; break;
         }
 
         return audioId;
@@ -1921,19 +2270,30 @@ public static class Effect
     /// </summary>
     /// <param name="towerId"></param>
     /// <returns></returns>
-    public static int GetTowerAudioId(int towerId)
+    public static int GetTowerAudioId(int towerId,int skill)
     {
         switch (towerId)
         {
             case 0: //营寨
-            case 2: //奏乐台
-                return 42;
+                switch (skill) 
+                {
+                    case 1://补给
+                        return 56;
+                    case 2://自身恢复
+                        return 57;
+                }break;
+
             case 1: //投石台
-                return 24;
+                return 31;
+
+            case 2: //奏乐台
+                return 56;
+
             case 3: //箭楼
-                return 20;
+                return 26;
+
             case 6: //轩辕台
-                return 4;
+                return 47;
         }
         return -1;
     }
@@ -1947,9 +2307,11 @@ public static class Effect
         switch (trapId)
         {
             case 0://拒马
-                return 89;
+                return 24;
+
             case 1://地雷
-                return 88;
+                return 38;
+
             case 2://石墙
             case 3://八阵图
             case 4://金锁阵
@@ -1957,9 +2319,13 @@ public static class Effect
             case 6://火墙
             case 7://毒泉
             case 8://刀墙
-            case 9://滚石
-            case 10://滚木
                 break;
+
+            case 9://滚石
+                return 48;
+            case 10://滚木
+                return 48;
+
             case 11://金币宝箱
             case 12://宝箱
                 return  98;
@@ -1990,9 +2356,11 @@ public static class Effect
         switch (con)
         {
             case CardState.Cons.Burn:
-                return -1;
+                return 17;
             case CardState.Cons.Poison:
+                return 17;
             case CardState.Cons.Bleed:
+                return 17;
             case CardState.Cons.Stunned:
             case CardState.Cons.Shield:
             case CardState.Cons.Invincible:
@@ -2030,8 +2398,9 @@ public static class Effect
         switch (con)
         {
             case CardState.Cons.Poison://毒buff伤害
+                return 17;
             case CardState.Cons.Burn://火buff伤害
-                return -1;
+                return 37;
             case CardState.Cons.Bleed:
             case CardState.Cons.Stunned:
             case CardState.Cons.Shield:
@@ -2077,10 +2446,10 @@ public static class Effect
                 return -1;//这些结果都是直接播放兵种音效
 
             case ActivityResult.Types.Dodge:
-                return 97;
+                return 5;
             case ActivityResult.Types.Shield:
             case ActivityResult.Types.Invincible:
-                return 96;
+                return 51;
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
