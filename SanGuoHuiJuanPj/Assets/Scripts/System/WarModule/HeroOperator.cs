@@ -387,10 +387,12 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TengJiaOperator : HeroOperator
     {
-        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
+        protected override void OnMilitaryDamageConvert(CombatConduct conduct)
         {
-            if (conduct.Element == CombatConduct.FireDmg) return (int)(conduct.Total * 3);
-            return base.OnMilitaryDamageConvert(conduct);
+            if (conduct.Element == CombatConduct.FireDmg)
+            {
+                conduct.Multiply(3);
+            }
         }
     }
 
@@ -795,7 +797,7 @@ namespace Assets.System.WarModule
             rest--;
         }
 
-        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        protected override void OnAfterSubtractHp(CombatConduct conduct)
         {
             if (Chessboard.GetStatus(this).IsDeath ||
                 Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f ||
@@ -807,7 +809,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
 
-        protected override int OnMilitaryDamageConvert(CombatConduct conduct)
+        protected override void OnMilitaryDamageConvert(CombatConduct conduct)
         {
             if (Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0)
             {
@@ -815,8 +817,6 @@ namespace Assets.System.WarModule
                     Helper.Singular(CombatConduct.InstanceHeal(conduct.Total, InstanceId)), -1, skill: -1);
                 conduct.SetZero();
             }
-
-            return (int)conduct.Total;
         }
     }
 
@@ -1999,7 +1999,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
 
-        protected override void OnAfterSubtractHp(int damage, CombatConduct conduct)
+        protected override void OnAfterSubtractHp(CombatConduct conduct)
         {
             if ((conduct.Rouse > 0 || conduct.Critical > 0) &&
                 Chessboard.IsRandomPass(InvincibleRate()))

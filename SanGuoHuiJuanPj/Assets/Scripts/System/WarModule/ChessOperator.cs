@@ -222,7 +222,6 @@ namespace Assets.System.WarModule
                 {
                     if (!chessboardInvocation)
                     {
-                        var finalDamage = conductTotal;
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
                             Chessboard.OnCombatMiddlewareConduct(this, conduct);
@@ -230,11 +229,11 @@ namespace Assets.System.WarModule
                                 conduct.Multiply(2);
 
                             //自身(武将技)伤害转化
-                            finalDamage = OnMilitaryDamageConvert(conduct);
+                            OnMilitaryDamageConvert(conduct);
                         }
 
-                        SubtractHp(finalDamage);
-                        if (IsAlive) OnAfterSubtractHp(finalDamage, conduct);
+                        SubtractHp((int)conduct.Total);
+                        if (IsAlive) OnAfterSubtractHp(conduct);
                     }
                     else
                     {
@@ -259,14 +258,16 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual void OnAfterSubtractHp(int damage, CombatConduct conduct){}
+        protected virtual void OnAfterSubtractHp(CombatConduct conduct){}
 
         /// <summary>
         /// 最后伤害免伤后的伤害转化
         /// </summary>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        protected virtual int OnMilitaryDamageConvert(CombatConduct conduct) => (int) conduct.Total;
+        protected virtual void OnMilitaryDamageConvert(CombatConduct conduct)
+        {
+        }
 
         /// <summary>
         /// 法术免伤
