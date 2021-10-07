@@ -68,7 +68,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public static Activity Instance(int id,int processId,int from ,int isChallenger,int to ,int intent, IList<CombatConduct> conducts,int skill,int rePos)
         {
-            return new Activity()
+            return new Activity
             {
                 InstanceId = id,
                 ProcessId = processId,
