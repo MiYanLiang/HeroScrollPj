@@ -16,6 +16,7 @@ namespace Assets.System.WarModule
         GameCardType CardType { get; }
         GameCardInfo Info { get; }
         int HitPoint { get; }
+        int MaxHitPoint { get; }
         int Level { get; }
         ChessStatus Status { get; }
         CombatStyle GetStyle();

@@ -322,7 +322,7 @@ namespace Assets.System.WarModule
                 Info = card.Info;
         }
 
-        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.HitPoint,
+        public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.MaxHitPoint,
             chessman.Pos,
             chessman.Pos,
             new Dictionary<int, int>(), new List<int>());

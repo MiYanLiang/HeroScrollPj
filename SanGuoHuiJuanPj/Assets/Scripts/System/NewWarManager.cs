@@ -35,6 +35,7 @@ public class NewWarManager : MonoBehaviour, ILogger
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
         CardData.Clear();
+        StartButtonShow(true);
     }
 
     private List<FightCardData> RegChessmanList(ChessCard[] list, bool isChallenger)

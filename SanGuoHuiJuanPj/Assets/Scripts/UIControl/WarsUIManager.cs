@@ -549,7 +549,7 @@ public class WarsUIManager : MonoBehaviour
     private bool OnChessRoundBegin()
     {
         //从暂存区，交接到棋盘区
-        foreach (var tmp in TempScope.ToDictionary(c=>c.Key,c=>c.Value))
+        foreach (var tmp in TempScope.ToDictionary(c => c.Key, c => c.Value))
         {
             var card = tmp.Key;
             var ui = tmp.Value;
@@ -580,10 +580,10 @@ public class WarsUIManager : MonoBehaviour
 
             TempScope.Add(card, ui);
             ui.transform.position = chessman.transform.position; //被改位置重置
-            var hp = Math.Max(card.Status.Hp + card.Info.GameSetRecovery, card.Status.MaxHp);
+            var hp = Math.Min(card.Status.Hp + card.Info.GameSetRecovery, card.Status.MaxHp);
             card.Status.SetHp(hp);
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
-            ui.War.SetHp(card.Status.HpRate);
+            ui.War.UpdateHpUi(card.Status.HpRate);
             ui.gameObject.SetActive(true);
             UpdateHeroEnlistText();
         }

@@ -58,7 +58,7 @@ public class GameCardWarUiOperation : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void SetHp(float hp) => Hp.fillAmount = 1f - hp;
+    public void UpdateHpUi(float hp) => Hp.fillAmount = 1f - hp;
 
     public void SetState(States state)
     {
