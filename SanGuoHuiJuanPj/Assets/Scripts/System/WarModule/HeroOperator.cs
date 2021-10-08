@@ -1488,8 +1488,9 @@ namespace Assets.System.WarModule
         {
             var targets = Chessboard.GetRivals(this).OrderBy(p => p.Pos).Take(Targets()).ToArray();
             if (targets.Length == 0) return;
-            var addOn = 0.5f * GeneralDamage();
-            var perform = InstanceHeroGenericDamage(addOn);
+            //var addOn = 0.5f * GeneralDamage();
+            var perform = InstanceHeroGenericDamage();
+            perform.Multiply(0.5f);
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
