@@ -31,7 +31,7 @@ public abstract class DragController : MonoBehaviour
     public abstract void OnDrag(BaseEventData data);
     public abstract void EndDrag(BaseEventData data);
 
-    public abstract void ResetPos();
+    public abstract void ResetPos(int pos);
 
     public abstract void Disable();
 }
@@ -287,13 +287,13 @@ public class CardForDrag : DragController
         transform.GetComponent<Image>().raycastTarget = true;
     }
 
-    public override void ResetPos()
+    public override void ResetPos(int pos)
     {
         throw new System.NotImplementedException();
     }
-
     public override void Disable()
     {
         throw new System.NotImplementedException();
     }
+
 }

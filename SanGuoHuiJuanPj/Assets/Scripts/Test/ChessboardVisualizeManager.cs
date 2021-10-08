@@ -386,12 +386,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
             UpdateActivityTarget(audioSection, map.Value.Activities, (target, activity) =>
             {
                 var op = GetCardMap(activity.From);
+                if (op == null) return;
                 if (major == null)
                     major = op;
 
                 //承受方状态演示注入
-                mainTween.Join(target.ChessmanStyle.EffectTween(activity, target,
-                        op.ChessmanStyle.GetMilitarySparkId(activity)))
+                mainTween.Join(target.ChessmanStyle.EffectTween(activity, target, op.ChessmanStyle.GetMilitarySparkId(activity)))
                     .OnComplete(() =>
                         //施展方演示注入
                         major.ChessmanStyle.ActivityEffect(activity, major)

@@ -534,7 +534,7 @@ public class WarsUIManager : MonoBehaviour
     private Dictionary<FightCardData, WarGameCardUi> PlayerScope { get; set; } =
         new Dictionary<FightCardData, WarGameCardUi>();
     //记录暂时摆放的卡牌与位置，直到点击开始战斗的时候会把卡牌记录到棋盘上
-    private Dictionary<FightCardData, WarGameCardUi> TempScope { get; set; } =
+    public Dictionary<FightCardData, WarGameCardUi> TempScope { get; private set; } =
         new Dictionary<FightCardData, WarGameCardUi>();
     private void OnCardDefeated(FightCardData defeatedCard)
     {
@@ -589,10 +589,10 @@ public class WarsUIManager : MonoBehaviour
         }
     }
     /// <summary>
-    /// 把棋子放入暂存区
+    /// 根据棋子PosIndex标记更新暂存区
     /// </summary>
     /// <param name="card"></param>
-    public void PlaceCardOnTemp(FightCardData card)
+    public void UpdateCardTempScope(FightCardData card)
     {
         if (!TempScope.ContainsKey(card))
             TempScope.Add(card, card.cardObj);
