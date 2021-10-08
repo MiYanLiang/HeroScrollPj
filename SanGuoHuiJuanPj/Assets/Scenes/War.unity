@@ -9411,9 +9411,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 5e79a44e30f872748b037b04fe3ca602, type: 3}
   - {fileID: 8300000, guid: 290735b8fef99544090273c8a2ba596b, type: 3}
   - {fileID: 8300000, guid: a2a8400f088e8434a980bc8883ee5a45, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 1b150e61e53caa047b7e8420f30da205, type: 3}
+  - {fileID: 8300000, guid: ff5bec2fb5fc3c443aa2863d0d108800, type: 3}
+  - {fileID: 8300000, guid: f480eeb1eb3bff24281aff4ddf3fd3a6, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -56696,11 +56696,21 @@ MonoBehaviour:
   force: 0
   playerData: {fileID: 3751974374267777477}
   heroes:
-  - CardId: 3
-    Level: 10
-  - CardId: 16
+  - CardId: 122
     Level: 1
-  towers: []
+  - CardId: 48
+    Level: 1
+  towers:
+  - CardId: 0
+    Level: 1
+  - CardId: 1
+    Level: 1
+  - CardId: 2
+    Level: 1
+  - CardId: 3
+    Level: 1
+  - CardId: 6
+    Level: 5
   traps: []
 --- !u!1 &7322335857402148973
 GameObject:

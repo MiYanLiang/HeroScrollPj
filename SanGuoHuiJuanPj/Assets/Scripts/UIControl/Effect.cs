@@ -1733,7 +1733,7 @@ public static class Effect
             case 1:
             case 66:
             case 67: //近战
-                audioId = 47; break;
+                audioId = 61; break;
 
             case 4:
             case 68:
