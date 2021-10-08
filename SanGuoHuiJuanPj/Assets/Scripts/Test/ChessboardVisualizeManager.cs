@@ -415,10 +415,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             //***演示开始***
             //施展方如果近战，前摇(后退，前冲)
+            var section = audioSection;
+            var activityTween = DOTween.Sequence().OnComplete(() => PlayAudio(section));
             if (major != null && major.Style.Type == CombatStyle.Types.Melee)
-                yield return CardAnimator.instance.StepBackAndHit(major)
-                    .OnComplete(() => PlayAudio(audioSection))
-                    .WaitForCompletion();
+                activityTween.Join(CardAnimator.instance.StepBackAndHit(major));
+            yield return activityTween.WaitForCompletion();
 
             //如果会心，调用棋盘摇晃效果
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsCriticalDamage() || c.IsRouseDamage()))
