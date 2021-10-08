@@ -130,7 +130,8 @@ using UnityEngine;
     public int CardId => cardId;
     public GameCardType CardType => (GameCardType) cardType;
     public GameCardInfo Info => info;
-    public int HitPoint => status.MaxHp;
+    public int HitPoint => status.Hp;
+    public int MaxHitPoint => status.MaxHp;
     public int Level => level;
     private CombatStyle style;
     public CombatStyle Style => style;
@@ -161,7 +162,7 @@ using UnityEngine;
             return;
         }
         UpdateHp();
-        void UpdateHp() => cardObj.War.SetHp(status.HpRate);
+        void UpdateHp() => cardObj.War.UpdateHpUi(status.HpRate);
     }
 
     public void ResetHp(int maxHp) => status.ResetHp(maxHp);
@@ -182,7 +183,7 @@ using UnityEngine;
     {
         status = stat.Clone();
         CardState.SetStates(stat.Buffs);
-        cardObj.War.SetHp(stat.HpRate);
+        cardObj.War.UpdateHpUi(stat.HpRate);
         if(stat.IsDeath)
             cardObj.SetLose(true);
     }

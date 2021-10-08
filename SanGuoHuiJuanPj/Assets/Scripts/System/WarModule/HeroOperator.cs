@@ -1976,6 +1976,7 @@ namespace Assets.System.WarModule
                     result.Status == null ||
                     !lastDmg.HasValue ||
                     lastDmg.Value <= 0 || //对手伤害=0
+                    stat.IsDeath ||
                     stat.Hp >= stat.MaxHp) //自身满血
                     break;
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,

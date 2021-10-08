@@ -186,14 +186,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //ClearStates();
             if (chess.IsChallengerWin)
                 yield return ChallengerWinAnimation();
-
+            RouseEffectObj.gameObject.SetActive(false);
             OnGameSet.Invoke(chess.IsChallengerWin);
-            yield return null;
+            IsBusy = false;
+            yield break;
         }
 
         IsBusy = false;
         NewWar.StartButtonShow(true);
-        //Sw.Stop();
     }
 
     private IEnumerator OnPreRoundUpdate(ChessRound round)
@@ -391,16 +391,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     major = op;
 
                 //承受方状态演示注入
-                mainTween.Join(target.ChessmanStyle.EffectTween(activity, target, op.ChessmanStyle.GetMilitarySparkId(activity)))
-                    .OnComplete(() =>
+                mainTween.Join(target.ChessmanStyle
+                    .EffectTween(activity, target, op.ChessmanStyle.GetMilitarySparkId(activity))
+                    .AppendCallback(() =>
                         //施展方演示注入
                         major.ChessmanStyle.ActivityEffect(activity, major)
-                    );
+                    ));
 
                 //击退一格注入
                 if (activity.IsRePos)
-                    mainTween.Join(CardAnimator.instance
-                        .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                    mainTween
+                        .Join(CardAnimator.instance.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
                         .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target)));
             });
 
@@ -408,8 +409,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
             {
                 var card = GetCardMap(result.Key);
                 mainTween.Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card))
-                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card))
-                    .OnComplete(()=>card.ChessmanStyle.ResultEffectTween(result.Value, card));
+                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card)
+                    .OnComplete(()=>card.ChessmanStyle.ResultEffectTween(result.Value, card)));
                 SetResultAudio(audioSection, result.Value);
             }
 
