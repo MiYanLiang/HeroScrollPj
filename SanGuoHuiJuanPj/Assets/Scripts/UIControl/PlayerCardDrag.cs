@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -96,11 +97,38 @@ public class PlayerCardDrag : DragController
         {
             targetPos = posObj.GetComponent<ChessPos>();
             targetPosIndex = targetPos.Pos;
+            if (WarsUIManager.instance.TempScope.Any(c => c.Key.PosIndex == targetPosIndex))
+            {
+                ResetPos();
+                return;
+            }
         }
         else
         {
             var war = posObj.GetComponent<GameCardWarUiOperation>();
+            if (!war)
+            {
+                ResetPos(-1);
+                return;
+            }
             if(war && war.baseUi.CompareTag(GameSystem.PyCard)) targetPosIndex = war.DragController.PosIndex;
+            if (targetPosIndex == -1)
+            {
+                ResetPos();
+                return;
+            }
+            if (this != war.DragController)
+            {
+                if (!war.DragController.IsLocked)
+                {
+                    war.DragController.ResetPos(-1);
+                    PlaceCard(WarsUIManager.instance.Chessboard.GetChessPos(targetPosIndex, true));
+                    return;
+                }
+
+                ResetPos();
+                return;
+            }
         }
 
 
@@ -147,7 +175,7 @@ public class PlayerCardDrag : DragController
     {
         FightCard.posIndex = pos.Pos;
         LastPos = pos;
-        WarsUIManager.instance.PlaceCardOnTemp(FightCard);
+        WarsUIManager.instance.UpdateCardTempScope(FightCard);
         Ui.SetHighLight(true);
 
         WarsUIManager.instance.PlayAudioForSecondClip(85, 0);
@@ -163,10 +191,12 @@ public class PlayerCardDrag : DragController
      * -a.回到架子上(pos = -1)
      * -b.回到地块上(pos >= 0)
      */
-    public override void ResetPos()
+    public override void ResetPos(int pos = -2)
     {
+        if (pos != -2) FightCard.UpdatePos(pos);
         if (WarsUIManager.instance != null && transform != null)
         {
+            WarsUIManager.instance.UpdateCardTempScope(FightCard);
             transform.SetParent(PosIndex == -1 ? ScrollRect.content.transform : LastPos.transform);
             Ui.SetSelected(false);
             CardBody.raycastTarget = true;
