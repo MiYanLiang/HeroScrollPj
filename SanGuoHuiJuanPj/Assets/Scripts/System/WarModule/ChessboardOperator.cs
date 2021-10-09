@@ -760,7 +760,9 @@ namespace Assets.System.WarModule
             //闪避判定
             if (offender.CardType == GameCardType.Hero &&
                 OnDodgeTriggerPass(op, offender))
+            {
                 result.Result = (int)ActivityResult.Types.Dodge;
+            }
             else
             {
                 var state = ShieldFilter(op, offender, activity);
@@ -902,7 +904,7 @@ namespace Assets.System.WarModule
         /// <param name="ratio"></param>
         /// <param name="range"></param>
         /// <returns></returns>
-        public bool IsRandomPass(int ratio, int range = 100) => random.Next(0, range) <= ratio;
+        public bool IsRandomPass(int ratio, int range = 100) => random.Next(1, range) <= ratio;
 
         /// <summary>
         /// Randomize

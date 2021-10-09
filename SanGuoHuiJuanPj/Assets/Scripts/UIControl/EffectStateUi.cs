@@ -5,4 +5,6 @@ public class EffectStateUi : MonoBehaviour
 {
     public Image Image;
     public Animator Animator;
+
+    public void ImageFading(float rate) => Image.color = new Color(Image.color.r, Image.color.g, Image.color.b, rate);
 }

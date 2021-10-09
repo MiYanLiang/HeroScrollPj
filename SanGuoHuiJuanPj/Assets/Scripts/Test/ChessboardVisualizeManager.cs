@@ -594,6 +594,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (RouseEffectObj.activeSelf)
                 RouseEffectObj.SetActive(false);
             RouseEffectObj.SetActive(true);
+            PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse), 0f);
         }).AppendInterval(1.5f);
 
     private void PlayAudio(AudioSection section)
@@ -605,6 +606,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void PlayAudio(int clipIndex, float delayedTime)
     {
+        if (clipIndex < 0) return;
         if (!GamePref.PrefMusicPlay) return;
         if (WarsUIManager.instance == null || AudioController0.instance == null) return;
         var clip = WarsUIManager.instance.audioClipsFightEffect[clipIndex];
