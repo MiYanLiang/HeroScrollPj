@@ -148,12 +148,17 @@ namespace Assets.System.WarModule
             }
         }
     }
-
+    /// <summary>
+    /// 短弓
+    /// </summary>
     public class DuanGongOperator : HeroOperator
     {
         protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Any;
 
     }
+    /// <summary>
+    /// 文士
+    /// </summary>
     public class WenShiOperator : HeroOperator
     {
         protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.AnyHero;
@@ -1679,7 +1684,7 @@ namespace Assets.System.WarModule
             var soul = Chessboard.GetCondition(this, CardState.Cons.BattleSoul);
             var addOn = DamageRate * 0.01f * soul * GeneralDamage();
             var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                Helper.Singular(InstanceHeroGenericDamage(addOn)), 0, 0);
+                Helper.Singular(InstanceHeroGenericDamage(addOn)), 0, skill: 1);
 
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(BattleSoulConduct), -1, 2);
@@ -1692,7 +1697,7 @@ namespace Assets.System.WarModule
                    loopCount <= RecursiveLimit)
             {
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                    Helper.Singular(BattleSoulConduct), loopCount + 1, 2);
+                    Helper.Singular(BattleSoulConduct), loopCount + 1, -1);
                 resultType = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
                     Helper.Singular(InstanceHeroGenericDamage(addOn)), loopCount + 1, 1).Type;
                 loopCount++;
@@ -1967,12 +1972,11 @@ namespace Assets.System.WarModule
             for (int i = 0; i < ComboRatio(); i++)
             {
                 var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(InstanceHeroGenericDamage()), i, i > 0 ? 1 : 0);//伤害活动
+                    Helper.Singular(InstanceHeroGenericDamage()), actId: i, skill: 1);//伤害活动
 
                 var lastDmg = result?.Status?.LastSuffers?.LastOrDefault();
                 if (result == null) return;
                 if (result.IsDeath || //对手死亡
-                    result.Type != ActivityResult.Types.Suffer || //对手反馈非承受
                     result.Status == null ||
                     !lastDmg.HasValue ||
                     lastDmg.Value <= 0 || //对手伤害=0
@@ -1980,7 +1984,11 @@ namespace Assets.System.WarModule
                     stat.Hp >= stat.MaxHp) //自身满血
                     break;
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceHeal(lastDmg.Value, InstanceId)), i, 2); //吸血活动
+                    Helper.Singular(CombatConduct.InstanceHeal(lastDmg.Value, InstanceId)), actId: i, skill: 2); //吸血活动
+                if (
+                    result.Type != ActivityResult.Types.Suffer//对手反馈非承受
+                    )
+                    break;
             }
         }
     }
