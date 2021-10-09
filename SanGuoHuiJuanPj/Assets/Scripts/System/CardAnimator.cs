@@ -231,16 +231,12 @@ public class CardAnimator : MonoBehaviour
             if (!target.StatesUi.ContainsKey(key))
                 target.StatesUi.Add(key, null);
             target.StatesUi[key] = effect;
-
-            if (con == CardState.Cons.EaseShield)
-            {
-                var fade = Math.Max(0.3f, 1f * stateValue / CardState.EaseShieldMax);
-                effect.Image.color = new Color(1, 1, 1, fade);
-            }
         }
 
         if (!target.cardObj.War.CardStates.ContainsKey(iconId))
             CreateSateIcon(target.cardObj, con);
+
+        target.StatesUi[key].ImageFading(Effect.BuffFading(con, stateValue));
     }
 
 

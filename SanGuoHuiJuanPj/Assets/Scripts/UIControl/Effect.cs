@@ -4,6 +4,18 @@ using CorrelateLib;
 
 public static class Effect
 {
+    public enum ChessboardEvent
+    {
+        /// <summary>
+        /// 会心一击
+        /// </summary>
+        Rouse,
+        /// <summary>
+        /// 当卡牌放置到棋格上
+        /// </summary>
+        PlaceCardToBoard
+    }
+
     public const string GetGold = "GetGold";
     public const string DropBlood = "dropBlood";
     public const string SpellTextH = "spellTextH";
@@ -682,6 +694,23 @@ public static class Effect
                 return 063;
             default:
                 return 001;
+        }
+    }
+
+    /// <summary>
+    /// 棋盘上棋子一些行为的特效
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    public static int OnChessboardEventEffect(ChessboardEvent arg)
+    {
+        switch (arg)
+        {
+            case ChessboardEvent.PlaceCardToBoard:
+                return -1;
+            case ChessboardEvent.Rouse:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
         }
     }
 
@@ -1651,6 +1680,79 @@ public static class Effect
                 return -1;//返回-1表示没有buff特效
         }
     }
+
+    /// <summary>
+    /// Buff亮度
+    /// </summary>
+    /// <param name="con"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static float BuffFading(CardState.Cons con,int value)
+    {
+        //返回1为最亮，0为透明
+        var fading = 1f;
+        switch (con)
+        {
+            // 武魂
+            case CardState.Cons.BattleSoul:
+            // 护盾
+            case CardState.Cons.Shield: 
+                fading = value / 10f;
+                break;
+            // 缓冲、抵消盾
+            case CardState.Cons.EaseShield:
+                fading = value / 1000f;
+                break;
+            // 眩晕
+            case CardState.Cons.Stunned:
+            // 无敌
+            case CardState.Cons.Invincible:
+            // 流血
+            case CardState.Cons.Bleed:
+            // 毒
+            case CardState.Cons.Poison:
+            // 灼烧
+            case CardState.Cons.Burn:
+            // 战意
+            case CardState.Cons.Stimulate:
+            // 禁锢
+            case CardState.Cons.Imprisoned:
+            // 混乱
+            case CardState.Cons.Confuse:
+            // 怯战
+            case CardState.Cons.Cowardly:
+            // 力量Up
+            case CardState.Cons.StrengthUp:
+            // 闪避Up
+            case CardState.Cons.DodgeUp:
+            // 暴击Up
+            case CardState.Cons.CriticalUp:
+            // 会心Up
+            case CardState.Cons.RouseUp:
+            // 护甲Up
+            case CardState.Cons.ArmorUp:
+            // 血战
+            case CardState.Cons.DeathFight:
+            // 卸甲
+            case CardState.Cons.Disarmed:
+            // 内助
+            case CardState.Cons.Neizhu:
+            //神助
+            case CardState.Cons.ShenZhu:
+            // 迷雾
+            case CardState.Cons.Forge://迷雾不应该是卡牌上的状态
+            // 杀气
+            case CardState.Cons.Murderous:
+            // 连环
+            case CardState.Cons.Chained:
+            // 黄巾
+            case CardState.Cons.YellowBand:
+                
+            default: break;
+        }
+
+        return Math.Max(0.3f, fading);//最低为0.3亮度
+    }
     #endregion
     #region 地块Buff状态
 
@@ -2433,5 +2535,22 @@ public static class Effect
         }
     }
 
+    /// <summary>
+    /// 棋盘音效
+    /// </summary>
+    /// <returns></returns>
+    public static int GetChessboardAudioId(ChessboardEvent arg)
+    {
+        switch (arg)
+        {
+            //会心一击
+            case ChessboardEvent.Rouse:
+                return -1;
+            case ChessboardEvent.PlaceCardToBoard:
+                return -1;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
+        }
+    }
     #endregion
 }

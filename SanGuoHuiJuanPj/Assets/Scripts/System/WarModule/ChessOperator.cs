@@ -162,9 +162,8 @@ namespace Assets.System.WarModule
         {
             var conducts = activity.Conducts;
             if (result == ActivityResult.Types.Shield)
-                conducts = conducts.Where(c => 
-                    !(c.Kind == CombatConduct.DamageKind && 
-                      Damage.GetKind(c) != Damage.Kinds.Physical)).ToList();
+                conducts = conducts.Where(c =>
+                    !(c.Kind == CombatConduct.DamageKind && Damage.GetKind(c) == Damage.Kinds.Physical)).ToList();
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;

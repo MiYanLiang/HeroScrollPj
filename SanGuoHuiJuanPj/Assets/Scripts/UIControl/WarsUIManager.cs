@@ -154,6 +154,7 @@ public class WarsUIManager : MonoBehaviour
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
         chessboardManager.OnCardDefeated.AddListener(OnCardDefeated);
         chessboardManager.OnGameSet.AddListener(FinalizeWar);
+        speedBtn.onClick.AddListener(ChangeTimeScale);
     }
 
     IEnumerator Initialize()
@@ -506,6 +507,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     [SerializeField] Text speedBtnText;
+    [SerializeField] private Button speedBtn;
 
     private const string Multiply = "×";
 
@@ -601,6 +603,8 @@ public class WarsUIManager : MonoBehaviour
         {
             var chessPos = Chessboard.GetChessPos(card.Pos, true);
             card.cardObj.transform.position = chessPos.transform.position;
+            EffectsPoolingControl.instance.GetSparkEffect(
+                Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
         }
         else
         {
