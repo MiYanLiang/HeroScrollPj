@@ -129,9 +129,9 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://攻击目标
-                        value = 005; break;
+                        value = 004; break;
                     case 2://自身加血
-                        value = 043; break;
+                        value = 105; break;
                 }
                 break;
 
@@ -158,7 +158,7 @@ public static class Effect
                     case 1://自身加盾
                         value = 08702; break;
                     case 2://自身加血
-                        value = 043; break;
+                        value = 105; break;
                 }
                 break;
 
@@ -444,17 +444,17 @@ public static class Effect
             case 181:
             case 182:
             case 183://元戎弩
-                value = 100;break;
+                value = 025;break;
 
             case 20:
             case 52:
             case 184://大弓
-                value = 02501;break;
+                value = 135;break;
 
             case 185:
             case 186:
             case 187://火弓
-                value = 02502;break;
+                value = 100;break;
 
             case 188:
             case 189:
@@ -1612,7 +1612,7 @@ public static class Effect
                 return 505;
             // 武魂
             case CardState.Cons.BattleSoul:
-                return 516;
+                return 517;
             // 战意
             case CardState.Cons.Stimulate:
                 return -1;
