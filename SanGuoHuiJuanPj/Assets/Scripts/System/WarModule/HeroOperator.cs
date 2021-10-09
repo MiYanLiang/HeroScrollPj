@@ -459,7 +459,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             if (!target.IsAliveHero)
             {
-                base.MilitaryPerforms(0);
+                base.MilitaryPerforms(1);
                 return;
             }
             var combat = InstanceHeroGenericDamage();
@@ -471,7 +471,7 @@ namespace Assets.System.WarModule
                 poisonRate += CriticalAddOn;
             if (Chessboard.IsRandomPass(poisonRate))
                 dmg.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison));
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, dmg.ToArray(), 0, 1);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, dmg.ToArray(), 0, 2);
         }
     }
 
@@ -698,7 +698,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             if (!target.IsAliveHero)
             {
-                base.MilitaryPerforms(0);
+                base.MilitaryPerforms(1);
                 return;
             }
 
@@ -711,7 +711,7 @@ namespace Assets.System.WarModule
                 disarmedRate += CriticalAddOn;
             if (Chessboard.IsRandomPass(disarmedRate))
                 list.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Disarmed));
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, list.ToArray(), 0, 1);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, list.ToArray(), 0, 2);
         }
     }
 
@@ -804,7 +804,7 @@ namespace Assets.System.WarModule
                 Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0 ||
                 rest > 0) return;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.DeathFight)), -1, 1);
+                Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.DeathFight)), -1, skill: 1);
         }
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
@@ -814,7 +814,7 @@ namespace Assets.System.WarModule
             if (Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0)
             {
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceHeal(conduct.Total, InstanceId)), -1, skill: -1);
+                    Helper.Singular(CombatConduct.InstanceHeal(conduct.Total, InstanceId)), -1, skill: 2);
                 conduct.SetZero();
             }
         }
@@ -1313,11 +1313,11 @@ namespace Assets.System.WarModule
                 .OrderByDescending(p => p.Operator.Style.Type)
                 .ThenByDescending(p => p.Operator.Style.Strength)
                 .ThenByDescending(p => p.Pos).FirstOrDefault();
-            if (target == null) base.MilitaryPerforms(0);
+            if (target == null) base.MilitaryPerforms(1);
             var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.IsRandomPass(BleedRate()))
                 combats.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed));
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, combats.ToArray(), 0, 1);
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, combats.ToArray(), 0, skill: 2);
         }
     }
 
@@ -1791,7 +1791,7 @@ namespace Assets.System.WarModule
         {
             if (Chessboard.GetStatus(this).HpRate * 100 > 30)
             {
-                base.MilitaryPerforms(0);
+                base.MilitaryPerforms(1);
                 return;
             }
 
@@ -1806,7 +1806,7 @@ namespace Assets.System.WarModule
                     Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), 0, 1);
             }
 
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling(InstanceId)), 0, 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self, Helper.Singular(CombatConduct.InstanceKilling(InstanceId)), 0, 2);
         }
 
         public override int GetDodgeRate() =>
@@ -2044,7 +2044,7 @@ namespace Assets.System.WarModule
                 shield++;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, shield)), -1,
-                damage.IsRouseDamage() ? 2 : 1);
+                damage.IsRouseDamage() ? 1 : 2);
         }
     }
 
