@@ -162,7 +162,9 @@ namespace Assets.System.WarModule
         {
             var conducts = activity.Conducts;
             if (result == ActivityResult.Types.Shield)
-                conducts = conducts.Where(c => Damage.GetKind(c) != Damage.Kinds.Magic).ToList();
+                conducts = conducts.Where(c => 
+                    !(c.Kind == CombatConduct.DamageKind && 
+                      Damage.GetKind(c) != Damage.Kinds.Physical)).ToList();
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
@@ -242,7 +244,7 @@ namespace Assets.System.WarModule
 
                     return;
                 }
-                case CombatConduct.PlayerDegreeKind://特别类不是棋子维度可执行的
+                case CombatConduct.PlayerScopeKind://特别类不是棋子维度可执行的
                 case CombatConduct.KillingKind://属于直接提取棋子的类型
                     status.Kill();
                     return;

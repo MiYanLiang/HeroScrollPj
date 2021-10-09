@@ -521,7 +521,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         if (activity.Intent != Activity.PlayerResource) return false;
         foreach (var conduct in activity.Conducts)
         {
-            if (conduct.Kind == CombatConduct.PlayerDegreeKind)
+            if (conduct.Kind == CombatConduct.PlayerScopeKind)
                 OnResourceUpdate.Invoke(activity.To == -1, conduct.Element, (int)conduct.Total);
         }
         return true;
@@ -600,7 +600,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var id in section.Offensive.Where(id => id >= 0)) PlayAudio(id, 0);
         if (section.Result >= 0)
-            PlayAudio(section.Result, 0.1f);
+            PlayAudio(section.Result, 0f);
     }
 
     private void PlayAudio(int clipIndex, float delayedTime)
