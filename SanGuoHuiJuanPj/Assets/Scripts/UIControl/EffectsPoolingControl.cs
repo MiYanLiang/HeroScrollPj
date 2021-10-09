@@ -237,6 +237,8 @@ public class EffectsPoolingControl : MonoBehaviour
     {
         var id = Effect.GetBuffId(con);
         if (id == -1) return null;
+        foreach (var tmp in BuffPool.Where(b=>b.Value.Any(e=>e ==null)).ToArray())
+            BuffPool[tmp.Key] = tmp.Value.Where(e => e != null).ToList();
         if (!BuffPool.ContainsKey(id))
             BuffPool.Add(id, new List<EffectStateUi>());
         var buff = BuffPool[id].FirstOrDefault(e => !e.gameObject.activeSelf);

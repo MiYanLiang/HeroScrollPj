@@ -35,15 +35,20 @@ namespace Assets.System.WarModule
         public const int HealKind = 1;
         public const int BuffKind = 2;
         public const int KillingKind = 3;
-        public const int PlayerDegreeKind = 10;
+        public const int PlayerScopeKind = 10;
         public const int SpriteKind = 11;
         #endregion
     
         //[JsonProperty("I")]
         public int ReferenceId { get; set; }
         /// <summary>
-        /// 战斗元素类型,其余资源类型并不使用这字段，请查<see cref="Element"/>
-        /// 精灵类：精灵类型
+        /// <see cref="DamageKind"/>,
+        /// <see cref="HealKind"/>,
+        /// <see cref="BuffKind"/>,
+        /// <see cref="KillingKind"/>,
+        /// <see cref="PlayerScopeKind"/>,
+        /// <see cref="SpriteKind"/>,
+        /// 战斗元素类型,其余资源类型并不使用这字段，请查<see cref="Element"/>。
         /// </summary>
         //[JsonProperty("K")] 
         public int Kind { get; set; }
@@ -51,7 +56,7 @@ namespace Assets.System.WarModule
         /// 战斗类<see cref="DamageKind"/> 或 <see cref="HealKind"/> ： 0 = 物理 ，大于0 = 法术元素，小于0 = 特殊物理，
         /// 状态类<see cref="BuffKind"/>：状态Id，详情看 <see cref="CardState.Cons"/>
         /// 斩杀类<see cref="KillingKind"/>
-        /// 玩家维度<see cref="PlayerDegreeKind"/>：资源Id(-1=金币,正数=宝箱id)
+        /// 玩家维度<see cref="PlayerScopeKind"/>：资源Id(-1=金币,正数=宝箱id)
         /// 精灵类<see cref="Activity.Sprite"/>：精灵TypeId
         /// </summary>
         //[JsonProperty("E")] 
@@ -123,7 +128,7 @@ namespace Assets.System.WarModule
         /// <param name="refId"></param>
         /// <returns></returns>
         public static CombatConduct InstancePlayerResource(int resourceId, int refId, int value = 1) =>
-            Instance(value, 0, 0, element: resourceId, kind: PlayerDegreeKind, 0, refId);
+            Instance(value, 0, 0, element: resourceId, kind: PlayerScopeKind, 0, refId);
 
         public void Multiply(float ratio)
         {
@@ -168,7 +173,7 @@ namespace Assets.System.WarModule
                 }
                 case HealKind: kindText = "治疗";break;
                 case KillingKind: kindText = "击杀";break;
-                case PlayerDegreeKind:
+                case PlayerScopeKind:
                 {
                     kindText = "玩家资源";
                     if (Element == -1)

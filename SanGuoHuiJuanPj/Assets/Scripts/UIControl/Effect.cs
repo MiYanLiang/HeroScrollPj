@@ -74,12 +74,6 @@ public static class Effect
     public const string Anchorite54A= "54A";
     #endregion
 
-    public const string VTextDodge = "A2";//闪避
-    public const string VTextParry = "A3";//格挡
-    public const string VTextInvincible = "A1";//无敌
-    public const string VTextShield = "4";//?
-    #region 旧特效
-    #endregion
     public const int Basic001 = 001;
     public static int GetHeroSparkId(int military, int skill)//skill=-1(没有特效)，skill=0(默认特效001),skill>0（技能专属特效）
     {
@@ -630,23 +624,7 @@ public static class Effect
         }
         return value;
     }
-    #region 旧特效
-    public static string GetTowerSpark(int towerId, int skill)
-    {
-        switch (towerId)
-        {
-            case 0: //营寨
-            case 2: //奏乐台
-                return Heal42A;
-            case 6://轩辕台
-            case 3://箭塔
-                return Bow20A;
-            case 1: //投石台
-            default:
-                return Basic0A;
-        }
-    }
-    #endregion
+
     /// <summary>
     /// 建筑（塔）特效
     /// </summary>
