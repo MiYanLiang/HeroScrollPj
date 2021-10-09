@@ -1760,7 +1760,7 @@ public static class Effect
             case 5:
             case 81:
             case 82://陷阵
-                audioId = 47; break;//自身加盾
+                audioId = 61; break;//自身加盾
 
             case 41:
             case 83:
@@ -1768,7 +1768,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://自身加盾
-                        audioId = 47; break;
+                        audioId = 61; break;
                     case 2://自身加血
                         audioId = 57; break;
                 }
