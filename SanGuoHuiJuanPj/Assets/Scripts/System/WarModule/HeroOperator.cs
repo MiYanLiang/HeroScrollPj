@@ -1584,16 +1584,30 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetContraTarget(this);
-            var targetStatus = Chessboard.GetStatus(target.Operator);
-            var dmgGapValue = Strength * DamageRate() * 0.01;//每10%掉血增加数
-            var additionDamage = HpDepletedRatioWithGap(targetStatus , 0, 10, (int)dmgGapValue);
-            var performDamage = InstanceHeroGenericDamage(additionDamage);
-            //var breakShield = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield) > 0 ? 1 : 0;
-            Chessboard.AppendOpActivity(this, target, Activity.Offensive, new[]
+            if (target.IsAliveHero)
             {
-                CombatConduct.InstanceBuff(InstanceId,CardState.Cons.Shield, -BreakShields()),
-                performDamage
-            }, 0, 1);
+                var targetStatus = Chessboard.GetStatus(target.Operator);
+                var targetShields = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield);
+                var shieldBalance = targetShields - BreakShields();
+                var dmgGapValue = Strength * DamageRate() * 0.01; //每10%掉血增加数
+                var additionDamage = HpDepletedRatioWithGap(targetStatus, 0, 10, (int)dmgGapValue);
+                var performDamage = InstanceHeroGenericDamage(additionDamage);
+                var combat = new List<CombatConduct>();
+                if (shieldBalance > 0)
+                {
+                    combat.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, -BreakShields()));
+                }
+                else
+                {
+                    combat.Add(performDamage);
+                    combat.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, -targetShields));
+                }
+                Chessboard.AppendOpActivity(this, target, Activity.Offensive, combat.ToArray(), 0, 1);
+                return;
+            }
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(InstanceHeroGenericDamage()),
+                0, 1);
+            //var breakShield = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield) > 0 ? 1 : 0;
         }
     }
 
@@ -1985,18 +1999,23 @@ namespace Assets.System.WarModule
         {
             var stat = Chessboard.GetStatus(this);
             var target = Chessboard.GetContraTarget(this);
-            if (!target.IsAliveHero) base.MilitaryPerforms(0);
+            if (!target.IsAliveHero)
+            {
+                base.MilitaryPerforms(1);
+                return;
+            }
             for (int i = 0; i < ComboRatio(); i++)
             {
                 //不攻击的判断
-                if ((i > 0 && stat.HpRate <= 1) || //第二击开始，血量满了
+                if ((i > 0 && stat.HpRate >= 1) || //第二击开始，血量满了
                     stat.IsDeath) break;
                 var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
                     Helper.Singular(InstanceHeroGenericDamage()), actId: i, skill: 1);//伤害活动
 
                 var lastDmg = result?.Status?.LastSuffers?.LastOrDefault();
                 if (result == null) return;
-                if (result.Status == null ||
+                if (!target.IsAliveHero||
+                    result.Status == null ||
                     !lastDmg.HasValue ||
                     lastDmg.Value <= 0 || //对手伤害=0
                     stat.Hp >= stat.MaxHp) //自身满血

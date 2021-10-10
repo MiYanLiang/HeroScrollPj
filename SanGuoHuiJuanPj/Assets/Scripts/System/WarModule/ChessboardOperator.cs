@@ -796,7 +796,8 @@ namespace Assets.System.WarModule
             if (GetCondition(op,CardState.Cons.Shield) > 0)
             {
                 if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
-                if (activity.Conducts.All(c => Damage.GetKind(c) != Damage.Kinds.Physical))
+                if (activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
+                    .All(c => Damage.GetKind(c) != Damage.Kinds.Physical))
                     return ActivityResult.Types.Suffer;
                 //如果被护盾免伤后，扣除护盾1层
                 activity.Conducts.Add(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Shield, -1));
