@@ -412,7 +412,7 @@ namespace Assets.System.WarModule
         {
             if (conduct.Element == CombatConduct.FireDmg)
             {
-                conduct.Multiply(3);
+                conduct.Multiply(10);
             }
         }
     }
@@ -1690,9 +1690,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ShenWuOperator : HeroOperator
     {
-        private const int RecursiveLimit = 10;
+        private int DamageRate => 10;//武魂：武力提升百分比
+        private const int RecursiveLimit = 20;//武魂：上限
         private static int loopCount = 0;
-        private int DamageRate => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
