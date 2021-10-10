@@ -250,12 +250,11 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
-            //var tOp = Chessboard.GetOperator(target);
-            int comboRate = ComboRatio();
             bool combo = true;
             var actId = 0;
             do
             {
+                int comboRate = ComboRatio();
                 var hit = InstanceHeroGenericDamage();
                 var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive, Helper.Singular(hit), actId,
                     actId == 0 ? 0 : 1);
@@ -538,7 +537,7 @@ namespace Assets.System.WarModule
                     var chessPos = surrounded[i];
                     if (Chessboard.IsRandomPass(ExplodeBurningRate))
                         explode.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn));
-                    Chessboard.AppendOpActivity(this, chessPos, Activity.Offensive, explode.ToArray(), 0,
+                    Chessboard.AppendOpActivity(this, chessPos, Activity.Inevitable, explode.ToArray(), 0,
                         i == 0 ? 2 : -1);
                 }
 
@@ -1327,14 +1326,14 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
+
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetRivals(this,
-                    p => p.IsAliveHero)
-                .OrderByDescending(p => p.Operator.Style.Type)
-                .ThenByDescending(p => p.Operator.Style.Strength)
-                .ThenByDescending(p => p.Pos).FirstOrDefault();
-            if (target == null) base.MilitaryPerforms(1);
+            var target = Chessboard.GetRivals(this)
+                .Where(p => p.Operator.IsRangeHero)
+                .Select(p => new { Pos = p, Random = Chessboard.Randomize(3) })
+                .OrderByDescending(p => p.Random).FirstOrDefault()?.Pos;
+            if (target == null) target = Chessboard.GetContraTarget(this);
             var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.IsRandomPass(BleedRate()))
                 combats.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed));
@@ -1437,16 +1436,16 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetContraTarget(this);
 
-            var basicDamage = GeneralDamage();
+            var damage = InstanceHeroGenericDamage();
             if (Chessboard.GetCondition(target.Operator, CardState.Cons.Stunned) > 0)
             {
-                basicDamage *= 2;
+                damage.Multiply(2);
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, basicDamage)), 0, 1);
+                    Helper.Singular(damage), 0, 1);
                 return;
             }
 
-            var damage = CombatConduct.InstanceDamage(InstanceId, basicDamage);
+            
             var combats = new List<CombatConduct> { damage };
             var stunningRate = StunningRate();
             if (damage.IsRouseDamage())
@@ -1759,7 +1758,7 @@ namespace Assets.System.WarModule
         public override int GetDodgeRate() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeGapRate());
 
-        protected override int GeneralDamage() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Strength, 10, DamageGapRate());
+        public override int Strength => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
     public class HuBaoQiOperator : HeroOperator
     {
@@ -1789,7 +1788,8 @@ namespace Assets.System.WarModule
         public override int GetPhysicArmor() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Armor, 10, DamageResistGapRate());
 
-        protected override int GeneralDamage() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Strength, 10, DamageGapRate());
+        public override int Strength =>
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
 
     /// <summary>
@@ -1823,7 +1823,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < array.Length; i++)
             {
                 var pos = array[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive,
+                Chessboard.AppendOpActivity(this, pos, Activity.Inevitable,
                     Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), 0, 2);
             }
 
@@ -1957,7 +1957,8 @@ namespace Assets.System.WarModule
 
         protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
-            if (offender.IsRangeHero) return;
+            if (offender.Style.Type == CombatStyle.Types.Range ||
+                offender.Style.ArmedType < 0) return;
             var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
                              .Sum(c => c.Total) * ReflectRate();
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Reflect,
@@ -1987,23 +1988,24 @@ namespace Assets.System.WarModule
             if (!target.IsAliveHero) base.MilitaryPerforms(0);
             for (int i = 0; i < ComboRatio(); i++)
             {
+                //不攻击的判断
+                if ((i > 0 && stat.HpRate <= 1) || //第二击开始，血量满了
+                    stat.IsDeath) break;
                 var result = Chessboard.AppendOpActivity(this, target, Activity.Offensive,
                     Helper.Singular(InstanceHeroGenericDamage()), actId: i, skill: 1);//伤害活动
 
                 var lastDmg = result?.Status?.LastSuffers?.LastOrDefault();
                 if (result == null) return;
-                if (result.IsDeath || //对手死亡
-                    result.Status == null ||
+                if (result.Status == null ||
                     !lastDmg.HasValue ||
                     lastDmg.Value <= 0 || //对手伤害=0
-                    stat.IsDeath ||
                     stat.Hp >= stat.MaxHp) //自身满血
                     break;
+                
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                     Helper.Singular(CombatConduct.InstanceHeal(lastDmg.Value, InstanceId)), actId: i, skill: 2); //吸血活动
-                if (
-                    result.Type != ActivityResult.Types.Suffer//对手反馈非承受
-                    )
+                if (result.Type != ActivityResult.Types.Suffer ||//对手反馈非承受
+                    result.IsDeath)
                     break;
             }
         }
