@@ -547,7 +547,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void OnSpriteEffect(Activity activity)
     {
-        var chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
+        ChessPos chessPos;
+        try
+        {
+            chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException(
+                $"找不到棋格[{activity.To}]IsChallenger[{activity.IsChallenger}]: {activity}");
+        }
         foreach (var conduct in activity.Conducts.Where(c => c.Kind == CombatConduct.SpriteKind))
         {
             var buffId = Effect.GetFloorBuffId(conduct.Element);
