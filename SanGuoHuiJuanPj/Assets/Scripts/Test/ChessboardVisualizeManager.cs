@@ -383,21 +383,24 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //施放者活动
             FightCardData major = null;
             var audioSection = new AudioSection();
+            var listTween = new List<CardTween>();
             UpdateActivityTarget(audioSection, map.Value.Activities, (target, activity) =>
             {
                 var op = GetCardMap(activity.From);
                 if (op == null) return;
                 if (major == null)
                     major = op;
-
+                mainTween.Join(target.ChessmanStyle.StatusEffectTween(activity, target,
+                    op.ChessmanStyle.GetMilitarySparkId(activity)));
                 //承受方状态演示注入
-                mainTween.Join(target.ChessmanStyle
-                    .EffectTween(activity, target, op.ChessmanStyle.GetMilitarySparkId(activity))
-                    .AppendCallback(() =>
-                        //施展方演示注入
-                        major.ChessmanStyle.ActivityEffect(activity, major)
-                    ));
-
+                mainTween.AppendCallback(() =>
+                    //施展方演示注入
+                    major.ChessmanStyle.ActivityEffect(activity, major)
+                );
+                var cardTween = new CardTween(target.InstanceId);
+                cardTween.NumberEffectTween = DOTween.Sequence().Pause()
+                    .AppendCallback(() => target.ChessmanStyle.NumberEffect(activity, target));
+                listTween.Add(cardTween);
                 //击退一格注入
                 if (activity.IsRePos)
                     mainTween
@@ -408,10 +411,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = GetCardMap(result.Key);
-                mainTween.Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card))
-                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card)
-                    .OnComplete(()=>card.ChessmanStyle.ResultEffectTween(result.Value, card)));
+                mainTween
+                    .Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
+                        .OnComplete(() => card.ChessmanStyle.ResultEffectTween(result.Value, card)))
+                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(audioSection, result.Value);
+                var tween = listTween.FirstOrDefault(c => c.Id == card.InstanceId);
+                if (tween == null) continue;
+                if (!(result.Value.Type == ActivityResult.Types.Dodge ||
+                      result.Value.Type == ActivityResult.Types.Shield))
+                    mainTween.Join(tween.NumberEffectTween);
             }
 
             //***演示开始***
@@ -447,7 +456,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             {
                 var op = GetCardMap(activity.From);
                 op.ChessmanStyle.ActivityEffect(activity, op);
-                counterTween.Join(target.ChessmanStyle.EffectTween(activity, target,
+                counterTween.Join(target.ChessmanStyle.StatusEffectTween(activity, target,
                     op.ChessmanStyle.GetMilitarySparkId(activity)));
             });
 
@@ -632,6 +641,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
         public int Pos;
         public EffectStateUi Obj;
     }
+
+    private class CardTween
+    {
+        public int Id { get; }
+        public Sequence NumberEffectTween;
+
+        public CardTween(int id)
+        {
+            Id = id;
+        }
+    }
+
 
     public class PlayerResourceEvent : UnityEvent<bool, int, int> { }
     public class GameSetEvent : UnityEvent<bool> { }

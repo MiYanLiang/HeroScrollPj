@@ -97,7 +97,7 @@ public class PlayerCardDrag : DragController
         {
             targetPos = posObj.GetComponent<ChessPos>();
             targetPosIndex = targetPos.Pos;
-            if (WarsUIManager.instance.TempScope.Any(c => c.Key.PosIndex == targetPosIndex))
+            if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex, PosIndex < 0))
             {
                 ResetPos();
                 return;
@@ -114,14 +114,14 @@ public class PlayerCardDrag : DragController
             if(war && war.baseUi.CompareTag(GameSystem.PyCard)) targetPosIndex = war.DragController.PosIndex;
             if (targetPosIndex == -1)
             {
-                ResetPos();
+                ResetPos(targetPosIndex);
                 return;
             }
-            if (this != war.DragController)
+            if (this != war.DragController)//当有别的棋子存在
             {
-                if (!war.DragController.IsLocked)
+                if (!war.DragController.IsLocked)//棋子是可移动的
                 {
-                    war.DragController.ResetPos(-1);
+                    war.DragController.ResetPos(PosIndex);
                     PlaceCard(WarsUIManager.instance.Chessboard.GetChessPos(targetPosIndex, true));
                     return;
                 }
@@ -149,7 +149,7 @@ public class PlayerCardDrag : DragController
         if (PosIndex == -1 && targetPos != null)
         {
             //是否可以上阵
-            if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex))
+            if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex, PosIndex < 0))
             {
                 //Debug.Log("上阵位已满");
                 ResetPos();
@@ -176,8 +176,8 @@ public class PlayerCardDrag : DragController
         FightCard.posIndex = pos.Pos;
         LastPos = pos;
         WarsUIManager.instance.UpdateCardTempScope(FightCard);
-        Ui.SetHighLight(true);
-
+        //Ui.SetHighLight(true);
+        Ui.SetSelected(!IsLocked);
         WarsUIManager.instance.PlayAudioForSecondClip(85, 0);
 
         EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f,
@@ -190,15 +190,22 @@ public class PlayerCardDrag : DragController
      * 1.知道上一个位置，恢复到那个位置的状态：
      * -a.回到架子上(pos = -1)
      * -b.回到地块上(pos >= 0)
+     * -2 = 取消位置
      */
     public override void ResetPos(int pos = -2)
     {
-        if (pos != -2) FightCard.UpdatePos(pos);
+        if (pos != -2)
+        {
+            FightCard.UpdatePos(pos);
+        }
+
         if (WarsUIManager.instance != null && transform != null)
         {
             WarsUIManager.instance.UpdateCardTempScope(FightCard);
-            transform.SetParent(PosIndex == -1 ? ScrollRect.content.transform : LastPos.transform);
-            Ui.SetSelected(false);
+            transform.SetParent(PosIndex == -1
+                ? ScrollRect.content.transform
+                : WarsUIManager.instance.Chessboard.GetChessPos(pos, true).transform);
+            Ui.SetSelected(!IsLocked && PosIndex > -1);
             CardBody.raycastTarget = true;
             transform.localPosition = Vector3.zero;
         }

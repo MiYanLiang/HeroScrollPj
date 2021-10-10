@@ -1243,10 +1243,12 @@ public class WarsUIManager : MonoBehaviour
     //刷新金币宝箱的显示
     private void UpdateInfoUis() => infoUis.Set(GoldForCity, WarChests);
 
-    public bool IsPlayerAvailableToPlace(int targetPos)
+    public bool IsPlayerAvailableToPlace(int targetPos,bool isAddIn)
     {
-        return TempScope.Count + PlayerScope.Count < maxHeroNums &&
-               Chessboard.IsPlayerScopeAvailable(targetPos);
+        var balance = maxHeroNums - TempScope.Count + PlayerScope.Count;
+        var isAvailable = Chessboard.IsPlayerScopeAvailable(targetPos);
+        if (balance <= 0 && isAddIn) PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(38));
+        return isAddIn ? balance > 0 : true & isAvailable;
     }
 
     public void RemoveCardFromBoard(FightCardData card)
@@ -1311,7 +1313,7 @@ public class WarsUIManager : MonoBehaviour
 
     private void UpdateHeroEnlistText() => heroEnlistText.text = 
         string.Format(DataTable.GetStringText(24),
-        TempScope.Count, 
+        TempScope.Count + PlayerScope.Count, 
         maxHeroNums);
 
 

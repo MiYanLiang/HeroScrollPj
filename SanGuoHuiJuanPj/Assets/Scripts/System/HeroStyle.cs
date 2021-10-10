@@ -42,9 +42,13 @@ public class ChessUiStyle : CombatStyle
     /// <param name="target"></param>
     /// <param name="effectId"></param>
     /// <returns></returns>
-    public virtual Sequence EffectTween(Activity activity, FightCardData target, int effectId) => DOTween.Sequence();
+    public virtual Sequence StatusEffectTween(Activity activity, FightCardData target, int effectId) => DOTween.Sequence();
 
     public virtual int GetMilitarySparkId(Activity activity) => Effect.Basic001;
+
+    public virtual void NumberEffect(Activity activity, FightCardData target)
+    {
+    }
 
 }
 /// <summary>
@@ -77,7 +81,7 @@ public class ChessmanStyle : ChessUiStyle
 public class InstantEffectStyle : CombatStyle
 {
     public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence()
-        .Join(target.ChessmanStyle.EffectTween(activity, target, GetSpriteSpark(activity)))
+        .Join(target.ChessmanStyle.StatusEffectTween(activity, target, GetSpriteSpark(activity)))
         .AppendCallback(() => CardAnimator.instance.UpdateStateIcon(target));
 
     private int GetSpriteSpark(Activity activity)
@@ -91,7 +95,7 @@ public abstract class CardStyle : ChessmanStyle
 {
     public override void ActivityEffect(Activity activity,FightCardData offense) => ActivityVText(activity, offense);
 
-    public override Sequence EffectTween(Activity activity, FightCardData target, int effectId) =>
+    public override Sequence StatusEffectTween(Activity activity, FightCardData target, int effectId) =>
         DOTween.Sequence().AppendCallback(() =>
             {
                 CardAnimator.instance.UpdateStateIcon(target);
@@ -105,7 +109,7 @@ public abstract class CardStyle : ChessmanStyle
             : CardAnimator.instance.SufferShakeAnimation(target);
     }
 
-    protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
+    public override void NumberEffect(Activity activity,FightCardData target)
     {
         var conducts = activity.Conducts
             .Where(c => c.Kind == CombatConduct.DamageKind ||
@@ -113,12 +117,6 @@ public abstract class CardStyle : ChessmanStyle
                         c.Kind == CombatConduct.HealKind ||
                         c.Kind == CombatConduct.BuffKind
             ).ToArray();
-        if (conducts.Length == 0) return;
-
-        if (effectId >= 0) //如果id==null，没有特效(火花)
-            SparkTween(activity, target, effectId);
-
-        CardAnimator.instance.DisplayTextEffect(target, activity);//文字效果，描述反馈结果：伤害，闪避，格挡
 
         //动画演示+上状态效果
         foreach (var conduct in conducts)
@@ -134,6 +132,19 @@ public abstract class CardStyle : ChessmanStyle
                     break;
             }
         }
+
+    }
+
+    protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
+    {
+        if (!activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
+                                        c.Kind == CombatConduct.KillingKind ||
+                                        c.Kind == CombatConduct.HealKind ||
+                                        c.Kind == CombatConduct.BuffKind)) return;
+        if (effectId >= 0) //如果id==null，没有特效(火花)
+            SparkTween(activity, target, effectId);
+
+        CardAnimator.instance.DisplayTextEffect(target, activity); //文字效果，描述反馈结果：流血，治疗，禁锢...
     }
 
     public override void ResultEffectTween(ActivityResult result, FightCardData card)
