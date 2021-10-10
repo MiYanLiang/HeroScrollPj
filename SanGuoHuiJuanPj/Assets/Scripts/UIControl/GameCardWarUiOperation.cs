@@ -89,6 +89,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     public void CreateStateIco(CardState.Cons con)
     {
         var iconId = Effect.GetStateIconId(con);
+        if (iconId == -1) return;
         if (CardStates.ContainsKey(iconId)) return;
         var icon = Instantiate(PrefabIco, StateContent);
         icon.sprite = GameResources.Instance.Icon[iconId];
