@@ -20,7 +20,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         gameResources.Init();
         EffectsPooling.Init();
 
-        NewWar.StartButton.onClick.AddListener(InvokeCard);
+        NewWar.StartButton.onClick.AddListener(InvokeRound);
         Init();
         NewWar.NewGame();
         NewWar.ConfirmEnemy();

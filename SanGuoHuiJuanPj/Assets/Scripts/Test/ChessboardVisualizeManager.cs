@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public class ChessboardVisualizeManager : MonoBehaviour
@@ -27,13 +28,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
     [SerializeField] private GameObject boomUIObj;
 
     [SerializeField] private GameObject gongKeUIObj;
+    [SerializeField] private Toggle autoRoundToggle;
 
     protected FightCardData GetCardMap(int id) => CardMap.ContainsKey(id) ? CardMap[id] : null;
 
     protected Dictionary<int, FightCardData> CardMap { get; set; } = new Dictionary<int, FightCardData>();
 
-    public bool IsBusy { get; set; }
-
+    public bool IsBusy { get; private set; }
+    public bool IsGameOver { get; private set; }
+    public bool IsFirstRound { get; private set; }
     private static InstantEffectStyle InstantEffectStyle { get; } = new InstantEffectStyle();
     private List<SpriteObj> Sprites { get; } = new List<SpriteObj>();
     public event Func<bool> OnRoundBegin;
@@ -46,7 +49,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         Chessboard.Init();
         NewWar.Init();
-        NewWar.StartButton.onClick.AddListener(InvokeCard);
+        NewWar.StartButton.onClick.AddListener(InvokeRound);
     }
 
     public IDictionary<int, FightCardData> CardData => NewWar.CardData;
@@ -59,8 +62,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
 
         foreach (var sp in Sprites.ToArray()) RemoveSpriteObj(sp);
+        IsFirstRound = true;
         NewWar.NewGame();
         Chessboard.ResetChessboard();
+        if(AutoRoundSlider) AutoRoundSlider.value = 0;
     }
 
     public void SetPlayerBase(FightCardData playerBase)
@@ -94,10 +99,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
         if (card.CardType != GameCardType.Base) ui.Init(gc);
     }
 
-    protected void InvokeCard()
+    protected void InvokeRound()
     {
         if (IsBusy) return;
         if (OnRoundBegin != null && !OnRoundBegin.Invoke()) return;
+        autoRoundTimer = 0;
         var chess = NewWar.ChessOperator;
         NewWar.StartButtonShow(false);
         var round = chess.StartRound();
@@ -107,6 +113,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             return;
         }
         StartCoroutine(AnimateRound(round, chess));
+        IsFirstRound = false;
     }
 
     private IEnumerator ChallengerWinAnimation()
@@ -188,6 +195,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 yield return ChallengerWinAnimation();
             RouseEffectObj.gameObject.SetActive(false);
             OnGameSet.Invoke(chess.IsChallengerWin);
+            IsGameOver = true;
             IsBusy = false;
             yield break;
         }
@@ -650,6 +658,23 @@ public class ChessboardVisualizeManager : MonoBehaviour
         public CardTween(int id)
         {
             Id = id;
+        }
+    }
+
+    private float autoRoundTimer;
+    [SerializeField] private float AutoRoundSecs = 1.5f;
+    [SerializeField] private Slider AutoRoundSlider;
+    private void Update()
+    {
+        if (!IsGameOver && !IsBusy && !IsFirstRound && autoRoundToggle.isOn)
+        {
+            autoRoundTimer += Time.deltaTime;
+            if (autoRoundTimer >= AutoRoundSecs)
+            {
+                InvokeRound();
+            }
+            if (AutoRoundSlider)
+                AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
         }
     }
 
