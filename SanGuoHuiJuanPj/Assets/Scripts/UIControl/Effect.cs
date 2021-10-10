@@ -707,7 +707,7 @@ public static class Effect
         switch (arg)
         {
             case ChessboardEvent.PlaceCardToBoard:
-                return -1;
+                return 527;
             case ChessboardEvent.Rouse:
             default:
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
@@ -727,7 +727,7 @@ public static class Effect
     }
     #endregion
 
-    #region VText
+    #region 特技VText
     /// <summary>
     /// 武将竖文字，null = 无
     /// </summary>
@@ -1610,7 +1610,7 @@ public static class Effect
                 return 509;
             // 流血
             case CardState.Cons.Bleed:
-                return 506;
+                return 526;
             // 毒
             case CardState.Cons.Poison:
                 return 504;
@@ -1695,10 +1695,10 @@ public static class Effect
         {
             // 武魂
             case CardState.Cons.BattleSoul:
-            // 护盾
-            case CardState.Cons.Shield: 
                 fading = value / 10f;
                 break;
+            // 护盾
+            case CardState.Cons.Shield: 
             // 缓冲、抵消盾
             case CardState.Cons.EaseShield:
                 fading = value / 1000f;
@@ -1813,7 +1813,7 @@ public static class Effect
             case 1:
             case 66:
             case 67: //近战
-                audioId = 61; break;
+                audioId = 47; break;
 
             case 4:
             case 68:
@@ -1862,7 +1862,7 @@ public static class Effect
             case 5:
             case 81:
             case 82://陷阵
-                audioId = 61; break;//自身加盾
+                audioId = 60; break;//自身加盾
 
             case 41:
             case 83:
@@ -1870,7 +1870,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://自身加盾
-                        audioId = 61; break;
+                        audioId = 60; break;
                     case 2://自身加血
                         audioId = 57; break;
                 }
@@ -1956,7 +1956,7 @@ public static class Effect
             case 17:
             case 104:
             case 105://大刀
-                audioId = 2; break;
+                audioId = 3; break;
 
             case 18:
             case 106:
@@ -1981,7 +1981,7 @@ public static class Effect
                     case 1://破势
                         audioId = 4;break;
                     case 2://武魂
-                        audioId = 57;break;
+                        audioId = -1;break;
                 }
                 break;
 
@@ -2545,7 +2545,7 @@ public static class Effect
         {
             //会心一击
             case ChessboardEvent.Rouse:
-                return -1;
+                return 64;
             case ChessboardEvent.PlaceCardToBoard:
                 return -1;
             default:
