@@ -1565,7 +1565,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 18: return 1;//2
+                case 18: return 3;//2
                 case 106: return 3;
                 case 107: return 5;
                 default: throw MilitaryNotValidError(this);
