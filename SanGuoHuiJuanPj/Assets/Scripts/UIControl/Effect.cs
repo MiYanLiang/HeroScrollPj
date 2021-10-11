@@ -2464,6 +2464,7 @@ public static class Effect
             case CardState.Cons.YellowBand:
             case CardState.Cons.Chained:
             case CardState.Cons.Murderous:
+                return -1;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
@@ -2505,6 +2506,7 @@ public static class Effect
             case CardState.Cons.YellowBand:
             case CardState.Cons.Chained:
             case CardState.Cons.Murderous:
+                return -1;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
