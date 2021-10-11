@@ -277,9 +277,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 16: return 10;
-                case 142: return 15;
-                case 143: return 20;
+                case 16: return 20;//15
+                case 142: return 20;
+                case 143: return 25;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -297,11 +297,11 @@ namespace Assets.System.WarModule
             {
                 int comboRate = ComboRatio();
                 var hit = InstanceHeroGenericDamage();
-                var result = OnPerformActivity(target, Activity.Offensive, actId, actId == 0 ? 1 : 0, hit);
-                if (result == null || result.IsDeath) break;
-                if (Chessboard.GetStatus(this).IsDeath) break;
+                var result = OnPerformActivity(target, Activity.Offensive, actId, 1, hit);
+                if (result == null || result.IsDeath) break;//目标死亡
+                if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
                 if (target.Operator == null || Chessboard.GetStatus(target.Operator).IsDeath) break;
-                if (target.IsAliveHero) break;
+                if (!target.IsAliveHero) break;
                 if (hit.IsRouseDamage())
                     comboRate += RouseAddOn;
                 if (hit.IsCriticalDamage())
@@ -742,9 +742,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 44: return 50;
-                case 144: return 70;
-                case 145: return 90;
+                case 44: return 50;//30
+                case 144: return 50;
+                case 145: return 70;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1806,13 +1806,16 @@ namespace Assets.System.WarModule
 
         public override int Strength => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
+    /// <summary>
+    /// 虎豹骑
+    /// </summary>
     public class HuBaoQiOperator : HeroOperator
     {
         private int DamageGapRate()
         {
             switch (Style.Military)
             {
-                case 11: return 10;
+                case 11: return 15;//10
                 case 140: return 15;
                 case 141: return 20;
                 default: throw MilitaryNotValidError(this);
@@ -1822,7 +1825,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 11: return 3;
+                case 11: return 5;//3
                 case 140: return 5;
                 case 141: return 7;
                 default: throw MilitaryNotValidError(this);
