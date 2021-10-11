@@ -104,7 +104,8 @@ public class CardAnimator : MonoBehaviour
     public Tween CounterAnimation(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
-        return StepBackAndHit(card, CounterStepBack, CounterTempo, CounterCharge).OnComplete(() => GetVTextEffect(13, card.cardObj.transform));
+        return StepBackAndHit(card, CounterStepBack, CounterTempo, CounterCharge).OnComplete(() =>
+            GetVTextEffect(Effect.HeroActivityVText(13, 1), card.cardObj.transform));
     }
 
     //退后向前进攻模式
