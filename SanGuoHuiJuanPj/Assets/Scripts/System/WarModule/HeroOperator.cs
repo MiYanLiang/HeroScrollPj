@@ -504,7 +504,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 56: return 30;
+                case 56: return 50;//30
                 case 131: return 50;
                 case 132: return 70;
                 default: throw MilitaryNotValidError(this);
@@ -1358,7 +1358,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 25: return 50;
+                case 25: return 75;//50
                 case 129: return 75;
                 case 130: return 100;
                 default: throw MilitaryNotValidError(this);
@@ -1373,9 +1373,9 @@ namespace Assets.System.WarModule
                 .OrderByDescending(p => p.Random).FirstOrDefault()?.Pos;
             if (target == null) target = Chessboard.GetContraTarget(this);
             var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
-            if (Chessboard.IsRandomPass(BleedRate()))
+            if (Chessboard.IsRandomPass(BleedRate())&&target.IsAliveHero)
                 combats.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed));
-            OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 2, combats.ToArray());
+            Chessboard.AppendOpActivity(this, target, Activity.Offensive, combats.ToArray(), 0, skill: 2);
         }
     }
 

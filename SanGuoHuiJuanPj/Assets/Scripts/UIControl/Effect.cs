@@ -329,7 +329,7 @@ public static class Effect
                     case 1://攻击建筑或陷阱
                         value = 001; break;
                     case 2://攻击武将士兵
-                        value = 012; break;
+                        value = 095; break;
                 }
                 break;
 
@@ -566,7 +566,7 @@ public static class Effect
             case 34:
             case 35:
             case 221://辩士
-                value = 096;break;
+                value = 041;break;
 
             case 47:
             case 48:
