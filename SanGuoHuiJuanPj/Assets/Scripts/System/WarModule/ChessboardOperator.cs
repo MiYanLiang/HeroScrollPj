@@ -1031,7 +1031,7 @@ namespace Assets.System.WarModule
 
         public IEnumerable<IChessPos> GetContraNeighbors(ChessOperator op)
         {
-            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? !op.IsChallenger : op.IsChallenger;
+            var isChallenger = GetCondition(op, CardState.Cons.Confuse) > 0 ? op.IsChallenger : !op.IsChallenger;
             return Grid.GetNeighbors(GetStatus(op).Pos, isChallenger);
         }
 
