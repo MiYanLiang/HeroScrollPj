@@ -102,7 +102,7 @@ namespace Assets.System.WarModule
             {
                 foreach (var conduct in activity.Conducts)
                     UpdateConduct(conduct);
-                result.SetStatus(Chessboard.GetStatus(this));
+                result.Status = Chessboard.GetStatus(this);
                 return result;
             }
 
@@ -114,7 +114,7 @@ namespace Assets.System.WarModule
                 {
                     result.Result = (int)ActivityResult.Types.Kill;
                     ProceedActivity(activity, result.Type);
-                    result.SetStatus(Chessboard.GetStatus(this));
+                    result.Status = Chessboard.GetStatus(this);
                     return result;
                 }
 
@@ -124,7 +124,7 @@ namespace Assets.System.WarModule
             //无敌判断
             if (Chessboard.OnInvincibleTrigger(this))
             {
-                result.SetStatus(Chessboard.GetStatus(this));
+                result.Status = Chessboard.GetStatus(this);
                 result.Result = (int)ActivityResult.Types.Invincible;
                 return result;
             }
@@ -138,7 +138,7 @@ namespace Assets.System.WarModule
             if (offender == null)
             {
                 ProceedActivity(activity, result.Type);
-                result.SetStatus(Chessboard.GetStatus(this));
+                result.Status = Chessboard.GetStatus(this);
                 return result;
             }
 
@@ -146,7 +146,7 @@ namespace Assets.System.WarModule
             if (result.Type == ActivityResult.Types.Friendly)
             {
                 ProceedActivity(activity, result.Type);
-                result.SetStatus(Chessboard.GetStatus(this));
+                result.Status = Chessboard.GetStatus(this);
             }
             else
             {

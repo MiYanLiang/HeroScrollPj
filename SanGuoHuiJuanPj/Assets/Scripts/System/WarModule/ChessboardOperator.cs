@@ -680,10 +680,25 @@ namespace Assets.System.WarModule
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             var result = GetOperator(target.InstanceId).Respond(activity, offender);
+            result.SetStatus(GetStatus(target));//仅获取最新状态
             
-            if (!CurrentCombatMapper.ResultMapper.ContainsKey(target.InstanceId))
-                CurrentCombatMapper.ResultMapper.Add(target.InstanceId, result);
-            else CurrentCombatMapper.ResultMapper[target.InstanceId] = result;
+            switch (RoundState)
+            {
+                case ProcessCondition.PlaceActions:
+                    break;
+                case ProcessCondition.RoundStart:
+                    break;
+                case ProcessCondition.Chessman:
+                    if (!CurrentCombatMapper.ResultMapper.ContainsKey(target.InstanceId))
+                        CurrentCombatMapper.ResultMapper.Add(target.InstanceId, result);
+                    else
+                        CurrentCombatMapper.ResultMapper[target.InstanceId] = result;
+                    break;
+                case ProcessCondition.RoundEnd:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             if (activity.To >= 0 && result.IsDeath)
             {
