@@ -30,9 +30,9 @@ namespace Assets.System.WarModule
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
             Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                Helper.Singular(CombatConduct.InstanceHeal(healingHp, InstanceId)), 0, 1);
+                Helper.Singular(CombatConduct.InstanceHeal(healingHp, InstanceId)), actId: 0, skill: 1);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, healingHp, CombatConduct.FixedDmg)), -1, -1);
+                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, healingHp, CombatConduct.FixedDmg)), actId: -1, skill: -1);
         }
     }
     /// <summary>
@@ -49,7 +49,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength)), actId: 0, skill: 1);
             }
         }
     }
@@ -66,7 +66,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                    Helper.Singular(CombatConduct.InstanceHeal(Strength, InstanceId)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceHeal(Strength, InstanceId)), actId: 0, skill: 1);
             }
         }
     }
@@ -87,7 +87,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), actId: 0, skill: 1);
             }
         }
 
@@ -120,7 +120,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Friendly,
-                    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield)), actId: 0, skill: 1);
             }
         }
     }

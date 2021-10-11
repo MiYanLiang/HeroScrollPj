@@ -401,15 +401,15 @@ namespace Assets.System.WarModule
 
 
         /// <summary>
-        /// 
+        /// 武将技活动
         /// </summary>
-        /// <param name="offender"></param>
-        /// <param name="target"></param>
-        /// <param name="intent"></param>
-        /// <param name="conducts"></param>
-        /// <param name="actId">-1 = 加入上一个活动</param>
-        /// <param name="skill"></param>
-        /// <param name="rePos"></param>
+        /// <param name="offender">施展者</param>
+        /// <param name="target">目标</param>
+        /// <param name="intent">活动标记，查<see cref="Activity"/>常量如：<see cref="Activity.Offensive"/></param>
+        /// <param name="actId">组合技标记，-1 = 追随上套组合，0或大于0都是各别组合标记。例如大弓：攻击多人，但是组合技都标记为0，它將同时间多次攻击。而连弩的连击却是每个攻击标记0,1,2,3(不同标记)，这样它会依次执行而不是一次执行一组</param>
+        /// <param name="skill">武将技标记，-1为隐式技能，0为普通技能，大于0为武将技</param>
+        /// <param name="conducts">招式，每一式会有一个招式效果。如赋buff，伤害，补血等...一个活动可以有多个招式</param>
+        /// <param name="rePos">移位，-1为无移位，而大或等于0将会指向目标棋格(必须是空棋格)</param>
         /// <returns></returns>
         public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
             CombatConduct[] conducts,int actId,int skill ,int rePos = -1)

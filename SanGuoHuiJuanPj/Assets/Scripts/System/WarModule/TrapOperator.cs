@@ -42,7 +42,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive, CounterConducts, 0, 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive, CounterConducts, actId: 0, skill: 1);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Assets.System.WarModule
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive,
-                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, reflectDamage)), 0, 1);
+                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, reflectDamage)), actId: 0, skill: 1);
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -94,7 +94,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), 0, 1);
+                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), actId: 0, skill: 1);
             }
 
             CombatConduct[] InstanceConduct()
@@ -125,7 +125,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), 0, 1);
+                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), actId: 0, skill: 1);
             }
 
             CombatConduct[] InstanceConduct()
