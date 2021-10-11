@@ -403,7 +403,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 //承受方状态演示注入
                 mainTween.AppendCallback(() =>
                     //施展方演示注入
-                    major.ChessmanStyle.ActivityEffect(activity, major)
+                    op.ChessmanStyle.ActivityEffect(activity, op)
                 );
                 var cardTween = new CardTween(target.InstanceId);
                 cardTween.NumberEffectTween = DOTween.Sequence().Pause()
