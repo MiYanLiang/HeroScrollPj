@@ -792,12 +792,12 @@ namespace Assets.System.WarModule
     public class GanSiOperator : HeroOperator
     {
         protected virtual int TriggerRate => 30;
-        private int rest;
-        private int RestingRate()
+        private int restTimes;
+        private int GetTimes()
         {
             switch (Style.Military)
             {
-                case 41: return 2;
+                case 41: return 1;//2
                 case 83: return 1;
                 case 84: return 0;
                 default: throw MilitaryNotValidError(this);
@@ -810,11 +810,11 @@ namespace Assets.System.WarModule
             {
                 Chessboard.InstanceChessboardActivity(IsChallenger, this, Activity.Self,
                     Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.DeathFight, -1)));
-                rest = RestingRate();
+                restTimes = GetTimes();
                 return;
             }
 
-            rest--;
+            restTimes--;
         }
 
         protected override void OnAfterSubtractHp(CombatConduct conduct)
@@ -822,13 +822,16 @@ namespace Assets.System.WarModule
             if (Chessboard.GetStatus(this).IsDeath ||
                 Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f ||
                 Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0 ||
-                rest > 0) return;
+                restTimes > 0) return;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.DeathFight)), -1, skill: 1);
         }
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
-
+        /// <summary>
+        /// 自身回血
+        /// </summary>
+        /// <param name="conduct"></param>
         protected override void OnMilitaryDamageConvert(CombatConduct conduct)
         {
             if (Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0)
@@ -1695,7 +1698,7 @@ namespace Assets.System.WarModule
         {
             if (Chessboard.IsRandomPass(CounterRate()))
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Counter,
-                    Helper.Singular(InstanceHeroGenericDamage()), -1, skill: 1);
+                    Helper.Singular(InstanceHeroGenericDamage()), -1, skill: 2);
         }
     }
     /// <summary>
@@ -2035,26 +2038,30 @@ namespace Assets.System.WarModule
     /// </summary>
     public class XianZhenOperator : HeroOperator
     {
-        private int InvincibleRate()
+        protected int GetInvincibleRate()//根据兵种id获取概率
         {
             switch (Style.Military)
             {
-                case 5: return 30;//20
-                case 81: return 30;
-                case 82: return 50;
-                default: throw MilitaryNotValidError(this);
+                case 5: return 10;//5
+                case 81: return 10;
+                case 82: return 15;
             }
+            throw MilitaryNotValidError(this);
         }
 
-        protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
-
-        protected override void OnAfterSubtractHp(CombatConduct conduct)
+        protected int CriticalAddRate = 10;
+        protected int RouseAddRate = 20;
+        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
         {
-            if ((conduct.Rouse > 0 || conduct.Critical > 0) &&
-                Chessboard.IsRandomPass(InvincibleRate()))
+            var rate = GetInvincibleRate();
+            var isRouse = activity.Conducts.Any(c => c.Rouse > 0);//是否会心一击
+            var isCritical = activity.Conducts.Any(c => c.Critical > 0);//是否暴击
+            rate += isRouse ? RouseAddRate : isCritical ? CriticalAddRate : 0;
+            if (Chessboard.IsRandomPass(rate))
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Invincible)), 0, 1);
+                    Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Invincible )), 0, 1);
         }
+        protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(0);
     }
 
     /// <summary>

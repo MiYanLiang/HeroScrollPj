@@ -1320,11 +1320,11 @@ public static class Effect
 
             //战鼓台
             case 4:
-                break;
+                return -1;
 
             //风神台
             case 5:
-                break;
+                return -1;
 
             //轩辕台
             case 6:
@@ -1332,70 +1332,71 @@ public static class Effect
 
             //铸铁炉
             case 7:
-                break;
+                return -1;
 
             //四方鼎
             case 8:
-                break;
+                return -1;
 
             //烽火台
             case 9:
-                break;
+                return -1;
 
             //号角台
             case 10:
-                break;
+                return -1;
 
             //瞭望塔
             case 11:
-                break;
+                return -1;
 
             //七星坛
             case 12:
-                break;
+                return -1;
 
             //演武场
             case 13:
-                break;
+                return -1;
 
             //曹魏旗
             case 14:
-                break;
+                return -1;
 
             //蜀汉旗
             case 15:
-                break;
+                return -1;
 
             //东吴旗
             case 16:
-                break;
+                return -1;
 
             //迷雾阵
             case 18:
+                return -1;
 
             //迷雾阵 
             case 17:
-                break;
+                return -1;
 
             //骑兵营
             case 19:
-                break;
+                return -1;
 
             //弓弩营
             case 20:
-                break;
+                return -1;
 
             //步兵营
             case 21:
-                break;
+                return -1;
 
             //长持营
             case 22:
-                break;
+                return -1;
 
             //战船营
             case 23:
-                break;
+                return -1;
         }
 
         return -1;
@@ -1453,16 +1454,16 @@ public static class Effect
         switch (result.Type)
         {
             case ActivityResult.Types.ChessPos://地块结果，一般为释放精灵
-                break;
+                return -1;
 
             case ActivityResult.Types.Suffer://承受结果
-                break;
+                return -1;
 
             case ActivityResult.Types.Dodge://闪避结果
                 return 102;
 
             case ActivityResult.Types.Friendly://友军
-                break;
+                return -1;
 
             case ActivityResult.Types.Shield://护盾
                 return 103;
@@ -1474,7 +1475,7 @@ public static class Effect
                 return -1;
 
             case ActivityResult.Types.Kill://击杀
-                break;
+                return -1;
             default:
                 throw new ArgumentOutOfRangeException();
         }
