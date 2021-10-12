@@ -1468,9 +1468,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 22: return 50;
-                case 172: return 70;
-                case 173: return 90;
+                case 22: return 50;//30
+                case 172: return 50;
+                case 173: return 70;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1974,7 +1974,7 @@ namespace Assets.System.WarModule
                 majorCombat.IsCriticalDamage() ? DamageState.Critical : DamageState.Basic;
             if (Chessboard.IsRandomPass(StunRate(combatState, true)))
                 list.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned));
-            OnPerformActivity(target, Activity.Offensive, actId: 0, skill: combatState == DamageState.Basic ? 0 : 1,
+            OnPerformActivity(target, Activity.Offensive, actId: 0, skill: combatState == DamageState.Basic ? 1 : 2,
                 list.ToArray());
 
             if (combatState == DamageState.Basic) return;
