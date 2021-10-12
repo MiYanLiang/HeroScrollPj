@@ -285,7 +285,7 @@ namespace Assets.System.WarModule
             return 0;
         }
     }
-    //链环精灵管理伤害转化
+    //链环精灵管理伤害转化，分享伤害由buff管理
     public class ChainSprite : RelationSprite
     {
         private const int ChainedId = (int)CardState.Cons.Chained;
@@ -293,12 +293,13 @@ namespace Assets.System.WarModule
         protected override int BuffRespond(CardState.Cons con, IChessOperator op)
         {
             if (con == CardState.Cons.Chained) return Value;
-            if (!TieJiOperator.IsChainable(op)) return 0;
+            if (!TieQiOperator.IsChainable(op)) return 0;
             if (con != CardState.Cons.ArmorUp && 
                 con != CardState.Cons.StrengthUp) return 0;
             var chainedList = Grid.GetChained(Pos, IsChallenger, ChainedFilter);
 
-            return Grid.GetChessPos(Pos,IsChallenger).Operator.OnSpritesValueConvert(chainedList.SelectMany(p => p.Terrain.Sprites).ToArray(), con);
+            return Grid.GetChessPos(Pos,IsChallenger).Operator
+                .OnSpritesValueConvert(chainedList.SelectMany(p => p.Terrain.Sprites).ToArray(), con);
         }
         public static Func<IChessPos, bool> ChainedFilter =>
             p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == ChainedId);

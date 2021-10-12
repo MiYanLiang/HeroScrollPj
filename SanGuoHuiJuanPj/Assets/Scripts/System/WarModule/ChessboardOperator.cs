@@ -86,7 +86,7 @@ namespace Assets.System.WarModule
             currentRound = new ChessRound
             {
                 InstanceId = RoundIdSeed,
-                PreRound = new List<ChessProcess>(),
+                PlaceActions = new List<ChessProcess>(),
                 Processes = new List<ChessProcess>(),
                 PreAction = new RoundAction(),
                 FinalAction = new RoundAction(),
@@ -109,7 +109,7 @@ namespace Assets.System.WarModule
                 case ProcessCondition.RoundEnd:
                     return GetActiveRound().FinalAction.ChessProcesses.LastOrDefault();
                 case ProcessCondition.PlaceActions:
-                    return GetActiveRound().PreRound.LastOrDefault();
+                    return GetActiveRound().PlaceActions.LastOrDefault();
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -190,7 +190,6 @@ namespace Assets.System.WarModule
         #endregion
 
         #region Round
-
         public ChessRound StartRound()
         {
             if (IsGameOver) return null;
@@ -203,13 +202,10 @@ namespace Assets.System.WarModule
                 op.OnPlaceInvocation();
             }
 
-            GetActiveRound().PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
+            var round = GetActiveRound();
+            round.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
                 .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
-            //instance Round
-            //invoke pre-action
-            //Get all sorted this operators
-            //invoke this operations
-            //invoke finalization
+
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
             ActivatedJiBan.Clear();
@@ -262,7 +258,6 @@ namespace Assets.System.WarModule
             currentRound.IsEnd = true;
             return currentRound;
         }
-
 
         private void RefreshChessPosses()
         {
@@ -412,20 +407,30 @@ namespace Assets.System.WarModule
         /// <param name="rePos">移位，-1为无移位，而大或等于0将会指向目标棋格(必须是空棋格)</param>
         /// <returns></returns>
         public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
-            CombatConduct[] conducts,int actId,int skill ,int rePos = -1)
+            CombatConduct[] conducts, int actId, int skill, int rePos = -1)
         {
             if (target == null) return null;
-            //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
-            var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
-                conducts, skill, rePos);
-            if (target.Operator != null)
-                activity.TargetStatus = GetFullCondition(target.Operator);
-            AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId);
-            var op = GetOperator(target.Operator.InstanceId);
-            if (op == null)
-                throw new NullReferenceException(
-                    $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
-            return ProcessActivityResult(activity);
+            if (isCounterFlagged) return ProcessActivity();
+
+            isCounterFlagged = intent == Activity.Counter;
+            var result = ProcessActivity();
+            isCounterFlagged = false;
+            return result;
+
+            ActivityResult ProcessActivity()
+            {
+                //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
+                var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+                    conducts, skill, rePos);
+                if (target.Operator != null)
+                    activity.TargetStatus = GetFullCondition(target.Operator);
+                AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId);
+                var op = GetOperator(target.Operator.InstanceId);
+                if (op == null)
+                    throw new NullReferenceException(
+                        $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
+                return ProcessActivityResult(activity);
+            }
         }
 
         /// <summary>
@@ -495,43 +500,50 @@ namespace Assets.System.WarModule
         private ChessProcess GetMajorProcess(ChessProcess.Types type, int major, bool isChallenger)
         {
             var process = GetCurrentProcess();
-
             if (process == null || process.Major != CurrentMajor.Pos || process.Scope != CurrentMajor.GetScope())
             {
                 CurrentMajor = new ChessMajor(major, isChallenger);
                 process = InstanceProcess(CurrentMajor);
-                switch (RoundState)
+
+                return process;
+
+                ChessProcess InstanceProcess(ChessMajor maj)
                 {
-                    case ProcessCondition.RoundStart:
+                    var pros = ChessProcess.Instance(ProcessSeed, GetActiveRound().InstanceId, type, maj.Pos,
+                        maj.IsChallenger);
+                    ProcessSeed++;
+                    switch (RoundState)
                     {
-                        GetActiveRound().PreAction.ChessProcesses.Add(process);
-                        break;
+                        case ProcessCondition.RoundStart:
+                        {
+                            GetActiveRound().PreAction.ChessProcesses.Add(pros);
+                            break;
+                        }
+                        case ProcessCondition.Chessman:
+                        {
+                            GetActiveRound().Processes.Add(pros);
+                            break;
+                        }
+                        case ProcessCondition.RoundEnd:
+                        {
+                            GetActiveRound().FinalAction.ChessProcesses.Add(pros);
+                            break;
+                        }
+                        case ProcessCondition.PlaceActions:
+                        {
+                            GetActiveRound().PlaceActions.Add(pros);
+                            break;
+                        }
+                        default:
+                            throw new InvalidOperationException(
+                                $"非法执行组合RoundState[{RoundState}] + ProcessType[{type}]!");
                     }
-                    case ProcessCondition.Chessman when type != ChessProcess.Types.JiBan:
-                    {
-                        GetActiveRound().Processes.Add(process);
-                        break;
-                    }
-                    case ProcessCondition.RoundEnd:
-                    {
-                        GetActiveRound().FinalAction.ChessProcesses.Add(process);
-                        break;
-                    }
-                    case ProcessCondition.PlaceActions:
-                    {
-                        GetActiveRound().PreRound.Add(process);
-                        break;
-                    }
-                    default:
-                        throw new InvalidOperationException($"非法执行组合RoundState[{RoundState}] + ProcessType[{type}]!");
+
+                    return pros;
                 }
             }
 
-            ProcessSeed++;
             return process;
-
-            ChessProcess InstanceProcess(ChessMajor maj) =>
-                ChessProcess.Instance(ProcessSeed, GetActiveRound().InstanceId, type, maj.Pos, maj.IsChallenger);
         }
 
         /// <summary>
@@ -627,7 +639,7 @@ namespace Assets.System.WarModule
 
         #region Logs
 
-        protected void Log(string message) => Logger?.Log(LogLevel.Information, message);
+        private void Log(string message) => Logger?.Log(LogLevel.Information, message);
 
         private void LogProcess(ChessProcess process)
         {
@@ -675,38 +687,30 @@ namespace Assets.System.WarModule
             }
             return $"{op.InstanceId}.{op}{statText}";
         }
+
+        private bool isCounterFlagged;
         private ActivityResult ProcessActivityResult(Activity activity)
         {
             var target = GetOperator(activity.To);
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             var result = GetOperator(target.InstanceId).Respond(activity, offender);
-            result.SetStatus(GetStatus(target));//仅获取最新状态
-            
-            switch (RoundState)
-            {
-                case ProcessCondition.PlaceActions:
-                    break;
-                case ProcessCondition.RoundStart:
-                    break;
-                case ProcessCondition.Chessman:
-                    if (!CurrentCombatMapper.ResultMapper.ContainsKey(target.InstanceId))
-                        CurrentCombatMapper.ResultMapper.Add(target.InstanceId, result);
-                    else
-                        CurrentCombatMapper.ResultMapper[target.InstanceId] = result;
-                    break;
-                case ProcessCondition.RoundEnd:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            result.SetStatus(GetFullCondition(target));
+            var resultMapper = isCounterFlagged
+                ? CurrentCombatMapper.CounterResultMapper
+                : CurrentCombatMapper.ResultMapper;
+            if (!resultMapper.ContainsKey(target.InstanceId))
+                resultMapper.Add(target.InstanceId, result);
+            else
+                resultMapper[target.InstanceId] = result;
 
             if (activity.To >= 0 && result.IsDeath)
             {
                 var death = GetOperator(activity.To);
-                foreach (var op in StatusMap.Keys.Where(op=>op!=death && op.IsAlive)) 
+                foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
                     op.OnSomebodyDie(death);
                 Log($"@@@@【{death}败退】@@@@！");
             }
+
             UpdateTerrain(GetChessPos(target));
             return result;
         }
@@ -774,6 +778,7 @@ namespace Assets.System.WarModule
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
             //闪避判定
             if (offender.CardType == GameCardType.Hero &&
+                activity.Intent != Activity.Inevitable &&
                 OnDodgeTriggerPass(op, offender))
             {
                 result.Result = (int)ActivityResult.Types.Dodge;
@@ -785,6 +790,7 @@ namespace Assets.System.WarModule
                 //元素特性
                 foreach (var conduct in activity.Conducts)
                 {
+                    if (conduct.Kind == CombatConduct.ElementDamageKind) continue;
                     foreach (var bo in GetBuffOperator(b => b.IsElementTrigger))
                         bo.OnElementConduct(op, conduct);
                 }
@@ -792,7 +798,7 @@ namespace Assets.System.WarModule
                 op.ProceedActivity(activity, result.Type);
             }
 
-            result.Status = GetFullCondition(op);
+            result.Status = GetStatus(op);
             return result;
         }
 

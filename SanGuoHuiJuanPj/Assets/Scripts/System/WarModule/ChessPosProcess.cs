@@ -84,6 +84,7 @@ namespace Assets.System.WarModule
         public List<Activity> Activities { get; set; } = new List<Activity>();
         public List<Activity> CounterActs { get; set; } = new List<Activity>();
         public Dictionary<int, ActivityResult> ResultMapper { get; set; } = new Dictionary<int, ActivityResult>();
+        public Dictionary<int, ActivityResult> CounterResultMapper { get; set; } = new Dictionary<int, ActivityResult>();
         public CombatMapper()
         {
             
