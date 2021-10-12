@@ -10,7 +10,7 @@ namespace Assets.System.WarModule
     // todo ChessOperator 与buffOperator存在共同管理buff问题，需要统一管理
     public abstract class BuffOperator
     {
-        private static Activity[] ZeroActivity = new Activity[0];
+        private static Activity[] ZeroActivity = Array.Empty<Activity>();
         public BuffOperator(ChessboardOperator chessboard)
         {
             Chessboard = chessboard;
@@ -236,7 +236,7 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, CombatConduct.BasicMagicDmg));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage(op.InstanceId, damage, CombatConduct.PoisonDmg));
             SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
         }
     }
@@ -265,7 +265,7 @@ namespace Assets.System.WarModule
             if (stacks <= 0) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
             SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op, stacks));
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceDamage(op.InstanceId, damage, CombatConduct.BasicMagicDmg));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage(op.InstanceId, damage, CombatConduct.FireDmg));
         }
     }
 
@@ -408,7 +408,7 @@ namespace Assets.System.WarModule
                 CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse,
                     CombatConduct.FixedDmg);
             foreach (var pos in poses)
-                Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), -1, -1);
+                Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), actId: -1, skill: -1);
         }
     }
 }

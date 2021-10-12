@@ -5,7 +5,7 @@ namespace Assets.System.WarModule
 {
     public class ChessRound
     {
-        public List<ChessProcess> PreRound { get; set; }
+        public List<ChessProcess> PlaceActions { get; set; }
         public Dictionary<int,ChessStatus> PreRoundStats { get; set; }
         //[JsonProperty("I")] 
         public int InstanceId { get; set; }

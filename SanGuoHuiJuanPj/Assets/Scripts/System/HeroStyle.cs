@@ -42,7 +42,7 @@ public class ChessUiStyle : CombatStyle
     /// <param name="target"></param>
     /// <param name="effectId"></param>
     /// <returns></returns>
-    public virtual Sequence StatusEffectTween(Activity activity, FightCardData target, int effectId) => DOTween.Sequence();
+    public virtual void RespondStatusEffect(Activity activity, FightCardData target, int effectId) {}
 
     public virtual int GetMilitarySparkId(Activity activity) => Effect.Basic001;
 
@@ -80,9 +80,11 @@ public class ChessmanStyle : ChessUiStyle
 }
 public class InstantEffectStyle : CombatStyle
 {
-    public Sequence Activity(Activity activity, FightCardData target) => DOTween.Sequence()
-        .Join(target.ChessmanStyle.StatusEffectTween(activity, target, GetSpriteSpark(activity)))
-        .AppendCallback(() => CardAnimator.instance.UpdateStateIcon(target));
+    public void Activity(Activity activity, FightCardData target)
+    {
+        target.ChessmanStyle.RespondStatusEffect(activity, target, GetSpriteSpark(activity));
+        CardAnimator.instance.UpdateStateIcon(target);
+    }
 
     private int GetSpriteSpark(Activity activity)
     {
@@ -95,12 +97,11 @@ public abstract class CardStyle : ChessmanStyle
 {
     public override void ActivityEffect(Activity activity,FightCardData offense) => ActivityVText(activity, offense);
 
-    public override Sequence StatusEffectTween(Activity activity, FightCardData target, int effectId) =>
-        DOTween.Sequence().AppendCallback(() =>
-            {
-                CardAnimator.instance.UpdateStateIcon(target);
-                RespondEffect(activity, target, effectId);
-            });
+    public override void RespondStatusEffect(Activity activity, FightCardData target, int effectId)
+    {
+        CardAnimator.instance.UpdateStateIcon(target);
+        RespondEffect(activity, target, effectId);
+    }
 
     public override Tween ResultAnimation(ActivityResult result, FightCardData target)
     {
@@ -115,7 +116,8 @@ public abstract class CardStyle : ChessmanStyle
             .Where(c => c.Kind == CombatConduct.DamageKind ||
                         c.Kind == CombatConduct.KillingKind ||
                         c.Kind == CombatConduct.HealKind ||
-                        c.Kind == CombatConduct.BuffKind
+                        c.Kind == CombatConduct.BuffKind ||
+                        c.Kind == CombatConduct.ElementDamageKind
             ).ToArray();
 
         //动画演示+上状态效果
@@ -124,6 +126,7 @@ public abstract class CardStyle : ChessmanStyle
             switch (conduct.Kind)
             {
                 case CombatConduct.DamageKind:
+                case CombatConduct.ElementDamageKind:
                 case CombatConduct.KillingKind:
                     CardAnimator.instance.NumberEffectTween(target, conduct);
                     break;
@@ -137,10 +140,13 @@ public abstract class CardStyle : ChessmanStyle
 
     protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
     {
+        //如果要精灵闪花或文字反馈得加 c.Kind == CombatConduct.SpriteKind ||
         if (!activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind ||
+                                        c.Kind == CombatConduct.ElementDamageKind ||
                                         c.Kind == CombatConduct.KillingKind ||
                                         c.Kind == CombatConduct.HealKind ||
                                         c.Kind == CombatConduct.BuffKind)) return;
+        
         if (effectId >= 0) //如果id==null，没有特效(火花)
             SparkTween(activity, target, effectId);
 
@@ -150,8 +156,7 @@ public abstract class CardStyle : ChessmanStyle
     public override void ResultEffectTween(ActivityResult result, FightCardData card)
     {
         var vTextId = Effect.ActivityResultVText(result);
-        if (vTextId == -1) return;
-        CardAnimator.instance.VTextEffect(vTextId, card.cardObj.transform);
+        if (vTextId > -1) CardAnimator.instance.VTextEffect(vTextId, card.cardObj.transform);
 
         switch (result.Type)
         {
@@ -214,7 +219,7 @@ public class HeroStyle : CardStyle
 {
     protected override void ActivityVText(Activity activity, FightCardData offense)
     {
-        if (activity.Skill == 0) return;
+        if (activity.Skill <= 0) return;
         //武将有自己的攻击特效
         CardAnimator.instance.VTextEffect(Effect.HeroActivityVText(Military,activity.Skill), offense.cardObj.transform);
     }

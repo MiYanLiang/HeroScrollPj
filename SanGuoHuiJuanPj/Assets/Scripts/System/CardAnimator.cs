@@ -191,8 +191,8 @@ public class CardAnimator : MonoBehaviour
     public void UpdateStateIcon(FightCardData target, int con = -1)
     {
         if (con == -1)
-            foreach (var state in CardState.ConsArray)
-                UpdateSingleStateEffect(target, (int)state);
+            foreach (var state in target.CardState.Data.Keys)
+                UpdateSingleStateEffect(target, state);
         else UpdateSingleStateEffect(target, con);
     }
 
@@ -237,7 +237,8 @@ public class CardAnimator : MonoBehaviour
         if (!target.cardObj.War.CardStates.ContainsKey(iconId))
             CreateSateIcon(target.cardObj, con);
 
-        target.StatesUi[key].ImageFading(Effect.BuffFading(con, stateValue));
+        if (target.StatesUi.ContainsKey(key) && target.StatesUi[key]) 
+            target.StatesUi[key].ImageFading(Effect.BuffFading(con, stateValue));
     }
 
 
@@ -253,6 +254,7 @@ public class CardAnimator : MonoBehaviour
             switch (conduct.Kind)
             {
                 case CombatConduct.BuffKind:
+                case CombatConduct.ElementDamageKind:
                     switch ((CardState.Cons)conduct.Element)
                     {
                         case CardState.Cons.Bleed:

@@ -267,7 +267,7 @@ namespace Assets.System.WarModule
                     op = new TengJiaOperator();
                     break; //57  藤甲
                 case 58:
-                    op = new TieJiOperator();
+                    op = new TieQiOperator();
                     break; //58  铁骑
                 case 59:
                 case 14:

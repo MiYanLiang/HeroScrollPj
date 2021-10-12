@@ -698,6 +698,31 @@ public static class Effect
     }
 
     /// <summary>
+    /// Buff特性伤害的闪花
+    /// </summary>
+    /// <param name="damageId"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static int GetBuffDamageSparkId(int damageId)
+    {
+        //这里返回的事buff特性伤害，一般是回合结束的火或毒伤的闪花演示
+        switch (damageId)
+        {
+            case CombatConduct.PoisonDmg: return 1;//毒属性伤害
+            case CombatConduct.FireDmg: return 1;//火属性伤害
+            case CombatConduct.WindDmg: //风属性伤害
+            case CombatConduct.WaterDmg: //水属性伤害
+            case CombatConduct.EarthDmg: //土属性伤害
+            case CombatConduct.ThunderDmg: //雷属性伤害
+            case CombatConduct.BasicMagicDmg: //一般法术伤害
+            case CombatConduct.MechanicalDmg: //器械伤害
+            case CombatConduct.PhysicalDmg: //物理伤害
+            case CombatConduct.FixedDmg: return -1;//固伤
+            default: throw new ArgumentOutOfRangeException(nameof(damageId), damageId.ToString());
+        }
+    }
+
+    /// <summary>
     /// 棋盘上棋子一些行为的特效
     /// </summary>
     /// <param name="arg"></param>
@@ -2471,11 +2496,11 @@ public static class Effect
     }
 
     /// <summary>
-    /// 不可避免类型，buff伤
+    /// buff伤
     /// </summary>
     /// <param name="con"></param>
     /// <returns></returns>
-    public static int GetInevitableAudioId(CardState.Cons con)
+    public static int GetBuffDamageAudioId(CardState.Cons con)
     {
         switch (con)
         {

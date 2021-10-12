@@ -316,7 +316,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 58  铁骑 - 多铁骑上阵发动【连环战马】。所有铁骑分担伤害，并按铁骑数量提升伤害。
     /// </summary>
-    public class TieJiOperator : HeroOperator
+    public class TieQiOperator : HeroOperator
     {
         public static bool IsChainable(IChessOperator op)
         {
@@ -380,7 +380,7 @@ namespace Assets.System.WarModule
             var chainedList = GetChained();
             if (chainedList.Length > 1)
                 Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), Chained,
-                    InstanceId, 1, -1);
+                    InstanceId, value: 1, actId: -1);
         }
     }
 
@@ -391,11 +391,7 @@ namespace Assets.System.WarModule
     {
         private const int YellowBand = (int)CardState.Cons.YellowBand;
         private const int Max = 15;
-        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con)
-        {
-            sprites = sprites.Where(s => s.TypeId == YellowBand).Take(Max).ToArray();
-            return !sprites.Any() ? 0 : sprites.Sum(s => s.Value);
-        }
+        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con) => sprites.Where(s => s.TypeId == YellowBand).Take(Max).Count() * GetDamageRate();
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(Chessboard.GetCondition(this, CardState.Cons.YellowBand) > 0 ? 1 : 0);
 
@@ -411,7 +407,19 @@ namespace Assets.System.WarModule
                     return false;
             }
         }
-        protected virtual int DamageRate => 20;
+
+        protected virtual int GetDamageRate()
+        {
+            switch (Style.Military)
+            {
+                case 65: return 15;
+                case 127: return 20;
+                case 128: return 30;
+                default:
+                    throw MilitaryNotValidError(this);
+            }
+        }
+
         public override void OnPlaceInvocation()
         {
             if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == YellowBand)) return;
@@ -421,7 +429,7 @@ namespace Assets.System.WarModule
                      IsYellowBand(p.Operator)).ToArray();
             if (cluster.Length == 0) return;
             Chessboard.InstanceSprite<YellowBandSprite>(Chessboard.GetChessPos(this), YellowBand,
-                InstanceId, DamageRate, -1);
+                InstanceId, 1, -1);
         }
 
     }
@@ -2121,13 +2129,13 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetContraTarget(this);
             if (target == null) return;
             var damage = InstanceHeroGenericDamage();
-            OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 0, Helper.Singular(damage));
             var shield = 1;
             if (damage.IsRouseDamage())
                 shield++;
             OnPerformActivity(Chessboard.GetChessPos(this), Activity.Self,
                 actId: -1, skill: damage.IsRouseDamage() ? 1 : 2,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, shield));
+            OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 0, Helper.Singular(damage));
         }
     }
 

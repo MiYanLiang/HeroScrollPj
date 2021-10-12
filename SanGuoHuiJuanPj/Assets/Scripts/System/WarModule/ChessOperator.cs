@@ -82,12 +82,14 @@ namespace Assets.System.WarModule
         {
             //处理行动
             var result = ProcessActivityResult(activity, offender);
-            if (activity.RePos >= 0)
+            if (result.Type == ActivityResult.Types.Suffer && activity.RePos >= 0)
                 SetPos(activity.RePos);
+            else activity.RePos = -1;
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
-            if (offender!=null && 
+            if (offender != null &&
+                !Chessboard.GetStatus(offender).IsDeath &&
                 activity.Intent == Activity.Offensive &&
-                Chessboard.OnCounterTriggerPass(this,offender)) 
+                Chessboard.OnCounterTriggerPass(this, offender))
                 OnCounter(activity, offender);
             return result;
 
@@ -220,6 +222,7 @@ namespace Assets.System.WarModule
                     status.AddHp(Chessboard.OnHealConvert(this, conduct));
                     return;
                 case CombatConduct.DamageKind:
+                case CombatConduct.ElementDamageKind:
                 {
                     if (!chessboardInvocation)
                     {

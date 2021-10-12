@@ -37,6 +37,10 @@ namespace Assets.System.WarModule
         public const int KillingKind = 3;
         public const int PlayerScopeKind = 10;
         public const int SpriteKind = 11;
+        /// <summary>
+        /// 元素伤害类型，不执行元素特性的伤害类型
+        /// </summary>
+        public const int ElementDamageKind = -1;
         #endregion
     
         //[JsonProperty("I")]
@@ -121,6 +125,16 @@ namespace Assets.System.WarModule
             Instance(damage, critical, rouse, element, DamageKind, rate, refId);
 
         /// <summary>
+        /// 此方法仅仅在buff执行伤害的时候用，此方法是不会有buff特性，例如雷不会有几率眩晕。
+        /// </summary>
+        /// <param name="refId"></param>
+        /// <param name="damage"></param>
+        /// <param name="element"></param>
+        /// <returns></returns>
+        public static CombatConduct InstanceElementDamage(int refId,float damage, int element = 0) =>
+            Instance(damage, 0, 0, element, ElementDamageKind, 0, refId);
+
+        /// <summary>
         /// 生成玩家维度的资源
         /// </summary>
         /// <param name="resourceId">金币=-1，正数=宝箱Id</param>
@@ -152,6 +166,7 @@ namespace Assets.System.WarModule
                     break;
                 }
                 case DamageKind:
+                case ElementDamageKind:
                 {
                     kindText = "伤害";
                     switch (Element)
@@ -161,6 +176,11 @@ namespace Assets.System.WarModule
                         case BasicMagicDmg: elementText = "[基础法伤]";break;
                         case PhysicalDmg: elementText = "[物理伤害]";break;
                         case ThunderDmg: elementText = "[雷元素]";break;
+                        case WaterDmg: elementText = "[水元素]"; break;
+                        case PoisonDmg: elementText = "[毒元素]";break;
+                        case EarthDmg: elementText = "[土元素]";break;
+                        case MechanicalDmg: elementText = "[器械]";break;
+                        case WindDmg: elementText = "[风元素]";break;
                         default: elementText = "[未知伤害]";break;
                     }
 
