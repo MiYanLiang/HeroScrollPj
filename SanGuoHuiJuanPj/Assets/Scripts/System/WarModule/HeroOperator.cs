@@ -1202,7 +1202,7 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float DamageRate => 0.3f;
+        private float DamageRate => 0.3f;//1f
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1389,13 +1389,13 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 24: return 1;
+                case 24: return 2;//1
                 case 178: return 2;
                 case 179: return 3;
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float DamageRate => 1f;
+        private float DamageRate => 0.3f;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -1403,11 +1403,12 @@ namespace Assets.System.WarModule
                 .Join(TargetPoses, t => t.Pos, p => p, (t, _) => t).ToArray();
             var damage = InstanceHeroGenericDamage();
             damage.Element = CombatConduct.MechanicalDmg;
+            damage.Multiply(DamageRate);
             for (int i = 0; i < ComboRate(); i++)
             {
                 var target = targets.RandomPick();
-                damage.Multiply(DamageRate);
-                OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 1, damage);
+                OnPerformActivity(target, Activity.Offensive, i, skill: 1, damage);
+                //if (!target.IsPostedAlive) return;//击杀目标后会停止连击
             }
         }
     }
@@ -1421,7 +1422,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 23: return 1;
+                case 23: return 2;//1
                 case 176: return 2;
                 case 177: return 3;
                 default: throw MilitaryNotValidError(this);
@@ -1439,8 +1440,11 @@ namespace Assets.System.WarModule
 
             var damage = InstanceHeroGenericDamage();
             damage.Element = CombatConduct.MechanicalDmg;
-            for (int i = 0; i < CombatRate(); i++)
+            for (int i = 0; i < CombatRate(); i++) 
+            { 
                 OnPerformActivity(target, Activity.Offensive, actId: i, skill: 1, damage);
+                if (!target.IsPostedAlive) break;
+            }
         }
 
         public static bool IsGongChengChe(IChessOperator chess)
@@ -1503,7 +1507,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 21: return 1.5f;
+                case 21: return 2f;//1.5
                 case 194: return 2f;
                 case 195: return 2.5f;
                 default: throw MilitaryNotValidError(this);
@@ -1517,10 +1521,9 @@ namespace Assets.System.WarModule
             var rePos = backPos != null &&
                         backPos.Operator == null &&
                         target.IsAliveHero ? backPos.Pos : -1;
-            combatConducts.Add(rePos == -1
-                ? InstanceHeroGenericDamage((int)(GeneralDamage() * DamageRate()))
+            combatConducts.Add(rePos == -1&&target.IsAliveHero
+                ? InstanceHeroGenericDamage((int)(GeneralDamage() * (DamageRate()-1f)))
                 : InstanceHeroGenericDamage());
-
             OnPerformActivity(target, Activity.Offensive, combatConducts.ToArray(), 0, 1, rePos);
         }
     }
@@ -1546,7 +1549,6 @@ namespace Assets.System.WarModule
             var targets = Chessboard.GetRivals(this).Select(p => new { chessPos = p, random = Chessboard.Randomize(5)})
                 .OrderBy(p => p.random).Take(Targets()).ToArray();
             if (targets.Length == 0) return;
-            //var addOn = 0.5f * GeneralDamage();
             var perform = InstanceHeroGenericDamage();
             perform.Multiply(0.5f);
             for (var i = 0; i < targets.Length; i++)
@@ -1582,10 +1584,10 @@ namespace Assets.System.WarModule
             for (int i = 0; i < combo; i++)
             {
                 var result = OnPerformActivity(target, Activity.Offensive,
-                    i, i > 0 ? 1 : 0, InstanceHeroGenericDamage());
+                    i, 1, InstanceHeroGenericDamage());
                 if (result == null || result.IsDeath) return;
-                if (!Chessboard.IsRandomPass(ComboRate))
-                    break;
+                //if (!Chessboard.IsRandomPass(ComboRate))
+                    //break;
             }
         }
     }
