@@ -36,15 +36,21 @@ public class CardAnimator : MonoBehaviour
 
     [Header("远程前摇(秒)")] 
     [SerializeField] private float rangePreAct = 0.5f;
+    [Header("远程后座力(格)")] [SerializeField] private float rangeRecoil = 0.3f;
+    [Header("远程后座力时长(秒)")] [SerializeField] private float rangeRecoilSec = 0.05f;
+    [Header("远程站稳时长(秒)")] [SerializeField] private float rangeRecoverSec = 0.05f;
 
     [Header("反击节奏(倍速)")][SerializeField] private float counterTempo = 0.3f;
     [Header("反击后退距离(格)")][SerializeField] private float counterStepBack = 0.3f;
     [Header("反击蓄力(秒)")][SerializeField] private float counterCharge= 0.1f;
     [Header("闪避")][SerializeField] private float dodgeDistance= 0.3f;
     [SerializeField] private float dodgeDuration = 0.2f;
+    [Header("辅助放大倍数")] [SerializeField] private float assistEnlarge = 1.5f;
+    [Header("辅助放大时长")] [SerializeField] private float assistEnlargeSec = 0.2f;
     [Header("竖文字显示(秒)")][SerializeField] private float VTextLasting = 1.5f;
     [Header("数字显示(秒)")][SerializeField] private float HTextLasting = 1.5f;
-
+    [Header("暴击文字大小")] [SerializeField] private float CriticalTextEnlarge = 1.5f;
+    [Header("会心文字大小")] [SerializeField] private float RouseTextEnlarge = 1.5f;
     void Awake()
     {
         if (instance != null)
@@ -83,12 +89,11 @@ public class CardAnimator : MonoBehaviour
     /// </summary>
     private Tween MeleeMoveAnimation(FightCardData card, FightCardData target)
     {
-        var ui = card.cardObj;
         var size = GetWorldSize(target.cardObj.transform);
         var oneYOffset = (card.isPlayerCard ? 1 : -1) * size.y;
         var targetPos = target.cardObj.transform.position;
         var facingPos = new Vector3(targetPos.x, targetPos.y - oneYOffset, targetPos.z);
-        return DOTween.Sequence().Append(ui.transform.DOMove(facingPos, MeleeMove)).AppendInterval(MeleeCharge);
+        return DOTween.Sequence().Append(MoveTween(card, facingPos, MeleeMove)).AppendInterval(MeleeCharge);
     }
 
     /// <summary>
@@ -96,9 +101,15 @@ public class CardAnimator : MonoBehaviour
     /// </summary>
     public Tween FinalizeAnimation(FightCardData card, Vector3 origin)
     {
-        var sBack = card.cardObj.transform.DOMove(origin, MeleeReturn);
+        var sBack = MoveTween(card, origin, MeleeReturn);
         var scaleBack = card.cardObj.transform.DOScale(Vector3.one, MeleeReturn);
         return DOTween.Sequence().Join(sBack).Join(scaleBack);
+    }
+
+    public Tween MoveTween(FightCardData card, Vector3 origin, float sec = -1)
+    {
+        if (sec <= 0) sec = rangeRecoverSec;
+        return card.cardObj.transform.DOMove(origin, sec);
     }
 
     public Tween CounterAnimation(FightCardData card)
@@ -109,16 +120,30 @@ public class CardAnimator : MonoBehaviour
     }
 
     //退后向前进攻模式
-    public Tween StepBackAndHit(FightCardData card, float backStepDistance = 0.5f,float time = 1f,float chargeRate = 1f)
+    public Sequence StepBackAndHit(FightCardData card, float backStepDistance = 0.5f,float time = 1f,float chargeRate = 1f)
     {
         var ui = card.cardObj;
         var size = GetWorldSize(card.cardObj.transform);
         var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
         var origin = ui.transform.position;
         return DOTween.Sequence()
-            .Append(ui.transform.DOMove(origin + new Vector3(0, oneYOffset * backStepDistance), MeleeStepBack * time))
+            .Append(MoveTween(card,origin + new Vector3(0, oneYOffset * backStepDistance), MeleeStepBack * time))
             .AppendInterval(MeleeCharge * chargeRate)
-            .Append(ui.transform.DOMove(origin, MeleeHit * time));
+            .Append(MoveTween(card, origin, MeleeHit * time));
+    }
+
+    /// <summary>
+    /// 后座力动画
+    /// </summary>
+    /// <returns></returns>
+    public Sequence RecoilTween(FightCardData card)
+    {
+        var ui = card.cardObj;
+        var size = GetWorldSize(card.cardObj.transform);
+        var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
+        var origin = ui.transform.position;
+        return DOTween.Sequence()
+            .Append(card.cardObj.transform.DOMove(origin + new Vector3(0, oneYOffset * rangeRecoil), rangeRecoilSec));
     }
 
     /// <summary>
@@ -141,6 +166,11 @@ public class CardAnimator : MonoBehaviour
     public Tween SufferShakeAnimation(FightCardData target) =>
         target.cardObj.transform.DOShakePosition(0.3f, new Vector3(10, 20, 10));
 
+    public Tween AssistEnlargeAnimation(FightCardData target)
+    {
+        var obj = target.cardObj;
+        return DOTween.Sequence().Append(obj.transform.DOScale(assistEnlarge, assistEnlargeSec)).Append(obj.transform.DOScale(1, assistEnlargeSec * 0.5f));
+    }
     /// <summary>
     /// 文字特效
     /// </summary>
@@ -159,8 +189,12 @@ public class CardAnimator : MonoBehaviour
         var effect =
             EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, HTextLasting,
                 target.cardObj.transform);
-        effect.GetComponentInChildren<Text>().text = value.ToString();
-        effect.GetComponentInChildren<Text>().color = color;
+        var text = effect.GetComponentInChildren<Text>();
+        text.text = value.ToString();
+        text.color = color;
+        if(conduct.IsCriticalDamage()) effect.transform.DOScale(CriticalTextEnlarge, 0);
+        else if (conduct.IsRouseDamage()) effect.transform.DOScale(RouseTextEnlarge, 0);
+        else effect.transform.DOScale(1, 0);
     }
 
     /// <summary>
@@ -191,8 +225,8 @@ public class CardAnimator : MonoBehaviour
     public void UpdateStateIcon(FightCardData target, int con = -1)
     {
         if (con == -1)
-            foreach (var state in target.CardState.Data.Keys)
-                UpdateSingleStateEffect(target, state);
+            foreach (var state in CardState.ConsArray)
+                UpdateSingleStateEffect(target, (int)state);
         else UpdateSingleStateEffect(target, con);
     }
 
@@ -245,7 +279,7 @@ public class CardAnimator : MonoBehaviour
     public void DisplayTextEffect(FightCardData target, Activity activity)
     {
         if (activity.IsRePos)
-            GetHTextEffect(17, target.cardObj.transform, Color.red);
+            GetHTextEffect(17, target.cardObj.transform, Color.red, 1);
 
         foreach (var conduct in activity.Conducts)
         {
@@ -311,12 +345,17 @@ public class CardAnimator : MonoBehaviour
                     break;
             }
 
+            var isCritical = activity.Conducts.Any(c => c.IsCriticalDamage());
+            var isRouse = activity.Conducts.Any(c => c.IsRouseDamage());
+            var scale = isRouse ? RouseTextEnlarge :
+                isCritical ? CriticalTextEnlarge :
+                1;
             if (tableId >= 0)
-                GetHTextEffect(tableId, target.cardObj.transform, color);
+                GetHTextEffect(tableId, target.cardObj.transform, color, scale);
             if (conduct.Critical > 0)
-                GetHTextEffect(23, target.cardObj.transform, color);
+                GetHTextEffect(23, target.cardObj.transform, color, scale);
             if (conduct.Rouse > 0)
-                GetHTextEffect(22, target.cardObj.transform, color);
+                GetHTextEffect(22, target.cardObj.transform, color, scale);
         }
     }
 
@@ -329,11 +368,12 @@ public class CardAnimator : MonoBehaviour
         effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[vTextId];
     }
 
-    private void GetHTextEffect(int id,Transform trans, Color color)
+    private void GetHTextEffect(int id,Transform trans, Color color, float scale)
     {
         var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextH, VTextLasting, trans);
         effectObj.GetComponentInChildren<Text>().text = DataTable.GetStringText(id);
         effectObj.GetComponentInChildren<Text>().color = color;
+        effectObj.transform.DOScale(scale, 0);
     }
 
     /// <summary>

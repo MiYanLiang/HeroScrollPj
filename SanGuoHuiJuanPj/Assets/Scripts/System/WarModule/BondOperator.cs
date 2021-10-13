@@ -41,7 +41,7 @@ namespace Assets.System.WarModule
             {
                 var conducts = RoundStartConducts(op);
                 if (conducts == null || conducts.Length == 0) continue;
-                Chessboard.InstanceJiBanActivity(BondId, op.IsChallenger, op, Activity.Inevitable, conducts);
+                Chessboard.InstanceJiBanActivity(BondId, op.IsChallenger, op, Activity.Friendly, conducts);
             }
 
             var rivals = Chessboard.GetRivals(first,
@@ -56,13 +56,13 @@ namespace Assets.System.WarModule
                 {
                     var conducts = result.Conducts;
                     if (conducts == null || conducts.Length == 0) continue;
-                    Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival, Activity.Inevitable, conducts);
+                    Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival, Activity.Offensive, conducts);
                     continue;
                 }
 
                 var backPos = Chessboard.BackPos(Chessboard.GetChessPos(rival));
                 if (backPos == null || backPos.IsPostedAlive) continue;
-                Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival, Activity.Inevitable,
+                Chessboard.InstanceJiBanActivity(BondId, first.IsChallenger, rival, Activity.Offensive,
                     result.Conducts, backPos.Pos);
             }
         }

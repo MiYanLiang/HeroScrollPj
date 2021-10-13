@@ -560,8 +560,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4263009085874486674}
   - component: {fileID: 4263009085874486672}
+  - component: {fileID: 1858342227175382865}
   - component: {fileID: 5540341847820749036}
-  - component: {fileID: 3488976166171385431}
   m_Layer: 5
   m_Name: NewhomeCard
   m_TagString: Untagged
@@ -602,6 +602,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4263009085874486675}
   m_CullTransparentMesh: 0
+--- !u!114 &1858342227175382865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4263009085874486675}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f9d41095fff3e146ba2ba175bd96eb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Hp: {fileID: 4263009085430308139}
+  Lose: {fileID: 330312936574843571}
+  Highlight: {fileID: 0}
+  Selected: {fileID: 0}
+  StateContent: {fileID: 0}
+  PrefabIco: {fileID: 0}
+  BurningState:
+    MainObj: {fileID: 8913599730900616859}
+    Fields:
+    - Value: 0.6
+      ObjFields:
+      - Obj: {fileID: 4036264447609767345}
+        IsActive: 1
+      - Obj: {fileID: 4036264447973551419}
+        IsActive: 0
+      - Obj: {fileID: 4036264447315435330}
+        IsActive: 0
+    - Value: 0.3
+      ObjFields:
+      - Obj: {fileID: 4036264447609767345}
+        IsActive: 1
+      - Obj: {fileID: 4036264447973551419}
+        IsActive: 1
+      - Obj: {fileID: 4036264447315435330}
+        IsActive: 0
+    - Value: 0.15
+      ObjFields:
+      - Obj: {fileID: 4036264447609767345}
+        IsActive: 1
+      - Obj: {fileID: 4036264447973551419}
+        IsActive: 1
+      - Obj: {fileID: 4036264447315435330}
+        IsActive: 1
+    - Value: 0.75
+      ObjFields:
+      - Obj: {fileID: 4036264447609767345}
+        IsActive: 0
+      - Obj: {fileID: 4036264447973551419}
+        IsActive: 0
+      - Obj: {fileID: 4036264447315435330}
+        IsActive: 0
 --- !u!114 &5540341847820749036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -620,26 +673,8 @@ MonoBehaviour:
   Short: {fileID: 0}
   Frame: {fileID: 0}
   GrayScale: {fileID: 0}
-  War: {fileID: 3488976166171385431}
+  War: {fileID: 1858342227175382865}
   DragComponent: {fileID: 0}
---- !u!114 &3488976166171385431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4263009085874486675}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4aed5009a4c931f45b501a1ba23bf3a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Hp: {fileID: 4263009085430308139}
-  Lose: {fileID: 330312936574843571}
-  Highlight: {fileID: 0}
-  Selected: {fileID: 0}
-  StateContent: {fileID: 0}
-  PrefabIco: {fileID: 0}
 --- !u!1 &7023177264490765276
 GameObject:
   m_ObjectHideFlags: 0
@@ -750,7 +785,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8913599730900616852
 RectTransform:
   m_ObjectHideFlags: 0

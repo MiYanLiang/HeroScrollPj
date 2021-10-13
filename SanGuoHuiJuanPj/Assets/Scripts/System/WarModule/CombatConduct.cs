@@ -83,7 +83,20 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 总伤害 = 基础伤害+暴击+会心
         /// </summary>
-        public float Total => Basic + Critical + Rouse;
+        public float Total
+        {
+            get
+            {
+                var value = Basic + Critical + Rouse;
+                if (Kind == DamageKind || 
+                    Kind == HealKind || 
+                    Kind == ElementDamageKind)
+                    return value >= 0 ? value : 0;
+
+                return value;
+            }
+        }
+
         public int Rate { get; set; }
 
         public static CombatConduct Instance(float value, float critical, float rouse, int element, int kind,

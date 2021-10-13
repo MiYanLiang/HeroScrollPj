@@ -177,7 +177,7 @@ public class PlayerCardDrag : DragController
         LastPos = pos;
         WarsUIManager.instance.UpdateCardTempScope(FightCard);
         //Ui.SetHighLight(true);
-        Ui.SetSelected(!IsLocked);
+        UpdateSelectionUi();
         WarsUIManager.instance.PlayAudioForSecondClip(85, 0);
 
         EffectsPoolingControl.instance.GetEffectToFight1("toBattle", 0.7f,
@@ -205,7 +205,7 @@ public class PlayerCardDrag : DragController
             transform.SetParent(PosIndex == -1
                 ? ScrollRect.content.transform
                 : WarsUIManager.instance.Chessboard.GetChessPos(pos, true).transform);
-            Ui.SetSelected(!IsLocked && PosIndex > -1);
+            UpdateSelectionUi();
             CardBody.raycastTarget = true;
             transform.localPosition = Vector3.zero;
         }
@@ -216,4 +216,6 @@ public class PlayerCardDrag : DragController
         CardBody.raycastTarget = false;
         IsLocked = true;
     }
+
+    public override void UpdateSelectionUi() => Ui.SetSelected(!IsLocked && PosIndex > -1);
 }

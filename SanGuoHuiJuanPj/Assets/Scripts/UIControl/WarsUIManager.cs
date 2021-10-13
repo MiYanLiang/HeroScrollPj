@@ -587,6 +587,7 @@ public class WarsUIManager : MonoBehaviour
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
             ui.War.UpdateHpUi(card.Status.HpRate);
             ui.gameObject.SetActive(true);
+            ui.DragComponent.UpdateSelectionUi();
             UpdateHeroEnlistText();
         }
     }
@@ -1245,10 +1246,11 @@ public class WarsUIManager : MonoBehaviour
 
     public bool IsPlayerAvailableToPlace(int targetPos,bool isAddIn)
     {
-        var balance = maxHeroNums - TempScope.Count + PlayerScope.Count;
         var isAvailable = Chessboard.IsPlayerScopeAvailable(targetPos);
+        if (!isAvailable) return false;
+        var balance = maxHeroNums - TempScope.Count - PlayerScope.Count;
         if (balance <= 0 && isAddIn) PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(38));
-        return isAddIn ? balance > 0 : true & isAvailable;
+        return !isAddIn || balance > 0;
     }
 
     public void RemoveCardFromBoard(FightCardData card)

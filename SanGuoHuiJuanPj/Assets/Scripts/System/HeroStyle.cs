@@ -105,9 +105,24 @@ public abstract class CardStyle : ChessmanStyle
 
     public override Tween ResultAnimation(ActivityResult result, FightCardData target)
     {
-        return result.Type == ActivityResult.Types.Dodge
-            ? CardAnimator.instance.SideDodgeAnimation(target)
-            : CardAnimator.instance.SufferShakeAnimation(target);
+        switch (result.Type)
+        {
+            case ActivityResult.Types.Dodge:
+                return CardAnimator.instance.SideDodgeAnimation(target);
+            case ActivityResult.Types.Suffer:
+            case ActivityResult.Types.EaseShield:
+                return CardAnimator.instance.SufferShakeAnimation(target);
+            case ActivityResult.Types.Assist:
+                return CardAnimator.instance.AssistEnlargeAnimation(target);
+            case ActivityResult.Types.ChessPos:
+            case ActivityResult.Types.Shield:
+            case ActivityResult.Types.Invincible:
+            case ActivityResult.Types.Kill:
+            case ActivityResult.Types.Suicide:
+                return DOTween.Sequence();
+            default:
+                throw new ArgumentOutOfRangeException(nameof(result), result.ToString());
+        }
     }
 
     public override void NumberEffect(Activity activity,FightCardData target)
@@ -161,7 +176,7 @@ public abstract class CardStyle : ChessmanStyle
         switch (result.Type)
         {
             case ActivityResult.Types.Suffer:
-            case ActivityResult.Types.Friendly:
+            case ActivityResult.Types.Assist:
             case ActivityResult.Types.Dodge:
             case ActivityResult.Types.Invincible:
                 break;
