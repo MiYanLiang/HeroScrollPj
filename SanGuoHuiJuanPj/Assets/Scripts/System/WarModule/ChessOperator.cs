@@ -134,7 +134,7 @@ namespace Assets.System.WarModule
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.Self)
-                result.Result = (int)ActivityResult.Types.Friendly;
+                result.Result = (int)ActivityResult.Types.Assist;
 
 
             if (offender == null)
@@ -145,7 +145,7 @@ namespace Assets.System.WarModule
             }
 
             //友军 与 非棋子 的执行结果
-            if (result.Type == ActivityResult.Types.Friendly)
+            if (result.Type == ActivityResult.Types.Assist)
             {
                 ProceedActivity(activity, result.Type);
                 result.Status = Chessboard.GetStatus(this);
@@ -229,7 +229,7 @@ namespace Assets.System.WarModule
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
                             Chessboard.OnCombatMiddlewareConduct(this, conduct);
-                            if (conduct.Element == CombatConduct.MechanicalDmg && Style.Military < 0)
+                            if (conduct.Element == CombatConduct.MechanicalDmg && Style.ArmedType < 0)
                                 conduct.Multiply(2);
 
                             //自身(武将技)伤害转化

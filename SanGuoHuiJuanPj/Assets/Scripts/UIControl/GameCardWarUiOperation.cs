@@ -43,7 +43,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     public States State { get; private set; }
     public Dictionary<int, Image> CardStates { get; set; } = new Dictionary<int, Image>();
 
-    public void Init(DragController drag)
+    public virtual void Init(DragController drag)
     {
         DragController = drag;
         Selected.gameObject.SetActive(false);
@@ -58,7 +58,7 @@ public class GameCardWarUiOperation : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void UpdateHpUi(float hp) => Hp.fillAmount = 1f - hp;
+    public virtual void UpdateHpUi(float hp) => Hp.fillAmount = 1f - hp;
 
     public void SetState(States state)
     {

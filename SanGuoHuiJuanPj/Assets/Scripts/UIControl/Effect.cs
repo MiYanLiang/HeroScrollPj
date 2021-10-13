@@ -1487,7 +1487,7 @@ public static class Effect
             case ActivityResult.Types.Dodge://闪避结果
                 return 102;
 
-            case ActivityResult.Types.Friendly://友军
+            case ActivityResult.Types.Assist://友军
                 return -1;
 
             case ActivityResult.Types.Shield://护盾
@@ -2548,7 +2548,7 @@ public static class Effect
         {
             case ActivityResult.Types.ChessPos:
             case ActivityResult.Types.Suffer:
-            case ActivityResult.Types.Friendly:
+            case ActivityResult.Types.Assist:
             case ActivityResult.Types.Kill:
             case ActivityResult.Types.EaseShield:
                 return -1;//这些结果都是直接播放兵种音效

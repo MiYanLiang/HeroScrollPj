@@ -221,7 +221,7 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 同势力，如果同势力表现会不同，例如被同势力伤害了(反击单位)不会反击
             /// </summary>
-            Friendly = 2,
+            Assist = 2,
             /// <summary>
             /// 盾挡状态
             /// </summary>
@@ -237,7 +237,11 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 击杀效果
             /// </summary>
-            Kill = 7
+            Kill = 7,
+            /// <summary>
+            /// 自杀
+            /// </summary>
+            Suicide = 8
         }
 
         public int Result { get; set; }
@@ -261,7 +265,7 @@ namespace Assets.System.WarModule
                 case Types.Dodge:
                     resultText = "闪避";
                     break;
-                case Types.Friendly:
+                case Types.Assist:
                     resultText = "同伴";
                     lastText = GenerateLastText();
                     break;

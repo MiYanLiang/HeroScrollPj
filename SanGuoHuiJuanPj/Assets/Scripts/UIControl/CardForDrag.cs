@@ -34,6 +34,8 @@ public abstract class DragController : MonoBehaviour
     public abstract void ResetPos(int pos);
 
     public abstract void Disable();
+
+    public abstract void UpdateSelectionUi();
 }
 
 public class CardForDrag : DragController
@@ -296,4 +298,8 @@ public class CardForDrag : DragController
         throw new System.NotImplementedException();
     }
 
+    public override void UpdateSelectionUi()
+    {
+        throw new System.NotImplementedException();
+    }
 }

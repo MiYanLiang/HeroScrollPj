@@ -869,6 +869,8 @@ namespace Assets.System.WarModule
                     addOn += bo.OnArmorAddOn(armor, op, conduct);
             }
             else armor = op.GetMagicArmor();
+
+            if (armor < 0) armor = 0;
             //加护甲
             var resisted = Math.Min(1 - (armor + addOn) * 0.01f, 1);
             conduct.Multiply(resisted);

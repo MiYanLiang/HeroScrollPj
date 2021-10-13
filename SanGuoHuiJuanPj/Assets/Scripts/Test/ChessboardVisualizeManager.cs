@@ -151,9 +151,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             var card = GetCardMap(stat.Key);
             if (card.HitPoint != stat.Value.Hp)
-            {
                 Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
-            }
         }
 #endif
         yield return OnPreRoundUpdate(round);
@@ -466,6 +464,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             FightCardData major = null;
             
             var listTween = new List<TweenCard>();
+            var rePosActs = new List<Activity>();
             var audioSection = UpdateActivityTarget(map.Value.Activities, (target, activity,_) =>
             {
                 var op = GetCardMap(activity.From);
@@ -486,9 +485,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 listTween.Add(cardTween);
                 //击退一格注入
                 if (activity.IsRePos)
-                    mainTween
-                        .Join(CardAnimator.instance.OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
-                        .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target)));
+                    rePosActs.Add(activity);
+                //mainTween.AppendCallback(() => Chessboard.PlaceCard(activity.RePos, target))
+                    //    .Append(CardAnimator.instance.OnRePos(target,
+                    //        Chessboard.GetScope(target.IsPlayer)[activity.RePos]));
             });
 
             foreach (var result in map.Value.ResultMapper)
@@ -508,16 +508,49 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             //***演示开始***
             //施展方如果近战，前摇(后退，前冲)
-            var activityTween = DOTween.Sequence().OnComplete(() => PlayAudio(audioSection));
-            if (major != null && major.Style.Type == CombatStyle.Types.Melee)
-                activityTween.Join(CardAnimator.instance.StepBackAndHit(major));
-            yield return activityTween.WaitForCompletion();
+            //如果有侵略行为才有动画
+            if (major != null &&
+                major.Style.ArmedType >= 0 &&
+                map.Value.Activities.Any(a => a.Intent == Activity.Offensive ||
+                                              a.Intent == Activity.Counter))
+            {
+                switch (major.Style.Type)
+                {
+                    case CombatStyle.Types.None:
+                        break;
+                    case CombatStyle.Types.Melee:
+                        yield return CardAnimator.instance.StepBackAndHit(major)
+                            .AppendCallback(()=>PlayAudio(audioSection))
+                            .WaitForCompletion();
+                        break;
+                    case CombatStyle.Types.Range:
+                        var origin = major.cardObj.transform.position;
+                        yield return CardAnimator.instance.RecoilTween(major)
+                            .AppendCallback(() => PlayAudio(audioSection))
+                            .WaitForCompletion();
+                        mainTween.Join(CardAnimator.instance.MoveTween(major, origin));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
 
             //如果会心，调用棋盘摇晃效果
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsCriticalDamage() || c.IsRouseDamage()))
                 mainTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard));
+
+            foreach (var activity in rePosActs)
+            {
+                var target = GetCardMap(activity.To);
+                //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
+                yield return CardAnimator.instance
+                    .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                    .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target));
+            }
+
             //开始播放前面的注入活动
             yield return mainTween.Play().WaitForCompletion();//播放主要活动
+
 
             /*********************反击*************************/
             //如果没有反击
@@ -557,12 +590,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
             yield return counterTween.Play().OnComplete(() => PlayAudio(counterAudio)).WaitForCompletion();//播放反击
         }
 
-        var chessPos = Chessboard.GetChessPos(majorCard).transform.position;
+        var chessPos = Chessboard.GetChessPos(majorCard);
         yield return new WaitForSeconds(0.5f);
         if (!majorCard.Status.IsDeath)
             //后摇
-            yield return CardAnimator.instance.FinalizeAnimation(majorCard, chessPos).WaitForCompletion();
-
+        {
+            yield return CardAnimator.instance.FinalizeAnimation(majorCard, chessPos.transform.position)
+                .WaitForCompletion();
+            Chessboard.PlaceCard(majorCard.PosIndex, majorCard);
+        }
     }
 
     private void SetAudioSection(AudioSection section, Activity activity)
@@ -785,7 +821,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
         }
     }
-
 
     public class PlayerResourceEvent : UnityEvent<bool, int, int> { }
     public class GameSetEvent : UnityEvent<bool> { }
