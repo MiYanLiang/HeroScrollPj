@@ -548,23 +548,32 @@ namespace Assets.System.WarModule
     /// </summary>
     public class HuoChuanOperator : HeroOperator
     {
-        private float ExplodeRate()
+        private float ExplodeDamageRate()
         {
             switch (Style.Military)
             {
-                case 55: return 1.5f;
+                case 55: return 2f;//1.5f
                 case 196: return 2f;
                 case 197: return 2.5f;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        private int ExplodeBurningRate => 50;
+        private int ExplodeBurningRate()
+        {
+            switch (Style.Military) 
+            {
+                case 55:return 70;//50
+                case 196:return 70;
+                case 197:return 90;
+                default:throw MilitaryNotValidError(this);
+            }
+        }
         private int BurningRate()
         {
             switch (Style.Military)
             {
-                case 55: return 30;
+                case 55: return 50;//30
                 case 196: return 50;
                 case 197: return 70;
                 default: throw MilitaryNotValidError(this);
@@ -577,13 +586,13 @@ namespace Assets.System.WarModule
             if (Chessboard.GetStatus(this).HpRate < 0.5)
             {
                 var explode = new List<CombatConduct>
-                    { CombatConduct.InstanceDamage(InstanceId,(int)(GeneralDamage() * ExplodeRate()), Style.Element) };
+                    { CombatConduct.InstanceDamage(InstanceId,(int)(GeneralDamage() * ExplodeDamageRate()), Style.Element) };
                 var surrounded = Chessboard.GetNeighbors(target, false).ToList();
                 surrounded.Insert(0, target);
                 for (var i = 0; i < surrounded.Count; i++)
                 {
                     var chessPos = surrounded[i];
-                    if (Chessboard.IsRandomPass(ExplodeBurningRate))
+                    if (Chessboard.IsRandomPass(ExplodeBurningRate()))
                         explode.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn));
                     OnPerformActivity(chessPos, Activity.Inevitable, 0, i == 0 ? 2 : -1, explode.ToArray());
                 }
@@ -1210,7 +1219,10 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float DamageRate => 0.3f;//1f
+        private float DamageRate => 0.3f;//旧数据表
+        private int PoisonRate => 20;//旧数据表
+        private int CriticalRate() => 5;
+        private int RouseRate() => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1223,12 +1235,28 @@ namespace Assets.System.WarModule
                 }).OrderBy(p => p.Random).Take(Targets()).ToArray();
             if (targets.Length == 0) base.MilitaryPerforms(0);
             var damage = InstanceHeroGenericDamage();
-            damage.Element = CombatConduct.PoisonDmg;
             damage.Multiply(DamageRate);
+            damage.Element = CombatConduct.PoisonDmg;
+            
+            var poisonRate = PoisonRate;
+            if (damage.IsCriticalDamage()) 
+            {
+                poisonRate += CriticalRate();
+            }
+            if (damage.IsRouseDamage())
+            {
+                poisonRate += RouseRate();
+            }
+
             for (var i = 0; i < targets.Length; i++)
             {
-                var target = targets[i];
-                OnPerformActivity(target.chessPos, Activity.Offensive, actId: 0, skill: 1, damage);
+                var target = targets[i].chessPos;
+                if (target.IsAliveHero && Chessboard.IsRandomPass(poisonRate)) 
+                {
+                    
+                    continue;
+                }
+                OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 1, damage);
             }
         }
     }
@@ -1320,8 +1348,10 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int CriticalRate() => 5;
-        private int RouseRate() => 10;
+        private int CriticalRate() => 3;            //旧数据表
+        private int RouseRate() => 5;            //旧数据表
+
+        private float DamageRate => 0.3f; //旧数据表
         private int KillingRate => 10;
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1330,6 +1360,7 @@ namespace Assets.System.WarModule
                 .OrderBy(p => p.random)
                 .Take(Targets()).ToArray();
             var baseDamage = InstanceHeroGenericDamage();
+            baseDamage.Multiply(DamageRate);
             baseDamage.Element = CombatConduct.WindDmg;
             var killingRate = KillingRate;
             if (baseDamage.IsCriticalDamage())
