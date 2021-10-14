@@ -330,7 +330,7 @@ namespace Assets.System.WarModule
         public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
             if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
-            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Sprite,
+            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(Host == HostType.Relation ? Lasting : IsChallenger ? -1 : -2,
                     CardState.Cons.Burn)));
         }
