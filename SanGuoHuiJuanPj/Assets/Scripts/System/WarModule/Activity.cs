@@ -142,7 +142,7 @@ namespace Assets.System.WarModule
             switch (Intent)
             {
                 case PlayerResource:
-                    intentText = "玩家资源";
+                    intentText = "资源";
                     break;
                 case Offensive:
                     intentText = "攻击";
@@ -163,9 +163,15 @@ namespace Assets.System.WarModule
                 case Reflect:
                     intentText = "反伤";
                     break;
-
+                case Inevitable:
+                    intentText = "必伤";
+                    break;
+                case ChessboardBuffing:
+                    intentText = "赋buff";
+                    break;
             }
-            if(Intent!=Sprite)
+
+            if (Intent != Sprite)
                 switch (To)
                 {
                     case -1:
@@ -181,6 +187,7 @@ namespace Assets.System.WarModule
 
             return intentText + toText;
         }
+
         public string StanceText()=>IsChallenger == 0 ? "玩家" : "对方";
         public override string ToString()
         {

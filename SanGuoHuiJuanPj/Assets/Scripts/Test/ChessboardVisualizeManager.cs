@@ -443,7 +443,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsRouseDamage()))
                 yield return FullScreenRouse().WaitForCompletion();
 
-            var offensiveActivity = map.Value.Activities.FirstOrDefault(a => a.Intent == Activity.Offensive);
+            var offensiveActivity =
+                map.Value.Activities.FirstOrDefault(a =>
+                    a.Intent == Activity.Offensive || a.Intent == Activity.Inevitable);
             if (offensiveActivity != null && majorCard.Style.Type == CombatStyle.Types.Melee)
             {
                 var target = GetCardMap(offensiveActivity.To);
@@ -500,6 +502,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (major != null &&
                 major.Style.ArmedType >= 0 &&
                 map.Value.Activities.Any(a => a.Intent == Activity.Offensive ||
+                                              a.Intent == Activity.Inevitable ||
                                               a.Intent == Activity.Counter))
             {
                 switch (major.Style.Type)
@@ -508,7 +511,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                         break;
                     case CombatStyle.Types.Melee:
                         yield return CardAnimator.instance.StepBackAndHit(major)
-                            .AppendCallback(()=>PlayAudio(audioSection))
+                            .AppendCallback(() => PlayAudio(audioSection))
                             .WaitForCompletion();
                         break;
                     case CombatStyle.Types.Range:
