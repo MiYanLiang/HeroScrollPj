@@ -97,7 +97,9 @@ public class PlayerCardDrag : DragController
         {
             targetPos = posObj.GetComponent<ChessPos>();
             targetPosIndex = targetPos.Pos;
-            if (!WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex, PosIndex < 0))
+
+            if (targetPosIndex == PosIndex ||
+                !WarsUIManager.instance.IsPlayerAvailableToPlace(targetPosIndex, PosIndex < 0))
             {
                 ResetPos();
                 return;
@@ -194,10 +196,9 @@ public class PlayerCardDrag : DragController
      */
     public override void ResetPos(int pos = -2)
     {
-        if (pos != -2)
-        {
-            FightCard.UpdatePos(pos);
-        }
+        if (pos == -2)
+            pos = LastPos != null ? LastPos.Pos : -1;
+        else FightCard.UpdatePos(pos);
 
         if (WarsUIManager.instance != null && transform != null)
         {

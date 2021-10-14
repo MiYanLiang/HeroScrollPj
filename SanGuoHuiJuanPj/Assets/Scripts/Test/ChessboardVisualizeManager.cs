@@ -65,6 +65,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         IsFirstRound = true;
         NewWar.NewGame();
         Chessboard.ResetChessboard();
+        IsGameOver = false;
         if(AutoRoundSlider) AutoRoundSlider.value = 0;
     }
 
@@ -220,30 +221,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var process in action.ChessProcesses)
         {
-            switch (process.Type)
+            var tween = DOTween.Sequence().Pause();
+            if (process.Type == ChessProcess.Types.JiBan)
             {
-                case ChessProcess.Types.JiBan:
-                {
-                    var jb = DataTable.JiBan[process.Major];
-                    yield return DOTween.Sequence()
-                        .Append(OnJiBanEffect(process.Scope == 0, jb))
-                        .Append(OnJiBanOffenseAnim(process.Scope != 0, jb))
-                        .AppendCallback(()=>OnInstantUpdate(process.CombatMaps.Values.ToArray()))
-                        .WaitForCompletion();
-                    yield return new WaitForSeconds(1);
-                    continue;
-                }
-                case ChessProcess.Types.Chessman:
-                case ChessProcess.Types.Chessboard:
-                default:
-                {
-                    yield return OnBasicChessProcess(process).Play().WaitForCompletion();
-                    //播放
-                    //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
-                    yield return new WaitForSeconds(1);
-                    break;
-                }
+                var jb = DataTable.JiBan[process.Major];
+                tween.Append(OnJiBanEffect(process.Scope == 0, jb))
+                    .Append(OnJiBanOffenseAnim(process.Scope != 0, jb));
             }
+            yield return tween.Append(OnBasicChessProcess(process)).Play().WaitForCompletion();
+            //播放
+            //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
+            yield return new WaitForSeconds(1);
         }
 
     }
@@ -294,8 +282,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
                 JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
                 DisplayJiBanObj(isChallenger, JiBanEffect.transform);
+                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id), 0);
             })
-            .AppendInterval(1f)
+            .AppendInterval(2f)
             .OnComplete(() => JiBanEffect.gameObject.SetActive(false));
     }
     void DisplayJiBanObj(bool isPlayer, Transform obj)
@@ -341,7 +330,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         if (offensiveEffect == null) return DOTween.Sequence();
         return DOTween.Sequence()
-            .OnComplete(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
+            .AppendCallback(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
             .AppendInterval(0.5f)
             .OnComplete(
                 () =>
@@ -377,7 +366,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (activity.Intent == Activity.ChessboardBuffing) continue;//附buff活动不演示，直接在CombatMap结果更新状态
             var target = GetCardMap(activity.To);
             if (target == null)
-                throw new InvalidOperationException($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
+                Debug.LogError($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
             action(target, activity, audioSection);
         }
         return audioSection;
@@ -680,15 +669,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void OnSpriteEffect(Activity activity)
     {
-        ChessPos chessPos;
+        ChessPos chessPos = null;
         try
         {
             chessPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
         }
         catch (Exception e)
         {
-            throw new InvalidOperationException(
-                $"找不到棋格[{activity.To}]IsChallenger[{activity.IsChallenger}]: {activity}");
+#if UNITY_EDITOR
+            Debug.LogError($"找不到棋格[{activity.To}]IsChallenger[{activity.IsChallenger}]: {activity}");
+#endif
         }
         foreach (var conduct in activity.Conducts.Where(c => c.Kind == CombatConduct.SpriteKind))
         {
@@ -767,6 +757,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         if (!GamePref.PrefMusicPlay) return;
         if (WarsUIManager.instance == null || AudioController0.instance == null) return;
         var clip = WarsUIManager.instance.audioClipsFightEffect[clipIndex];
+#if UNITY_EDITOR
+        if (clip == null)
+            Debug.LogError($"找不到音效id = {clipIndex}!");
+#endif
         var volume = WarsUIManager.instance.audioVolumeFightEffect[clipIndex];
         if (AudioController0.instance.ChangeAudioClip(clip, volume))
         {

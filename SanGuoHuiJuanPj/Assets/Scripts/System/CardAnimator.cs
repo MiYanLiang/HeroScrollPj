@@ -353,11 +353,7 @@ public class CardAnimator : MonoBehaviour
                     break;
             }
 
-            var isCritical = activity.Conducts.Any(c => c.IsCriticalDamage());
-            var isRouse = activity.Conducts.Any(c => c.IsRouseDamage());
-            var scale = isRouse ? RouseTextEnlarge :
-                isCritical ? CriticalTextEnlarge :
-                1;
+            var scale = 1;
             if (tableId >= 0)
                 GetHTextEffect(tableId, target.cardObj.transform, color, scale);
             if (conduct.Critical > 0)
@@ -373,6 +369,7 @@ public class CardAnimator : MonoBehaviour
     {
         if (vTextId == -1) return;
         var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextV, VTextLasting, trans);
+        effectObj.transform.DOScale(1, 0);
         effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[vTextId];
     }
 

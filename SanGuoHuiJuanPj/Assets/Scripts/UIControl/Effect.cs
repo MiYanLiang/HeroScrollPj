@@ -2587,5 +2587,30 @@ public static class Effect
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
         }
     }
+    /// <summary>
+    /// 羁绊音效
+    /// </summary>
+    /// <returns></returns>
+    public static int GetJiBanAudioId(JiBanSkillName jiBan)
+    {
+        switch (jiBan)
+        {
+            case JiBanSkillName.WuHuShangJiang: return 101;
+            case JiBanSkillName.TaoYuanJieYi:
+            case JiBanSkillName.WoLongFengChu:
+            case JiBanSkillName.HuChiELai:
+            case JiBanSkillName.WuZiLiangJiang:
+            case JiBanSkillName.WeiWuMouShi:
+            case JiBanSkillName.HuJuJiangDong:
+            case JiBanSkillName.ShuiShiDuDu:
+            case JiBanSkillName.TianZuoZhiHe:
+            case JiBanSkillName.HeBeiSiTingZhu:
+            case JiBanSkillName.JueShiWuShuang:
+            case JiBanSkillName.HanMoSanXian:
+                return -1;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(jiBan), jiBan, null);
+        }
+    }
     #endregion
 }
