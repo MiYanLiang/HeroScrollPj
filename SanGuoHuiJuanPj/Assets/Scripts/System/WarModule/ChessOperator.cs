@@ -87,6 +87,7 @@ namespace Assets.System.WarModule
             else activity.RePos = -1;
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
             if (offender != null &&
+                Chessboard.IsMajorTarget(this) &&
                 !Chessboard.GetStatus(offender).IsDeath &&
                 activity.Intent == Activity.Offensive &&
                 Chessboard.OnCounterTriggerPass(this, offender))
@@ -114,7 +115,9 @@ namespace Assets.System.WarModule
             {
                 if (kills.Any(kill => kill.Rate == 0 || Chessboard.IsRandomPass(kill.Rate)))
                 {
-                    result.Result = (int)ActivityResult.Types.Kill;
+                    result.Result = activity.Intent == Activity.Self
+                        ? (int)ActivityResult.Types.Suicide
+                        : (int)ActivityResult.Types.Kill;
                     ProceedActivity(activity, result.Type);
                     result.Status = Chessboard.GetStatus(this);
                     return result;
@@ -134,8 +137,9 @@ namespace Assets.System.WarModule
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.Self)
-                result.Result = (int)ActivityResult.Types.Assist;
-
+                result.Result = activity.Conducts.Any(c => c.Kind == CombatConduct.HealKind)
+                    ? (int)ActivityResult.Types.Heal
+                    : (int)ActivityResult.Types.Assist;
 
             if (offender == null)
             {
@@ -145,7 +149,8 @@ namespace Assets.System.WarModule
             }
 
             //友军 与 非棋子 的执行结果
-            if (result.Type == ActivityResult.Types.Assist)
+            if (result.Type == ActivityResult.Types.Assist || 
+                result.Type == ActivityResult.Types.Heal)
             {
                 ProceedActivity(activity, result.Type);
                 result.Status = Chessboard.GetStatus(this);
@@ -219,7 +224,7 @@ namespace Assets.System.WarModule
                 }
                 case CombatConduct.HealKind:
                     // 治疗执行<see cref="CombatConduct"/>的血量增值转换
-                    status.AddHp(Chessboard.OnHealConvert(this, conduct));
+                    status.OnHeal(Chessboard.OnHealConvert(this, conduct));
                     return;
                 case CombatConduct.DamageKind:
                 case CombatConduct.ElementDamageKind:

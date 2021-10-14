@@ -171,30 +171,38 @@ public class CardAnimator : MonoBehaviour
         var obj = target.cardObj;
         return DOTween.Sequence().Append(obj.transform.DOScale(assistEnlarge, assistEnlargeSec)).Append(obj.transform.DOScale(1, assistEnlargeSec * 0.5f));
     }
+
     /// <summary>
     /// 文字特效
     /// </summary>
     /// <param name="target"></param>
-    /// <param name="conduct"></param>
+    /// <param name="value"></param>
     /// <param name="color"></param>
+    /// <param name="dmgType"></param>
     /// <returns></returns>
-    public void NumberEffectTween(FightCardData target, CombatConduct conduct,Color color = default)
+    public void NumberEffectTween(FightCardData target, int value,Color color,Damage.Types dmgType)
     {
-        var value = (int)conduct.Total;
         if (value == 0) return;
-        if (color == default)
-            color = CombatConduct.IsPositiveConduct(conduct)
-                ? ColorDataStatic.huiFu_green
-                : ColorDataStatic.name_deepRed;
         var effect =
             EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, HTextLasting,
                 target.cardObj.transform);
         var text = effect.GetComponentInChildren<Text>();
         text.text = value.ToString();
         text.color = color;
-        if(conduct.IsCriticalDamage()) effect.transform.DOScale(CriticalTextEnlarge, 0);
-        else if (conduct.IsRouseDamage()) effect.transform.DOScale(RouseTextEnlarge, 0);
-        else effect.transform.DOScale(1, 0);
+        switch (dmgType)
+        {
+            case Damage.Types.General:
+                effect.transform.DOScale(1, 0);
+                break;
+            case Damage.Types.Critical:
+                effect.transform.DOScale(CriticalTextEnlarge, 0);
+                break;
+            case Damage.Types.Rouse:
+                effect.transform.DOScale(RouseTextEnlarge, 0);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(dmgType), dmgType, null);
+        }
     }
 
     /// <summary>

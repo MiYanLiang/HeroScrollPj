@@ -461,7 +461,6 @@ namespace Assets.System.WarModule
             //Log($"生成{activity}");
             return activity;
         }
-        private CombatMapper CurrentCombatMapper { get; set; }
 
         /// <summary>
         /// 加入活动
@@ -686,6 +685,13 @@ namespace Assets.System.WarModule
                 statText = $"[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
             }
             return $"{op.InstanceId}.{op}{statText}";
+        }
+        public CombatMapper CurrentCombatMapper { get; private set; }
+
+        public bool IsMajorTarget(ChessOperator target)
+        {
+            var activity = CurrentCombatMapper.Activities.First();
+            return activity.To == target.InstanceId;
         }
 
         private bool isCounterFlagged;

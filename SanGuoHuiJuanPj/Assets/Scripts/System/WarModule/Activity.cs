@@ -223,6 +223,10 @@ namespace Assets.System.WarModule
             /// </summary>
             Assist = 2,
             /// <summary>
+            /// 治疗
+            /// </summary>
+            Heal = 3,
+            /// <summary>
             /// 盾挡状态
             /// </summary>
             Shield = 4,
@@ -281,6 +285,12 @@ namespace Assets.System.WarModule
                     break;
                 case Types.Kill:
                     resultText = "击杀";
+                    break;
+                case Types.Heal:
+                    resultText = "治疗";
+                    break;
+                case Types.Suicide:
+                    resultText = "自杀";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
