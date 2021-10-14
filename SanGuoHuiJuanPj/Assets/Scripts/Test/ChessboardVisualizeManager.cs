@@ -646,7 +646,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             if (conduct.Kind == CombatConduct.ElementDamageKind)
             {
-                audioId = Effect.GetBuffDamageAudioId((CardState.Cons)conduct.Element);
+                audioId = Effect.GetBuffDamageAudioId((CardState.Cons)conduct.ReferenceId);
                 AddToSection();
             }
         }

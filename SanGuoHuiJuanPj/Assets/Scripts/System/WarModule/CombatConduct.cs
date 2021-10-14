@@ -299,8 +299,6 @@ namespace Assets.System.WarModule
                 case CombatConduct.PhysicalDmg:
                 case CombatConduct.MechanicalDmg:
                     return Kinds.Physical;
-                case CombatConduct.FixedDmg:
-                    return Kinds.Fixed;
                 case CombatConduct.BasicMagicDmg:
                 case CombatConduct.FireDmg:
                 case CombatConduct.ThunderDmg:
@@ -309,6 +307,8 @@ namespace Assets.System.WarModule
                 case CombatConduct.WaterDmg:
                 case CombatConduct.EarthDmg:
                     return Kinds.Magic;
+                case CombatConduct.FixedDmg:
+                    return Kinds.Fixed;
                 default: throw new ArgumentOutOfRangeException($"Unknown Damage kind ={element}!");
             }
         }

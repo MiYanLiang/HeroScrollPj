@@ -374,7 +374,7 @@ namespace Assets.System.WarModule
 
         private IChessPos[] GetChained() => Chessboard.GetChainedPos(this, p => p.IsAliveHero && IsChainable(p.Operator)).ToArray();
 
-        public override void OnPlaceInvocation()
+        public override void OnRoundStart()
         {
             if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == Chained)) return;
             var chainedList = GetChained();

@@ -117,7 +117,7 @@ namespace Assets.System.WarModule
         #region Helper
 
         protected bool IsBuffActive(ChessOperator op) => Chessboard.GetCondition(op, Buff) > 0;
-        protected CombatConduct DepleteBuff(ChessOperator op, int value = 1) => CombatConduct.InstanceBuff(op.InstanceId, Buff, -value);
+        protected CombatConduct DepleteBuff(int value = 1) => CombatConduct.InstanceBuff((int)Buff, Buff, -value);
 
         protected void SelfConduct(ChessOperator op, int activityIntent, params CombatConduct[] conducts) =>
             Chessboard.InstanceChessboardActivity(op.IsChallenger, op, activityIntent, conducts,
@@ -149,7 +149,7 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (IsBuffActive(op))
-                SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
+                SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff());
         }
 
     }
@@ -167,7 +167,7 @@ namespace Assets.System.WarModule
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.ThunderDmg ||
                 !Chessboard.IsRandomPass(conduct.GetRate())) return;
-            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Stunned)));
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff((int)Buff, CardState.Cons.Stunned)));
         }
 
         public override bool IsMainActionTrigger => true;
@@ -227,7 +227,7 @@ namespace Assets.System.WarModule
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.PoisonDmg ||
                 !Chessboard.IsRandomPass(conduct.GetRate())) return;
-            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Poison)));
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff((int)Buff, CardState.Cons.Poison)));
         }
 
         public override bool IsRoundEndTrigger => true;
@@ -236,8 +236,8 @@ namespace Assets.System.WarModule
         {
             if (!IsBuffActive(op)) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage(op.InstanceId, damage, CombatConduct.PoisonDmg));
-            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage((int)Buff, damage, CombatConduct.PoisonDmg));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff());
         }
     }
     //6 灼烧
@@ -253,7 +253,7 @@ namespace Assets.System.WarModule
             if (conduct.Kind != CombatConduct.DamageKind ||
                 conduct.Element != CombatConduct.FireDmg ||
                 !Chessboard.IsRandomPass(conduct.GetRate())) return;
-            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff(op.InstanceId, CardState.Cons.Burn)));
+            SelfConduct(op, Activity.Offensive, Helper.Singular(CombatConduct.InstanceBuff((int)Buff, CardState.Cons.Burn)));
         }
 
         private int DamageRate => 5;
@@ -264,8 +264,8 @@ namespace Assets.System.WarModule
             var stacks = Chessboard.GetCondition(op, CardState.Cons.Burn);
             if (stacks <= 0) return;
             var damage = Chessboard.GetStatus(op).MaxHp * DamageRate * stacks * 0.01f;
-            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op, stacks));
-            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage(op.InstanceId, damage, CombatConduct.FireDmg));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(stacks));
+            SelfConduct(op, Activity.Inevitable, CombatConduct.InstanceElementDamage((int)Buff, damage, CombatConduct.FireDmg));
         }
     }
 
@@ -336,7 +336,7 @@ namespace Assets.System.WarModule
         public override int OnCriticalRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff());
             return 100;
         }
     }
@@ -352,7 +352,7 @@ namespace Assets.System.WarModule
         public override int OnRouseRatioAddOn(ChessOperator op)
         {
             if (!IsBuffActive(op)) return 0;
-            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff(op));
+            SelfConduct(op, Activity.ChessboardBuffing, DepleteBuff());
             return 100;
         }
     }
@@ -408,15 +408,14 @@ namespace Assets.System.WarModule
             if (chainCount == 0) return;
             conduct.Multiply(1f / chainCount);
             var fixedDmg =
-                CombatConduct.InstanceElementDamage(op.InstanceId, (int)conduct.Total, (int)Buff);
+                CombatConduct.InstanceElementDamage((int)Buff, (int)conduct.Total, CombatConduct.FixedDmg);
                 //CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse, CombatConduct.FixedDmg);
             foreach (var pos in poses)
             {
                 if (pos.Operator == op)
-                    Chessboard.AppendOpActivity(op, pos, Activity.Self, Helper.Singular(conduct), -1, -1);
-                else
-                    Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), actId: -1,
-                        skill: -1);
+                    continue;
+                Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), actId: -1,
+                    skill: -1);
             }
         }
     }
