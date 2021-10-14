@@ -136,7 +136,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 57, y: 2}
+  m_AnchoredPosition: {x: 68, y: 20}
   m_SizeDelta: {x: 75, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4036264447315435335
@@ -456,7 +456,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.39215687}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.5882353}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -584,8 +584,8 @@ RectTransform:
   - {fileID: 4263009085291120498}
   - {fileID: 4263009085430308140}
   - {fileID: 4263009085616391106}
-  - {fileID: 7315835470334206325}
   - {fileID: 8913599730900616852}
+  - {fileID: 7315835470334206325}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -623,7 +623,7 @@ MonoBehaviour:
   BurningState:
     MainObj: {fileID: 8913599730900616859}
     Fields:
-    - Value: 0.6
+    - Value: 0.5
       ObjFields:
       - Obj: {fileID: 4036264447609767345}
         IsActive: 1
@@ -688,7 +688,7 @@ GameObject:
   - component: {fileID: 330312936574843571}
   - component: {fileID: 2325890836361688263}
   m_Layer: 5
-  m_Name: 4 LoseIcon
+  m_Name: LoseIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -706,7 +706,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4263009085874486674}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -799,7 +799,7 @@ RectTransform:
   m_Children:
   - {fileID: 4036264447209450878}
   m_Father: {fileID: 4263009085874486674}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
