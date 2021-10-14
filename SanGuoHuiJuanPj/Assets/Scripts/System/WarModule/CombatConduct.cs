@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using UnityEditor.Experimental.GraphView;
@@ -254,13 +255,6 @@ namespace Assets.System.WarModule
             Rouse = 0;
         }
 
-        public static bool IsPositiveConduct(CombatConduct conduct)
-        {
-            return conduct.Kind == HealKind ||
-                   conduct.Kind == BuffKind && !CardState.IsNegativeBuff((CardState.Cons)conduct.Element) &&
-                   conduct.Total > 0;
-        }
-
         public CombatConduct Clone(float ratio = 1f) => Instance(Basic * ratio, Critical * ratio, Rouse * ratio, Element,
             Kind, Rate, ReferenceId);
 
@@ -278,12 +272,25 @@ namespace Assets.System.WarModule
 
     public class Damage
     {
+        public enum Types
+        {
+            General,
+            Critical,
+            Rouse
+        }
         public enum Kinds
         {
             Physical,
             Magic,
             Fixed
         }
+
+        public static Types GetType(CombatConduct conduct) => conduct.IsRouseDamage() ? Types.Rouse :
+            conduct.IsCriticalDamage() ? Types.Critical : Types.General;
+
+        public static Types GetType(Activity activity) => 
+            activity.Conducts.Any(c => c.IsRouseDamage()) ? Types.Rouse :
+            activity.Conducts.Any(c => c.IsCriticalDamage()) ? Types.Critical : Types.General;
 
         public static Kinds GetKind(int element)
         {

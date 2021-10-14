@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NotImplementedException = System.NotImplementedException;
 
@@ -29,7 +30,8 @@ namespace Assets.System.WarModule
         public bool IsDeath => Hp <= 0;
         //[JsonIgnore] 
         public float HpRate => 1f * Hp / MaxHp;
-
+        public int LastEaseShieldDamage { get; set; }
+        public int LastHeal { get; set; }
         private ChessStatus()
         {
             
@@ -59,18 +61,21 @@ namespace Assets.System.WarModule
         public override string ToString() =>
             $"[{Hp}/{MaxHp}]Buffs[{Buffs.Count(b => b.Value > 0)}].LastS[{LastSuffers.Sum()}]";
 
-        public void AddHp(int value, bool overLimit = false)
+        public void OnHeal(int value, bool overLimit = false)
         {
+            if (value < 0)
+                throw new InvalidOperationException($"补血数量不可以低于0");
+            LastHeal = value;
             Hp += value;
             if (overLimit) return;
-            if (Hp > MaxHp)
-                Hp = MaxHp;
+            Hp = Math.Min(MaxHp, Hp);
         }
 
         public void Kill() => Hp = 0;
 
         public int EaseShieldOffset(float damage)
         {
+            LastEaseShieldDamage = (int)damage;
             var ease = GetBuff(CardState.Cons.EaseShield);
             if (ease > damage)
             {

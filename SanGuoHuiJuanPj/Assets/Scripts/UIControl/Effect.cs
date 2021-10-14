@@ -1501,6 +1501,10 @@ public static class Effect
 
             case ActivityResult.Types.Kill://击杀
                 return -1;
+            case ActivityResult.Types.Heal:
+                return - 1;
+            case ActivityResult.Types.Suicide:
+                return - 1;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -2551,6 +2555,8 @@ public static class Effect
             case ActivityResult.Types.Assist:
             case ActivityResult.Types.Kill:
             case ActivityResult.Types.EaseShield:
+            case ActivityResult.Types.Heal:
+            case ActivityResult.Types.Suicide:
                 return -1;//这些结果都是直接播放兵种音效
 
             case ActivityResult.Types.Dodge:

@@ -46,7 +46,7 @@ public class ChessUiStyle : CombatStyle
 
     public virtual int GetMilitarySparkId(Activity activity) => Effect.Basic001;
 
-    public virtual void NumberEffect(Activity activity, FightCardData target)
+    public virtual void NumberEffect(ActivityResult result, FightCardData target, Damage.Types type)
     {
     }
 
@@ -113,6 +113,7 @@ public abstract class CardStyle : ChessmanStyle
             case ActivityResult.Types.EaseShield:
                 return CardAnimator.instance.SufferShakeAnimation(target);
             case ActivityResult.Types.Assist:
+            case ActivityResult.Types.Heal:
                 return CardAnimator.instance.AssistEnlargeAnimation(target);
             case ActivityResult.Types.ChessPos:
             case ActivityResult.Types.Shield:
@@ -125,32 +126,35 @@ public abstract class CardStyle : ChessmanStyle
         }
     }
 
-    public override void NumberEffect(Activity activity,FightCardData target)
+    public override void NumberEffect(ActivityResult result,FightCardData target,Damage.Types type)
     {
-        var conducts = activity.Conducts
-            .Where(c => c.Kind == CombatConduct.DamageKind ||
-                        c.Kind == CombatConduct.KillingKind ||
-                        c.Kind == CombatConduct.HealKind ||
-                        c.Kind == CombatConduct.BuffKind ||
-                        c.Kind == CombatConduct.ElementDamageKind
-            ).ToArray();
-
-        //动画演示+上状态效果
-        foreach (var conduct in conducts)
+        var value = 0;
+        var color = ColorDataStatic.name_deepRed;
+            
+        switch (result.Type)
         {
-            switch (conduct.Kind)
-            {
-                case CombatConduct.DamageKind:
-                case CombatConduct.ElementDamageKind:
-                case CombatConduct.KillingKind:
-                    CardAnimator.instance.NumberEffectTween(target, conduct);
-                    break;
-                case CombatConduct.HealKind:
-                    CardAnimator.instance.NumberEffectTween(target, conduct);
-                    break;
-            }
+            case ActivityResult.Types.Suffer:
+                value = result.Status.LastSuffers.LastOrDefault();
+                break;
+            case ActivityResult.Types.EaseShield:
+                value = result.Status.LastEaseShieldDamage;
+                break;
+            case ActivityResult.Types.Heal:
+                value = result.Status.LastHeal;
+                color = ColorDataStatic.huiFu_green;
+                break;
+            case ActivityResult.Types.ChessPos:
+            case ActivityResult.Types.Assist:
+            case ActivityResult.Types.Shield:
+            case ActivityResult.Types.Invincible:
+            case ActivityResult.Types.Dodge:
+            case ActivityResult.Types.Kill:
+            case ActivityResult.Types.Suicide:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
-
+        CardAnimator.instance.NumberEffectTween(target, value, color, type);
     }
 
     protected virtual void RespondEffect(Activity activity, FightCardData target, int effectId)
@@ -179,6 +183,10 @@ public abstract class CardStyle : ChessmanStyle
             case ActivityResult.Types.Assist:
             case ActivityResult.Types.Dodge:
             case ActivityResult.Types.Invincible:
+            case ActivityResult.Types.ChessPos:
+            case ActivityResult.Types.Heal:
+            case ActivityResult.Types.Kill:
+            case ActivityResult.Types.Suicide:
                 break;
             case ActivityResult.Types.Shield:
                 CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.Shield);
@@ -186,6 +194,8 @@ public abstract class CardStyle : ChessmanStyle
             case ActivityResult.Types.EaseShield:
                 CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.EaseShield);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
     }
