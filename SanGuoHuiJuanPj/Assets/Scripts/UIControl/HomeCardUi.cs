@@ -12,11 +12,11 @@ public class HomeCardUi : GameCardWarUiOperation
         Lose.gameObject.SetActive(false);
     }
 
-    public override void UpdateHpUi(float hp)
+    public override void UpdateHpUi(float hpRate)
     {
-        base.UpdateHpUi(hp);
+        base.UpdateHpUi(hpRate);
         BurningState.MainObj.SetActive(true);
-        var field = BurningState.Fields.Where(f => hp > f.Value).OrderByDescending(f => f.Value).FirstOrDefault();
+        var field = BurningState.Fields.Where(f => hpRate > f.Value).OrderByDescending(f => f.Value).FirstOrDefault();
         if (field == null) return;
         foreach (var obj in field.ObjFields) obj.Obj.SetActive(obj.IsActive);
     }
