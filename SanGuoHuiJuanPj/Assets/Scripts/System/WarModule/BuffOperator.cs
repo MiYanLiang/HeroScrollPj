@@ -133,7 +133,7 @@ namespace Assets.System.WarModule
         public virtual int OnHealingConvert(int value) => value;
 
         public virtual bool IsSufferConductTrigger => false;
-        public virtual void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public virtual void OnSufferConduct(int activityIntent, ChessOperator op, CombatConduct conduct)
         {
         }
     }
@@ -206,7 +206,7 @@ namespace Assets.System.WarModule
 
         public override bool IsSufferConductTrigger => true;
 
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(int activityIntent, ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
             conduct.Multiply(DataTable.GetGameValue(117) * 0.01f);
@@ -366,7 +366,7 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsSufferConductTrigger => true;
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(int activityIntent, ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op)) return;
             var status = Chessboard.GetStatus(op);
@@ -397,18 +397,27 @@ namespace Assets.System.WarModule
 
         public override bool IsSufferConductTrigger => true;
 
-        public override void OnSufferConduct(ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(int activityIntent, ChessOperator op, CombatConduct conduct)
         {
-            if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
+            if (!IsBuffActive(op) ||
+                Damage.GetKind(conduct) != Damage.Kinds.Physical ||
+                activityIntent == Activity.Self ||
+                activityIntent == Activity.Friendly) return;
             var poses = Chessboard.GetChainedPos(op, ChainSprite.ChainedFilter).ToArray();
             var chainCount = poses.Count();
             if (chainCount == 0) return;
             conduct.Multiply(1f / chainCount);
             var fixedDmg =
-                CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse,
-                    CombatConduct.FixedDmg);
+                CombatConduct.InstanceElementDamage(op.InstanceId, (int)conduct.Total, (int)Buff);
+                //CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse, CombatConduct.FixedDmg);
             foreach (var pos in poses)
-                Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), actId: -1, skill: -1);
+            {
+                if (pos.Operator == op)
+                    Chessboard.AppendOpActivity(op, pos, Activity.Self, Helper.Singular(conduct), -1, -1);
+                else
+                    Chessboard.AppendOpActivity(op, pos, Activity.Friendly, Helper.Singular(fixedDmg), actId: -1,
+                        skill: -1);
+            }
         }
     }
 }

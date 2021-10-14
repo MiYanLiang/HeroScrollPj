@@ -406,8 +406,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             else
             {
                 tween.AppendCallback(() => OnChessboardActivity(activity, target));
-                SetAudioSection(aud, activity);
             }
+
+            SetAudioSection(aud, activity);
             tweenCards.Add(tCard);
         });
         return (tweenCards, section);
@@ -618,17 +619,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
                 break;
             }
-            case Activity.ChessboardBuffing:
-            {
-                var elementDamageConduct =
-                    activity.Conducts.FirstOrDefault(c => c.Kind == CombatConduct.ElementDamageKind);
-                if (elementDamageConduct != null) //羁绊，Buff 类型的伤害
-                {
-                    audioId = Effect.GetBuffDamageAudioId((CardState.Cons)elementDamageConduct.Element);
-                    AddToSection();
-                }
-                break;
-            }
             case Activity.PlayerResource:
             {
                 foreach (var conduct in activity.Conducts)
@@ -640,14 +630,24 @@ public class ChessboardVisualizeManager : MonoBehaviour
             }
             default:
             {
-                if (activity.Intent != Activity.Sprite && activity.From >= 0)
+                if (activity.From >= 0)
                 {
                     // 棋子伤害
                     var major = GetCardMap(activity.From);
                     if (major != null) audioId = GetCardSoundEffect(activity, major.ChessmanStyle);
                     AddToSection();
+                    break;
                 }
                 break;
+            }
+        }
+
+        foreach (var conduct in activity.Conducts)
+        {
+            if (conduct.Kind == CombatConduct.ElementDamageKind)
+            {
+                audioId = Effect.GetBuffDamageAudioId((CardState.Cons)conduct.Element);
+                AddToSection();
             }
         }
 
@@ -662,7 +662,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         var actResultId = Effect.ResultAudioId(result.Type);
         //只获取第一棋子结果音效
-        if (section.Result == -1) section.Result = actResultId;
+        if (!section.Result.Contains(actResultId)) section.Result.Add(actResultId);
     }
 
 
@@ -744,7 +744,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private class AudioSection
     {
         public List<int> Offensive = new List<int>();
-        public int Result = -1;
+        public List<int> Result = new List<int>();
     }
 
     private Tween FullScreenRouse() =>
@@ -758,9 +758,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void PlayAudio(AudioSection section)
     {
-        foreach (var id in section.Offensive.Where(id => id >= 0)) PlayAudio(id, 0);
-        if (section.Result >= 0)
-            PlayAudio(section.Result, 0f);
+        foreach (var id in section.Offensive.Concat(section.Result).Where(id => id >= 0)) PlayAudio(id, 0);
     }
 
     private void PlayAudio(int clipIndex, float delayedTime)

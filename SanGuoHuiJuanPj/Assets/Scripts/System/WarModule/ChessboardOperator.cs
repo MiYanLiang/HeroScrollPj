@@ -861,9 +861,10 @@ namespace Assets.System.WarModule
         /// 当被伤害的时候，伤害值转化
         /// </summary>
         /// <param name="op"></param>
+        /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public void OnCombatMiddlewareConduct(ChessOperator op, CombatConduct conduct)
+        public void OnCombatMiddlewareConduct(ChessOperator op, int activityIntent, CombatConduct conduct)
         {
             float armor;
             var addOn = 0;
@@ -882,7 +883,7 @@ namespace Assets.System.WarModule
             conduct.Multiply(resisted);
             //伤害或护甲转化buff 例如：流血
             foreach (var bo in GetBuffOperator(b => b.IsSufferConductTrigger))
-                bo.OnSufferConduct(op, conduct);
+                bo.OnSufferConduct(activityIntent, op, conduct);
         }
 
         public bool OnMainProcessAvailable(ChessOperator op)

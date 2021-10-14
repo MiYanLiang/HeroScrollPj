@@ -104,7 +104,7 @@ namespace Assets.System.WarModule
             if (activity.Intent == Activity.ChessboardBuffing)
             {
                 foreach (var conduct in activity.Conducts)
-                    UpdateConduct(conduct);
+                    UpdateConduct(activity.Intent, conduct);
                 result.Status = Chessboard.GetStatus(this);
                 return result;
             }
@@ -174,7 +174,7 @@ namespace Assets.System.WarModule
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
-                UpdateConduct(conduct);
+                UpdateConduct(activity.Intent, conduct);
             }
         }
 
@@ -198,9 +198,10 @@ namespace Assets.System.WarModule
         /// 更新行动，主要是分类调用
         /// 另外如果来自伤害死亡，将触发<see cref="OnDeadTrigger"/>
         /// </summary>
+        /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
         /// <param name="chessboardInvocation"></param>
-        private void UpdateConduct(CombatConduct conduct,bool chessboardInvocation = false)
+        private void UpdateConduct(int activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
         {
             var conductTotal = (int) conduct.Total;
             var status = Chessboard.GetStatus(this);
@@ -233,7 +234,7 @@ namespace Assets.System.WarModule
                     {
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
-                            Chessboard.OnCombatMiddlewareConduct(this, conduct);
+                            Chessboard.OnCombatMiddlewareConduct(this, activityIntent, conduct);
                             if (conduct.Element == CombatConduct.MechanicalDmg && Style.ArmedType < 0)
                                 conduct.Multiply(2);
 
