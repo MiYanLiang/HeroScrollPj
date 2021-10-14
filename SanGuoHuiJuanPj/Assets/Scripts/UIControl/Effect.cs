@@ -2513,7 +2513,7 @@ public static class Effect
             case CardState.Cons.Burn://火buff伤害
                 return 37;
             case CardState.Cons.Chained://连环分摊伤害
-                return 57;
+                return 59;
             case CardState.Cons.Bleed:
             case CardState.Cons.Stunned:
             case CardState.Cons.Shield:
@@ -2595,16 +2595,16 @@ public static class Effect
     {
         switch (jiBan)
         {
-            case JiBanSkillName.WuHuShangJiang: return 101;
+            case JiBanSkillName.WuHuShangJiang: return 10;
+            case JiBanSkillName.WuZiLiangJiang:return 58;
+            case JiBanSkillName.WeiWuMouShi:return 45;
+            case JiBanSkillName.ShuiShiDuDu:return 13;
+            case JiBanSkillName.HeBeiSiTingZhu:return 58;
             case JiBanSkillName.TaoYuanJieYi:
             case JiBanSkillName.WoLongFengChu:
             case JiBanSkillName.HuChiELai:
-            case JiBanSkillName.WuZiLiangJiang:
-            case JiBanSkillName.WeiWuMouShi:
             case JiBanSkillName.HuJuJiangDong:
-            case JiBanSkillName.ShuiShiDuDu:
             case JiBanSkillName.TianZuoZhiHe:
-            case JiBanSkillName.HeBeiSiTingZhu:
             case JiBanSkillName.JueShiWuShuang:
             case JiBanSkillName.HanMoSanXian:
                 return -1;
