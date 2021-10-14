@@ -1348,11 +1348,11 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int CriticalRate() => 3;            //旧数据表
-        private int RouseRate() => 5;            //旧数据表
+        private int CriticalRate() => 5;            //旧数据表
+        private int RouseRate() => 10;            //旧数据表
 
         private float DamageRate => 0.3f; //旧数据表
-        private int KillingRate => 10;
+        private int KillingRate => 5;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
