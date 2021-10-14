@@ -166,23 +166,25 @@ public class ChessboardVisualizeManager : MonoBehaviour
             FilterDeathChessman();
         }
         //回合结束演示
-        yield return new WaitForSeconds(0.5f);
-        foreach (var process in round.FinalAction.ChessProcesses)
-            yield return OnBasicChessProcess(process).Play().WaitForCompletion();
+        if(round.FinalAction.ChessProcesses.Count>0)
+        {
+            yield return new WaitForSeconds(0.5f);
+            foreach (var process in round.FinalAction.ChessProcesses)
+                yield return OnBasicChessProcess(process).Play().WaitForCompletion();
+        }
         FilterDeathChessman();
-        yield return new WaitForSeconds(0.5f);
         if (chess.IsGameOver)
         {
+            OnGameSet.Invoke(chess.IsChallengerWin);
             //ClearStates();
             if (chess.IsChallengerWin)
                 yield return ChallengerWinAnimation();
             RouseEffectObj.gameObject.SetActive(false);
-            OnGameSet.Invoke(chess.IsChallengerWin);
             IsGameOver = true;
             IsBusy = false;
             yield break;
         }
-
+        yield return new WaitForSeconds(0.5f);
         IsBusy = false;
         NewWar.StartButtonShow(true);
 

@@ -582,7 +582,8 @@ public class WarsUIManager : MonoBehaviour
 
             TempScope.Add(card, ui);
             ui.transform.position = chessman.transform.position; //被改位置重置
-            var hp = Math.Min(card.Status.Hp + card.Info.GameSetRecovery, card.Status.MaxHp);
+            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Info.GameSetRecovery * 0.01f)),
+                card.Status.MaxHp);
             card.Status.SetHp(hp);
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
             ui.War.UpdateHpUi(card.Status.HpRate);
@@ -638,13 +639,21 @@ public class WarsUIManager : MonoBehaviour
             ExpeditionFinalize(false);
             return;
         }
+        StartCoroutine(OnPlayerWin());
+    }
+
+    IEnumerator OnPlayerWin()
+    {
         WarChests.AddRange(TempChest);
         UpdateInfoUis();
+        if (TempChest.Count > 0)
+        {
+            var warReward = PlayerDataForGame.instance.WarReward;
+            foreach (var id in TempChest)
+                warReward.Chests.Add(id);
+        }
+        yield return new WaitForSeconds(2);
         GenericWindow.SetReward(TempGold, TempChest.Count);
-        if (TempChest.Count <= 0) return;
-        var warReward = PlayerDataForGame.instance.WarReward;
-        foreach (var id in TempChest)
-            warReward.Chests.Add(id);
     }
 
     public void InitChessboard(GameStage stage)
