@@ -154,7 +154,7 @@ public class WarsUIManager : MonoBehaviour
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
         chessboardManager.OnCardDefeated.AddListener(OnCardDefeated);
         chessboardManager.OnGameSet.AddListener(FinalizeWar);
-        speedBtn.onClick.AddListener(ChangeTimeScale);
+        speedBtn.onClick.AddListener(()=>ChangeTimeScale());
     }
 
     IEnumerator Initialize()
@@ -512,12 +512,16 @@ public class WarsUIManager : MonoBehaviour
     private const string Multiply = "×";
 
     //改变游戏速度
-    public void ChangeTimeScale()
+    public void ChangeTimeScale(int scale = 0)
     {
         var warScale = GamePref.PrefWarSpeed;
-        warScale *= 2;
-        if (warScale > 2)
-            warScale = 1;
+        if (scale <= 0)
+        {
+            warScale *= 2;
+            if (warScale > 2)
+                warScale = 1;
+        }
+        else warScale = scale;
         GamePref.SetPrefWarSpeed(warScale);
         Time.timeScale = warScale;
         speedBtnText.text = Multiply + warScale;
@@ -646,6 +650,7 @@ public class WarsUIManager : MonoBehaviour
     {
         WarChests.AddRange(TempChest);
         UpdateInfoUis();
+        ChangeTimeScale(1);
         if (TempChest.Count > 0)
         {
             var warReward = PlayerDataForGame.instance.WarReward;

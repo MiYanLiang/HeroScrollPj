@@ -10,47 +10,13 @@ using UnityEngine.UI;
 public class CardAnimator : MonoBehaviour
 {
     public static CardAnimator instance;
-    private float MeleeMove => meleeMove;
-    private float MeleeReturn => meleeReturn;
-    private float MeleeStepBack => meleeStepBack;
-    private float MeleeCharge => meleeCharge;
-    private float MeleeHit => meleeHit;
-    private float RangePreAction => rangePreAct;
-    private float CounterTempo => counterTempo;
-    private float CounterStepBack => counterStepBack;
-    private float CounterCharge => counterCharge;
-    private float DodgeDistance => dodgeDistance;
-    private float DodgeDuration => dodgeDuration;
+    [Header("近战")][SerializeField] private MeleeField Melee;
+    [Header("远程")][SerializeField] private RangeField Range;
+    [Header("反击")][SerializeField] private CounterField Counter;
+    [Header("闪避")][SerializeField] private DodgeField Dodge;
+    [Header("辅助")][SerializeField] private AssistField Assist;
+    [Header("其它")][SerializeField] private MiscField Misc;
 
-    [Header("近战前进(秒)")]
-    [SerializeField] private float meleeMove = 0.2f;
-    [SerializeField] private float meleeStop = 0.15f;
-    [Header("近战攻击(秒)")]
-    [SerializeField] private float meleeStepBack = 0.3f;
-    [SerializeField] private float meleeCharge = 0.4f;
-    [SerializeField] private float meleeHit = 0.1f;
-    [Header("近战归位(秒)")]
-    [SerializeField] private float meleeReturn = 0.15f;
-    [Header("后退距离(格)")]
-    [SerializeField] private float stepBackDistance = 1f;
-
-    [Header("远程前摇(秒)")] 
-    [SerializeField] private float rangePreAct = 0.5f;
-    [Header("远程后座力(格)")] [SerializeField] private float rangeRecoil = 0.3f;
-    [Header("远程后座力时长(秒)")] [SerializeField] private float rangeRecoilSec = 0.05f;
-    [Header("远程站稳时长(秒)")] [SerializeField] private float rangeRecoverSec = 0.05f;
-
-    [Header("反击节奏(倍速)")][SerializeField] private float counterTempo = 0.3f;
-    [Header("反击后退距离(格)")][SerializeField] private float counterStepBack = 0.3f;
-    [Header("反击蓄力(秒)")][SerializeField] private float counterCharge= 0.1f;
-    [Header("闪避")][SerializeField] private float dodgeDistance= 0.3f;
-    [SerializeField] private float dodgeDuration = 0.2f;
-    [Header("辅助放大倍数")] [SerializeField] private float assistEnlarge = 1.5f;
-    [Header("辅助放大时长")] [SerializeField] private float assistEnlargeSec = 0.2f;
-    [Header("竖文字显示(秒)")][SerializeField] private float VTextLasting = 1.5f;
-    [Header("数字显示(秒)")][SerializeField] private float HTextLasting = 1.5f;
-    [Header("暴击文字大小")] [SerializeField] private float CriticalTextEnlarge = 1.5f;
-    [Header("会心文字大小")] [SerializeField] private float RouseTextEnlarge = 1.5f;
     void Awake()
     {
         if (instance != null)
@@ -65,15 +31,14 @@ public class CardAnimator : MonoBehaviour
         {
             case CombatStyle.Types.None:
                 break;
-            case CombatStyle.Types.Melee:
-                if (target != null) tween.Join(MeleeMoveAnimation(card, target));
+            case CombatStyle.Types.Melee when (target != null):
+                tween.Join(MeleeMoveAnimation(card, target));
                 break;
             case CombatStyle.Types.Range:
                 tween.Join(RangePreActAnimation(card));
                 break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
+
         return tween;
     }
 
@@ -81,7 +46,7 @@ public class CardAnimator : MonoBehaviour
     private Tween RangePreActAnimation(FightCardData card)
     {
         var obj = card.cardObj;
-        return obj.transform.DOScale(new Vector3(1.15f, 1.15f, 1), RangePreAction).SetAutoKill(false).OnComplete(() => obj.transform.DOPlayBackwards());
+        return obj.transform.DOScale(Range.PreActScale, Range.PreAct).OnComplete(() => obj.transform.DOPlayBackwards());
     }
 
     /// <summary>
@@ -93,7 +58,7 @@ public class CardAnimator : MonoBehaviour
         var oneYOffset = (card.isPlayerCard ? 1 : -1) * size.y;
         var targetPos = target.cardObj.transform.position;
         var facingPos = new Vector3(targetPos.x, targetPos.y - oneYOffset, targetPos.z);
-        return DOTween.Sequence().Append(MoveTween(card, facingPos, MeleeMove)).AppendInterval(MeleeCharge);
+        return DOTween.Sequence().Append(MoveTween(card, facingPos, Melee.Forward)).AppendInterval(Melee.Stop);
     }
 
     /// <summary>
@@ -101,35 +66,42 @@ public class CardAnimator : MonoBehaviour
     /// </summary>
     public Tween FinalizeAnimation(FightCardData card, Vector3 origin)
     {
-        var sBack = MoveTween(card, origin, MeleeReturn);
-        var scaleBack = card.cardObj.transform.DOScale(Vector3.one, MeleeReturn);
+        var sBack = MoveTween(card, origin, Melee.Return);
+        var scaleBack = card.cardObj.transform.DOScale(Vector3.one, Melee.Return);
         return DOTween.Sequence().Join(sBack).Join(scaleBack);
     }
 
     public Tween MoveTween(FightCardData card, Vector3 origin, float sec = -1)
     {
-        if (sec <= 0) sec = rangeRecoverSec;
+        if (sec <= 0) sec = Range.RecoverSec;
         return card.cardObj.transform.DOMove(origin, sec);
     }
 
     public Tween CounterAnimation(FightCardData card)
     {
         //这里反击所有兵种都显示文字效果。并不仅限于禁卫
-        return StepBackAndHit(card, CounterStepBack, CounterTempo, CounterCharge).OnComplete(() =>
+        return StepBackAndHit(card, Counter.StepBack, Counter.StepBackSec, Counter.Charge).OnComplete(() =>
             GetVTextEffect(Effect.HeroActivityVText(13, 1), card.cardObj.transform));
     }
 
     //退后向前进攻模式
-    public Sequence StepBackAndHit(FightCardData card, float backStepDistance = 0.5f,float time = 1f,float chargeRate = 1f)
+    public Sequence StepBackAndHit(FightCardData card, float backStepDistance = -0.5f, float stepBckTime = -1f,
+        float chargeTime = -1f)
     {
+        if (stepBckTime < 0)
+            stepBckTime = Melee.StepBack;
+        if (chargeTime < 0)
+            chargeTime = Melee.Charge;
+        if (backStepDistance < 0)
+            backStepDistance = Melee.StepBackDistance;
         var ui = card.cardObj;
         var size = GetWorldSize(card.cardObj.transform);
         var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
         var origin = ui.transform.position;
         return DOTween.Sequence()
-            .Append(MoveTween(card,origin + new Vector3(0, oneYOffset * backStepDistance), MeleeStepBack * time))
-            .AppendInterval(MeleeCharge * chargeRate)
-            .Append(MoveTween(card, origin, MeleeHit * time));
+            .Append(MoveTween(card, origin + new Vector3(0, oneYOffset * backStepDistance), stepBckTime))
+            .AppendInterval(chargeTime)
+            .Append(MoveTween(card, origin, Melee.Hit));
     }
 
     /// <summary>
@@ -143,7 +115,7 @@ public class CardAnimator : MonoBehaviour
         var oneYOffset = (card.isPlayerCard ? -1 : 1) * size.y;
         var origin = ui.transform.position;
         return DOTween.Sequence()
-            .Append(card.cardObj.transform.DOMove(origin + new Vector3(0, oneYOffset * rangeRecoil), rangeRecoilSec));
+            .Append(card.cardObj.transform.DOMove(origin + new Vector3(0, oneYOffset * Range.Recoil), Range.RecoilSec));
     }
 
     /// <summary>
@@ -155,9 +127,10 @@ public class CardAnimator : MonoBehaviour
         var size = GetWorldSize(target.cardObj.transform);
         var origin = ui.transform.position;
         return DOTween.Sequence()
-            .Append(ui.transform.DOMove(origin + new Vector3(size.x * DodgeDistance, 0, 0), DodgeDuration))
-            .Append(ui.transform.DOMove(origin, DodgeDuration * 0.5f));
+            .Append(ui.transform.DOMove(origin + new Vector3(size.x * Dodge.Distance, 0, 0), Dodge.Duration))
+            .Append(ui.transform.DOMove(origin, Dodge.Duration * 0.5f));
     }
+
     /// <summary>
     /// 被攻击摇晃动作
     /// </summary>
@@ -169,7 +142,8 @@ public class CardAnimator : MonoBehaviour
     public Tween AssistEnlargeAnimation(FightCardData target)
     {
         var obj = target.cardObj;
-        return DOTween.Sequence().Append(obj.transform.DOScale(assistEnlarge, assistEnlargeSec)).Append(obj.transform.DOScale(1, assistEnlargeSec * 0.5f));
+        return DOTween.Sequence().Append(obj.transform.DOScale(Assist.Enlarge, Assist.EnlargeSec))
+            .Append(obj.transform.DOScale(1, Assist.EnlargeSec * 0.5f));
     }
 
     /// <summary>
@@ -180,11 +154,11 @@ public class CardAnimator : MonoBehaviour
     /// <param name="color"></param>
     /// <param name="dmgType"></param>
     /// <returns></returns>
-    public void NumberEffectTween(FightCardData target, int value,Color color,Damage.Types dmgType)
+    public void NumberEffectTween(FightCardData target, int value, Color color, Damage.Types dmgType)
     {
         if (value == 0) return;
         var effect =
-            EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, HTextLasting,
+            EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, Misc.VTextLasting,
                 target.cardObj.transform);
         var text = effect.GetComponentInChildren<Text>();
         text.text = value.ToString();
@@ -195,10 +169,10 @@ public class CardAnimator : MonoBehaviour
                 effect.transform.DOScale(1, 0);
                 break;
             case Damage.Types.Critical:
-                effect.transform.DOScale(CriticalTextEnlarge, 0);
+                effect.transform.DOScale(Misc.CriticalTextEnlarge, 0);
                 break;
             case Damage.Types.Rouse:
-                effect.transform.DOScale(RouseTextEnlarge, 0);
+                effect.transform.DOScale(Misc.RouseTextEnlarge, 0);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(dmgType), dmgType, null);
@@ -209,9 +183,10 @@ public class CardAnimator : MonoBehaviour
     /// 被击退一格
     /// </summary>
     public Tween OnRePos(FightCardData target, ChessPos pos) =>
-        target.cardObj.transform.DOMove(pos.transform.position,
-            0.2f);
+        target.cardObj.transform.DOMove(pos.transform.position,Misc.RePos);
+
     static float chessboardShakeIntensity = 30f;
+
     /// <summary>
     /// 棋盘震动
     /// </summary>
@@ -225,7 +200,7 @@ public class CardAnimator : MonoBehaviour
     }
 
     private static Vector2 GetWorldSize(Transform transform) =>
-        ((RectTransform) transform).sizeDelta * transform.lossyScale;
+        ((RectTransform)transform).sizeDelta * transform.lossyScale;
 
     /// <summary>
     /// 更新棋子上的状态效果
@@ -243,6 +218,7 @@ public class CardAnimator : MonoBehaviour
     /// </summary>
     public void UpdateStateIcon(FightCardData target, CardState.Cons con) =>
         UpdateStateIcon(target, (int)con);
+
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
@@ -261,6 +237,7 @@ public class CardAnimator : MonoBehaviour
                 target.StatesUi.Remove(key);
                 EffectsPoolingControl.instance.RecycleStateBuff(e);
             }
+
             //更新小图标
             if (target.cardObj.War.CardStates.ContainsKey(iconId))
                 DestroySateIcon(target.cardObj, con);
@@ -268,7 +245,7 @@ public class CardAnimator : MonoBehaviour
             return;
         }
 
-        if (!target.StatesUi.ContainsKey(key) || target.StatesUi[key] == null)//添加效果图
+        if (!target.StatesUi.ContainsKey(key) || target.StatesUi[key] == null) //添加效果图
         {
             var effect = EffectsPoolingControl.instance.GetStateBuff(con, target.cardObj.transform);
             if (!target.StatesUi.ContainsKey(key))
@@ -279,7 +256,7 @@ public class CardAnimator : MonoBehaviour
         if (!target.cardObj.War.CardStates.ContainsKey(iconId))
             CreateSateIcon(target.cardObj, con);
 
-        if (target.StatesUi.ContainsKey(key) && target.StatesUi[key]) 
+        if (target.StatesUi.ContainsKey(key) && target.StatesUi[key])
             target.StatesUi[key].ImageFading(Effect.BuffFading(con, stateValue));
     }
 
@@ -365,17 +342,18 @@ public class CardAnimator : MonoBehaviour
 
     public void VTextEffect(int vTextId, Transform trans) => GetVTextEffect(vTextId, trans);
 
-    private void GetVTextEffect(int vTextId , Transform trans)
+    private void GetVTextEffect(int vTextId, Transform trans)
     {
         if (vTextId == -1) return;
-        var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextV, VTextLasting, trans);
+        var effectObj =
+            EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextV, Misc.VTextLasting, trans);
         effectObj.transform.DOScale(1, 0);
         effectObj.GetComponentsInChildren<Image>()[1].sprite = GameResources.Instance.VText[vTextId];
     }
 
-    private void GetHTextEffect(int id,Transform trans, Color color, float scale)
+    private void GetHTextEffect(int id, Transform trans, Color color, float scale)
     {
-        var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextH, VTextLasting, trans);
+        var effectObj = EffectsPoolingControl.instance.GetVTextEffect(Effect.SpellTextH, Misc.HTextLasting, trans);
         effectObj.GetComponentInChildren<Text>().text = DataTable.GetStringText(id);
         effectObj.GetComponentInChildren<Text>().color = color;
         effectObj.transform.DOScale(scale, 0);
@@ -388,4 +366,59 @@ public class CardAnimator : MonoBehaviour
 
     //删除状态图标
     private void DestroySateIcon(WarGameCardUi ui, CardState.Cons con) => ui.War.RemoveStateIco(con);
+
+
+    [Serializable]
+    private class MeleeField
+    {
+        [Header("前进(秒)")] public float Forward = 0.2f;
+        [Header("前摇停顿(秒)")]public float Stop = 0.15f;
+        [Header("蓄力(秒)")]public float Charge = 0.3f;
+        [Header("后退(秒)")] public float StepBack = 0.2f;
+        [Header("后退距离(格)")] public float StepBackDistance = 0.5f;
+        [Header("攻击(秒)")] public float Hit = 0.1f;
+        [Header("归位(秒)")] public float Return = 0.15f;
+    }
+
+    [Serializable]
+    private class RangeField
+    {
+        [Header("前摇(秒)")] public float PreAct = 0.3f;
+        [Header("前摇放大(倍)")] public float PreActScale = 1.2f;
+        [Header("后座力(格)")] public float Recoil = 0.3f;
+        [Header("后座力时长(秒)")] public float RecoilSec = 0.05f;
+        [Header("站稳时长(秒)")] public float RecoverSec = 0.05f;
+    }
+
+    [Serializable]
+    private class CounterField
+    {
+        [Header("后退(秒)")] public float StepBackSec = 0.15f;
+        [Header("后退距离(格)")] public float StepBack = 0.3f;
+        [Header("蓄力(秒)")] public float Charge = 0.1f;
+    }
+
+    [Serializable]
+    private class DodgeField
+    {
+        [Header("距离(格)")] public float Distance = 0.3f;
+        [Header("时长(秒)")]public float Duration = 0.2f;
+    }
+
+    [Serializable]
+    private class AssistField
+    {
+        [Header("放大(倍)")] public float Enlarge = 1.1f;
+        [Header("时长(秒)")] public float EnlargeSec = 0.2f;
+    }
+
+    [Serializable]
+    private class MiscField
+    {
+        [Header("竖文字显示时长(秒)")] public float VTextLasting = 1.5f;
+        [Header("横文字显示时长(秒)")]public float HTextLasting = 1.5f;
+        [Header("暴击文字大小(倍)")] public float CriticalTextEnlarge = 1.5f;
+        [Header("会心文字大小(倍)")] public float RouseTextEnlarge = 2f;
+        [Header("击退执行(秒)")] public float RePos = 0.2f;
+    }
 }

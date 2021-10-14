@@ -19,11 +19,14 @@ namespace Assets.System.WarModule
     /// </summary>
     public class YingZhaiOperator : TowerOperator
     {
+        private int RecoverRate => 20;
         protected override void StartActions()
         {
             var status = Chessboard.GetStatus(this);
             var targets = Chessboard.GetFriendlyNeighbors(this)
-                .Where(c => c.IsPostedAlive && c.Operator.CardType == GameCardType.Hero).ToArray();
+                .Where(c => c.IsPostedAlive &&
+                            c.Operator.CardType == GameCardType.Hero &&
+                            Chessboard.GetStatus(c.Operator).HpRate < 1).ToArray();
             if (targets.Length == 0) return;
             var target = targets.OrderBy(c => Chessboard.GetStatus(c.Operator).HpRate).First();
             var tarStat = Chessboard.GetStatus(target.Operator);
@@ -33,6 +36,14 @@ namespace Assets.System.WarModule
                 Helper.Singular(CombatConduct.InstanceHeal(healingHp, InstanceId)), actId: 0, skill: 1);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
                 Helper.Singular(CombatConduct.InstanceDamage(InstanceId, healingHp, CombatConduct.FixedDmg)), actId: -1, skill: -1);
+        }
+
+        public override void OnRoundStart()
+        {
+            var stat = Chessboard.GetStatus(this);
+            if (!stat.IsDeath && stat.HpRate < 1)
+                Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                    Helper.Singular(CombatConduct.InstanceHeal(stat.MaxHp * RecoverRate * 0.01f, InstanceId)), -1, -1);
         }
     }
     /// <summary>
