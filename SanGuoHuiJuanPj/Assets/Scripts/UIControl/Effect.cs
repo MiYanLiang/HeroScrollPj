@@ -2512,6 +2512,8 @@ public static class Effect
                 return 17;
             case CardState.Cons.Burn://火buff伤害
                 return 37;
+            case CardState.Cons.Chained://连环分摊伤害
+                return 57;
             case CardState.Cons.Bleed:
             case CardState.Cons.Stunned:
             case CardState.Cons.Shield:
@@ -2533,7 +2535,6 @@ public static class Effect
             case CardState.Cons.Stimulate:
             case CardState.Cons.Confuse:
             case CardState.Cons.YellowBand:
-            case CardState.Cons.Chained:
             case CardState.Cons.Murderous:
                 return -1;
             default:
