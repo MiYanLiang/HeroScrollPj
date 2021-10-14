@@ -627,11 +627,11 @@ MonoBehaviour:
     - {fileID: 4036264447973551419}
     - {fileID: 4036264447315435330}
     Fields:
-    - Value: 0.75
-      Objs: 010000
     - Value: 0.5
+      Objs: 010000
+    - Value: 0.3
       Objs: 010100
-    - Value: 0.25
+    - Value: 0.1
       Objs: 010101
 --- !u!114 &5540341847820749036
 MonoBehaviour:
