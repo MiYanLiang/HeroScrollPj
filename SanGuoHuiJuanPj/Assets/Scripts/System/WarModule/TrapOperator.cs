@@ -160,42 +160,45 @@ namespace Assets.System.WarModule
     /// </summary>
     public class BaZhenTuOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, Chessboard.ConfigValue(133)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
+            CardState.Cons.Stunned, value: 1, rate: DataTable.GetGameValue(133)));
     }
     /// <summary>
     /// 金锁阵
     /// </summary>
     public class JinSuoZhenOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Imprisoned, DataTable.GetGameValue(10)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
+            CardState.Cons.Imprisoned, value: 1, rate: DataTable.GetGameValue(10)));
     }
     /// <summary>
     /// 鬼兵阵
     /// </summary>
     public class GuiBingZhenOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Cowardly, DataTable.GetGameValue(11)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
+            CardState.Cons.Cowardly, value: 1, rate: DataTable.GetGameValue(11)));
     }
     /// <summary>
     /// 火墙
     /// </summary>
     public class FireWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, DataTable.GetGameValue(12)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 1, rate: DataTable.GetGameValue(12)));
     }
     /// <summary>
     /// 毒泉
     /// </summary>
     public class PoisonSpringOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, DataTable.GetGameValue(13)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 1, rate: DataTable.GetGameValue(13)));
     }
     /// <summary>
     /// 刀墙
     /// </summary>
     public class BladeWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, DataTable.GetGameValue(14)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, value: 1, rate: DataTable.GetGameValue(14)));
     }
     /// <summary>
     /// 金币宝箱
