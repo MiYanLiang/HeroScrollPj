@@ -159,7 +159,6 @@ public class GameSystem : MonoBehaviour
 
     private void OnStartSceneLoaded()
     {
-        EffectsPoolingControl.instance.Init();
         StartSceneUIManager.instance.Init();
         StartSceneToServerCS.instance.Init();
         BarrageUiController.instance.Init();

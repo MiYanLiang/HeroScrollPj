@@ -749,6 +749,7 @@ namespace Assets.System.WarModule
                     op.OnSomebodyDie(death);
                 Log($"@@@@【{death}败退】@@@@！");
             }
+
             return result;
         }
 

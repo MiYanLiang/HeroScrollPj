@@ -259,7 +259,7 @@ namespace Assets.System.WarModule
         public ChessStatus Status { get; set; }
         public Types Type => (Types)Result;
         //[JsonIgnore] 
-        public bool IsDeath => Status.IsDeath;
+        public bool IsDeath => Status != null && Status.IsDeath;
 
         public override string ToString()
         {

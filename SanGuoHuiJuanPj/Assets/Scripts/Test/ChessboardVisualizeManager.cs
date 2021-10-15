@@ -148,7 +148,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         IsBusy = true;
         var gridTween = DOTween.Sequence().Pause();
-        foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(0, CardAnimator.instance.Misc.ChessGridFadingSec));
+        foreach (var image in Chessboard.GridImages)
+            gridTween.Join(image.DOFade(CardAnimator.instance.Misc.ChessGridFading,
+                CardAnimator.instance.Misc.ChessGridFadingSec));
         gridTween.Play();
 
 #if UNITY_EDITOR
@@ -241,7 +243,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
             yield return new WaitForSeconds(1);
         }
-
     }
 
     private Sequence OnBasicChessProcess(ChessProcess process)

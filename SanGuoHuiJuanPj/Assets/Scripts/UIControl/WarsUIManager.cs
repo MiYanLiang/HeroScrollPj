@@ -773,11 +773,12 @@ public class WarsUIManager : MonoBehaviour
         currentEvent = EventTypes.回春;
         PlayAudioClip(19);
         GenericWindow.SetRecovery(DataTable.GetStringText(55));
-        foreach (var card in FightForManager.instance.GetCardList(true))
+        foreach (var itm in TempScope)
         {
-            if (card == null || card.Hp <= 0) continue;
-            card.Hp.Add((int)(percentReturnHp * card.Hp.Value));
-            card.UpdateHpUi();
+            var ui = itm.Value;
+            var card = itm.Key;
+            card.ResetHp(card.MaxHitPoint);
+            ui.War.UpdateHpUi(card.Status.HpRate);
         }
     }
 

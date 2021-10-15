@@ -71,25 +71,22 @@ public class StartSceneToServerCS : MonoBehaviour
     public void LoginGameInfoFun()
     {
         //如果有存档或初始剧情已播或是用户名已注册，不播剧情
-        if (!string.IsNullOrWhiteSpace(PlayerDataForGame.instance.acData.Username)
-#if UNITY_EDITOR
-            || isSkipInitBattle
-#endif
-            || StartSceneUIManager.instance.isPlayedStory)
-        {
+//        if (!string.IsNullOrWhiteSpace(PlayerDataForGame.instance.acData.Username)
+//#if UNITY_EDITOR
+//            || isSkipInitBattle
+//#endif
+//            || StartSceneUIManager.instance.isPlayedStory)
+//        {
             var login = GameSystem.LoginUi;
             login.OnAction(LoginUiController.ActionWindows.Login);
             login.OnLoggedInAction += OnLoggedIn;
             return;
-        }
-
-        //先播放剧情 
-        StartButton.gameObject.SetActive(true);
-        StartButton.onClick.RemoveAllListeners();
-        var startSceneUi = GetComponent<StartSceneUIManager>();
-        StartButton.onClick.AddListener(startSceneUi.DontHaveSaveDataPlayStory);
-        //beginningWarBtn.gameObject.SetActive(true);
-
+        //}
+        ////先播放剧情 
+        //StartButton.gameObject.SetActive(true);
+        //StartButton.onClick.RemoveAllListeners();
+        //var startSceneUi = GetComponent<StartSceneUIManager>();
+        //StartButton.onClick.AddListener(startSceneUi.DontHaveSaveDataPlayStory);
     }
 
     private void OnLoggedIn(string username, string password, int arrangement, int newReg)
