@@ -147,6 +147,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private IEnumerator AnimateRound(ChessRound round, ChessboardOperator chess)
     {
         IsBusy = true;
+        var gridTween = DOTween.Sequence().Pause();
+        foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(0, CardAnimator.instance.Misc.ChessGridFadingSec));
+        gridTween.Play();
+
 #if UNITY_EDITOR
         foreach (var stat in round.PreRoundStats)
         {
@@ -174,6 +178,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 yield return OnBasicChessProcess(process).Play().WaitForCompletion();
         }
         FilterDeathChessman();
+
+        gridTween = DOTween.Sequence().Pause();
+        foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
+        gridTween.Play();
+
         if (chess.IsGameOver)
         {
             OnGameSet.Invoke(chess.IsChallengerWin);
@@ -188,7 +197,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         IsBusy = false;
         NewWar.StartButtonShow(true);
-
     }
     private void FilterDeathChessman()
     {
@@ -282,7 +290,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
                 JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
                 DisplayJiBanObj(isChallenger, JiBanEffect.transform);
-                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id), 0);
             })
             .AppendInterval(2f)
             .OnComplete(() => JiBanEffect.gameObject.SetActive(false));
@@ -330,7 +337,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         if (offensiveEffect == null) return DOTween.Sequence();
         return DOTween.Sequence()
-            .AppendCallback(() => DisplayJiBanObj(isPlayer, offensiveEffect.transform))
+            .AppendCallback(() =>
+            {
+                DisplayJiBanObj(isPlayer, offensiveEffect.transform);
+                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id), 0);
+            })
             .AppendInterval(0.5f)
             .OnComplete(
                 () =>
@@ -438,7 +449,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var map in process.CombatMaps.OrderBy(c => c.Key))
         {
             var mainTween = DOTween.Sequence().Pause();
-            var counterTween = DOTween.Sequence().Pause();
             //会心一击演示
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsRouseDamage()))
                 yield return FullScreenRouse().WaitForCompletion();
@@ -483,7 +493,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = GetCardMap(result.Key);
-                var tweenCard = listTween.FirstOrDefault(c => c.Id == card.InstanceId);
+                var tweenCard = listTween.FirstOrDefault();
                 mainTween
                     .Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
                         .OnComplete(() =>
@@ -500,10 +510,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //施展方如果近战，前摇(后退，前冲)
             //如果有侵略行为才有动画
             if (major != null &&
-                major.Style.ArmedType >= 0 &&
-                map.Value.Activities.Any(a => a.Intent == Activity.Offensive ||
-                                              a.Intent == Activity.Inevitable ||
-                                              a.Intent == Activity.Counter))
+                major.Style.ArmedType >= 0)
             {
                 switch (major.Style.Type)
                 {
@@ -546,6 +553,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //如果没有反击
             if (map.Value.CounterActs == null || map.Value.CounterActs.Count == 0) continue;
 
+            var counterTween = DOTween.Sequence().Pause();
+
             //会心一击，棋盘效果
             if (map.Value.CounterActs.SelectMany(c => c.Conducts).Any(c => c.IsRouseDamage()))
                 yield return FullScreenRouse().WaitForCompletion();
@@ -564,7 +573,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = GetCardMap(result.Key);
-                var tweenCard = tweenCards.FirstOrDefault(c => c.Id == card.InstanceId);
+                var tweenCard = tweenCards.FirstOrDefault();
                 counterTween
                     .Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
                         .OnComplete(() =>
@@ -577,9 +586,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 SetResultAudio(counterAudio, result.Value);
             }
 
-            PlayAudio(counterAudio);
             //播放反击的注入活动
-            yield return counterTween.Play().WaitForCompletion();//播放反击
+            yield return counterTween.AppendCallback(() => PlayAudio(counterAudio)).Play().WaitForCompletion(); //播放反击
         }
 
         var chessPos = Chessboard.GetChessPos(majorCard);

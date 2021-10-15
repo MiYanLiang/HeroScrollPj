@@ -15,7 +15,7 @@ public class CardAnimator : MonoBehaviour
     [Header("反击")][SerializeField] private CounterField Counter;
     [Header("闪避")][SerializeField] private DodgeField Dodge;
     [Header("辅助")][SerializeField] private AssistField Assist;
-    [Header("其它")][SerializeField] private MiscField Misc;
+    [Header("其它")] public MiscField Misc;
 
     void Awake()
     {
@@ -235,7 +235,7 @@ public class CardAnimator : MonoBehaviour
             {
                 var e = target.StatesUi[key];
                 target.StatesUi.Remove(key);
-                EffectsPoolingControl.instance.RecycleStateBuff(e);
+                if (e != null) EffectsPoolingControl.instance.RecycleStateBuff(e);
             }
 
             //更新小图标
@@ -413,12 +413,13 @@ public class CardAnimator : MonoBehaviour
     }
 
     [Serializable]
-    private class MiscField
+    public class MiscField
     {
         [Header("竖文字显示时长(秒)")] public float VTextLasting = 1.5f;
         [Header("横文字显示时长(秒)")]public float HTextLasting = 1.5f;
         [Header("暴击文字大小(倍)")] public float CriticalTextEnlarge = 1.5f;
         [Header("会心文字大小(倍)")] public float RouseTextEnlarge = 2f;
         [Header("击退执行(秒)")] public float RePos = 0.2f;
+        [Header("棋格显示/取消时长(秒)")] public float ChessGridFadingSec = 3f;
     }
 }

@@ -27,9 +27,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected bool IsGongChengChe(IChessOperator chess) => GongChengCheOperator.IsGongChengChe(chess);
 
-        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
-            if (IsGongChengChe(offender) ||
+            if (offender == null ||
+                IsGongChengChe(offender) ||
                 offender.IsRangeHero) return;
             InstanceReflection(activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind), offender);
         }

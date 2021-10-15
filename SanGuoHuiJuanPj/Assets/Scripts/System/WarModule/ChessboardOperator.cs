@@ -188,21 +188,29 @@ namespace Assets.System.WarModule
         }
 
         #endregion
-
+        /********************************【Round】**************************************/
         #region Round
-        public ChessRound StartRound()
-        {
-            if (IsGameOver) return null;
-            CurrentMajor = ChessMajor.UnDefined;
 
+        public List<ChessProcess> OnPlaceInvocation()
+        {
             RoundState = ProcessCondition.PlaceActions;
+            GetActiveRound().PlaceActions.Clear();
             foreach (var op in PlaceList.ToArray())
             {
                 PlaceList.Remove(op);
                 op.OnPlaceInvocation();
             }
+            return GetActiveRound().PlaceActions;
+        }
+
+        public ChessRound StartRound()
+        {
+            if (IsGameOver) return null;
+            CurrentMajor = ChessMajor.UnDefined;
 
             var round = GetActiveRound();
+            OnPlaceInvocation();
+
             round.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
                 .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
 
@@ -213,6 +221,7 @@ namespace Assets.System.WarModule
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             RefreshChessPosses();
             InvokePreRoundTriggers();
+
             RoundState = ProcessCondition.Chessman;
             do
             {
@@ -568,6 +577,14 @@ namespace Assets.System.WarModule
             return sprite;
         }
 
+        public ActivityResult SpriteRemoveActivity(PosSprite sprite, ChessProcess.Types type)
+        {
+            var activity = SpriteActivity(sprite, false);
+            RemoveSprite(sprite);
+            AddToCurrentProcess(type, sprite.Pos, activity, -1);
+            return ProcessActivityResult(activity);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -619,6 +636,7 @@ namespace Assets.System.WarModule
             var activity = SpriteActivity(sprite, false);
             //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1);
+            ProcessActivityResult(activity);
             Log($"移除{sprite}");
             return true;
         }
@@ -697,17 +715,32 @@ namespace Assets.System.WarModule
         private bool isCounterFlagged;
         private ActivityResult ProcessActivityResult(Activity activity)
         {
-            var target = GetOperator(activity.To);
+            ActivityResult result;
+            IChessOperator target;
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
-            var result = GetOperator(target.InstanceId).Respond(activity, offender);
-            result.SetStatus(GetFullCondition(target));
-            var resultMapper = isCounterFlagged
-                ? CurrentCombatMapper.CounterResultMapper
-                : CurrentCombatMapper.ResultMapper;
-            if (!resultMapper.ContainsKey(target.InstanceId))
-                resultMapper.Add(target.InstanceId, result);
+            if (activity.Intent == Activity.Sprite)
+            {
+                target = GetChessPos(activity.IsChallenger == 0, activity.To).Operator;
+                result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+            }
             else
-                resultMapper[target.InstanceId] = result;
+            {
+                target = GetOperator(activity.To);
+                result = GetOperator(target.InstanceId).Respond(activity, offender);
+            }
+
+            if (target != null)
+            {
+                result.SetStatus(GetFullCondition(target));
+                var resultMapper = isCounterFlagged
+                    ? CurrentCombatMapper.CounterResultMapper
+                    : CurrentCombatMapper.ResultMapper;
+                if (!resultMapper.ContainsKey(target.InstanceId))
+                    resultMapper.Add(target.InstanceId, result);
+                else
+                    resultMapper[target.InstanceId] = result;
+                UpdateTerrain(GetChessPos(target));
+            }
 
             if (activity.To >= 0 && result.IsDeath)
             {
@@ -716,8 +749,6 @@ namespace Assets.System.WarModule
                     op.OnSomebodyDie(death);
                 Log($"@@@@【{death}败退】@@@@！");
             }
-
-            UpdateTerrain(GetChessPos(target));
             return result;
         }
 
@@ -778,14 +809,13 @@ namespace Assets.System.WarModule
             return !GetBuffOperator(b => b.IsDisableCounter(counterOp)).Any();
         }
 
-        public ActivityResult OnOffensiveActivity(Activity activity, ChessOperator op, IChessOperator off)
+        public ActivityResult OnOffensiveActivity(Activity activity, ChessOperator op, ChessOperator offender)
         {
-            var offender = GetOperator(off.InstanceId);
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
             //闪避判定
-            if (offender.CardType == GameCardType.Hero &&
+            if ((offender == null || offender.CardType == GameCardType.Hero) &&
                 activity.Intent != Activity.Inevitable &&
-                OnDodgeTriggerPass(op, offender))
+                OnDodgeTriggerPass(op))
             {
                 result.Result = (int)ActivityResult.Types.Dodge;
             }
@@ -808,12 +838,12 @@ namespace Assets.System.WarModule
             return result;
         }
 
-        public bool OnDodgeTriggerPass(ChessOperator op, ChessOperator offender)
+        public bool OnDodgeTriggerPass(ChessOperator op)
         {
             if (op.CardType != GameCardType.Hero) return false;
             var rate = op.GetDodgeRate() + GetCondition(op, CardState.Cons.DodgeUp);
             foreach (var bo in GetBuffOperator(o=>o.IsDodgeRateTrigger(op))) 
-                rate += bo.OnAppendDodgeRate(op, offender);
+                rate += bo.OnAppendDodgeRate(op);
             rate = Math.Min(rate, HeroDodgeLimit);
             return IsRandomPass(rate);
         }
@@ -822,7 +852,7 @@ namespace Assets.System.WarModule
         {
             if (GetCondition(op,CardState.Cons.Shield) > 0)
             {
-                if (offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
+                if (offender != null && offender.IsIgnoreShieldUnit) return ActivityResult.Types.Suffer;
                 if (activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
                     .All(c => Damage.GetKind(c) != Damage.Kinds.Physical))
                     return ActivityResult.Types.Suffer;

@@ -97,7 +97,7 @@ namespace Assets.System.WarModule
         }
 
         //更新棋子代理反馈的结果
-        private ActivityResult ProcessActivityResult(Activity activity, IChessOperator offender)
+        private ActivityResult ProcessActivityResult(Activity activity, ChessOperator offender)
         {
             //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
@@ -137,16 +137,22 @@ namespace Assets.System.WarModule
             //友方执行判定
             if (activity.Intent == Activity.Friendly ||
                 activity.Intent == Activity.Self)
-                result.Result = activity.Conducts.Any(c => c.Kind == CombatConduct.HealKind)
-                    ? (int)ActivityResult.Types.Heal
-                    : (int)ActivityResult.Types.Assist;
-
-            if (offender == null)
             {
-                ProceedActivity(activity, result.Type);
-                result.Status = Chessboard.GetStatus(this);
-                return result;
+                if (activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind || 
+                                               c.Kind == CombatConduct.ElementDamageKind))
+                    result.Result = (int)ActivityResult.Types.Suffer;
+                else if(activity.Conducts.Any(c => c.Kind == CombatConduct.HealKind))
+                        result.Result = (int)ActivityResult.Types.Heal;
+                else if (activity.Conducts.Any(c => c.Kind == CombatConduct.BuffKind))
+                    result.Result = (int)ActivityResult.Types.Assist;
             }
+
+            //if (offender == null)
+            //{
+            //    ProceedActivity(activity, result.Type);
+            //    result.Status = Chessboard.GetStatus(this);
+            //    return result;
+            //}
 
             //友军 与 非棋子 的执行结果
             if (result.Type == ActivityResult.Types.Assist || 
@@ -159,7 +165,7 @@ namespace Assets.System.WarModule
             {
                 //执行对方棋子的攻击
                 result = Chessboard.OnOffensiveActivity(activity, this, offender);
-                OnSufferConduct(offender, activity);
+                OnSufferConduct(activity, offender);
             }
 
             return result;
@@ -185,7 +191,7 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="offender"></param>
         /// <param name="activity"></param>
-        protected virtual void OnSufferConduct(IChessOperator offender, Activity activity){}
+        protected virtual void OnSufferConduct(Activity activity, IChessOperator offender = null){}
 
         public void SetPos(int pos)
         {
@@ -257,7 +263,7 @@ namespace Assets.System.WarModule
                     status.Kill();
                     return;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(conduct.Kind), conduct.Kind.ToString());
             }
             // 扣除血量的方法,血量最低为0
             void SubtractHp(int damage)

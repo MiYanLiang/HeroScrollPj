@@ -5,9 +5,11 @@ using Assets.System.WarModule;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using Image = UnityEngine.UI.Image;
 
 public class Chessboard : MonoBehaviour
 {
+    public Image[] GridImages;
     [SerializeField] private ChessPos[] PlayerScope;
     [SerializeField] private ChessPos[] EnemyScope;
 

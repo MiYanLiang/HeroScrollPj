@@ -512,7 +512,7 @@ public class WarsUIManager : MonoBehaviour
     private const string Multiply = "×";
 
     //改变游戏速度
-    public void ChangeTimeScale(int scale = 0)
+    public void ChangeTimeScale(int scale = 0,bool save = true)
     {
         var warScale = GamePref.PrefWarSpeed;
         if (scale <= 0)
@@ -522,7 +522,7 @@ public class WarsUIManager : MonoBehaviour
                 warScale = 1;
         }
         else warScale = scale;
-        GamePref.SetPrefWarSpeed(warScale);
+        if(save) GamePref.SetPrefWarSpeed(warScale);
         Time.timeScale = warScale;
         speedBtnText.text = Multiply + warScale;
     }
@@ -650,7 +650,7 @@ public class WarsUIManager : MonoBehaviour
     {
         WarChests.AddRange(TempChest);
         UpdateInfoUis();
-        ChangeTimeScale(1);
+        ChangeTimeScale(1, false);
         if (TempChest.Count > 0)
         {
             var warReward = PlayerDataForGame.instance.WarReward;

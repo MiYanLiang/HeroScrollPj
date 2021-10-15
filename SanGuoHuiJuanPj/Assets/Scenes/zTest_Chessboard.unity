@@ -2264,21 +2264,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 758f10a2f0b96544b9998139e332a0b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meleeMove: 0.3
-  meleeStop: 0.1
-  meleeStepBack: 0.2
-  meleeCharge: 0.2
-  meleeHit: 0.1
-  meleeReturn: 0.2
-  stepBackDistance: 0.75
-  rangePreAct: 0.3
-  counterTempo: 0.3
-  counterStepBack: 0.3
-  counterCharge: 0.1
-  dodgeDistance: 0.3
-  dodgeDuration: 0.2
-  VTextLasting: 1.5
-  HTextLasting: 1.5
+  Melee:
+    Forward: 0.2
+    Stop: 0.15
+    Charge: 0.3
+    StepBack: 0.2
+    StepBackDistance: 0.5
+    Hit: 0.1
+    Return: 0.15
+  Range:
+    PreAct: 0.2
+    PreActScale: 1.1
+    Recoil: 0.3
+    RecoilSec: 0.1
+    RecoverSec: 0.3
+  Counter:
+    StepBackSec: 0.15
+    StepBack: 0.3
+    Charge: 0.1
+  Dodge:
+    Distance: 0.3
+    Duration: 0.2
+  Assist:
+    Enlarge: 1.05
+    EnlargeSec: 0.2
+  Misc:
+    VTextLasting: 1.5
+    HTextLasting: 1.5
+    CriticalTextEnlarge: 1.3
+    RouseTextEnlarge: 1.5
+    RePos: 0.3
 --- !u!1 &420174418
 GameObject:
   m_ObjectHideFlags: 0

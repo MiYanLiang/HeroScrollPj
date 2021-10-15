@@ -223,7 +223,7 @@ namespace Assets.System.WarModule
 
         protected int RouseShieldRate => 60;
         protected int CriticalShieldRate => 30;
-        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
             var shieldRate = GetShieldRate();
             var isRouse = activity.Conducts.Any(c => c.Rouse > 0);//是否会心一击
@@ -374,13 +374,26 @@ namespace Assets.System.WarModule
 
         private IChessPos[] GetChained() => Chessboard.GetChainedPos(this, p => p.IsAliveHero && IsChainable(p.Operator)).ToArray();
 
-        public override void OnRoundStart()
+        public override void OnRoundStart() => UpdateChain();
+
+        private void UpdateChain()
         {
-            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == Chained)) return;
             var chainedList = GetChained();
-            if (chainedList.Length > 1)
+            var chainSprite = Chessboard.GetSpriteInChessPos(this).FirstOrDefault(s => s.TypeId == Chained);
+            if (chainedList.Length > 1 && chainSprite == null)
+            {
                 Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), Chained,
                     InstanceId, value: 1, actId: -1);
+                return;
+            }
+
+            if (chainSprite != null && chainedList.Length < 2)
+                Chessboard.SpriteRemoveActivity(chainSprite, ChessProcess.Types.Chessman);
+        }
+
+        public override void OnSomebodyDie(ChessOperator death)
+        {
+            if (IsChainable(death)) UpdateChain();
         }
     }
 
@@ -1810,7 +1823,7 @@ namespace Assets.System.WarModule
         }
 
         private CombatConduct BattleSoulConduct => CombatConduct.InstanceBuff(InstanceId, CardState.Cons.BattleSoul);
-        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
             OnPerformActivity(Chessboard.GetChessPos(this), Activity.Self, actId: 0, skill: 2, BattleSoulConduct);
         }
@@ -2044,9 +2057,10 @@ namespace Assets.System.WarModule
             base.MilitaryPerforms(0);//刺甲攻击是普通攻击
         }
 
-        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
-            if (offender.Style.Type == CombatStyle.Types.Range ||
+            if (offender == null ||
+                offender.Style.Type == CombatStyle.Types.Range ||
                 offender.Style.ArmedType < 0) return;
             var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
                              .Sum(c => c.Total) * ReflectRate();
@@ -2123,7 +2137,7 @@ namespace Assets.System.WarModule
 
         private int CriticalAddRate => 10;
         private int RouseAddRate => 20;
-        protected override void OnSufferConduct(IChessOperator offender, Activity activity)
+        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
             var rate = GetInvincibleRate();
             var isRouse = activity.Conducts.Any(c => c.Rouse > 0);//是否会心一击

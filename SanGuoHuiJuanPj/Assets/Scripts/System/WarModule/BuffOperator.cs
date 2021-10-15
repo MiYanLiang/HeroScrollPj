@@ -63,9 +63,8 @@ namespace Assets.System.WarModule
         /// 配合<see cref="IsDodgeRateTrigger"/>产出闪避值
         /// </summary>
         /// <param name="op"></param>
-        /// <param name="offender"></param>
         /// <returns></returns>
-        public virtual int OnAppendDodgeRate(ChessOperator op, IChessOperator offender) => 0;
+        public virtual int OnAppendDodgeRate(ChessOperator op) => 0;
 
         public virtual bool IsMainActionTrigger { get; protected set; }
 
@@ -400,7 +399,6 @@ namespace Assets.System.WarModule
         public override void OnSufferConduct(int activityIntent, ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) ||
-                Damage.GetKind(conduct) != Damage.Kinds.Physical ||
                 activityIntent == Activity.Self ||
                 activityIntent == Activity.Friendly) return;
             var poses = Chessboard.GetChainedPos(op, ChainSprite.ChainedFilter).ToArray();
