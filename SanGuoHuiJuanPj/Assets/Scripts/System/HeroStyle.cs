@@ -3,7 +3,6 @@ using System.Linq;
 using Assets.System.WarModule;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.WSA;
 using Random = UnityEngine.Random;
 
 /// <summary>

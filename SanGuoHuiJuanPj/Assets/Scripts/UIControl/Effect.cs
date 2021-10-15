@@ -1324,10 +1324,8 @@ public static class Effect
             case 0:
                 switch (skill ) 
                 {
-                    case 1://补给
-                        return 408;
-                    case 2://回合开始前自身恢复
-                        return 409;             
+                    case 1: return 409;//援军        
+                    case 2: return 408;//屯兵
                 }
                 break;
 

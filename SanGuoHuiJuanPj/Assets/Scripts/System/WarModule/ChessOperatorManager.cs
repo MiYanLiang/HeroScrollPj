@@ -359,7 +359,7 @@ namespace Assets.System.WarModule
                     break;
                 //投石台
                 case 1:
-                    op = new TouShiTaiOperator();
+                    op = new PaoShiTaiOperator();
                     break;
                 //奏乐台
                 case 2:
@@ -489,7 +489,7 @@ namespace Assets.System.WarModule
             {
                 if (sprite.Host == PosSprite.HostType.Round)
                     sprite.Lasting--;
-                if(UpdateRemovable(sprite))continue;
+                if (UpdateRemovable(sprite)) continue;
 
                 var pos = Grid.GetChessPos(sprite.Pos, sprite.IsChallenger);
                 if (!pos.IsPostedAlive) continue;

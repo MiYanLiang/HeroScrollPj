@@ -298,10 +298,9 @@ namespace Assets.System.WarModule
                 int comboRate = ComboRatio();
                 var hit = InstanceHeroGenericDamage();
                 var result = OnPerformActivity(target, Activity.Offensive, actId, 1, hit);
-                if (result == null || result.IsDeath) break;//目标死亡
+                if (result == null) break;
+                if (!target.IsAliveHero) break;//目标死亡
                 if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
-                if (target.Operator == null || Chessboard.GetStatus(target.Operator).IsDeath) break;
-                if (!target.IsAliveHero) break;
                 if (hit.IsRouseDamage())
                     comboRate += RouseAddOn;
                 if (hit.IsCriticalDamage())
@@ -1920,12 +1919,16 @@ namespace Assets.System.WarModule
             }
 
             var damage = Strength * DamageRate();
+            var target = Chessboard.GetContraTarget(this);
             var array = Chessboard.GetRivals(this)
-                .Where(p => p.IsAliveHero)
                 .ToArray();
+
+            OnPerformActivity(target, Activity.Inevitable, actId: 0, skill: 2,
+                CombatConduct.InstanceDamage(InstanceId, damage));
             for (var i = 0; i < array.Length; i++)
             {
                 var pos = array[i];
+                if (pos.Pos == target.Pos) continue;
                 OnPerformActivity(pos, Activity.Inevitable, actId: 0, skill: 2, CombatConduct.InstanceDamage(InstanceId, damage));
             }
 
