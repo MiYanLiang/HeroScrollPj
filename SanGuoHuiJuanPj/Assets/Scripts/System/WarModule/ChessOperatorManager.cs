@@ -489,7 +489,7 @@ namespace Assets.System.WarModule
             {
                 if (sprite.Host == PosSprite.HostType.Round)
                     sprite.Lasting--;
-                if(UpdateRemovable(sprite))continue;
+                if (UpdateRemovable(sprite)) continue;
 
                 var pos = Grid.GetChessPos(sprite.Pos, sprite.IsChallenger);
                 if (!pos.IsPostedAlive) continue;

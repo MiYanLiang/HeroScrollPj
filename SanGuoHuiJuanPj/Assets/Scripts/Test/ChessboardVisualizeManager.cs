@@ -284,6 +284,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .AppendCallback(() =>
             {
                 foreach (var card in jbCards) card.cardObj.SetHighLight(true);
+                PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse), 0);
             }).AppendInterval(0.5f)
             .AppendCallback(() =>
             {
