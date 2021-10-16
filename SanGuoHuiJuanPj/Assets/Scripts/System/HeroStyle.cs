@@ -55,14 +55,10 @@ public class ChessUiStyle : CombatStyle
 /// </summary>
 public class ChessmanStyle : ChessUiStyle
 {
-    public virtual Tween UpdateStatusTween(ChessStatus chessStatus, FightCardData card)
+    public virtual void UpdateStatus(ChessStatus chessStatus, FightCardData card)
     {
-        return DOTween.Sequence()
-            .AppendCallback(() =>
-            {
-                card.UpdateActivityStatus(chessStatus);
-                CardAnimator.instance.UpdateStateIcon(card);
-            });
+        card.UpdateActivityStatus(chessStatus);
+        CardAnimator.instance.UpdateStateIcon(card);
     }
 
     /// <summary>

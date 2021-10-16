@@ -136,8 +136,6 @@ public class GameCard : IGameCard,IComparable<GameCard>
     public int chips;       //拥有碎片
     public int isFight;     //是否出战
     public int typeIndex;   //单位类型0武将1士兵2塔3陷阱4技能
-    public bool isHad;      //是否拥有过
-    public int maxLevel = 1;    //历史最高星级
 
     public int CardId => id;
     public int Level

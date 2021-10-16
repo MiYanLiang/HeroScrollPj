@@ -206,22 +206,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TreasureOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(int damage)
-        {
-            Chessboard.RegResources(this, !IsChallenger, -1, DataTable.EnemyUnit[CardId].GoldReward);
-        }
+        protected override void OnDeadTrigger(int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Strength);
     }
     /// <summary>
     /// 战役宝箱
     /// </summary>
     public class WarChestOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(int damage)
-        {
-            foreach (var warChestId in DataTable.EnemyUnit[CardId].WarChest)
-            {
-                Chessboard.RegResources(this, !IsChallenger, warChestId, 1);
-            }
-        }
+        protected override void OnDeadTrigger(int damage) => Chessboard.RegResources(this, !IsChallenger, Strength, 1);
     }
 }

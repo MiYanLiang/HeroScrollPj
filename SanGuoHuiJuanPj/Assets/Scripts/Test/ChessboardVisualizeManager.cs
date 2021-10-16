@@ -103,10 +103,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
     protected void InvokeRound()
     {
         if (IsBusy) return;
+        NewWar.StartButtonShow(false);
         if (OnRoundBegin != null && !OnRoundBegin.Invoke()) return;
         autoRoundTimer = 0;
         var chess = NewWar.ChessOperator;
-        NewWar.StartButtonShow(false);
         var round = chess.StartRound();
         if (SkipAnim)
         {
@@ -133,9 +133,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         //火焰
         fireUIObj.SetActive(true);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         gongKeUIObj.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.7f);
         fireUIObj.SetActive(false);
         gongKeUIObj.SetActive(false);
         yield return new WaitForSeconds(0.1f);
@@ -161,7 +161,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
         }
 #endif
-        yield return OnPreRoundUpdate(round);
+        OnPreRoundUpdate(round);
         //回合开始演示
         yield return OnRoundBeginAnimation(round.PreAction);
         //执行回合每一个棋子活动
@@ -215,16 +215,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
     }
 
-    private IEnumerator OnPreRoundUpdate(ChessRound round)
+    private void OnPreRoundUpdate(ChessRound round)
     {
-        var tween = DOTween.Sequence().Pause();
         foreach (var stat in round.PreRoundStats)
         {
             if (!CardMap.ContainsKey(stat.Key)) continue;
             var card = CardMap[stat.Key];
-            tween.Append(card.ChessmanStyle.UpdateStatusTween(stat.Value, card));
+            card.ChessmanStyle.UpdateStatus(stat.Value, card);
         }
-        yield return tween.Play().WaitForCompletion();
     }
 
     private IEnumerator OnRoundBeginAnimation(RoundAction action)
@@ -259,17 +257,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
             {
                 var card = GetCardMap(result.Key);
                 var tw = tCards.FirstOrDefault(c => c.Id == card.InstanceId);
-                tween.Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
-                        .OnComplete(() =>
-                        {
-                            card.ChessmanStyle.ResultEffectTween(result.Value, card);
-                            if (tw != null)
-                                card.ChessmanStyle.NumberEffect(result.Value, card, tw.DmgType);
-                        }))
-                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
+                tween.AppendCallback(() =>
+                {
+                    card.ChessmanStyle.ResultEffectTween(result.Value, card);
+                    if (tw != null)
+                        card.ChessmanStyle.NumberEffect(result.Value, card, tw.DmgType);
+                    card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                }).Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(audioSection, result.Value);
             }
-            tween.AppendCallback(() => PlayAudio(audioSection));
+            tween.AppendCallback(() =>
+            {
+                PlayAudio(audioSection);
+            });
         }
         return tween;
     }
@@ -491,20 +491,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 if (activity.IsRePos)
                     rePosActs.Add(activity);
             });
-
+            UnityAction statusUpdateAction = null;
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = GetCardMap(result.Key);
                 var tweenCard = listTween.FirstOrDefault();
-                mainTween
-                    .Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
-                        .OnComplete(() =>
-                        {
-                            card.ChessmanStyle.ResultEffectTween(result.Value, card);
-                            if (tweenCard != null)
-                                card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
-                        }))
-                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
+                statusUpdateAction += () =>
+                {
+                    card.ChessmanStyle.ResultEffectTween(result.Value, card);
+                    if (tweenCard != null)
+                        card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
+                    card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                };
+                mainTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(audioSection, result.Value);
             }
 
@@ -520,13 +519,21 @@ public class ChessboardVisualizeManager : MonoBehaviour
                         break;
                     case CombatStyle.Types.Melee:
                         yield return CardAnimator.instance.StepBackAndHit(major)
-                            .AppendCallback(() => PlayAudio(audioSection))
+                            .AppendCallback(() =>
+                            {
+                                PlayAudio(audioSection);
+                                statusUpdateAction?.Invoke();
+                            })
                             .WaitForCompletion();
                         break;
                     case CombatStyle.Types.Range:
                         var origin = major.cardObj.transform.position;
                         yield return CardAnimator.instance.RecoilTween(major)
-                            .AppendCallback(() => PlayAudio(audioSection))
+                            .AppendCallback(() =>
+                            {
+                                PlayAudio(audioSection);
+                                statusUpdateAction?.Invoke();
+                            })
                             .WaitForCompletion();
                         mainTween.Join(CardAnimator.instance.MoveTween(major, origin));
                         break;
@@ -571,25 +578,28 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var (tweenCards, counterAudio) = UpdateBasicActivityUpdate(map.Value.CounterActs);
 
             foreach (var tweenCard in tweenCards) counterTween.Join(tweenCard.MajorTween);
-
+            UnityAction counterStatusUpdate = null;
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = GetCardMap(result.Key);
                 var tweenCard = tweenCards.FirstOrDefault();
-                counterTween
-                    .Join(card.ChessmanStyle.UpdateStatusTween(result.Value.Status, card)
-                        .OnComplete(() =>
-                        {
-                            card.ChessmanStyle.ResultEffectTween(result.Value, card);
-                            if (tweenCard != null)
-                                card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
-                        }))
-                    .Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
+                counterStatusUpdate += () =>
+                {
+                    card.ChessmanStyle.ResultEffectTween(result.Value, card);
+                    if (tweenCard != null)
+                        card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
+                    card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                };
+                counterTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(counterAudio, result.Value);
             }
 
             //播放反击的注入活动
-            yield return counterTween.AppendCallback(() => PlayAudio(counterAudio)).Play().WaitForCompletion(); //播放反击
+            yield return counterTween.AppendCallback(() =>
+            {
+                counterStatusUpdate?.Invoke();
+                PlayAudio(counterAudio);
+            }).Play().WaitForCompletion(); //播放反击
         }
 
         var chessPos = Chessboard.GetChessPos(majorCard);

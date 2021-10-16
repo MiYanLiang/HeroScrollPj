@@ -64,9 +64,7 @@ public static class GameSystemExtension
     {
         card.id = cardId;
         card.level = cardLevel;
-        card.maxLevel = cardLevel;
         card.typeIndex = (int) type;
-        card.isHad = true;
         return card;
     }
 

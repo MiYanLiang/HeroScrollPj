@@ -740,7 +740,7 @@ namespace Assets.System.WarModule
         protected virtual int CriticalAddOn => 15;
         protected virtual int RouseAddOn => 30;
         protected virtual CardState.Cons Buff => CardState.Cons.Neizhu;
-        private CombatConduct BuffToFriendly => CombatConduct.InstanceBuff(InstanceId, Buff);
+        private CombatConduct BuffToFriendly(int rate) => CombatConduct.InstanceBuff(InstanceId, Buff, rate);
         protected override void MilitaryPerforms(int skill = 1)
         {
             var combat = InstanceHeroGenericDamage();
@@ -752,13 +752,14 @@ namespace Assets.System.WarModule
                 .OrderByDescending(p => p.Operator.Style.Strength)
                 .Take(Targets())
                 .ToArray();
-            if (!targets.Any() || !Chessboard.IsRandomPass(rate))
+            if (!targets.Any())
             {
                 base.MilitaryPerforms(0);
                 return;
             }
+
             foreach (var target in targets)
-                OnPerformActivity(target, Activity.Friendly, actId: 0, skill: 1, BuffToFriendly);
+                OnPerformActivity(target, Activity.Friendly, actId: 0, skill: 1, BuffToFriendly(rate));
         }
     }
 

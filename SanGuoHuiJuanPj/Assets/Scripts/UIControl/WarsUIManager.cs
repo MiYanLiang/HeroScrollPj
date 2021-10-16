@@ -659,6 +659,11 @@ public class WarsUIManager : MonoBehaviour
         }
         yield return new WaitForSeconds(2);
         GenericWindow.SetReward(TempGold, TempChest.Count);
+        GoldForCity += TempGold;
+        UpdateInfoUis();
+        PlayerDataForGame.instance.WarReward.Chests.AddRange(TempChest);
+        TempGold = 0;
+        TempChest.Clear();
     }
 
     public void InitChessboard(GameStage stage)
@@ -687,6 +692,7 @@ public class WarsUIManager : MonoBehaviour
                 //var card = CreateEnemyFightUnit(i,1, true, chessman);
                 //PlaceCardOnBoard(card, i, false);
                 enemyCards.Add(ChessCard.Instance(chessman.CardId, chessman.CardType, chessman.Star, i));
+
             }
 
         }
@@ -699,9 +705,19 @@ public class WarsUIManager : MonoBehaviour
                 if (enemyId == 0) continue;
                 var enemy = DataTable.EnemyUnit[enemyId];
                 var cardType = enemy.CardType;
-                var cardId = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity).Id;
-                var level = enemy.Star;
-                enemyCards.Add(ChessCard.Instance(cardId, cardType, level, i));
+                ChessCard chessCard;
+                if (enemy.CardType >= 0)
+                {
+                    var card = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity);
+                    var level = enemy.Star;
+                    chessCard = ChessCard.Instance(card.Id, cardType, level, i);
+                }
+                else
+                {
+                    var trap = DataTable.Trap[enemy.Rarity];
+                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemy.Star, i);
+                }
+                enemyCards.Add(chessCard);
             }
         }
 
