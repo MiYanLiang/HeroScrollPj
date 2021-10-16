@@ -421,6 +421,6 @@ public class CardAnimator : MonoBehaviour
         [Header("会心文字大小(倍)")] public float RouseTextEnlarge = 2f;
         [Header("击退执行(秒)")] public float RePos = 0.2f;
         [Header("棋格显示/渐变时长(秒)")] public float ChessGridFadingSec = 3f;
-        [Header("棋格渐变Alpha(度)")] [Range(0, 1)] public float ChessGridFading = 0.2f;
+        [Header("棋格渐变Alpha(度)")] [Range(0, 1)] public float ChessGridFading = 0.3f;
     }
 }

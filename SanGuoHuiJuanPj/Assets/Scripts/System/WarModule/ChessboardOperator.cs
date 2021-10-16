@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
-using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 
 namespace Assets.System.WarModule
 {
@@ -211,8 +209,7 @@ namespace Assets.System.WarModule
             var round = GetActiveRound();
             OnPlaceInvocation();
 
-            round.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath)
-                .ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
+            round.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath).ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
 
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;

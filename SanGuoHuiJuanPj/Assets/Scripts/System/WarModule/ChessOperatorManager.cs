@@ -359,7 +359,7 @@ namespace Assets.System.WarModule
                     break;
                 //投石台
                 case 1:
-                    op = new TouShiTaiOperator();
+                    op = new PaoShiTaiOperator();
                     break;
                 //奏乐台
                 case 2:

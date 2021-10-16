@@ -148,8 +148,9 @@ namespace Assets.System.WarModule
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
+        private float DamageRate => 6;
         protected override CombatConduct[] CounterConducts =>
-            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength * Chessboard.ConfigPercentage(9)));
+            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength * DamageRate));
     }
     /// <summary>
     /// 石墙

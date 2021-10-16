@@ -43,13 +43,13 @@ namespace Assets.System.WarModule
             var stat = Chessboard.GetStatus(this);
             if (!stat.IsDeath && stat.HpRate < 1)
                 Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
-                    Helper.Singular(CombatConduct.InstanceHeal(stat.MaxHp * RecoverRate * 0.01f, InstanceId)), -1, -1);
+                    Helper.Singular(CombatConduct.InstanceHeal(stat.MaxHp * RecoverRate * 0.01f, InstanceId)), actId: -1, skill: 2);
         }
     }
     /// <summary>
-    /// 投石台
+    /// 抛石台
     /// </summary>
-    public class TouShiTaiOperator : TowerOperator
+    public class PaoShiTaiOperator : TowerOperator
     {
         protected override void StartActions()
         {
@@ -92,13 +92,13 @@ namespace Assets.System.WarModule
             var maxTargets = DataTable.GetGameValue(18); //箭楼攻击数量
             var pick = chessPoses.Length > maxTargets ? maxTargets : chessPoses.Length;
             //17, 箭楼远射伤害百分比
-            var damage = Strength * DataTable.GetGameValue(17);
+            var damage = Strength * DataTable.GetGameValue(17) * 0.01f;
             var targets = chessPoses.Select(RandomElement.Instance).Pick(pick).ToArray();
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage)), actId: 0, skill: 1);
+                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage: damage)), actId: 0, skill: 1);
             }
         }
 
