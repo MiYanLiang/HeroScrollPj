@@ -38,6 +38,10 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Thunder = 3;
         /// <summary>
+        /// 投射精灵， 
+        /// </summary>
+        public const int CastSprite = 4;
+        /// <summary>
         /// 地震
         /// </summary>
         public const int Eerthquake = 8;
@@ -306,9 +310,9 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 雷精灵
+    /// 投射精灵
     /// </summary>
-    public class ThunderSprite : RoundSprite
+    public class CastSprite : RoundSprite
     {
         public override HostType Host => HostType.Round;
 

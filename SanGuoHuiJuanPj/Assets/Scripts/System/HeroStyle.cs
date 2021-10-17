@@ -55,7 +55,7 @@ public class ChessUiStyle : CombatStyle
 /// </summary>
 public class ChessmanStyle : ChessUiStyle
 {
-    public virtual void UpdateStatus(ChessStatus chessStatus, FightCardData card)
+    public void UpdateStatus(ChessStatus chessStatus, FightCardData card)
     {
         card.UpdateActivityStatus(chessStatus);
         CardAnimator.instance.UpdateStateIcon(card);
@@ -171,28 +171,7 @@ public abstract class CardStyle : ChessmanStyle
     {
         var vTextId = Effect.ActivityResultVText(result);
         if (vTextId > -1) CardAnimator.instance.VTextEffect(vTextId, card.cardObj.transform);
-
-        switch (result.Type)
-        {
-            case ActivityResult.Types.Suffer:
-            case ActivityResult.Types.Assist:
-            case ActivityResult.Types.Dodge:
-            case ActivityResult.Types.Invincible:
-            case ActivityResult.Types.ChessPos:
-            case ActivityResult.Types.Heal:
-            case ActivityResult.Types.Kill:
-            case ActivityResult.Types.Suicide:
-                break;
-            case ActivityResult.Types.Shield:
-                CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.Shield);
-                break;
-            case ActivityResult.Types.EaseShield:
-                CardAnimator.instance.UpdateStateIcon(card, CardState.Cons.EaseShield);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
+        CardAnimator.instance.UpdateStateIcon(card);
     }
 
     private void SparkTween(Activity activity, FightCardData target, int effectId)
