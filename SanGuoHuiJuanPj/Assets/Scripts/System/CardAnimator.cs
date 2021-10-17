@@ -216,12 +216,6 @@ public class CardAnimator : MonoBehaviour
     /// <summary>
     /// 更新棋子上的状态效果
     /// </summary>
-    public void UpdateStateIcon(FightCardData target, CardState.Cons con) =>
-        UpdateStateIcon(target, (int)con);
-
-    /// <summary>
-    /// 更新棋子上的状态效果
-    /// </summary>
     private void UpdateSingleStateEffect(FightCardData target, int key)
     {
         var con = (CardState.Cons)key;
@@ -274,6 +268,7 @@ public class CardAnimator : MonoBehaviour
             {
                 case CombatConduct.BuffKind:
                 case CombatConduct.ElementDamageKind:
+                    if (conduct.Element < 0) continue;
                     switch ((CardState.Cons)conduct.Element)
                     {
                         case CardState.Cons.Bleed:
@@ -317,7 +312,7 @@ public class CardAnimator : MonoBehaviour
                         case CardState.Cons.Murderous:
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            throw new ArgumentOutOfRangeException(nameof(conduct.Element), conduct.Element.ToString());
                     }
 
                     break;

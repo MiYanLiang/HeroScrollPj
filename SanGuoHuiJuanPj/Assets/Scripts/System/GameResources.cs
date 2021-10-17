@@ -180,7 +180,10 @@ public class GameResources
             get
             {
                 if (Data.TryGetValue(key, out var value)) return value;
-                throw new KeyNotFoundException($"{Name}.{nameof(GameResources)} Not Found, Key = {key}!");
+                var errorMsg = $"{Name}.{nameof(GameResources)} Not Found, Key = {key}!";
+                var exception = new KeyNotFoundException(errorMsg);
+                Debug.LogError(errorMsg);
+                throw exception;
             }
         }
 

@@ -52,7 +52,7 @@ namespace Assets.System.WarModule
         }
 
         private IChessPos GetTarget() => Chessboard.GetTargetByMode(this, TargetingMode);
-        protected virtual ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Contra;
+        protected virtual ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Lane;
         protected void NoSkillAction()
         {
             var target = GetTarget();
@@ -256,7 +256,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (target == null) return;
             var combos = Chessboard.IsRandomPass(ComboRate) ? ComboTimes() : 1;
             for (int i = 0; i < combos; i++)
@@ -289,7 +289,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (target == null) return;
             bool combo = true;
             var actId = 0;
@@ -346,7 +346,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (Chessboard.GetCondition(this, CardState.Cons.Chained) <= 0)
             {
                 base.MilitaryPerforms(0);
@@ -499,7 +499,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var damage = InstanceHeroGenericDamage();
 
             OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 1, damage);
@@ -536,7 +536,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (!target.IsAliveHero)
             {
                 base.MilitaryPerforms(1);
@@ -594,7 +594,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (Chessboard.GetStatus(this).HpRate < 0.5)
             {
                 var explode = new List<CombatConduct>
@@ -784,7 +784,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (!target.IsAliveHero)
             {
                 base.MilitaryPerforms(1);
@@ -1325,7 +1325,7 @@ namespace Assets.System.WarModule
                 for (int index = 0; index < targetPoses.Length; index++)
                 {
                     var pos = targetPoses[index];
-                    Chessboard.DelegateSpriteActivity<ThunderSprite>(this, pos.Obj, PosSprite.Thunder,
+                    Chessboard.DelegateSpriteActivity<CastSprite>(this, pos.Obj, PosSprite.Thunder,
                         Helper.Singular(conduct), j, isUlti ? 2 : 1, 1);
                 }
             }
@@ -1423,7 +1423,7 @@ namespace Assets.System.WarModule
                 .Where(p => p.Operator.IsRangeHero)
                 .Select(p => new { Pos = p, Random = Chessboard.Randomize(3) })
                 .OrderByDescending(p => p.Random).FirstOrDefault()?.Pos;
-            if (target == null) target = Chessboard.GetContraTarget(this);
+            if (target == null) target = Chessboard.GetLaneTarget(this);
             var combats = new List<CombatConduct> { InstanceHeroGenericDamage() };
             if (Chessboard.IsRandomPass(BleedRate())&&target.IsAliveHero)
                 combats.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed));
@@ -1483,7 +1483,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (target.IsAliveHero)
             {
                 base.MilitaryPerforms(0);
@@ -1527,7 +1527,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
 
             var damage = InstanceHeroGenericDamage();
             if (Chessboard.GetCondition(target.Operator, CardState.Cons.Stunned) > 0)
@@ -1567,7 +1567,7 @@ namespace Assets.System.WarModule
         }
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var combatConducts = new List<CombatConduct>();
             var backPos = Chessboard.BackPos(target);
             var rePos = backPos != null &&
@@ -1631,7 +1631,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var combo = Chessboard.IsRandomPass(ComboRate) ? Combo() : 1;
             for (int i = 0; i < combo; i++)
             {
@@ -1673,7 +1673,7 @@ namespace Assets.System.WarModule
         }
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (target.IsAliveHero)
             {
                 var targetStatus = Chessboard.GetStatus(target.Operator);
@@ -1751,7 +1751,7 @@ namespace Assets.System.WarModule
         private IEnumerable<IChessPos> ExtendedTargets(IChessPos target) => Chessboard.GetNeighbors(target, false);
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var splashTargets = ExtendedTargets(target);
             var damage = InstanceHeroGenericDamage();
             var splash = damage.Clone(DamageRate() * 0.01f);
@@ -1797,7 +1797,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var soul = Chessboard.GetCondition(this, CardState.Cons.BattleSoul);
             var addOn = DamageRate * 0.01f * soul * GeneralDamage();
             var result = OnPerformActivity(target, Activity.Offensive, actId: 0, skill: 1, InstanceHeroGenericDamage(addOn));
@@ -1920,7 +1920,7 @@ namespace Assets.System.WarModule
             }
 
             var damage = Strength * DamageRate();
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var array = Chessboard.GetRivals(this)
                 .ToArray();
 
@@ -2017,7 +2017,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             var majorCombat = InstanceHeroGenericDamage();
             var list = new List<CombatConduct> { majorCombat };
             var combatState = majorCombat.IsRouseDamage() ? DamageState.Rouse :
@@ -2091,7 +2091,7 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var stat = Chessboard.GetStatus(this);
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (!target.IsAliveHero)
             {
                 base.MilitaryPerforms(1);
@@ -2175,7 +2175,7 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var target = Chessboard.GetContraTarget(this);
+            var target = Chessboard.GetLaneTarget(this);
             if (target == null) return;
             var damage = InstanceHeroGenericDamage();
             var shield = 1;

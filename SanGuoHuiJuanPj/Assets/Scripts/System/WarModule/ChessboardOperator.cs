@@ -599,7 +599,7 @@ namespace Assets.System.WarModule
             where T : PosSprite, new()
         {
             var sprite = InstanceSprite<T>(target, typeId, lasting, value, actId);
-            return sprite.OnActivity(op, this, conducts, actId, skill);
+            return target.IsPostedAlive ? sprite.OnActivity(op, this, conducts, actId, skill) : null;
         }
 
         private Activity SpriteActivity(PosSprite sprite,bool isAdd)
@@ -735,7 +735,12 @@ namespace Assets.System.WarModule
                 if (!resultMapper.ContainsKey(target.InstanceId))
                     resultMapper.Add(target.InstanceId, result);
                 else
-                    resultMapper[target.InstanceId] = result;
+                {
+                    var resultType = resultMapper[target.InstanceId].Type;
+                    //地块结果可以被其它结果覆盖
+                    if (resultType == ActivityResult.Types.ChessPos)
+                        resultMapper[target.InstanceId] = result;
+                }
                 UpdateTerrain(GetChessPos(target));
             }
 
@@ -1026,7 +1031,7 @@ namespace Assets.System.WarModule
         public IChessPos GetChessPos(IChessOperator op) => Grid.GetChessPos(op, GetStatus(op).Pos);
         public IChessPos GetChessPos(bool isChallenger, int pos) => Grid.GetChessPos(pos, isChallenger);
 
-        public IChessPos GetContraTarget(ChessOperator op)
+        public IChessPos GetLaneTarget(ChessOperator op)
         {
             return Grid.GetContraPositionInSequence(
                 GetCondition(op, CardState.Cons.Confuse) > 0 ? op.IsChallenger : !op.IsChallenger,
@@ -1034,8 +1039,14 @@ namespace Assets.System.WarModule
                 p => p.IsPostedAlive && p.Operator != op);
         }
 
+        public IChessPos GetContraPos(ChessOperator op) => Grid.GetChessPos(GetChessPos(op).Pos, !op.IsChallenger);
+
         public enum Targeting
         {
+            /// <summary>
+            /// 攻击路线
+            /// </summary>
+            Lane,
             /// <summary>
             /// 对位
             /// </summary>
@@ -1057,17 +1068,21 @@ namespace Assets.System.WarModule
             IChessPos chessPos = null;
             switch (mode)
             {
+                case Targeting.Lane:
+                    chessPos = GetLaneTarget(op);
+                    break;
                 case Targeting.Contra:
-                    chessPos = GetContraTarget(op);break;
+                    chessPos = GetContraPos(op);
+                    break;
                 case Targeting.Any:
                     chessPos = GetRivals(op).RandomPick();
                     if (chessPos == null)
-                        chessPos = GetContraTarget(op);
+                        chessPos = GetLaneTarget(op);
                     break;
                 case Targeting.AnyHero:
                     chessPos = GetRivals(op, p => p.IsAliveHero).RandomPick();
                     if (chessPos == null)
-                        chessPos = GetContraTarget(op);
+                        chessPos = GetLaneTarget(op);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);

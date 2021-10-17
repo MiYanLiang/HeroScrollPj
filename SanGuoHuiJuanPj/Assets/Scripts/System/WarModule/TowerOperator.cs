@@ -54,13 +54,14 @@ namespace Assets.System.WarModule
         protected override void StartActions()
         {
             // 获取对位与周围的单位
-            var targets = Chessboard.GetContraNeighbors(this).Where(p => p.IsPostedAlive).ToArray();
-            if (targets.Length == 0) return;
+            var target = Chessboard.GetTargetByMode(this, ChessboardOperator.Targeting.Contra);
+            var targets = Chessboard.GetNeighbors(target, false).ToArray();
+            var combat = Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength));
+            Chessboard.DelegateSpriteActivity<CastSprite>(this, target, PosSprite.CastSprite, combat, 0, 1);
             for (var i = 0; i < targets.Length; i++)
             {
-                var target = targets[i];
-                Chessboard.AppendOpActivity(this, target, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength)), actId: 0, skill: 1);
+                var pos = targets[i];
+                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, combat, actId: 0, skill: -1);
             }
         }
     }

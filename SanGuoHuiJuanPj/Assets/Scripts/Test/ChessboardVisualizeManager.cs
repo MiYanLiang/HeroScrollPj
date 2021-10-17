@@ -249,25 +249,28 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var map in process.CombatMaps)
         {
             var itm = UpdateBasicActivityUpdate(map.Value.Activities);
-            var audioSection = itm.Item2;
-            var tCards = itm.Item1;
-            foreach (var tweenCard in tCards)
-                tween.Join(tweenCard.MajorTween);
+            var audioSection = itm.Item1;
+            var tCards = itm.Item2;
+            var ue = new UnityEvent();
+            foreach (var card in tCards) ue.AddListener(card.MajorAction.Invoke);
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = GetCardMap(result.Key);
                 var tw = tCards.FirstOrDefault(c => c.Id == card.InstanceId);
-                tween.AppendCallback(() =>
+                ue.AddListener(() =>
                 {
                     card.ChessmanStyle.ResultEffectTween(result.Value, card);
                     if (tw != null)
                         card.ChessmanStyle.NumberEffect(result.Value, card, tw.DmgType);
                     card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
-                }).Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
+                });
+                tween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(audioSection, result.Value);
             }
+
             tween.AppendCallback(() =>
             {
+                ue.Invoke();
                 PlayAudio(audioSection);
             });
         }
@@ -357,14 +360,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var map in combats)
         {
-            var audioSection = UpdateActivityTarget(map.Activities,
+            var section = UpdateActivityTarget(map.Activities,
                 (target, act, _) => InstantEffectStyle.Activity(act, target));
             foreach (var result in map.ResultMapper)
             {
                 var target = GetCardMap(result.Key);
                 target.UpdateActivityStatus(result.Value.Status);
             }
-            PlayAudio(audioSection);
+            PlayAudio(section);
         }
     }
 
@@ -385,35 +388,28 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return audioSection;
     }
 
-    private (List<TweenCard>,AudioSection) UpdateBasicActivityUpdate(IEnumerable<Activity> activities)
+    private (AudioSection,List<TweenCard>) UpdateBasicActivityUpdate(IEnumerable<Activity> activities)
     {
-        var tweenCards = new List<TweenCard>();
+        var list = new List<TweenCard>();
         var section = UpdateActivityTarget(activities, (target, activity,aud) =>
         {
-            var tween = DOTween.Sequence().Pause();
-            var tCard = new TweenCard(target.InstanceId)
-            {
-                MajorTween = tween
-            };
+            var tc = new TweenCard(activity.To);
+            tc.DmgType = Damage.GetType(activity);
             if (activity.From >= 0)
             {
                 var op = GetCardMap(activity.From);
-                tween.AppendCallback(() =>
+                tc.MajorAction.AddListener(() =>
                 {
                     target.ChessmanStyle.RespondStatusEffect(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity));
                     op.ChessmanStyle.ActivityEffect(activity, op);
                 });
             }
-            else
-            {
-                tween.AppendCallback(() => OnChessboardActivity(activity, target));
-            }
-
+            else tc.MajorAction.AddListener(() => OnChessboardActivity(activity, target));
+            list.Add(tc);
             SetAudioSection(aud, activity);
-            tweenCards.Add(tCard);
         });
-        return (tweenCards, section);
+        return (section, list);
     }
 
     private void OnChessboardActivity(Activity activity, FightCardData target)
@@ -466,18 +462,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
             else yield return CardAnimator.instance.PreActionTween(majorCard, null).WaitForCompletion();
 
             //施放者活动
-            FightCardData major = null;
+            var major = map.Value.Activities.Where(a => a.From >= 0).Select(a => GetCardMap(a.From))
+                .FirstOrDefault();
             
             var listTween = new List<TweenCard>();
             var rePosActs = new List<Activity>();
-            var audioSection = UpdateActivityTarget(map.Value.Activities, (target, activity,_) =>
+            var mainEvent = new UnityEvent();
+            var section = UpdateActivityTarget(map.Value.Activities, (target, activity,_) =>
             {
                 var op = GetCardMap(activity.From);
                 if (op == null) return;
-                if (major == null)
-                    major = op;
                 //承受方状态演示注入
-                mainTween.AppendCallback(() =>
+                mainEvent.AddListener(() =>
                 {
                     target.ChessmanStyle.RespondStatusEffect(activity, target,
                         op.ChessmanStyle.GetMilitarySparkId(activity));
@@ -491,23 +487,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 if (activity.IsRePos)
                     rePosActs.Add(activity);
             });
-            UnityAction statusUpdateAction = null;
-            foreach (var result in map.Value.ResultMapper)
-            {
-                var card = GetCardMap(result.Key);
-                var tweenCard = listTween.FirstOrDefault();
-                statusUpdateAction += () =>
-                {
-                    card.ChessmanStyle.ResultEffectTween(result.Value, card);
-                    if (tweenCard != null)
-                        card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
-                    card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
-                };
-                mainTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
-                SetResultAudio(audioSection, result.Value);
-            }
 
             //***演示开始***
+            var rePosTween = DOTween.Sequence().Pause();
+            foreach (var activity in rePosActs)
+            {
+                var target = GetCardMap(activity.To);
+                //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
+                rePosTween.Join(CardAnimator.instance
+                    .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                    .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target)));
+            }
+
             //施展方如果近战，前摇(后退，前冲)
             //如果有侵略行为才有动画
             if (major != null &&
@@ -519,21 +510,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
                         break;
                     case CombatStyle.Types.Melee:
                         yield return CardAnimator.instance.StepBackAndHit(major)
-                            .AppendCallback(() =>
-                            {
-                                PlayAudio(audioSection);
-                                statusUpdateAction?.Invoke();
-                            })
                             .WaitForCompletion();
                         break;
                     case CombatStyle.Types.Range:
                         var origin = major.cardObj.transform.position;
                         yield return CardAnimator.instance.RecoilTween(major)
-                            .AppendCallback(() =>
-                            {
-                                PlayAudio(audioSection);
-                                statusUpdateAction?.Invoke();
-                            })
                             .WaitForCompletion();
                         mainTween.Join(CardAnimator.instance.MoveTween(major, origin));
                         break;
@@ -544,19 +525,27 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             //如果会心，调用棋盘摇晃效果
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsCriticalDamage() || c.IsRouseDamage()))
-                mainTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard));
-
-            foreach (var activity in rePosActs)
+                mainTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard)).WaitForCompletion();
+            
+            foreach (var result in map.Value.ResultMapper)
             {
-                var target = GetCardMap(activity.To);
-                //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
-                yield return CardAnimator.instance
-                    .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
-                    .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target));
-            }
+                var card = GetCardMap(result.Key);
+                var tweenCard = listTween.FirstOrDefault();
+                mainEvent.AddListener(() =>
+                {
+                    card.ChessmanStyle.ResultEffectTween(result.Value, card);
+                    if (tweenCard != null)
+                        card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
+                    card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                });
 
+                mainTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
+                SetResultAudio(section, result.Value);
+            }
+            mainEvent.AddListener(()=> PlayAudio(section));
+            mainEvent.Invoke();
             //开始播放前面的注入活动
-            yield return mainTween.Play().WaitForCompletion();//播放主要活动
+            yield return mainTween.Join(rePosTween).Play().WaitForCompletion();//播放主要活动
 
             /*********************反击*************************/
             //如果没有反击
@@ -575,21 +564,20 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //会心演示
             if (map.Value.CounterActs.SelectMany(c => c.Conducts).Any(c => c.Rouse > 0 || c.Critical > 0))
                 counterTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard));
-            var (tweenCards, counterAudio) = UpdateBasicActivityUpdate(map.Value.CounterActs);
+            var (counterAudio, tweenCards) = UpdateBasicActivityUpdate(map.Value.CounterActs);
 
-            foreach (var tweenCard in tweenCards) counterTween.Join(tweenCard.MajorTween);
-            UnityAction counterStatusUpdate = null;
+            var counterE = new UnityEvent();
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = GetCardMap(result.Key);
-                var tweenCard = tweenCards.FirstOrDefault();
-                counterStatusUpdate += () =>
+                var tc = tweenCards.FirstOrDefault(c => c.Id == card.InstanceId);
+                counterE.AddListener(() =>
                 {
                     card.ChessmanStyle.ResultEffectTween(result.Value, card);
-                    if (tweenCard != null)
-                        card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
+                    if (tc != null)
+                        card.ChessmanStyle.NumberEffect(result.Value, card, tc.DmgType);
                     card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
-                };
+                });
                 counterTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(counterAudio, result.Value);
             }
@@ -597,7 +585,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //播放反击的注入活动
             yield return counterTween.AppendCallback(() =>
             {
-                counterStatusUpdate?.Invoke();
+                counterE.Invoke();
                 PlayAudio(counterAudio);
             }).Play().WaitForCompletion(); //播放反击
         }
@@ -810,7 +798,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private class TweenCard
     {
         public int Id { get; }
-        public Sequence MajorTween;
+        public UnityEvent MajorAction = new UnityEvent();
         public Damage.Types DmgType;
 
         public TweenCard(int id)
