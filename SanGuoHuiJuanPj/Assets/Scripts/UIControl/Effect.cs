@@ -1808,11 +1808,11 @@ public static class Effect
             case PosSprite.Kinds.Thunder:return 200;//术士落雷
             case PosSprite.Kinds.Earthquake:return 166;//狂士地震
             case PosSprite.Kinds.Catapult: return 061;//抛石
-            case PosSprite.Kinds.RollingStone://滚石
-            case PosSprite.Kinds.RollingWood://滚木
+            case PosSprite.Kinds.Arrow:return 156;//箭楼（井阑）
+            case PosSprite.Kinds.RollingStone:return 063;//滚石
+            case PosSprite.Kinds.RollingWood:return 063;//滚木
 
             case PosSprite.Kinds.CastSprite:
-            case PosSprite.Kinds.Arrow:
             case PosSprite.Kinds.YellowBand:
             case PosSprite.Kinds.Chained:
             case PosSprite.Kinds.Strength:
@@ -2403,13 +2403,13 @@ public static class Effect
                 }break;
 
             case 1: //投石台
-                return 31;
+                return -1;
+
+            case 3: //箭楼
+                return -1;
 
             case 2: //奏乐台
                 return 56;
-
-            case 3: //箭楼
-                return 26;
 
             case 6: //轩辕台
                 return 47;
@@ -2417,7 +2417,7 @@ public static class Effect
         return -1;
     }
     /// <summary>
-    /// 陷阱音效, -1 = 没音效
+    /// 陷阱音效, -1 = 没音效 遭受攻击时播放音效
     /// </summary>
     /// <param name="trapId"></param>
     /// <returns></returns>
@@ -2438,12 +2438,10 @@ public static class Effect
             case 6://火墙
             case 7://毒泉
             case 8://刀墙
-                break;
-
             case 9://滚石
-                return 48;
             case 10://滚木
-                return 48;
+                return -1;
+
 
             case 11://金币宝箱
             case 12://宝箱
@@ -2474,19 +2472,20 @@ public static class Effect
     {
         switch (kind)
         {
+            case PosSprite.Kinds.Forge: return 57;
             case PosSprite.Kinds.YeHuo: return 38;
-            case PosSprite.Kinds.RollingStone:
-            case PosSprite.Kinds.RollingWood:
-            case PosSprite.Kinds.Catapult: 
-            case PosSprite.Kinds.Thunder: 
-            case PosSprite.Kinds.Arrow: 
-            case PosSprite.Kinds.FireFlame: 
+            case PosSprite.Kinds.FireFlame: return 37;
+            case PosSprite.Kinds.Thunder:return 55;
+            case PosSprite.Kinds.Earthquake: return -1;
+            case PosSprite.Kinds.Catapult:return 31;
+            case PosSprite.Kinds.Arrow: return 26;
+            case PosSprite.Kinds.RollingStone:return 48;
+            case PosSprite.Kinds.RollingWood:return 48;
+
             case PosSprite.Kinds.Unknown: 
-            case PosSprite.Kinds.Earthquake: 
             case PosSprite.Kinds.CastSprite: 
             case PosSprite.Kinds.YellowBand: 
             case PosSprite.Kinds.Chained: 
-            case PosSprite.Kinds.Forge: 
             case PosSprite.Kinds.Strength: 
             case PosSprite.Kinds.Armor: 
             case PosSprite.Kinds.Dodge: 
