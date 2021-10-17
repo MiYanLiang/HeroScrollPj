@@ -569,18 +569,16 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
-        /// <param name="typeId"></param>
         /// <param name="lasting">回合数或宿主id</param>
         /// <param name="value">buff参数</param>
         /// <param name="actId"></param>
         /// <returns></returns>
-        public T InstanceSprite<T>(IChessPos target, int typeId,int lasting,int value,int actId)
+        public T InstanceSprite<T>(IChessPos target, int lasting,int value,int actId)
             where T : PosSprite, new()
         {
             var sprite =
                 PosSprite.Instance<T>(this,ChessSpriteSeed,
                     value: value,
-                    typeId: typeId,
                     pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
             ChessSpriteSeed++;
             RegSprite(sprite, actId);
@@ -601,18 +599,18 @@ namespace Assets.System.WarModule
         /// <typeparam name="T"></typeparam>
         /// <param name="op"></param>
         /// <param name="target"></param>
-        /// <param name="typeId"></param>
         /// <param name="conducts"></param>
         /// <param name="actId"></param>
         /// <param name="skill"></param>
-        /// <param name="lasting">1 = 回合数，0 = 即刻销毁, -1 = 去除</param>
+        /// <param name="lasting">1 = 回合数，0 = 即刻销毁(会导致演示没效果), -1 = 去除</param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public ActivityResult DelegateSpriteActivity<T>(ChessOperator op,IChessPos target, int typeId, CombatConduct[] conducts,int actId ,int skill,int lasting = 0, int value = 0)
+        public void DelegateSpriteActivity<T>(ChessOperator op, IChessPos target, CombatConduct[] conducts, int actId,
+            int skill, int lasting = 1, int value = 0)
             where T : PosSprite, new()
         {
-            var sprite = InstanceSprite<T>(target, typeId, lasting, value, actId);
-            return target.IsPostedAlive ? sprite.OnActivity(op, this, conducts, actId, skill) : null;
+            var sprite = InstanceSprite<T>(target, lasting, value, actId);
+            sprite.OnActivity(op, this, conducts, actId, skill);
         }
 
         private Activity SpriteActivity(PosSprite sprite,bool isAdd)

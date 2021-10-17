@@ -85,7 +85,7 @@ public class InstantEffectStyle : CombatStyle
     {
         var first = activity.Conducts.FirstOrDefault();
         if (first == null) return -1;
-        return Effect.GetFloorBuffId(first.Element);
+        return Effect.GetFloorBuffId(PosSprite.GetKind(first.Element));
     }
 }
 public abstract class CardStyle : ChessmanStyle

@@ -667,7 +667,7 @@ public static class Effect
                 return 025;
 
             case 1: //投石台
-                return 061;
+                return -1;
 
             default:
                 return 001;
@@ -1788,11 +1788,9 @@ public static class Effect
     /// 获取卡牌buffId，返回-1表示没有buff。
     /// 目前类型：
     /// </summary>
-    /// <param name="id">
-    /// 参考 <see cref="PosSprite"/> 常量
-    /// </param>
+    /// <param name="kind"></param>
     /// <returns></returns>
-    public static int GetFloorBuffId(int id)
+    public static int GetFloorBuffId(PosSprite.Kinds kind)
     {
         /*
          * FloorBuff(地块状态)与buff差别在于一个在地块，一个在卡牌上。
@@ -1802,16 +1800,27 @@ public static class Effect
          * 由于地块上的特效数量比较少，所以就不分是Spark或Buff，因为代码可控制。
          * 而 落雷 的实现其实就只是让它的Animator不循环就可以实现了。
          */
-
-        switch (id)
+        switch (kind)
         {
-            case PosSprite.Forge: return 522;//迷雾
-            case PosSprite.YeHuo: return 50501;//爆炸+火焰
-            case PosSprite.FireFlame:return 50502;//一般火焰
-            case PosSprite.Thunder: return 200;//术士落雷
-            case PosSprite.Eerthquake: return 166;//狂士地震
+            case PosSprite.Kinds.Forge:return 522;//迷雾
+            case PosSprite.Kinds.YeHuo:return 50501;//爆炸+火焰
+            case PosSprite.Kinds.FireFlame:return 50502;//一般火焰
+            case PosSprite.Kinds.Thunder:return 200;//术士落雷
+            case PosSprite.Kinds.Earthquake:return 166;//狂士地震
+            case PosSprite.Kinds.Rock: return 061;//抛石
+
+            case PosSprite.Kinds.CastSprite:
+            case PosSprite.Kinds.Arrow:
+            case PosSprite.Kinds.YellowBand:
+            case PosSprite.Kinds.Chained:
+            case PosSprite.Kinds.Strength:
+            case PosSprite.Kinds.Armor:
+            case PosSprite.Kinds.Dodge:
+            case PosSprite.Kinds.Critical:
+            case PosSprite.Kinds.Rouse:
+            case PosSprite.Kinds.Unknown: return -1;
             default:
-                return -1;//返回-1表示没有buff特效
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
     }
     #endregion
@@ -2265,8 +2274,8 @@ public static class Effect
             case 32:
             case 33:
             case 209://统帅
-                audioId = 38;break;
-
+                //audioId = 38;break;
+                audioId = -1;break;
             case 53:
             case 54:
             case 210://隐士
@@ -2454,46 +2463,34 @@ public static class Effect
     }
 
     /// <summary>
-    /// 精灵附buff音效
+    /// 精灵出现的音效
     /// </summary>
-    /// <param name="con"></param>
+    /// <param name="kind"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetBuffingAudioId(CardState.Cons con)
+    public static int GetSpriteAudioId(PosSprite.Kinds kind)
     {
-        switch (con)
+        switch (kind)
         {
-            case CardState.Cons.Burn:
-                return 17;
-            case CardState.Cons.Poison:
-                return 17;
-            case CardState.Cons.Bleed:
-                return 17;
-            case CardState.Cons.Stunned:
-            case CardState.Cons.Shield:
-            case CardState.Cons.Invincible:
-            case CardState.Cons.BattleSoul:
-            case CardState.Cons.Imprisoned:
-            case CardState.Cons.Cowardly:
-            case CardState.Cons.StrengthUp:
-            case CardState.Cons.DodgeUp:
-            case CardState.Cons.CriticalUp:
-            case CardState.Cons.RouseUp:
-            case CardState.Cons.ArmorUp:
-            case CardState.Cons.DeathFight:
-            case CardState.Cons.Disarmed:
-            case CardState.Cons.Neizhu:
-            case CardState.Cons.ShenZhu:
-            case CardState.Cons.EaseShield:
-            case CardState.Cons.Forge:
-            case CardState.Cons.Stimulate:
-            case CardState.Cons.Confuse:
-            case CardState.Cons.YellowBand:
-            case CardState.Cons.Chained:
-            case CardState.Cons.Murderous:
+            case PosSprite.Kinds.YeHuo: return 38;
+            case PosSprite.Kinds.Unknown: 
+            case PosSprite.Kinds.FireFlame: 
+            case PosSprite.Kinds.Thunder: 
+            case PosSprite.Kinds.CastSprite: 
+            case PosSprite.Kinds.Earthquake: 
+            case PosSprite.Kinds.Rock: 
+            case PosSprite.Kinds.Arrow: 
+            case PosSprite.Kinds.YellowBand: 
+            case PosSprite.Kinds.Chained: 
+            case PosSprite.Kinds.Forge: 
+            case PosSprite.Kinds.Strength: 
+            case PosSprite.Kinds.Armor: 
+            case PosSprite.Kinds.Dodge: 
+            case PosSprite.Kinds.Critical: 
+            case PosSprite.Kinds.Rouse: 
                 return -1;
             default:
-                throw new ArgumentOutOfRangeException(nameof(con), con, null);
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
     }
 

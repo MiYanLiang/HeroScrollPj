@@ -378,11 +378,11 @@ namespace Assets.System.WarModule
         private void UpdateChain()
         {
             var chainedList = GetChained();
-            var chainSprite = Chessboard.GetSpriteInChessPos(this).FirstOrDefault(s => s.TypeId == Chained);
+            var chainSprite = Chessboard.GetSpriteInChessPos(this)
+                .FirstOrDefault(s => s.GetKind() == PosSprite.Kinds.Chained);
             if (chainedList.Length > 1 && chainSprite == null)
             {
-                Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), Chained,
-                    InstanceId, value: 1, actId: -1);
+                Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), InstanceId, value: 1, actId: -1);
                 return;
             }
 
@@ -434,14 +434,13 @@ namespace Assets.System.WarModule
 
         public override void OnPlaceInvocation()
         {
-            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.TypeId == YellowBand)) return;
+            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.GetKind() == PosSprite.Kinds.YellowBand)) return;
             var cluster = Chessboard.GetFriendly(this,
                 p => p.IsAliveHero &&
                      p.Operator != this &&
                      IsYellowBand(p.Operator)).ToArray();
             if (cluster.Length == 0) return;
-            Chessboard.InstanceSprite<YellowBandSprite>(Chessboard.GetChessPos(this), YellowBand,
-                InstanceId, 1, -1);
+            Chessboard.InstanceSprite<YellowBandSprite>(Chessboard.GetChessPos(this), InstanceId, 1, -1);
         }
 
     }
@@ -1179,41 +1178,43 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var scope = Chessboard.GetRivals(this, _ => true).ToArray();
-            var ringIndex = -1;
-
-            for (int i = FireRings.Length - 1; i >= 0; i--)
-            {
-                var sprite = Chessboard.GetSpriteInChessPos(FireRings[i][0], !IsChallenger)
-                    .FirstOrDefault(s => s.TypeId == PosSprite.YeHuo);
-                if (sprite == null) continue;
-                ringIndex = i;
-                break;
-            }
-            ringIndex++;
-            if (ringIndex >= FireRings.Length)
-                ringIndex = 0;
+            //var scope = Chessboard.GetRivals(this, _ => true).ToArray();
+            //var ringIndex = -1;
+            //
+            //for (int i = FireRings.Length - 1; i >= 0; i--)
+            //{
+            //    var sprite = Chessboard.GetSpriteInChessPos(FireRings[i][0], !IsChallenger)
+            //        .FirstOrDefault(s => s.TypeId == PosSprite.YeHuo);
+            //    if (sprite == null) continue;
+            //    ringIndex = i;
+            //    break;
+            //}
+            //ringIndex++;
+            //if (ringIndex >= FireRings.Length)
+            //    ringIndex = 0;
             //var outRingDamageDecrease = GeneralDamage() * DamageRatio * ringIndex * 0.01f;
             var damage = InstanceHeroGenericDamage();
             damage.Multiply(DamageRate());
             damage.Element = CombatConduct.FireDmg;
             damage.Rate = BurnRatio;
+            Chessboard.DelegateSpriteActivity<YeHuoSprite>(this, Chessboard.GetChessPos(!IsChallenger, 7),
+                Helper.Singular(damage), actId: 0, skill: 1, 2);
             //var burnBuff = CombatConduct.InstanceBuff(CardState.Cons.Burn, 3);
-            var burnPoses = scope
-                .Join(FireRings.SelectMany(i => i), p => p.Pos, i => i, (p, _) => p)
-                .All(p => p.Terrain.Sprites.Any(s => s.TypeId == PosSprite.YeHuo))
-                ? //是否满足满圈条件
-                scope
-                : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
-            var combat = Helper.Singular(damage);
-            for (var index = 0; index < burnPoses.Length; index++)
-            {
-                var chessPos = burnPoses[index];
-                //if (Chessboard.IsRandomPass(BurnRatio + Chessboard.Randomize(10))) combat.Add(burnBuff);
-                Chessboard.InstanceSprite<FireSprite>(chessPos, typeId: PosSprite.YeHuo, lasting: 2, value: 5, actId: -1);
-                if (chessPos.Operator == null || Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
-                OnPerformActivity(chessPos, Activity.Offensive, actId: 0, skill: 1, combat);
-            }
+            //var burnPoses = scope
+            //    .Join(FireRings.SelectMany(i => i), p => p.Pos, i => i, (p, _) => p)
+            //    .All(p => p.Terrain.Sprites.Any(s => s.TypeId == PosSprite.YeHuo))
+            //    ? //是否满足满圈条件
+            //    scope
+            //    : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
+            //var combat = Helper.Singular(damage);
+            //for (var index = 0; index < burnPoses.Length; index++)
+            //{
+            //    var chessPos = burnPoses[index];
+            //    //if (Chessboard.IsRandomPass(BurnRatio + Chessboard.Randomize(10))) combat.Add(burnBuff);
+            //    Chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: 5, actId: -1);
+            //    if (chessPos.Operator == null || Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
+            //    OnPerformActivity(chessPos, Activity.Offensive, actId: 0, skill: 1, combat);
+            //}
         }
     }
 
@@ -1325,8 +1326,8 @@ namespace Assets.System.WarModule
                 for (int index = 0; index < targetPoses.Length; index++)
                 {
                     var pos = targetPoses[index];
-                    Chessboard.DelegateSpriteActivity<CastSprite>(this, pos.Obj, PosSprite.Thunder,
-                        Helper.Singular(conduct), j, isUlti ? 2 : 1, 1);
+                    Chessboard.DelegateSpriteActivity<ThunderSprite>(this, pos.Obj, Helper.Singular(conduct), j,
+                        isUlti ? 2 : 1);
                 }
             }
         }

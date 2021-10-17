@@ -618,7 +618,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 foreach (var conduct in activity.Conducts)
                 {
                     if (!(conduct.Total > 0)) continue;
-                    audioId = Effect.GetBuffingAudioId((CardState.Cons)conduct.Element);
+                    audioId = Effect.GetSpriteAudioId(PosSprite.GetKind(conduct.Element));
                     AddToSection();
                 }
 
@@ -698,7 +698,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         foreach (var conduct in activity.Conducts.Where(c => c.Kind == CombatConduct.SpriteKind))
         {
-            var buffId = Effect.GetFloorBuffId(conduct.Element);
+            var buffId = Effect.GetFloorBuffId(PosSprite.GetKind(conduct.Element));
             if (buffId == -1) continue;
             var sp = Sprites.FirstOrDefault(s =>
                 s.SpriteType == conduct.Element && s.Pos == chessPos.Pos && s.SpriteId == conduct.Kind);

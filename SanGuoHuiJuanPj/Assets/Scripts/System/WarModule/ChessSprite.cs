@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using CorrelateLib;
 using Newtonsoft.Json;
 
@@ -11,6 +12,84 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class PosSprite
     {
+        public enum Kinds
+        {
+            Unknown = -1,
+            /// <summary>
+            /// 爆炸+火焰
+            /// </summary>
+            YeHuo = 101,
+            /// <summary>
+            /// 一般火焰
+            /// </summary>
+            FireFlame = 100,
+            /// <summary>
+            /// 落雷
+            /// </summary>
+            Thunder = 102,
+            /// <summary>
+            /// 投射精灵， 
+            /// </summary>
+            CastSprite = 106,
+            /// <summary>
+            /// 地震
+            /// </summary>
+            Earthquake = 104,
+            /// <summary>
+            /// 抛石精灵
+            /// </summary>
+            Rock = 105,
+            Arrow = 107,
+            /**下列是跟状态有关的精灵类型**/
+            YellowBand = 23,
+            Chained = 24,
+            Forge = 20,
+            Strength = 10,
+            Armor = 14,
+            Dodge = 11,
+            Critical = 12,
+            Rouse = 13,
+        }
+
+        public static Kinds GetKind(int typeId) => (Kinds)typeId;
+
+        public static bool TryGetKind(CardState.Cons con,out Kinds kind)
+        {
+            switch (con)
+            {
+                case CardState.Cons.StrengthUp: kind = Kinds.Strength;break;
+                case CardState.Cons.DodgeUp: kind =  Kinds.Dodge; break;
+                case CardState.Cons.CriticalUp: kind =  Kinds.Critical; break;
+                case CardState.Cons.RouseUp: kind =  Kinds.Rouse; break;
+                case CardState.Cons.ArmorUp: kind =  Kinds.Armor; break;
+                case CardState.Cons.Forge: kind =  Kinds.Forge; break;
+                case CardState.Cons.YellowBand: kind =  Kinds.YellowBand; break;
+                case CardState.Cons.Chained: kind =  Kinds.Chained; break;
+                case CardState.Cons.Murderous:
+                case CardState.Cons.Neizhu:
+                case CardState.Cons.ShenZhu:
+                case CardState.Cons.Stunned:
+                case CardState.Cons.Poison:
+                case CardState.Cons.Burn:
+                case CardState.Cons.Shield:
+                case CardState.Cons.Invincible:
+                case CardState.Cons.Bleed:
+                case CardState.Cons.BattleSoul:
+                case CardState.Cons.Imprisoned:
+                case CardState.Cons.Cowardly:
+                case CardState.Cons.DeathFight:
+                case CardState.Cons.Disarmed:
+                case CardState.Cons.EaseShield:
+                case CardState.Cons.Stimulate:
+                case CardState.Cons.Confuse:
+                    kind = Kinds.Unknown;
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(con), con, null);
+            }
+            return true;
+        }
+
         /// <summary>
         /// 类型
         /// </summary>
@@ -25,37 +104,43 @@ namespace Assets.System.WarModule
             /// </summary>
             Round
         }
-        /// <summary>
-        /// 爆炸+火焰
-        /// </summary>
-        public const int YeHuo = 6;
-        /// <summary>
-        /// 一般火焰
-        /// </summary>
-        public const int FireFlame = 7;
-        /// <summary>
-        /// 落雷
-        /// </summary>
-        public const int Thunder = 3;
-        /// <summary>
-        /// 投射精灵， 
-        /// </summary>
-        public const int CastSprite = 4;
-        /// <summary>
-        /// 地震
-        /// </summary>
-        public const int Eerthquake = 8;
-        /// <summary>
-        /// 迷雾精灵(依赖类)
-        /// </summary>
-        public const int Forge = 20;
-        public const int Strength = 10;
-        public const int Armor = 14;
-        public const int Dodge = 11;
-        public const int Critical = 12;
-        public const int Rouse = 13;
 
-        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int lasting,int value ,int typeId, int pos,bool isChallenger)
+        ///// <summary>
+        ///// 爆炸+火焰
+        ///// </summary>
+        //public const int YeHuo = 6;
+        ///// <summary>
+        ///// 一般火焰
+        ///// </summary>
+        //public const int FireFlame = 7;
+        ///// <summary>
+        ///// 落雷
+        ///// </summary>
+        //public const int Thunder = 3;
+        ///// <summary>
+        ///// 投射精灵， 
+        ///// </summary>
+        //public const int CastSprite = 4;
+        ///// <summary>
+        ///// 地震
+        ///// </summary>
+        //public const int Earthquake = 8;
+        ///// <summary>
+        ///// 抛石精灵
+        ///// </summary>
+        //public const int Rock = 22;
+        //public const int Arrow = 21;
+        ///// <summary>
+        ///// 迷雾精灵(依赖类)
+        ///// </summary>
+        //public const int Forge = 20;
+        //public const int Strength = 10;
+        //public const int Armor = 14;
+        //public const int Dodge = 11;
+        //public const int Critical = 12;
+        //public const int Rouse = 13;
+
+        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int lasting,int value, int pos,bool isChallenger)
             where T : PosSprite, new()
         {
             return new T
@@ -65,7 +150,6 @@ namespace Assets.System.WarModule
                 Value = value,
                 Pos = pos,
                 IsChallenger = isChallenger,
-                TypeId = typeId,
                 Lasting = lasting,
             };
         }
@@ -77,7 +161,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 类型标签，用来识别单位类型
         /// </summary>
-        public int TypeId { get; set; }
+        public abstract int TypeId { get; }
         public abstract HostType Host { get; }
         /// <summary>
         /// <see cref="HostType.Round"/> = 回合数，<see cref="HostType.Relation"/> = 宿主Id
@@ -104,22 +188,48 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual int ServedBuff(CardState.Cons buff,IChessOperator op) => 0;
 
+        public Kinds GetKind() => GetKind(TypeId);
+
+        public string GetName() => GetName(GetKind());
+        public static string GetName(Kinds kind)
+        {
+            switch (kind)
+            {
+                case Kinds.Unknown: return (nameof(Kinds.Unknown));
+                case Kinds.YeHuo: return (nameof(Kinds.YeHuo));
+                case Kinds.FireFlame: return (nameof(Kinds.FireFlame));
+                case Kinds.Thunder: return (nameof(Kinds.Thunder));
+                case Kinds.CastSprite: return (nameof(Kinds.CastSprite));
+                case Kinds.Earthquake: return (nameof(Kinds.Earthquake));
+                case Kinds.Rock: return (nameof(Kinds.Rock));
+                case Kinds.Arrow: return (nameof(Kinds.Arrow));
+                case Kinds.YellowBand: return (nameof(Kinds.YellowBand));
+                case Kinds.Chained: return (nameof(Kinds.Chained));
+                case Kinds.Forge: return (nameof(Kinds.Forge));
+                case Kinds.Strength: return (nameof(Kinds.Strength));
+                case Kinds.Armor: return (nameof(Kinds.Armor));
+                case Kinds.Dodge: return (nameof(Kinds.Dodge));
+                case Kinds.Critical: return (nameof(Kinds.Critical));
+                case Kinds.Rouse: return (nameof(Kinds.Rouse));
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
         public override string ToString()
         {
-            var hostText = Host == HostType.Relation ? $"宿主({Lasting})" : $"回合({Lasting})";
-            var challengerText = IsChallenger ? $"玩家({Pos})" : $"对手({Pos})";
-            var typeText = "未定";
-            switch (TypeId)
-            {
-                case YeHuo: typeText = "业火";break;
-                case Forge: typeText = "迷雾";break;
-                case Thunder: typeText = "落雷";break;
-            }
-            return $"精灵({InstanceId})({typeText}).{hostText} [{Value}] Pos:{challengerText}";
+            var sb = new StringBuilder("精灵");
+            sb.Append($"({InstanceId})");
+            sb.Append(GetName());
+            sb.Append(Host == HostType.Relation ? $".宿主({Lasting})" : $".回合({Lasting})");
+            sb.Append($"[{Value}]");
+            sb.Append("Pos:");
+            sb.Append(IsChallenger ? $"玩家({Pos})" : $"对手({Pos})");
+            //return $"精灵({InstanceId})({kindText}).{hostText} [{Value}] Pos:{challengerText}";
+            return sb.ToString();
         }
 
-        public virtual ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
-            CombatConduct[] conducts,int actId,int skill) => null;
+        public virtual void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+            CombatConduct[] conducts,int actId,int skill) {}
         public virtual void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
         }
@@ -146,10 +256,12 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class StrengthSprite : RelationSprite
     {
+        public override int TypeId => (int)Kinds.Strength;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.StrengthUp ? Value : 0;
     }
     public class ArmorSprite : RelationSprite
     {
+        public override int TypeId => (int)Kinds.Armor;
         protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.ArmorUp ? Value : 0;
     }
@@ -245,6 +357,7 @@ namespace Assets.System.WarModule
         protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
 
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.DodgeUp ? Value : 0;
+        public override int TypeId => (int)Kinds.Dodge;
     }
     /// <summary>
     /// 暴击精灵
@@ -254,6 +367,7 @@ namespace Assets.System.WarModule
         protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
 
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.CriticalUp ? Value : 0;
+        public override int TypeId => (int)Kinds.Critical;
     }
     /// <summary>
     /// 会心精灵
@@ -262,12 +376,15 @@ namespace Assets.System.WarModule
     {
         protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.RouseUp ? Value : 0;
+        public override int TypeId => (int)Kinds.Rouse;
     }
     /// <summary>
     /// 迷雾精灵
     /// </summary>
     public class ForgeSprite : DodgeSprite
     {
+        public override int TypeId => (int)Kinds.Forge;
+
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) =>
             con == CardState.Cons.DodgeUp || 
             con == CardState.Cons.Forge ? Value : 0;
@@ -292,7 +409,9 @@ namespace Assets.System.WarModule
     //链环精灵管理伤害转化，分享伤害由buff管理
     public class ChainSprite : RelationSprite
     {
-        private const int ChainedId = (int)CardState.Cons.Chained;
+        private const int ChainedId = (int)Kinds.Chained;
+        public override int TypeId => ChainedId;
+
         protected override Func<IChessOperator, bool> OpCondition => op=> op.InstanceId == Lasting;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op)
         {
@@ -307,22 +426,43 @@ namespace Assets.System.WarModule
         }
         public static Func<IChessPos, bool> ChainedFilter =>
             p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == ChainedId);
+
     }
 
     /// <summary>
-    /// 投射精灵
+    /// 落雷精灵
     /// </summary>
-    public class CastSprite : RoundSprite
+    public class ThunderSprite : RoundSprite
     {
+        public override int TypeId { get; } = (int)Kinds.Thunder;
         public override HostType Host => HostType.Round;
 
-        public override ActivityResult OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
             CombatConduct[] conducts, int actId, int skill)
         {
             var target = chessboard.GetChessPos(IsChallenger, Pos);
-            return target.IsPostedAlive
-                ? chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill)
-                : null;
+            if (target.IsPostedAlive)
+                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill);
+        }
+    }    
+    
+    /// <summary>
+    /// 抛石精灵
+    /// </summary>
+    public class RockSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Rock;
+        public override HostType Host => HostType.Round;
+
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+            CombatConduct[] conducts, int actId, int skill)
+        {
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            var targets = chessboard.GetNeighbors(target, false).ToList();
+            targets.Add(target);
+            foreach (var pos in targets)
+                if (pos.IsPostedAlive)
+                    chessboard.AppendOpActivity(offender, pos, Activity.Offensive, conducts, actId, skill);
         }
     }
 
@@ -331,6 +471,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class FireSprite : RoundSprite
     {
+        public override int TypeId { get; } = (int)Kinds.FireFlame;
+
         public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
             if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
@@ -339,5 +481,49 @@ namespace Assets.System.WarModule
                     CardState.Cons.Burn)));
         }
     }
+    /// <summary>
+    /// 业火精灵
+    /// </summary>
+    public class YeHuoSprite : FireSprite
+    {
+        private int[][] FireRings { get; } = new int[3][] {
+            new int[1] { 7},
+            new int[6] { 2, 5, 6,10,11,12},
+            new int[11]{ 0, 1, 3, 4, 8, 9,13,14,15,16,17},
+        };
 
+        public override int TypeId { get; } = (int)Kinds.YeHuo;
+
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId,
+            int skill)
+        {
+            var scope = chessboard.GetRivals(offender, _ => true).ToArray();
+            var ringIndex = -1;
+
+            for (int i = FireRings.Length - 1; i >= 0; i--)
+            {
+                var sprite = chessboard.GetSpriteInChessPos(FireRings[i][0], IsChallenger)
+                    .FirstOrDefault(s => s.GetKind() == Kinds.YeHuo && s != this);
+                if (sprite == null) continue;
+                ringIndex = i;
+                break;
+            }
+            ringIndex++;
+            if (ringIndex >= FireRings.Length)
+                ringIndex = 0;
+            var burnPoses = scope
+                .Join(FireRings.SelectMany(i => i), p => p.Pos, i => i, (p, _) => p)
+                .All(p => p.Terrain.Sprites.Any(s => s.GetKind() == Kinds.YeHuo))
+                ? //是否满足满圈条件
+                scope
+                : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
+            for (var index = 0; index < burnPoses.Length; index++)
+            {
+                var chessPos = burnPoses[index];
+                chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: 5, actId: -1);
+                if (chessPos.Operator == null || chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
+                chessboard.AppendOpActivity(offender, chessPos, Activity.Offensive, conducts, actId: 0, skill: 1);
+            }
+        }
+    }
 }
