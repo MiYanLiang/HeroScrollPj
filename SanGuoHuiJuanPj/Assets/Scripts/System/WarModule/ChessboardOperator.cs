@@ -617,7 +617,8 @@ namespace Assets.System.WarModule
         {
             GetMajorProcess(ChessProcess.Types.Chessboard, sprite.Pos, sprite.IsChallenger);
             var conduct = isAdd
-                ? CombatConduct.AddSprite(sprite.Value, sprite.TypeId, sprite.InstanceId)
+                ? CombatConduct.AddSprite(sprite.Host == PosSprite.HostType.Round ? sprite.Lasting : sprite.Value,
+                    sprite.TypeId, sprite.InstanceId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
             return InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Sprite,
                 Helper.Singular(conduct), 1, -1);

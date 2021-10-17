@@ -13,7 +13,15 @@ public static class Effect
         /// <summary>
         /// 当卡牌放置到棋格上
         /// </summary>
-        PlaceCardToBoard
+        PlaceCardToBoard,
+        /// <summary>
+        /// 天暗(小)
+        /// </summary>
+        Shady,
+        /// <summary>
+        /// 天暗(大)
+        /// </summary>
+        Dark
     }
 
     public const string GetGold = "GetGold";
@@ -507,13 +515,13 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
-                switch (skill ) 
-                {
-                    case 1://小技能
-                        value = 200;break;
-                    case 2://大技能
-                        value = 200;break;
-                }
+                //switch (skill) 
+                //{
+                //    case 1://小技能
+                //        value = 200;break;
+                //    case 2://大技能
+                //        value = 200;break;
+                //}
                 break;
 
             case 205:
@@ -734,6 +742,8 @@ public static class Effect
             case ChessboardEvent.PlaceCardToBoard:
                 return 527;
             case ChessboardEvent.Rouse:
+            case ChessboardEvent.Shady:
+            case ChessboardEvent.Dark:
             default:
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
         }
@@ -2581,6 +2591,10 @@ public static class Effect
                 return 64;
             case ChessboardEvent.PlaceCardToBoard:
                 return -1;
+            case ChessboardEvent.Shady:
+                return 43;
+            case ChessboardEvent.Dark:
+                return 42;
             default:
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
         }
@@ -2611,4 +2625,39 @@ public static class Effect
         }
     }
     #endregion
+
+    /// <summary>
+    /// 会调用天暗的精灵类型。
+    /// </summary>
+    /// <param name="kind"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static bool IsShadyChessboardElement(PosSprite.Kinds kind)
+    {
+        //注意，暗度是根据技能标记skill = 1小,2大
+        switch (kind)
+        {
+            case PosSprite.Kinds.Thunder: return true;
+            case PosSprite.Kinds.Unknown:
+            case PosSprite.Kinds.YeHuo:
+            case PosSprite.Kinds.FireFlame:
+            case PosSprite.Kinds.CastSprite:
+            case PosSprite.Kinds.Earthquake:
+            case PosSprite.Kinds.Catapult:
+            case PosSprite.Kinds.Arrow:
+            case PosSprite.Kinds.RollingStone:
+            case PosSprite.Kinds.RollingWood:
+            case PosSprite.Kinds.YellowBand:
+            case PosSprite.Kinds.Chained:
+            case PosSprite.Kinds.Forge:
+            case PosSprite.Kinds.Strength:
+            case PosSprite.Kinds.Armor:
+            case PosSprite.Kinds.Critical:
+            case PosSprite.Kinds.Dodge:
+            case PosSprite.Kinds.Rouse:
+                return false;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+        }
+    }
 }

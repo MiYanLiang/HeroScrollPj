@@ -19,6 +19,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public GameObject RouseEffectObj;
     public JiBanEffectUi JiBanEffect;
     public GameObject[] JiBanOffensiveEffects;
+    public Image ShadyImage;
 
     [SerializeField] private AudioSource audioSource;
 
@@ -43,7 +44,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
     public UnityEvent<FightCardData> OnCardDefeated = new CardDefeatedEvent();
 
-    //private Stopwatch Sw = Stopwatch.StartNew();
+    private Tween ShadyTween(float alpha)
+    {
+        if (alpha > 0.5)
+        {
+            var audioId =
+                Effect.GetChessboardAudioId(alpha >= 0.8 ? Effect.ChessboardEvent.Dark : Effect.ChessboardEvent.Shady);
+            PlayAudio(audioId, 0);
+        }
+        return ShadyImage.DOFade(alpha, 0.3f);
+    }
+
     public void Init()
     {
         Chessboard.Init();
@@ -469,7 +480,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //施放者活动
             var major = map.Value.Activities.Where(a => a.From >= 0).Select(a => GetCardMap(a.From))
                 .FirstOrDefault();
-            
+
+            var shady = map.Value.Activities.FirstOrDefault(a =>
+                a.Intent == Activity.Sprite &&
+                a.Conducts.Any(c => Effect.IsShadyChessboardElement(PosSprite.GetKind(c.Element)) && c.Total > 0));
+
+            if (shady != null && shady.Skill > 0)
+            {
+                yield return ShadyTween(shady.Skill == 1 ? 0.6f : 0.8f).WaitForCompletion();
+            }
+
             var listTween = new List<TweenCard>();
             var rePosActs = new List<Activity>();
             var mainEvent = new UnityEvent();
@@ -551,6 +571,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
             mainEvent.Invoke();
             //开始播放前面的注入活动
             yield return mainTween.Join(rePosTween).Play().WaitForCompletion();//播放主要活动
+
+            if (shady != null)
+            {
+                yield return ShadyTween(0).WaitForCompletion();
+            }
 
             /*********************反击*************************/
             //如果没有反击

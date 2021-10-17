@@ -151,7 +151,8 @@ namespace Assets.System.WarModule
         //public const int Critical = 12;
         //public const int Rouse = 13;
 
-        public static T Instance<T>(ChessboardOperator chessboardOp,int instanceId,int lasting,int value, int pos,bool isChallenger)
+        public static T Instance<T>(ChessboardOperator chessboardOp, int instanceId, int lasting, int value, int pos,
+            bool isChallenger)
             where T : PosSprite, new()
         {
             return new T
@@ -164,6 +165,7 @@ namespace Assets.System.WarModule
                 Lasting = lasting,
             };
         }
+
         /// <summary>
         /// ChessboardOperator千万别用来添加活动。它仅仅用在地块查询
         /// </summary>
