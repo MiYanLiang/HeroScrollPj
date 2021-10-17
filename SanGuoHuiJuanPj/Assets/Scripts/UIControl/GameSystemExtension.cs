@@ -20,7 +20,7 @@ public static class GameSystemExtension
     }
 
     /// <summary>
-    /// 上阵
+    /// 出战？
     /// </summary>
     /// <param name="cards"></param>
     /// <param name="forceId">军团Id</param>
@@ -105,7 +105,11 @@ public static class GameSystemExtension
 
     public static GameCardInfo GetInfo(this GameCard card) => GameCardInfo.GetInfo(card);
     public static int Power(this GameCard card) => card.CardCapability(card.GetInfo().Rare);
-
+    /// <summary>
+    /// 卡牌出售价格
+    /// </summary>
+    /// <param name="card"></param>
+    /// <returns></returns>
     public static int GetValue(this GameCard card)
     {
         var info = card.GetInfo();
@@ -267,7 +271,12 @@ public class GameCardInfo
             index++;
         }
     }
-
+    /// <summary>
+    /// 玩家起名
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="nickname"></param>
+    /// <param name="sign"></param>
     public void Rename(string name, string nickname, string sign)
     {
         Name = name;
@@ -371,7 +380,7 @@ public class HeroCombatInfo
     /// <returns></returns>
     public float GetRouseDamage(int damage) => GetRouseDamageRate() * damage;
     /// <summary>
-    /// 获取会心率
+    /// 获取会心伤害比率
     /// </summary>
     /// <returns></returns>
     public float GetRouseDamageRate() => RouseDamage * 0.01f;
@@ -382,7 +391,7 @@ public class HeroCombatInfo
     /// <returns></returns>
     public float GetCriticalDamage(int damage) => GetCriticalDamageRate() * damage;
     /// <summary>
-    /// 获取暴击率
+    /// 获取暴击伤害比率
     /// </summary>
     /// <returns></returns>
     public float GetCriticalDamageRate() => CriticalDamage * 0.01f;
