@@ -2043,7 +2043,7 @@ public static class Effect
             case 65:
             case 127:
             case 128://黄巾
-                audioId = 2; break;//群起攻击
+                audioId = 33; break;//群起攻击
 
             case 25:
             case 129:
