@@ -33,7 +33,7 @@ namespace Assets.System.WarModule
         /// </summary>
         public const int Offensive = 0;
         /// <summary>
-        /// 
+        /// 反击
         /// </summary>
         public const int Counter = 1;
         /// <summary>
