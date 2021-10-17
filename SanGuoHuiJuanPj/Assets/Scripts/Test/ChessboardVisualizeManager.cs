@@ -12,7 +12,6 @@ using Debug = UnityEngine.Debug;
 
 public class ChessboardVisualizeManager : MonoBehaviour
 {
-    public bool SkipAnim;
     public WarGameCardUi PrefabUi;
     public WarGameCardUi HomePrefab;
     public NewWarManager NewWar;
@@ -105,14 +104,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
         if (IsBusy) return;
         NewWar.StartButtonShow(false);
         if (OnRoundBegin != null && !OnRoundBegin.Invoke()) return;
+        StartCoroutine(Round());
+    }
+
+    private IEnumerator Round()
+    {
         autoRoundTimer = 0;
         var chess = NewWar.ChessOperator;
-        var round = chess.StartRound();
-        if (SkipAnim)
-        {
-            NewWar.StartButtonShow(true);
-            return;
-        }
+        ChessRound round = null;
+        round = chess.StartRound();
+        PreAnimation().Play();
+        yield return new WaitUntil(() => round != null);
         StartCoroutine(AnimateRound(round, chess));
         IsFirstRound = false;
     }
@@ -143,15 +145,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    //演示回合
-    private IEnumerator AnimateRound(ChessRound round, ChessboardOperator chess)
+    private Tween PreAnimation()
     {
-        IsBusy = true;
         var gridTween = DOTween.Sequence().Pause();
         foreach (var image in Chessboard.GridImages)
             gridTween.Join(image.DOFade(CardAnimator.instance.Misc.ChessGridFading,
                 CardAnimator.instance.Misc.ChessGridFadingSec));
-        gridTween.Play();
+        return gridTween;
+    }
+    //演示回合
+    private IEnumerator AnimateRound(ChessRound round, ChessboardOperator chess)
+    {
+        IsBusy = true;
 
 #if UNITY_EDITOR
         foreach (var stat in round.PreRoundStats)
@@ -181,7 +186,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         FilterDeathChessman();
 
-        gridTween = DOTween.Sequence().Pause();
+        var gridTween = DOTween.Sequence().Pause();
         foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
         gridTween.Play();
 

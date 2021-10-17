@@ -33,7 +33,11 @@ public class NewWarManager : MonoBehaviour, ILogger
     public void NewGame()
     {
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
+#if UNITY_EDITOR
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
+#else
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid);
+#endif
         CardData.Clear();
         StartButtonShow(true);
     }

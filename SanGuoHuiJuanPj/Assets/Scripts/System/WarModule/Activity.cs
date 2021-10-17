@@ -188,7 +188,13 @@ namespace Assets.System.WarModule
             return intentText + toText;
         }
 
-        public string StanceText()=>IsChallenger == 0 ? "玩家" : "对方";
+        public string StanceText()
+        {
+            const string playerText = "玩家";
+            const string OppoText = "对方";
+            return IsChallenger == 0 ? playerText : OppoText;
+        }
+
         public override string ToString()
         {
             var targetText = TargetStatus == null ? string.Empty : TargetStatus.ToString();
