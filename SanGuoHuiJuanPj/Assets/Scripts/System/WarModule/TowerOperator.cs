@@ -9,6 +9,8 @@ namespace Assets.System.WarModule
     public abstract class TowerOperator : CardOperator
     {
         public override int GetDodgeRate() => 0;
+
+        protected CombatConduct InstanceMechanicalDamage(float damage) => CombatConduct.InstanceDamage(InstanceId, damage, CombatConduct.MechanicalDmg);
     }
 
     public class BlankTowerOperator : TowerOperator
@@ -55,13 +57,8 @@ namespace Assets.System.WarModule
         {
             // 获取对位与周围的单位
             var target = Chessboard.GetTargetByMode(this, ChessboardOperator.Targeting.Contra);
-            var combat = Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength));
-            Chessboard.DelegateSpriteActivity<RockSprite>(this, target, combat, 0, 1);
-            //var targets = Chessboard.GetNeighbors(target, false).ToList();
-            //targets.Add(target);
-            //foreach (var pos in targets)
-            //    if (pos.IsPostedAlive)
-            //        Chessboard.AppendOpActivity(this, pos, Activity.Offensive, combat, actId: 0, skill: -1);
+            var combat = Helper.Singular(InstanceMechanicalDamage(Strength));
+            Chessboard.DelegateSpriteActivity<CatapultSprite>(this, target, combat, actId: 0, skill: 1);
         }
     }
     /// <summary>
@@ -86,34 +83,21 @@ namespace Assets.System.WarModule
     /// </summary>
     public class JianLouOperator : TowerOperator
     {
+        private int Targets => 7;
+        private int DamageRate => 50;
         protected override void StartActions()
         {
-            var chessPoses = Chessboard.GetRivals(this).ToArray();
-            var maxTargets = DataTable.GetGameValue(18); //箭楼攻击数量
-            var pick = chessPoses.Length > maxTargets ? maxTargets : chessPoses.Length;
+            var chessPoses = Chessboard.GetRivals(this, _ => true)
+                .Select(p => new { p, random = Chessboard.Randomize(3) })
+                .OrderBy(p => p.random).Take(Targets).ToArray();
             //17, 箭楼远射伤害百分比
-            var damage = Strength * DataTable.GetGameValue(17) * 0.01f;
-            var targets = chessPoses.Select(RandomElement.Instance).Pick(pick).ToArray();
-            for (var i = 0; i < targets.Length; i++)
+            var damage = InstanceMechanicalDamage(Strength * DamageRate * 0.01f);
+            for (var i = 0; i < chessPoses.Length; i++)
             {
-                var target = targets[i];
-                Chessboard.AppendOpActivity(this, target.Pos, Activity.Offensive,
-                    Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage: damage)), actId: 0, skill: 1);
+                var target = chessPoses[i].p;
+                Chessboard.DelegateSpriteActivity<ArrowSprite>(this, target, Helper.Singular(damage), 0, 1);
             }
         }
-
-        class RandomElement : IWeightElement
-        {
-            public static RandomElement Instance(IChessPos card) => new RandomElement(card);
-            public int Weight => 1;
-            public IChessPos Pos { get; }
-
-            public RandomElement(IChessPos pos)
-            {
-                Pos = pos;
-            }
-        }
-
     }
     /// <summary>
     /// 轩辕台
@@ -276,7 +260,7 @@ namespace Assets.System.WarModule
     public class GongNuYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ArrowSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
+            Chessboard.InstanceSprite<ArrowUpSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>

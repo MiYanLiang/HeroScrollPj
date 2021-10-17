@@ -9,6 +9,9 @@ namespace Assets.System.WarModule
     public abstract class TrapOperator : CardOperator
     {
         public override int GetDodgeRate() => 0;
+
+        protected CombatConduct InstanceMechanicalDamage(float damage) => CombatConduct.InstanceDamage(InstanceId, damage, CombatConduct.MechanicalDmg);
+
     }
 
     public class BlankTrapOperator : TrapOperator
@@ -68,7 +71,7 @@ namespace Assets.System.WarModule
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive,
-                Helper.Singular(CombatConduct.InstanceDamage(InstanceId, reflectDamage)), actId: 0, skill: 1);
+                Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: 0, skill: 1);
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -78,37 +81,20 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GunMuOperator : TrapOperator
     {
+        private int StunningRate => 100;
         protected override void OnDeadTrigger(int conduct)
         {
-            var poses = Chessboard.Grid.GetRivalScope(this).Where(c => c.Value.IsPostedAlive)
-                .OrderBy(c => c.Key).Select(c => c.Value);
-            var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
-            var max = Chessboard.FrontRows.Length;
-            var targets = new List<IChessPos>();
-            foreach (var pos in poses)
-            {
-                var column = pos.Pos % max; //获取直线排数
-                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
-                targets.Add(pos);
-            }
-
-            for (var i = 0; i < targets.Count; i++)
-            {
-                var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), actId: 0, skill: 1);
-            }
-
+            var target = Chessboard.GetChessPos(!IsChallenger, Chessboard.GetStatus(this).Pos % 5);//最上一层棋格
+            Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, target, InstanceConduct(), 0, 1);
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(InstanceId, Strength);
+                var basicDmg = InstanceMechanicalDamage(Strength);
                 //根据比率给出是否眩晕
-                if (Chessboard.RandomFromConfigTable(15))
-                    return new[]
-                    {
-                        basicDmg,
-                        CombatConduct.InstanceBuff(InstanceId,CardState.Cons.Stunned)
-                    };
-                return Helper.Singular(basicDmg);
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1, rate: StunningRate)
+                };
             }
         }
     }
@@ -117,29 +103,25 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GunShiOperator : TrapOperator
     {
+        /// <summary>
+        /// 眩晕几率
+        /// </summary>
+        private int StunningRate => 100;
         protected override void OnDeadTrigger(int damage)
         {
-            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//后排直线
-            var targets = Chessboard.GetRivals(this, p => p.IsPostedAlive && p.Pos == verticalIndex)
-                .OrderBy(p => p.Pos).ToList();
-
-            for (var i = 0; i < targets.Count; i++)
-            {
-                var pos = targets[i];
-                Chessboard.AppendOpActivity(this, pos, Activity.Offensive, InstanceConduct(), actId: 0, skill: 1);
-            }
+            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//最上一排
+            var target = Chessboard.GetChessPos(!IsChallenger, verticalIndex);
+            Chessboard.DelegateSpriteActivity<RollingStoneSprite>(this, target, InstanceConduct(), 0, 1);
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = CombatConduct.InstanceDamage(InstanceId, Strength);
+                var basicDmg = InstanceMechanicalDamage(Strength);
                 //根据比率给出是否眩晕
-                if (Chessboard.RandomFromConfigTable(16))
-                    return new[]
-                    {
-                        basicDmg,
-                        CombatConduct.InstanceBuff(InstanceId,CardState.Cons.Stunned)
-                    };
-                return Helper.Singular(basicDmg);
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1, rate: StunningRate)
+                };
             }
         }
     }
@@ -150,7 +132,7 @@ namespace Assets.System.WarModule
     {
         private float DamageRate => 6;
         protected override CombatConduct[] CounterConducts =>
-            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength * DamageRate));
+            Helper.Singular(InstanceMechanicalDamage(Strength * DamageRate));
     }
     /// <summary>
     /// 石墙

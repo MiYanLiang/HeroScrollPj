@@ -1807,7 +1807,9 @@ public static class Effect
             case PosSprite.Kinds.FireFlame:return 50502;//一般火焰
             case PosSprite.Kinds.Thunder:return 200;//术士落雷
             case PosSprite.Kinds.Earthquake:return 166;//狂士地震
-            case PosSprite.Kinds.Rock: return 061;//抛石
+            case PosSprite.Kinds.Catapult: return 061;//抛石
+            case PosSprite.Kinds.RollingStone://滚石
+            case PosSprite.Kinds.RollingWood://滚木
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.Arrow:
@@ -2473,13 +2475,15 @@ public static class Effect
         switch (kind)
         {
             case PosSprite.Kinds.YeHuo: return 38;
-            case PosSprite.Kinds.Unknown: 
-            case PosSprite.Kinds.FireFlame: 
+            case PosSprite.Kinds.RollingStone:
+            case PosSprite.Kinds.RollingWood:
+            case PosSprite.Kinds.Catapult: 
             case PosSprite.Kinds.Thunder: 
-            case PosSprite.Kinds.CastSprite: 
-            case PosSprite.Kinds.Earthquake: 
-            case PosSprite.Kinds.Rock: 
             case PosSprite.Kinds.Arrow: 
+            case PosSprite.Kinds.FireFlame: 
+            case PosSprite.Kinds.Unknown: 
+            case PosSprite.Kinds.Earthquake: 
+            case PosSprite.Kinds.CastSprite: 
             case PosSprite.Kinds.YellowBand: 
             case PosSprite.Kinds.Chained: 
             case PosSprite.Kinds.Forge: 

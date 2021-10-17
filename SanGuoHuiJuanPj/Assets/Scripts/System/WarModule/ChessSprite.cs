@@ -38,8 +38,19 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 抛石精灵
             /// </summary>
-            Rock = 105,
+            Catapult = 105,
+            /// <summary>
+            /// 箭
+            /// </summary>
             Arrow = 107,
+            /// <summary>
+            /// 滚石
+            /// </summary>
+            RollingStone = 108,
+            /// <summary>
+            /// 滚木
+            /// </summary>
+            RollingWood = 109,
             /**下列是跟状态有关的精灵类型**/
             YellowBand = 23,
             Chained = 24,
@@ -201,7 +212,7 @@ namespace Assets.System.WarModule
                 case Kinds.Thunder: return (nameof(Kinds.Thunder));
                 case Kinds.CastSprite: return (nameof(Kinds.CastSprite));
                 case Kinds.Earthquake: return (nameof(Kinds.Earthquake));
-                case Kinds.Rock: return (nameof(Kinds.Rock));
+                case Kinds.Catapult: return (nameof(Kinds.Catapult));
                 case Kinds.Arrow: return (nameof(Kinds.Arrow));
                 case Kinds.YellowBand: return (nameof(Kinds.YellowBand));
                 case Kinds.Chained: return (nameof(Kinds.Chained));
@@ -211,6 +222,8 @@ namespace Assets.System.WarModule
                 case Kinds.Dodge: return (nameof(Kinds.Dodge));
                 case Kinds.Critical: return (nameof(Kinds.Critical));
                 case Kinds.Rouse: return (nameof(Kinds.Rouse));
+                case Kinds.RollingStone: return (nameof(Kinds.RollingStone));
+                case Kinds.RollingWood: return (nameof(Kinds.RollingWood));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -338,7 +351,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 箭系精灵
     /// </summary>
-    public class ArrowSprite : StrengthSprite
+    public class ArrowUpSprite : StrengthSprite
     {
         protected override Func<IChessOperator, bool> OpCondition => op => op.Style.ArmedType == 7;
     }
@@ -444,14 +457,28 @@ namespace Assets.System.WarModule
             if (target.IsPostedAlive)
                 chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill);
         }
-    }    
+    }
+
+    /// <summary>
+    /// 箭精灵
+    /// </summary>
+    public class ArrowSprite : RouseSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Arrow;
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
+        {
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            if (target.IsPostedAlive)
+                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill);
+        }
+    }
     
     /// <summary>
-    /// 抛石精灵
+    /// 投石精灵
     /// </summary>
-    public class RockSprite : RoundSprite
+    public class CatapultSprite : RoundSprite
     {
-        public override int TypeId { get; } = (int)Kinds.Rock;
+        public override int TypeId { get; } = (int)Kinds.Catapult;
         public override HostType Host => HostType.Round;
 
         public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
@@ -463,6 +490,44 @@ namespace Assets.System.WarModule
             foreach (var pos in targets)
                 if (pos.IsPostedAlive)
                     chessboard.AppendOpActivity(offender, pos, Activity.Offensive, conducts, actId, skill);
+        }
+    }
+    /// <summary>
+    /// 滚石精灵
+    /// </summary>
+    public class RollingStoneSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.RollingStone;
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
+        {
+            var verticalIndex = Pos % 5;
+            var targets = chessboard.GetRivals(offender, p => p.IsPostedAlive && p.Pos % 5 == verticalIndex)
+                .OrderBy(p => p.Pos).ToList();
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var pos = targets[i];
+                chessboard.AppendOpActivity(offender, pos, Activity.Offensive, conducts, actId: i, skill: 1);
+            }
+        }
+    }
+    /// <summary>
+    /// 滚石精灵
+    /// </summary>
+    public class RollingWoodSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.RollingWood;
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
+        {
+            var scope = chessboard.Grid.GetScope(IsChallenger);
+            var mapper = chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
+            foreach (var pos in scope)
+            {
+                if (!pos.Value.IsPostedAlive) continue;
+                var column = pos.Key % 5; //获取直线排数
+                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
+                chessboard.AppendOpActivity(offender, pos.Value, Activity.Offensive, conducts, actId: 0, skill: 1);
+                mapper[column] = true;
+            }
         }
     }
 
