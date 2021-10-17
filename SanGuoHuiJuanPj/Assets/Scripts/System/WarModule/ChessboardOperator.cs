@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
 
@@ -124,6 +125,7 @@ namespace Assets.System.WarModule
         public bool IsOppositeWin { get; private set; }
 
         private ILogger Logger { get; }
+        private bool HasLogger => Logger != null;
         /// <summary>
         /// 单体 一列
         /// </summary>
@@ -214,7 +216,15 @@ namespace Assets.System.WarModule
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
             ActivatedJiBan.Clear();
-            Log($"开始回合[{currentRound.InstanceId}]");
+            if(HasLogger)
+            {
+                const string roundStartText = "开始回合[";
+                const string roundStartText2 = "]";
+                var sb = new StringBuilder(roundStartText);
+                sb.Append(currentRound.InstanceId);
+                sb.Append(roundStartText2);
+                Log(sb);
+            }
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             RefreshChessPosses();
             InvokePreRoundTriggers();
@@ -250,12 +260,15 @@ namespace Assets.System.WarModule
             CurrentMajor = ChessMajor.UnDefined;
             if (IsGameOver)
             {
-                var winner = string.Empty;
-                if (IsChallengerWin)
-                    winner += "玩家胜利!";
-                if (IsOppositeWin)
-                    winner += "对方胜利!";
-                Log($"{winner}");
+                if (HasLogger)
+                {
+                    var winner = new StringBuilder();
+                    if (IsChallengerWin)
+                        winner.Append("玩家胜利!");
+                    if (IsOppositeWin)
+                        winner.Append("对方胜利!");
+                    Log(winner);
+                }
                 currentRound.IsEnd = true;
                 return currentRound;
             }
@@ -614,7 +627,7 @@ namespace Assets.System.WarModule
 
         private void RegSprite(PosSprite sprite,int actId)
         {
-            Log($"添加{sprite}");
+            if (HasLogger) Log(new StringBuilder($"添加{sprite}"));
             var activity = SpriteActivity(sprite, true);
             //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId);
@@ -624,7 +637,7 @@ namespace Assets.System.WarModule
 
         public bool UpdateRemovable(PosSprite sprite)
         {
-            if (sprite.Host == PosSprite.HostType.Relation && 
+            if (sprite.Host == PosSprite.HostType.Relation &&
                 (sprite.Lasting > 0 && GetOperator(sprite.Lasting).IsAlive)) return false;
 
             if (sprite.Host == PosSprite.HostType.Round && sprite.Lasting > 0) return false;
@@ -634,7 +647,7 @@ namespace Assets.System.WarModule
             //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1);
             ProcessActivityResult(activity);
-            Log($"移除{sprite}");
+            if (HasLogger) Log(new StringBuilder($"移除{sprite}"));
             return true;
         }
 
@@ -653,7 +666,7 @@ namespace Assets.System.WarModule
 
         #region Logs
 
-        private void Log(string message) => Logger?.Log(LogLevel.Information, message);
+        private void Log(StringBuilder builder) => Logger?.Log(LogLevel.Information, builder.ToString());
 
         private void LogProcess(ChessProcess process)
         {
@@ -672,16 +685,25 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            Log($"**********进程({process.InstanceId})[{opText}]**********");
-            foreach (var combat in process.CombatMaps.Values)
-            {
-                foreach (var activity in combat.Activities.Concat(combat.CounterActs))
-                {
-                    LogActivity(activity);
-                    LogConducts(activity);
-                }
 
-                foreach (var result in combat.ResultMapper) Log($"{GetOperator(result.Key)}{result.Value}");
+            if (HasLogger)
+            {
+                Log(new StringBuilder($"**********进程({process.InstanceId})[{opText}]**********"));
+                foreach (var combat in process.CombatMaps.Values)
+                {
+                    foreach (var activity in combat.Activities.Concat(combat.CounterActs))
+                    {
+                        LogActivity(activity);
+                        LogConducts(activity);
+                    }
+
+                    foreach (var result in combat.ResultMapper)
+                    {
+                        var sb = new StringBuilder(GetOperator(result.Key).ToString());
+                        sb.Append(result.Value);
+                        Log(sb);
+                    }
+                }
             }
         }
 
@@ -744,34 +766,57 @@ namespace Assets.System.WarModule
                 UpdateTerrain(GetChessPos(target));
             }
 
+            const string Deco1 = "@@@@【";
+            const string Deco2 = "败退】@@@@！";
             if (activity.To >= 0 && result.IsDeath)
             {
                 var death = GetOperator(activity.To);
                 foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
                     op.OnSomebodyDie(death);
-                Log($"@@@@【{death}败退】@@@@！");
+                if (HasLogger)
+                {
+                    //Log(
+                    var sb = new StringBuilder(Deco1);
+                    sb.Append(death);
+                    sb.Append(Deco2);
+                    Log(sb);
+                }
             }
 
             return result;
         }
-
+        
         private void LogActivity(Activity activity)
         {
-            var statText = string.Empty;
+            const string actText = "【活动】";
+            const string atText = "@";
+            const string spaceText = " ";
+            const string targetingText = "目标：";
+            var sb = new StringBuilder(actText);
+            sb.Append(activity.StanceText());
+            sb.Append(atText);
+            sb.Append(activity.IntentText());
+            sb.Append(spaceText);
+            sb.Append(targetingText);
+            //var statText = string.Empty;
+            if (activity.Intent != Activity.Sprite) sb.Append(OperatorText(activity.To, false));
             if (activity.TargetStatus != null)
             {
                 var stat = activity.TargetStatus;
-                statText = $"[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})";
+                sb.Append($"[{stat.Hp}/{stat.MaxHp}]Pos({stat.Pos})");
             }
-            var targetText = string.Empty;
-            if (activity.Intent != Activity.Sprite)
-                targetText = $"目标：{OperatorText(activity.To, false)}{statText}";
-            Log($"【活动】{activity.StanceText()}@{activity.IntentText()} {targetText}");
+            Log(sb);
         }
 
         private void LogConducts(Activity activity)
         {
-            foreach (var conduct in activity.Conducts) Log($"一招--->{conduct}");
+            const string conductText = "一招--->";
+            foreach (var conduct in activity.Conducts)
+            {
+                var sb = new StringBuilder(conductText);
+                sb.Append(conduct);
+                Log(sb);
+            }
         }
         #endregion
 
