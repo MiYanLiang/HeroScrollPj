@@ -119,17 +119,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
     protected void InvokeRound()
     {
         if (IsBusy) return;
-        NewWar.StartButtonShow(false);
         if (OnRoundBegin != null && !OnRoundBegin.Invoke()) return;
         StartCoroutine(Round());
     }
 
     private IEnumerator Round()
     {
+        NewWar.StartButtonShow(false);
         autoRoundTimer = 0;
         var chess = NewWar.ChessOperator;
         ChessRound round = null;
         round = chess.StartRound();
+        yield return new WaitForSeconds(0.5f);
         PreAnimation().Play();
         yield return new WaitUntil(() => round != null);
         StartCoroutine(AnimateRound(round, chess));
@@ -251,6 +252,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         foreach (var process in action.ChessProcesses)
         {
+            var offenseTween = DOTween.Sequence().Pause();
             var tween = DOTween.Sequence().Pause();
             if (process.Type == ChessProcess.Types.JiBan)
             {
@@ -258,10 +260,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 foreach (var map in process.CombatMaps)
                 foreach (var activity in map.Value.Activities)
                     UpdateTargetStatus(activity);
-                tween.Append(OnJiBanEffect(process.Scope == 0, jb))
-                    .Append(OnJiBanOffenseAnim(process.Scope != 0, jb));
+                tween.Append(OnJiBanEffect(process.Scope == 0, jb));
+                offenseTween.Append(OnJiBanOffenseAnim(process.Scope != 0, jb));
             }
-            yield return tween.Append(OnBasicChessProcess(process)).Play().WaitForCompletion();
+
+            yield return tween.Play().WaitForCompletion();
+            yield return offenseTween.Join(OnBasicChessProcess(process)).Play().WaitForCompletion();
             //播放
             //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
             yield return new WaitForSeconds(1);

@@ -236,5 +236,6 @@ public class TowerStyle : CardStyle
 
 public class TrapStyle : CardStyle
 {
+    public override int GetMilitarySparkId(Activity activity) => Effect.GetTrapSparkId(Military, activity.Skill);
     protected override void ActivityVText(Activity activity, FightCardData offense) => CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, activity.Skill), offense.cardObj.transform);
 }

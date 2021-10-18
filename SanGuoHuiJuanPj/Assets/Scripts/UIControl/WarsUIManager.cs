@@ -76,9 +76,11 @@ public class WarsUIManager : MonoBehaviour
     public float cardMoveSpeed; //卡牌移动速度
 
     public AudioClip[] audioClipsFightEffect;
+    [Range(0,1)]
     public float[] audioVolumeFightEffect;
 
     public AudioClip[] audioClipsFightBack;
+    [Range(0,1)]
     public float[] audioVolumeFightBack;
 
     [SerializeField] AudioSource audioSource;
@@ -748,7 +750,6 @@ public class WarsUIManager : MonoBehaviour
         AudioController1.instance.isNeedPlayLongMusic = true;
         AudioController1.instance.ChangeAudioClip(audioClipsFightBack[bgmIndex], audioVolumeFightBack[bgmIndex]);
         AudioController1.instance.PlayLongBackMusInit();
-        //FightForManager.instance.InitChessboard(stage);
         InitChessboard(stage);
     }
 

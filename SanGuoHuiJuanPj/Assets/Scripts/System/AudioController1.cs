@@ -10,6 +10,7 @@ public class AudioController1 : MonoBehaviour
 
     [SerializeField]
     AudioClip[] audioClipsBack; //背景音乐
+    [Range(0,1)]
     [SerializeField]
     float[] audioVolumeBack;    //背景音乐音量
     float audioPlayInterval;    //背景音乐间隔时间

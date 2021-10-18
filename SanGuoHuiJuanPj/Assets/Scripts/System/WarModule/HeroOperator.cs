@@ -1334,7 +1334,9 @@ namespace Assets.System.WarModule
 
         public override void OnSomebodyDie(ChessOperator death)
         {
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: 3, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous));
+            if (death.Style.Military < 0) return;
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: 3,
+                CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous));
         }
 
         public override void OnRoundStart()
