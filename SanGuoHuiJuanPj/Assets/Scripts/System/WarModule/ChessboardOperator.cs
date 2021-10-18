@@ -413,7 +413,6 @@ namespace Assets.System.WarModule
             ProcessActivityResult(activity);
         }
 
-
         /// <summary>
         /// 武将技活动
         /// </summary>
@@ -585,12 +584,12 @@ namespace Assets.System.WarModule
             return sprite;
         }
 
-        public ActivityResult SpriteRemoveActivity(PosSprite sprite, ChessProcess.Types type)
+        public void SpriteRemoveActivity(PosSprite sprite, ChessProcess.Types type)
         {
             var activity = SpriteActivity(sprite, false);
             RemoveSprite(sprite);
             AddToCurrentProcess(type, sprite.Pos, activity, -1);
-            return ProcessActivityResult(activity);
+            ProcessActivityResult(activity);
         }
 
         /// <summary>
@@ -620,18 +619,22 @@ namespace Assets.System.WarModule
                 ? CombatConduct.AddSprite(sprite.Host == PosSprite.HostType.Round ? sprite.Lasting : sprite.Value,
                     sprite.TypeId, sprite.InstanceId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
-            return InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Sprite,
+            var activity = InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Sprite,
                 Helper.Singular(conduct), 1, -1);
+            var target = GetChessPos(sprite.IsChallenger, activity.To).Operator;
+            if (target != null) activity.TargetStatus = GetFullCondition(target);
+            return activity;
         }
 
         private void RegSprite(PosSprite sprite,int actId)
         {
-            if (HasLogger) Log(new StringBuilder($"添加{sprite}"));
             var activity = SpriteActivity(sprite, true);
             //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
+            ProcessActivityResult(activity);
+            if (HasLogger) LogSprite(sprite,true,activity.To);
         }
 
         public bool UpdateRemovable(PosSprite sprite)
@@ -646,7 +649,7 @@ namespace Assets.System.WarModule
             //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1);
             ProcessActivityResult(activity);
-            if (HasLogger) Log(new StringBuilder($"移除{sprite}"));
+            if (HasLogger) LogSprite(sprite, false, activity.To);
             return true;
         }
 
@@ -665,7 +668,16 @@ namespace Assets.System.WarModule
 
         #region Logs
 
+        private void LogSprite(PosSprite sp, bool isAdd, int activityTo)
+        {
+            var pos = GetChessPos(sp.IsChallenger, activityTo);
+            var target = string.Empty;
+            if (pos.Operator != null)
+                target = OperatorText(pos.Operator.InstanceId, true);
+            Log(isAdd ? $"添加{sp}{target}" : $"移除{sp}{target}");
+        }
         private void Log(StringBuilder builder) => Logger?.Log(LogLevel.Information, builder.ToString());
+        private void Log(string message) => Logger?.Log(LogLevel.Information, message);
 
         private void LogProcess(ChessProcess process)
         {

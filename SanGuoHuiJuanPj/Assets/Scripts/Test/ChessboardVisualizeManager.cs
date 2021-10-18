@@ -249,6 +249,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (process.Type == ChessProcess.Types.JiBan)
             {
                 var jb = DataTable.JiBan[process.Major];
+                foreach (var map in process.CombatMaps)
+                foreach (var activity in map.Value.Activities)
+                    UpdateTargetStatus(activity);
                 tween.Append(OnJiBanEffect(process.Scope == 0, jb))
                     .Append(OnJiBanOffenseAnim(process.Scope != 0, jb));
             }
@@ -257,6 +260,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
             yield return new WaitForSeconds(1);
         }
+    }
+
+    private void UpdateTargetStatus(Activity activity)
+    {
+        if(activity.Intent == Activity.Sprite)return;
+        var card = GetCardMap(activity.To);
+        if (card == null) return;
+        card.ChessmanStyle.UpdateStatus(activity.TargetStatus, card);
     }
 
     private Sequence OnBasicChessProcess(ChessProcess process)
@@ -395,6 +406,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             SetAudioSection(audioSection, activity);
             if (IsPlayerResourcesActivity(activity)) continue;
             if (IsSpriteActivity(activity)) continue;
+            UpdateTargetStatus(activity);
             if (activity.Intent == Activity.ChessboardBuffing) continue;//附buff活动不演示，直接在CombatMap结果更新状态
             var target = GetCardMap(activity.To);
             if (target == null)
@@ -493,7 +505,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var listTween = new List<TweenCard>();
             var rePosActs = new List<Activity>();
             var mainEvent = new UnityEvent();
-            var section = UpdateActivityTarget(map.Value.Activities, (target, activity,_) =>
+            var section = UpdateActivityTarget(map.Value.Activities, (target, activity, _) =>
             {
                 var op = GetCardMap(activity.From);
                 if (op == null) return;
@@ -551,7 +563,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //如果会心，调用棋盘摇晃效果
             if (map.Value.Activities.SelectMany(c => c.Conducts).Any(c => c.IsCriticalDamage() || c.IsRouseDamage()))
                 mainTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard)).WaitForCompletion();
-            
+
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = GetCardMap(result.Key);
@@ -567,10 +579,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 mainTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(section, result.Value);
             }
-            mainEvent.AddListener(()=> PlayAudio(section));
+
+            mainEvent.AddListener(() => PlayAudio(section));
             mainEvent.Invoke();
             //开始播放前面的注入活动
-            yield return mainTween.Join(rePosTween).Play().WaitForCompletion();//播放主要活动
+            yield return mainTween.Join(rePosTween).Play().WaitForCompletion(); //播放主要活动
 
             if (shady != null)
             {
@@ -597,6 +610,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var (counterAudio, tweenCards) = UpdateBasicActivityUpdate(map.Value.CounterActs);
 
             var counterE = new UnityEvent();
+            foreach (var tweenCard in tweenCards) counterE.AddListener(tweenCard.MajorAction.Invoke);
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = GetCardMap(result.Key);
@@ -612,12 +626,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 SetResultAudio(counterAudio, result.Value);
             }
 
+            counterE.Invoke();
+            PlayAudio(counterAudio);
             //播放反击的注入活动
-            yield return counterTween.AppendCallback(() =>
-            {
-                counterE.Invoke();
-                PlayAudio(counterAudio);
-            }).Play().WaitForCompletion(); //播放反击
+            yield return counterTween.Play().WaitForCompletion(); //播放反击
         }
 
         var chessPos = Chessboard.GetChessPos(majorCard);

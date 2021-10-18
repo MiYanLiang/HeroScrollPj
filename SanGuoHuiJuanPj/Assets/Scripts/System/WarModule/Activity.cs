@@ -89,9 +89,11 @@ namespace Assets.System.WarModule
         /// <see cref="Friendly"/>,
         /// <see cref="Counter"/>,
         /// <see cref="Self"/>,
-        /// <see cref="OffendAttach"/>,
-        /// <see cref="FriendlyAttach"/>,
         /// <see cref="PlayerResource"/>,
+        /// <see cref="ChessboardBuffing"/>,
+        /// <see cref="Sprite"/>,
+        /// <see cref="Inevitable"/>,
+        /// <see cref="Reflect"/>,
         /// </summary>
         //[JsonProperty("K")] 
         public int Intent { get; set; }
@@ -122,13 +124,11 @@ namespace Assets.System.WarModule
         //[JsonProperty("C")] 
         public List<CombatConduct> Conducts { get; set; }
         //[JsonProperty("R")] 
-        public ChessStatus TargetStatus { get; set; }
-        //public ActivityResult Result { get; set; }
-
-        //[JsonProperty("OS")]
         /// <summary>
-        /// 发起方 0 = Challenger, 1 = Opposite
+        /// 目标当前的状态，如果<see cref="To"/>不是卡牌目标，就为null
         /// </summary>
+        public ChessStatus TargetStatus { get; set; }
+
         //[JsonProperty("IC")] 
         public int IsChallenger { get; set; }
 
