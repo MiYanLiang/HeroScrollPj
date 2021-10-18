@@ -25,7 +25,7 @@ namespace Assets.System.WarModule
                 Type = type,
                 Major = major,
                 Scope = isChallenger ? 0 : 1,
-                CombatMaps = new Dictionary<int, CombatMapper>()
+                CombatMaps = new Dictionary<int, CombatSet>()
             };
         public static ChessProcess Instance(int id,int roundId,int pos, bool isChallenger)
             => new ChessProcess()
@@ -35,7 +35,7 @@ namespace Assets.System.WarModule
                 Type = Types.Chessman,
                 Major = pos, 
                 Scope = isChallenger ? 0 : 1,
-                CombatMaps = new Dictionary<int, CombatMapper>()
+                CombatMaps = new Dictionary<int, CombatSet>()
             };
 
 
@@ -46,7 +46,7 @@ namespace Assets.System.WarModule
         /// 棋子活动集，key = actId, value = 活动
         /// </summary>
         //[JsonProperty("A")]
-        public Dictionary<int,CombatMapper> CombatMaps { get; set; }
+        public Dictionary<int,CombatSet> CombatMaps { get; set; }
         //[JsonProperty("P")] 
         /// <summary>
         /// <see cref="Types.Chessman"/>  和 <see cref="Types.Chessboard"/> : -1 = Challenger, -2 = opponent, 正数为棋子Pos，
@@ -78,19 +78,20 @@ namespace Assets.System.WarModule
         }
     }
 
-    public class CombatMapper
+    public class CombatSet
     {
+        public int InstanceId { get; set; }
         public int Id {  get; set; }
         public List<Activity> Activities { get; set; } = new List<Activity>();
         public List<Activity> CounterActs { get; set; } = new List<Activity>();
         public Dictionary<int, ActivityResult> ResultMapper { get; set; } = new Dictionary<int, ActivityResult>();
         public Dictionary<int, ActivityResult> CounterResultMapper { get; set; } = new Dictionary<int, ActivityResult>();
-        public CombatMapper()
+        public CombatSet()
         {
             
         }
 
-        public CombatMapper(int id)
+        public CombatSet(int id)
         {
             Id = id;
         }

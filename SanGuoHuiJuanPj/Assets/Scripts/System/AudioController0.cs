@@ -11,7 +11,7 @@ public class AudioController0 : MonoBehaviour
     public AudioSource audioSource;
 
     public AudioClip[] audioClips;  //0奖励,1-8古筝,12开始游戏,13点击选择,14出战，15回城，16升星,17出售,18确认出售,19升级战鼓成功-进入非战斗事件,20升级战鼓失败，21进入战斗事件
-
+    [Range(0,1)]
     public float[] audioVolumes;
 
     bool isPlaying;

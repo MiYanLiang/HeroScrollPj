@@ -346,7 +346,7 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         public void RegResources(ChessOperator op, bool toChallenger, int resourceId, int value)
         {
-            var activity = InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.PlayerResource,
+            var activity = InstanceActivity(op.IsChallenger, op, toChallenger ? -1 : -2, Activity.Intentions.PlayerResource,
                 Singular(CombatConduct.InstancePlayerResource(resourceId, op.InstanceId, value)), 0, -1);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, op.IsChallenger ? -1 : -2, activity, -1);
             if (resourceId == -1)
@@ -391,7 +391,7 @@ namespace Assets.System.WarModule
         /// <param name="conducts"></param>
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
-        public void InstanceChessboardActivity(bool fromChallenger, IChessOperator target, int intent,
+        public void InstanceChessboardActivity(bool fromChallenger, IChessOperator target, Activity.Intentions intent,
             CombatConduct[] conducts, int skill = 0, int rePos = -1)
         {
             //棋盘没用字典分类活动顺序，所以直接嵌入上一个活动actId-1
@@ -401,7 +401,7 @@ namespace Assets.System.WarModule
             ProcessActivityResult(activity);
         }
 
-        public void InstanceJiBanActivity(int bondId, bool fromChallenger, IChessOperator target, int intent,
+        public void InstanceJiBanActivity(int bondId, bool fromChallenger, IChessOperator target, Activity.Intentions intent,
             CombatConduct[] conducts, int rePos = -1)
         {
             CurrentMajor = new ChessMajor(bondId, fromChallenger);
@@ -424,13 +424,13 @@ namespace Assets.System.WarModule
         /// <param name="conducts">招式，每一式会有一个招式效果。如赋buff，伤害，补血等...一个活动可以有多个招式</param>
         /// <param name="rePos">移位，-1为无移位，而大或等于0将会指向目标棋格(必须是空棋格)</param>
         /// <returns></returns>
-        public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, int intent,
+        public ActivityResult AppendOpActivity(ChessOperator offender, IChessPos target, Activity.Intentions intent,
             CombatConduct[] conducts, int actId, int skill, int rePos = -1)
         {
             if (target == null) return null;
             if (isCounterFlagged) return ProcessActivity();
 
-            isCounterFlagged = intent == Activity.Counter;
+            isCounterFlagged = intent == Activity.Intentions.Counter;
             var result = ProcessActivity();
             isCounterFlagged = false;
             return result;
@@ -462,7 +462,7 @@ namespace Assets.System.WarModule
         /// <param name="skill"></param>
         /// <param name="rePos"></param>
         /// <returns></returns>
-        private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, int intent,
+        private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, Activity.Intentions intent,
             CombatConduct[] conducts, int skill, int rePos)
         {
             RecursiveActionCount++;
@@ -475,7 +475,7 @@ namespace Assets.System.WarModule
                 fromId,
                 fromChallenger ? 0 : 1,
                 targetInstance,
-                intent, conducts.Select(c => c.Clone()).ToArray(), skill, rePos);
+                (int)intent, conducts.Select(c => c.Clone()).ToArray(), skill, rePos);
             //Log($"生成{activity}");
             return activity;
         }
@@ -495,10 +495,12 @@ namespace Assets.System.WarModule
             
             if (!process.CombatMaps.ContainsKey(actId))
             {
-                CurrentCombatMapper = new CombatMapper(actId);
-                process.CombatMaps.Add(actId, CurrentCombatMapper);
+                CurrentCombatSet = new CombatSet(actId);
+                CurrentCombatSet.InstanceId = CombatSetSeed;
+                CombatSetSeed++;
+                process.CombatMaps.Add(actId, CurrentCombatSet);
             }
-            else CurrentCombatMapper = process.CombatMaps[actId];
+            else CurrentCombatSet = process.CombatMaps[actId];
 
             MapperAdd(activity);
             return;
@@ -507,12 +509,13 @@ namespace Assets.System.WarModule
 
             void MapperAdd(Activity act)
             {
-                if (act.Intent == Activity.Counter)
-                    CurrentCombatMapper.CounterActs.Add(act);
+                if (act.Intention == Activity.Intentions.Counter)
+                    CurrentCombatSet.CounterActs.Add(act);
                 else
-                    CurrentCombatMapper.Activities.Add(act);
+                    CurrentCombatSet.Activities.Add(act);
             }
         }
+        private int CombatSetSeed { get; set; }
 
         private ChessProcess GetMajorProcess(ChessProcess.Types type, int major, bool isChallenger)
         {
@@ -619,7 +622,7 @@ namespace Assets.System.WarModule
                 ? CombatConduct.AddSprite(sprite.Host == PosSprite.HostType.Round ? sprite.Lasting : sprite.Value,
                     sprite.TypeId, sprite.InstanceId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
-            var activity = InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Sprite,
+            var activity = InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Intentions.Sprite,
                 Helper.Singular(conduct), 1, -1);
             var target = GetChessPos(sprite.IsChallenger, activity.To).Operator;
             if (target != null) activity.TargetStatus = GetFullCondition(target);
@@ -734,52 +737,59 @@ namespace Assets.System.WarModule
             }
             return $"{op.InstanceId}.{op}{statText}";
         }
-        public CombatMapper CurrentCombatMapper { get; private set; }
+        public CombatSet CurrentCombatSet { get; private set; }
 
         public bool IsMajorTarget(ChessOperator target)
         {
-            var activity = CurrentCombatMapper.Activities.First();
+            var activity = CurrentCombatSet.Activities.First();
             return activity.To == target.InstanceId;
         }
 
         private bool isCounterFlagged;
         private ActivityResult ProcessActivityResult(Activity activity)
         {
-            ActivityResult result;
+            ActivityResult currentResult;
             IChessOperator target;
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
-            if (activity.Intent == Activity.Sprite)
+            if (activity.Intention == Activity.Intentions.Sprite)
             {
                 target = GetChessPos(activity.IsChallenger == 0, activity.To).Operator;
-                result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+                currentResult = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             }
             else
             {
                 target = GetOperator(activity.To);
-                result = GetOperator(target.InstanceId).Respond(activity, offender);
+                currentResult = GetOperator(target.InstanceId).Respond(activity, offender);
             }
 
             if (target != null)
             {
-                result.SetStatus(GetFullCondition(target));
+                currentResult.SetStatus(GetFullCondition(target));
                 var resultMapper = isCounterFlagged
-                    ? CurrentCombatMapper.CounterResultMapper
-                    : CurrentCombatMapper.ResultMapper;
+                    ? CurrentCombatSet.CounterResultMapper
+                    : CurrentCombatSet.ResultMapper;
                 if (!resultMapper.ContainsKey(target.InstanceId))
-                    resultMapper.Add(target.InstanceId, result);
+                    resultMapper.Add(target.InstanceId, currentResult);
                 else
                 {
                     var resultType = resultMapper[target.InstanceId].Type;
                     //地块结果可以被其它结果覆盖
                     if (resultType == ActivityResult.Types.ChessPos)
-                        resultMapper[target.InstanceId] = result;
+                        resultMapper[target.InstanceId] = currentResult;
+                    else if (resultType == ActivityResult.Types.Assist)
+                    {
+                        if (currentResult.Type == ActivityResult.Types.Suffer ||
+                            currentResult.Type == ActivityResult.Types.Suicide ||
+                            currentResult.Type == ActivityResult.Types.Kill)
+                            resultMapper[target.InstanceId].Result = currentResult.Result;
+                    }
                 }
                 UpdateTerrain(GetChessPos(target));
             }
 
             const string Deco1 = "@@@@【";
             const string Deco2 = "败退】@@@@！";
-            if (activity.To >= 0 && result.IsDeath)
+            if (activity.To >= 0 && currentResult.IsDeath)
             {
                 var death = GetOperator(activity.To);
                 foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
@@ -794,7 +804,7 @@ namespace Assets.System.WarModule
                 }
             }
 
-            return result;
+            return currentResult;
         }
         
         private void LogActivity(Activity activity)
@@ -810,7 +820,7 @@ namespace Assets.System.WarModule
             sb.Append(spaceText);
             sb.Append(targetingText);
             //var statText = string.Empty;
-            if (activity.Intent != Activity.Sprite) sb.Append(OperatorText(activity.To, false));
+            if (activity.Intention != Activity.Intentions.Sprite) sb.Append(OperatorText(activity.To, false));
             if (activity.TargetStatus != null)
             {
                 var stat = activity.TargetStatus;
@@ -873,7 +883,7 @@ namespace Assets.System.WarModule
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
             //闪避判定
             if ((offender == null || offender.CardType == GameCardType.Hero) &&
-                activity.Intent != Activity.Inevitable &&
+                activity.Intention != Activity.Intentions.Inevitable &&
                 OnDodgeTriggerPass(op))
             {
                 result.Result = (int)ActivityResult.Types.Dodge;
@@ -953,7 +963,7 @@ namespace Assets.System.WarModule
         /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
         /// <returns></returns>
-        public void OnCombatMiddlewareConduct(ChessOperator op, int activityIntent, CombatConduct conduct)
+        public void OnCombatMiddlewareConduct(ChessOperator op, Activity.Intentions activityIntent, CombatConduct conduct)
         {
             float armor;
             var addOn = 0;
