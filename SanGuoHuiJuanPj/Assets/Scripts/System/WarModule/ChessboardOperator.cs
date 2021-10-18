@@ -495,10 +495,12 @@ namespace Assets.System.WarModule
             
             if (!process.CombatMaps.ContainsKey(actId))
             {
-                CurrentCombatMapper = new CombatMapper(actId);
-                process.CombatMaps.Add(actId, CurrentCombatMapper);
+                CurrentCombatSet = new CombatSet(actId);
+                CurrentCombatSet.InstanceId = CombatSetSeed;
+                CombatSetSeed++;
+                process.CombatMaps.Add(actId, CurrentCombatSet);
             }
-            else CurrentCombatMapper = process.CombatMaps[actId];
+            else CurrentCombatSet = process.CombatMaps[actId];
 
             MapperAdd(activity);
             return;
@@ -508,11 +510,12 @@ namespace Assets.System.WarModule
             void MapperAdd(Activity act)
             {
                 if (act.Intent == Activity.Counter)
-                    CurrentCombatMapper.CounterActs.Add(act);
+                    CurrentCombatSet.CounterActs.Add(act);
                 else
-                    CurrentCombatMapper.Activities.Add(act);
+                    CurrentCombatSet.Activities.Add(act);
             }
         }
+        private int CombatSetSeed { get; set; }
 
         private ChessProcess GetMajorProcess(ChessProcess.Types type, int major, bool isChallenger)
         {
@@ -734,52 +737,59 @@ namespace Assets.System.WarModule
             }
             return $"{op.InstanceId}.{op}{statText}";
         }
-        public CombatMapper CurrentCombatMapper { get; private set; }
+        public CombatSet CurrentCombatSet { get; private set; }
 
         public bool IsMajorTarget(ChessOperator target)
         {
-            var activity = CurrentCombatMapper.Activities.First();
+            var activity = CurrentCombatSet.Activities.First();
             return activity.To == target.InstanceId;
         }
 
         private bool isCounterFlagged;
         private ActivityResult ProcessActivityResult(Activity activity)
         {
-            ActivityResult result;
+            ActivityResult currentResult;
             IChessOperator target;
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             if (activity.Intent == Activity.Sprite)
             {
                 target = GetChessPos(activity.IsChallenger == 0, activity.To).Operator;
-                result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+                currentResult = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             }
             else
             {
                 target = GetOperator(activity.To);
-                result = GetOperator(target.InstanceId).Respond(activity, offender);
+                currentResult = GetOperator(target.InstanceId).Respond(activity, offender);
             }
 
             if (target != null)
             {
-                result.SetStatus(GetFullCondition(target));
+                currentResult.SetStatus(GetFullCondition(target));
                 var resultMapper = isCounterFlagged
-                    ? CurrentCombatMapper.CounterResultMapper
-                    : CurrentCombatMapper.ResultMapper;
+                    ? CurrentCombatSet.CounterResultMapper
+                    : CurrentCombatSet.ResultMapper;
                 if (!resultMapper.ContainsKey(target.InstanceId))
-                    resultMapper.Add(target.InstanceId, result);
+                    resultMapper.Add(target.InstanceId, currentResult);
                 else
                 {
                     var resultType = resultMapper[target.InstanceId].Type;
                     //地块结果可以被其它结果覆盖
                     if (resultType == ActivityResult.Types.ChessPos)
-                        resultMapper[target.InstanceId] = result;
+                        resultMapper[target.InstanceId] = currentResult;
+                    else if (resultType == ActivityResult.Types.Assist)
+                    {
+                        if (currentResult.Type == ActivityResult.Types.Suffer ||
+                            currentResult.Type == ActivityResult.Types.Suicide ||
+                            currentResult.Type == ActivityResult.Types.Kill)
+                            resultMapper[target.InstanceId].Result = currentResult.Result;
+                    }
                 }
                 UpdateTerrain(GetChessPos(target));
             }
 
             const string Deco1 = "@@@@【";
             const string Deco2 = "败退】@@@@！";
-            if (activity.To >= 0 && result.IsDeath)
+            if (activity.To >= 0 && currentResult.IsDeath)
             {
                 var death = GetOperator(activity.To);
                 foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
@@ -794,7 +804,7 @@ namespace Assets.System.WarModule
                 }
             }
 
-            return result;
+            return currentResult;
         }
         
         private void LogActivity(Activity activity)
