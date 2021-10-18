@@ -89,7 +89,7 @@ namespace Assets.System.WarModule
             if (offender != null &&
                 Chessboard.IsMajorTarget(this) &&
                 !Chessboard.GetStatus(offender).IsDeath &&
-                activity.Intent == Activity.Offensive &&
+                activity.Intention == Activity.Intentions.Offensive &&
                 Chessboard.OnCounterTriggerPass(this, offender))
                 OnCounter(activity, offender);
             return result;
@@ -101,10 +101,10 @@ namespace Assets.System.WarModule
         {
             //棋盘执行
             var result = ActivityResult.Instance(ActivityResult.Types.Suffer);
-            if (activity.Intent == Activity.ChessboardBuffing)
+            if (activity.Intention == Activity.Intentions.ChessboardBuffing)
             {
                 foreach (var conduct in activity.Conducts)
-                    UpdateConduct(activity.Intent, conduct);
+                    UpdateConduct(activity.Intention, conduct);
                 result.Status = Chessboard.GetStatus(this);
                 return result;
             }
@@ -115,7 +115,7 @@ namespace Assets.System.WarModule
             {
                 if (kills.Any(kill => kill.Rate == 0 || Chessboard.IsRandomPass(kill.Rate)))
                 {
-                    result.Result = activity.Intent == Activity.Self
+                    result.Result = activity.Intention == Activity.Intentions.Self
                         ? (int)ActivityResult.Types.Suicide
                         : (int)ActivityResult.Types.Kill;
                     ProceedActivity(activity, result.Type);
@@ -135,8 +135,8 @@ namespace Assets.System.WarModule
             }
 
             //友方执行判定
-            if (activity.Intent == Activity.Friendly ||
-                activity.Intent == Activity.Self)
+            if (activity.Intention == Activity.Intentions.Friendly ||
+                activity.Intention == Activity.Intentions.Self)
             {
                 if (activity.Conducts.Any(c => c.Kind == CombatConduct.DamageKind || 
                                                c.Kind == CombatConduct.ElementDamageKind))
@@ -146,13 +146,6 @@ namespace Assets.System.WarModule
                 else if (activity.Conducts.Any(c => c.Kind == CombatConduct.BuffKind))
                     result.Result = (int)ActivityResult.Types.Assist;
             }
-
-            //if (offender == null)
-            //{
-            //    ProceedActivity(activity, result.Type);
-            //    result.Status = Chessboard.GetStatus(this);
-            //    return result;
-            //}
 
             //友军 与 非棋子 的执行结果
             if (result.Type == ActivityResult.Types.Assist || 
@@ -180,7 +173,7 @@ namespace Assets.System.WarModule
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
-                UpdateConduct(activity.Intent, conduct);
+                UpdateConduct(activity.Intention, conduct);
             }
         }
 
@@ -207,7 +200,7 @@ namespace Assets.System.WarModule
         /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
         /// <param name="chessboardInvocation"></param>
-        private void UpdateConduct(int activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
+        private void UpdateConduct(Activity.Intentions activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
         {
             var conductTotal = (int) conduct.Total;
             var status = Chessboard.GetStatus(this);

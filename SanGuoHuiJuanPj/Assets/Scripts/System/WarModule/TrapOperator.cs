@@ -34,6 +34,7 @@ namespace Assets.System.WarModule
         {
             if (offender == null ||
                 IsGongChengChe(offender) ||
+                activity.Intention != Activity.Intentions.Offensive ||
                 offender.IsRangeHero) return;
             InstanceReflection(activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind), offender);
         }
@@ -46,7 +47,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive, CounterConducts, actId: 0, skill: 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive, CounterConducts, actId: 0, skill: 1);
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace Assets.System.WarModule
         {
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Offensive,
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive,
                 Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: 0, skill: 1);
         }
 

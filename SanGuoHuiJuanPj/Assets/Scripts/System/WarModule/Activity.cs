@@ -14,44 +14,88 @@ namespace Assets.System.WarModule
     
     public class Activity
     {
+        public enum Intentions
+        {
+            /// <summary>
+            /// 棋盘执行活动，如： Buff消减，必须对棋子执行的活动
+            /// </summary>
+            ChessboardBuffing = -2,
+            /// <summary>
+            /// 棋手资源类
+            /// </summary>
+            PlayerResource = -1,
+            /// <summary>
+            /// 精灵类型
+            /// </summary>
+            Sprite = -3,
+            /// <summary>
+            /// 进攻行动
+            /// </summary>
+            Offensive = 0,
+            /// <summary>
+            /// 反击
+            /// </summary>
+            Counter = 1,
+            /// <summary>
+            /// 反伤
+            /// </summary>
+            Reflect = 2,
+            /// <summary>
+            /// 同阵营行动
+            /// </summary>
+            Friendly = 3,
+            /// <summary>
+            /// 对自己的行动
+            /// </summary>
+            Self = 4,
+            /// <summary>
+            /// 附属攻击，不会被反弹或反击的标记
+            /// </summary>
+            Attach = 5,
+            /// <summary>
+            /// 不可避免(闪避)
+            /// </summary>
+            Inevitable = 7,
+        }
+
         public static Activity[] Empty { get; } = Array.Empty<Activity>();
         //注意，负数是非棋子行动。一般都是上升到棋手这个维度的东西如：资源，金币
         /// <summary>
         /// 棋盘执行活动，如： Buff消减，必须对棋子执行的活动
         /// </summary>
-        public const int ChessboardBuffing = -2;
-        /// <summary>
+        //public const int ChessboardBuffing = -2;
+        ///// <summary>
         /// 棋手资源类
         /// </summary>
-        public const int PlayerResource = -1;
-        /// <summary>
+        //public const int PlayerResource = -1;
+        ///// <summary>
         /// 精灵类型
         /// </summary>
-        public const int Sprite = -3;
-        /// <summary>
+        //public const int Sprite = -3;
+        ///// <summary>
         /// 进攻行动
         /// </summary>
-        public const int Offensive = 0;
-        /// <summary>
+        //public const int Offensive = 0;
+        ///// <summary>
         /// 反击
         /// </summary>
-        public const int Counter = 1;
-        /// <summary>
+        //public const int Counter = 1;
+        ///// <summary>
         /// 反伤
         /// </summary>
-        public const int Reflect = 2;
-        /// <summary>
+        //public const int Reflect = 2;
+        ///// <summary>
         /// 同阵营行动
         /// </summary>
-        public const int Friendly = 3;
-        /// <summary>
+        //public const int Friendly = 3;
+        ///// <summary>
         /// 对自己的行动
         /// </summary>
-        public const int Self = 4;
-        /// <summary>
+        //public const int Self = 4;
+        ///// <summary>
         /// 不可避免(闪避)
         /// </summary>
-        public const int Inevitable = 7;
+        //public const int Inevitable = 7;
 
         /// <summary>
         /// 生成<see cref="Activity"/>
@@ -85,19 +129,11 @@ namespace Assets.System.WarModule
         public int InstanceId { get; set; }
         /// <summary>
         /// 行动描述，描述Id参考常数：
-        /// <see cref="Offensive"/>,
-        /// <see cref="Friendly"/>,
-        /// <see cref="Counter"/>,
-        /// <see cref="Self"/>,
-        /// <see cref="PlayerResource"/>,
-        /// <see cref="ChessboardBuffing"/>,
-        /// <see cref="Sprite"/>,
-        /// <see cref="Inevitable"/>,
-        /// <see cref="Reflect"/>,
+        /// <see cref="Activity.Intentions"/>
         /// </summary>
         //[JsonProperty("K")] 
         public int Intent { get; set; }
-
+        public Intentions Intention => (Intentions)Intent;
         /// <summary>
         /// Target Id, > 0 = InstanceId, -1 = Player, -2 = Opponent
         /// </summary>
@@ -139,39 +175,44 @@ namespace Assets.System.WarModule
         {
             var intentText = string.Empty;
             var toText = string.Empty;
-            switch (Intent)
+            switch (Intention)
             {
-                case PlayerResource:
+                case Intentions.ChessboardBuffing:
+                    intentText = "赋buff";
+                    break;
+                case Intentions.PlayerResource:
                     intentText = "资源";
                     break;
-                case Offensive:
-                    intentText = "攻击";
-                    break;
-                case Friendly:
-                    intentText = "队友";
-                    break;
-                case Counter:
-                    intentText = "反击";
-                    break;
-                case Self:
-                    intentText = "自己";
-                    break;
-                case Sprite:
+                case Intentions.Sprite:
                     intentText = "精灵";
                     toText = $"棋格[{To}]";
                     break;
-                case Reflect:
+                case Intentions.Offensive:
+                    intentText = "攻击";
+                    break;
+                case Intentions.Counter:
+                    intentText = "反击";
+                    break;
+                case Intentions.Reflect:
                     intentText = "反伤";
                     break;
-                case Inevitable:
+                case Intentions.Friendly:
+                    intentText = "队友";
+                    break;
+                case Intentions.Self:
+                    intentText = "自己";
+                    break;
+                case Intentions.Attach:
+                    intentText = "附属";
+                    break;
+                case Intentions.Inevitable:
                     intentText = "必伤";
                     break;
-                case ChessboardBuffing:
-                    intentText = "赋buff";
-                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
-            if (Intent != Sprite)
+            if (Intention != Intentions.Sprite)
                 switch (To)
                 {
                     case -1:
@@ -260,7 +301,6 @@ namespace Assets.System.WarModule
             /// </summary>
             Suicide = 8
         }
-
         public int Result { get; set; }
         public ChessStatus Status { get; set; }
         public Types Type => (Types)Result;

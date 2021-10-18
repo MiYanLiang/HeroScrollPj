@@ -270,7 +270,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void UpdateTargetStatus(Activity activity)
     {
-        if(activity.Intent == Activity.Sprite)return;
+        if(activity.Intention == Activity.Intentions.Sprite)return;
         var card = GetCardMap(activity.To);
         if (card == null) return;
         card.ChessmanStyle.UpdateStatus(activity.TargetStatus, card);
@@ -420,7 +420,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 CombatTargets.Add(activity.To);
                 UpdateTargetStatus(activity);
             }
-            if (activity.Intent == Activity.ChessboardBuffing) continue;//附buff活动不演示，直接在CombatMap结果更新状态
+            if (activity.Intention == Activity.Intentions.ChessboardBuffing) continue;//附buff活动不演示，直接在CombatMap结果更新状态
             var target = GetCardMap(activity.To);
             if (target == null)
                 Debug.LogError($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
@@ -466,7 +466,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private bool IsSpriteActivity(Activity activity)
     {
-        if (activity.Intent != Activity.Sprite) return false;
+        if (activity.Intention != Activity.Intentions.Sprite) return false;
         OnSpriteEffect(activity);
         return true;
     }
@@ -495,7 +495,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             var offensiveActivity =
                 map.Value.Activities.FirstOrDefault(a =>
-                    a.Intent == Activity.Offensive || a.Intent == Activity.Inevitable);
+                    a.Intention == Activity.Intentions.Offensive || 
+                    a.Intention == Activity.Intentions.Inevitable);
             if (offensiveActivity != null && majorCard.Style.Type == CombatStyle.Types.Melee)
             {
                 var target = GetCardMap(offensiveActivity.To);
@@ -508,7 +509,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 .FirstOrDefault();
 
             var shady = map.Value.Activities.FirstOrDefault(a =>
-                a.Intent == Activity.Sprite &&
+                a.Intention == Activity.Intentions.Sprite &&
                 a.Conducts.Any(c => Effect.IsShadyChessboardElement(PosSprite.GetKind(c.Element)) && c.Total > 0));
 
             if (shady != null && shady.Skill > 0)
@@ -662,10 +663,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         //棋子活动
         int audioId = -1;
-        switch (activity.Intent)
+        switch (activity.Intention)
         {
             //精灵buff
-            case Activity.Sprite when activity.From < 0:
+            case Activity.Intentions.Sprite when activity.From < 0:
             {
                 foreach (var conduct in activity.Conducts)
                 {
@@ -676,7 +677,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
                 break;
             }
-            case Activity.PlayerResource:
+            case Activity.Intentions.PlayerResource:
             {
                 foreach (var conduct in activity.Conducts)
                 {
@@ -725,7 +726,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private bool IsPlayerResourcesActivity(Activity activity)
     {
-        if (activity.Intent != Activity.PlayerResource) return false;
+        if (activity.Intention != Activity.Intentions.PlayerResource) return false;
         foreach (var conduct in activity.Conducts)
         {
             if (conduct.Kind == CombatConduct.PlayerScopeKind)

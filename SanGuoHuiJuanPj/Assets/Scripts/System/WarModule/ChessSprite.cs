@@ -457,7 +457,7 @@ namespace Assets.System.WarModule
         {
             var target = chessboard.GetChessPos(IsChallenger, Pos);
             if (target.IsPostedAlive)
-                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill);
+                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
         }
     }
 
@@ -471,7 +471,7 @@ namespace Assets.System.WarModule
         {
             var target = chessboard.GetChessPos(IsChallenger, Pos);
             if (target.IsPostedAlive)
-                chessboard.AppendOpActivity(offender, target, Activity.Offensive, conducts, actId, skill);
+                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
         }
     }
     
@@ -491,7 +491,7 @@ namespace Assets.System.WarModule
             targets.Add(target);
             foreach (var pos in targets)
                 if (pos.IsPostedAlive)
-                    chessboard.AppendOpActivity(offender, pos, Activity.Offensive, conducts, actId, skill);
+                    chessboard.AppendOpActivity(offender, pos, Activity.Intentions.Offensive, conducts, actId, skill);
         }
     }
     /// <summary>
@@ -508,7 +508,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                chessboard.AppendOpActivity(offender, pos, Activity.Offensive, conducts, actId: i, skill: 1);
+                chessboard.AppendOpActivity(offender, pos, Activity.Intentions.Offensive, conducts, actId: i, skill: 1);
             }
         }
     }
@@ -527,7 +527,7 @@ namespace Assets.System.WarModule
                 if (!pos.Value.IsPostedAlive) continue;
                 var column = pos.Key % 5; //获取直线排数
                 if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
-                chessboard.AppendOpActivity(offender, pos.Value, Activity.Offensive, conducts, actId: 0, skill: 1);
+                chessboard.AppendOpActivity(offender, pos.Value, Activity.Intentions.Offensive, conducts, actId: 0, skill: 1);
                 mapper[column] = true;
             }
         }
@@ -543,7 +543,7 @@ namespace Assets.System.WarModule
         public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
             if (!op.IsAlive && chessboard.IsRandomPass(Value)) return;
-            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Self,
+            chessboard.InstanceChessboardActivity(IsChallenger, op, Activity.Intentions.Self,
                 Helper.Singular(CombatConduct.InstanceBuff(Host == HostType.Relation ? Lasting : IsChallenger ? -1 : -2,
                     CardState.Cons.Burn)));
         }
@@ -589,7 +589,7 @@ namespace Assets.System.WarModule
                 var chessPos = burnPoses[index];
                 chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: 5, actId: -1);
                 if (chessPos.Operator == null || chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
-                chessboard.AppendOpActivity(offender, chessPos, Activity.Offensive, conducts, actId: 0, skill: 1);
+                chessboard.AppendOpActivity(offender, chessPos, Activity.Intentions.Offensive, conducts, actId: 0, skill: 1);
             }
         }
     }

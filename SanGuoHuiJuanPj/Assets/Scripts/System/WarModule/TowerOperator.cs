@@ -34,9 +34,9 @@ namespace Assets.System.WarModule
             var tarStat = Chessboard.GetStatus(target.Operator);
             var targetGap = tarStat.MaxHp - tarStat.Hp;
             var healingHp = status.Hp - targetGap > 1 ? targetGap : status.Hp - 1;
-            Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+            Chessboard.AppendOpActivity(this, target, Activity.Intentions.Friendly,
                 Helper.Singular(CombatConduct.InstanceHeal(healingHp, InstanceId)), actId: 0, skill: 1);
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Intentions.Self,
                 Helper.Singular(CombatConduct.InstanceDamage(InstanceId, healingHp, CombatConduct.FixedDmg)), actId: -1, skill: -1);
         }
 
@@ -44,7 +44,7 @@ namespace Assets.System.WarModule
         {
             var stat = Chessboard.GetStatus(this);
             if (!stat.IsDeath && stat.HpRate < 1)
-                Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Self,
+                Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(this), Activity.Intentions.Self,
                     Helper.Singular(CombatConduct.InstanceHeal(stat.MaxHp * RecoverRate * 0.01f, InstanceId)), actId: -1, skill: 2);
         }
     }
@@ -73,7 +73,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                Chessboard.AppendOpActivity(this, target, Activity.Intentions.Friendly,
                     Helper.Singular(CombatConduct.InstanceHeal(Strength, InstanceId)), actId: 0, skill: 1);
             }
         }
@@ -114,7 +114,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
-                Chessboard.AppendOpActivity(this, target, Activity.Friendly,
+                Chessboard.AppendOpActivity(this, target, Activity.Intentions.Friendly,
                     Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield)), actId: 0, skill: 1);
             }
         }
