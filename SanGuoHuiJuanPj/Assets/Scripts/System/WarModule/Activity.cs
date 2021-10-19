@@ -110,14 +110,14 @@ namespace Assets.System.WarModule
         /// <param name="skill">技能值，普通攻击为0</param>
         /// <param name="rePos">换位</param>
         /// <returns></returns>
-        public static Activity Instance(int id,int processId,int from ,int isChallenger,int to ,int intent, IList<CombatConduct> conducts,int skill,int rePos)
+        public static Activity Instance(int id,int processId,int from ,bool isChallenger,int to ,int intent, IList<CombatConduct> conducts,int skill,int rePos)
         {
             return new Activity
             {
                 InstanceId = id,
                 ProcessId = processId,
                 From = from,
-                IsChallenger = isChallenger,
+                IsChallenger = isChallenger ? 1 : 0,
                 To = to,
                 Conducts = conducts.ToList(),
                 Intent = intent,
@@ -166,6 +166,9 @@ namespace Assets.System.WarModule
         public ChessStatus TargetStatus { get; set; }
 
         //[JsonProperty("IC")] 
+        /// <summary>
+        /// 1 = Challenger, 0 = opponent
+        /// </summary>
         public int IsChallenger { get; set; }
 
         //[JsonIgnore] 
@@ -233,7 +236,7 @@ namespace Assets.System.WarModule
         {
             const string playerText = "玩家";
             const string OppoText = "对方";
-            return IsChallenger == 0 ? playerText : OppoText;
+            return IsChallenger > 0 ? playerText : OppoText;
         }
 
         public override string ToString()

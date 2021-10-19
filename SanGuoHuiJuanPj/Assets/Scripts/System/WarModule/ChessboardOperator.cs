@@ -419,7 +419,7 @@ namespace Assets.System.WarModule
         /// <param name="offender">施展者</param>
         /// <param name="target">目标</param>
         /// <param name="intent">活动标记，查<see cref="Activity"/>常量如：<see cref="Activity.Offensive"/></param>
-        /// <param name="actId">组合技标记，-1 = 追随上套组合，0或大于0都是各别组合标记。例如大弓：攻击多人，但是组合技都标记为0，它將同时间多次攻击。而连弩的连击却是每个攻击标记0,1,2,3(不同标记)，这样它会依次执行而不是一次执行一组</param>
+        /// <param name="actId">组合技标记，-1 = 追随上套组合,-2=添加新一套，0或大于0都是各别组合标记。例如大弓：攻击多人，但是组合技都标记为0，它將同时间多次攻击。而连弩的连击却是每个攻击标记0,1,2,3(不同标记)，这样它会依次执行而不是一次执行一组</param>
         /// <param name="skill">武将技标记，-1为隐式技能，0为普通技能，大于0为武将技</param>
         /// <param name="conducts">招式，每一式会有一个招式效果。如赋buff，伤害，补血等...一个活动可以有多个招式</param>
         /// <param name="rePos">移位，-1为无移位，而大或等于0将会指向目标棋格(必须是空棋格)</param>
@@ -473,7 +473,7 @@ namespace Assets.System.WarModule
                 ActivitySeed,
                 processId,
                 fromId,
-                fromChallenger ? 0 : 1,
+                fromChallenger,
                 targetInstance,
                 (int)intent, conducts.Select(c => c.Clone()).ToArray(), skill, rePos);
             //Log($"生成{activity}");
@@ -486,12 +486,20 @@ namespace Assets.System.WarModule
         /// <param name="type"></param>
         /// <param name="fromPos"></param>
         /// <param name="activity"></param>
-        /// <param name="actId">-1 = 加入上一个活动</param>
+        /// <param name="actId">-1 = 加入上一个活动,-2添入新活动</param>
         private void AddToCurrentProcess(ChessProcess.Types type, int fromPos, Activity activity, int actId)
         {
             var process = GetMajorProcess(type, fromPos, Scope(activity));
-            if (actId == -1) //如果-1的话就加入上一个活动
-                actId = process.CombatMaps.Count == 0 ? 0 : process.CombatMaps.Last().Key;
+            switch (actId)
+            {
+                //如果-1的话就加入上一个活动
+                case -1:
+                    actId = process.CombatMaps.Count == 0 ? 0 : process.CombatMaps.Last().Key;
+                    break;
+                case -2:
+                    actId = process.CombatMaps.Count == 0 ? 0 : process.CombatMaps.Last().Key + 1;
+                    break;
+            }
             
             if (!process.CombatMaps.ContainsKey(actId))
             {
@@ -753,7 +761,7 @@ namespace Assets.System.WarModule
             var offender = activity.From < 0 ? null : GetOperator(activity.From);
             if (activity.Intention == Activity.Intentions.Sprite)
             {
-                target = GetChessPos(activity.IsChallenger == 0, activity.To).Operator;
+                target = GetChessPos(activity.IsChallenger > 0, activity.To).Operator;
                 currentResult = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             }
             else
@@ -768,39 +776,54 @@ namespace Assets.System.WarModule
                 var resultMapper = isCounterFlagged
                     ? CurrentCombatSet.CounterResultMapper
                     : CurrentCombatSet.ResultMapper;
+
                 if (!resultMapper.ContainsKey(target.InstanceId))
                     resultMapper.Add(target.InstanceId, currentResult);
-                else
+                else if (!resultMapper[target.InstanceId].IsDeath)
                 {
-                    var resultType = resultMapper[target.InstanceId].Type;
-                    //地块结果可以被其它结果覆盖
-                    if (resultType == ActivityResult.Types.ChessPos)
-                        resultMapper[target.InstanceId] = currentResult;
-                    else if (resultType == ActivityResult.Types.Assist)
+                    switch (resultMapper[target.InstanceId].Type) //结果标签优先级
                     {
-                        if (currentResult.Type == ActivityResult.Types.Suffer ||
-                            currentResult.Type == ActivityResult.Types.Suicide ||
-                            currentResult.Type == ActivityResult.Types.Kill)
-                            resultMapper[target.InstanceId].Result = currentResult.Result;
+                        case ActivityResult.Types.ChessPos:
+                            //地块结果可以被其它结果覆盖
+                            resultMapper[target.InstanceId] = currentResult;
+                            break;
+                        case ActivityResult.Types.Assist:
+                        {
+                            //赋buff会被主攻击覆盖
+                            if (currentResult.Type == ActivityResult.Types.Suffer ||
+                                currentResult.Type == ActivityResult.Types.Suicide ||
+                                currentResult.Type == ActivityResult.Types.Kill)
+                                resultMapper[target.InstanceId].Result = currentResult.Result;
+                            break;
+                        }
+                        default:
+                        {
+                            //其余的标签不换，仅更新状态
+                            resultMapper[target.InstanceId].Status = currentResult.Status;
+                            break;
+                        }
                     }
                 }
+
                 UpdateTerrain(GetChessPos(target));
             }
 
-            const string Deco1 = "@@@@【";
-            const string Deco2 = "败退】@@@@！";
             if (activity.To >= 0 && currentResult.IsDeath)
             {
-                var death = GetOperator(activity.To);
-                foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
-                    op.OnSomebodyDie(death);
-                if (HasLogger)
+                ChessOperator death = null;
+                if (currentResult.Type == ActivityResult.Types.ChessPos)
                 {
-                    //Log(
-                    var sb = new StringBuilder(Deco1);
-                    sb.Append(death);
-                    sb.Append(Deco2);
-                    Log(sb);
+                    var pos = GetChessPos(activity.IsChallenger > 0, activity.To);
+                    if (pos.Operator != null)
+                        death = GetOperator(pos.Operator.InstanceId);
+                }
+                else death = GetOperator(activity.To);
+                if(death!=null)
+                {
+                    foreach (var op in StatusMap.Keys.Where(op => op != death && op.IsAlive))
+                        op.OnSomebodyDie(death);
+
+                    if (HasLogger) Log($"@@@@【({death.InstanceId}){death}败退】@@@@！");
                 }
             }
 
