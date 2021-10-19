@@ -699,7 +699,7 @@ public static class Effect
             case 9://滚石
                 return -1;
             case 10://滚木
-                return -1;
+                return 063;
             default:
                 return 001;
         }
