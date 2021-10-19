@@ -1819,8 +1819,8 @@ public static class Effect
             case PosSprite.Kinds.Earthquake:return 166;//狂士地震
             case PosSprite.Kinds.Catapult: return 061;//抛石
             case PosSprite.Kinds.Arrow:return 156;//箭楼（井阑）
-            case PosSprite.Kinds.RollingStone:return 063;//滚石
-            case PosSprite.Kinds.RollingWood:return 063;//滚木
+            case PosSprite.Kinds.RollingStone://return 063;//滚石
+            case PosSprite.Kinds.RollingWood://return 063;//滚木
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.YellowBand:

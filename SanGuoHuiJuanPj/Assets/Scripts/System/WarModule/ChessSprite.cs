@@ -508,7 +508,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Count; i++)
             {
                 var pos = targets[i];
-                chessboard.AppendOpActivity(offender, pos, Activity.Intentions.Offensive, conducts, actId: i, skill: 1);
+                chessboard.AppendOpActivity(offender, pos, Activity.Intentions.Offensive, conducts, actId: -2, skill: 1);
             }
         }
     }
