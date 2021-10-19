@@ -672,7 +672,7 @@ public static class Effect
                 return 003;
 
             case 3://箭楼
-                return 025;
+                return -1;
 
             case 1: //投石台
                 return -1;
@@ -697,9 +697,9 @@ public static class Effect
             case 1://地雷
                 return 064;
             case 9://滚石
-                return 063;
+                return -1;
             case 10://滚木
-                return 063;
+                return -1;
             default:
                 return 001;
         }
@@ -1818,9 +1818,9 @@ public static class Effect
             case PosSprite.Kinds.Thunder:return 200;//术士落雷
             case PosSprite.Kinds.Earthquake:return 166;//狂士地震
             case PosSprite.Kinds.Catapult: return 061;//抛石
-            case PosSprite.Kinds.Arrow:return 156;//箭楼（井阑）
+            case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
             case PosSprite.Kinds.RollingStone:return 063;//滚石
-            case PosSprite.Kinds.RollingWood:return 063;//滚木
+            case PosSprite.Kinds.RollingWood:return -1;//滚木
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.YellowBand:
