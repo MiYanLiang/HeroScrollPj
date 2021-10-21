@@ -4664,7 +4664,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 125, y: 130}
+  m_SizeDelta: {x: 160, y: 180}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &184989425
 MonoBehaviour:
@@ -4739,7 +4739,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7c1ced19eee4d87428be1f63ec5aef9d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4b27086bf6650734aa732a9aed702757, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -16432,7 +16432,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 110.166664, y: -200.5}
+  m_AnchoredPosition: {x: 110.16669, y: -200.5}
   m_SizeDelta: {x: 200.33333, y: 361}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &595218015
@@ -34308,7 +34308,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0.48278105}
-  m_AnchoredPosition: {x: 0, y: -137.00003}
+  m_AnchoredPosition: {x: 0, y: -137.00006}
   m_SizeDelta: {x: 1080, y: -273}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1082312976
@@ -44928,7 +44928,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 175}
+  m_SizeDelta: {x: 250, y: 220}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1363594584
 MonoBehaviour:
@@ -44949,7 +44949,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fb2bed6a756a7394db636be55775ab8f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1ae95c36255ac314fbe104a81e100cf3, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -86082,6 +86082,7 @@ MonoBehaviour:
   Hp: {fileID: 5290392905597864399}
   Lose: {fileID: 5290392905941506516}
   Highlight: {fileID: 5290392905185776357}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 5982149234341911585}
   StateContent: {fileID: 5290392905949697936}
   PrefabIco: {fileID: 0}
