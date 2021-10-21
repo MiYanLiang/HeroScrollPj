@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -9524,10 +9524,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: fdaf7e4f85e56d04cba8779741d3413d, type: 3}
   - {fileID: 8300000, guid: 368a85d48cb3cb14a83094d9dec72184, type: 3}
   - {fileID: 8300000, guid: 9495a82a44041884d9e2fbfff060e71e, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 1fed05f373ceea54684d2b37fead5d7b, type: 3}
+  - {fileID: 8300000, guid: f20b4161a083c7a4dbce860a3ecc8813, type: 3}
+  - {fileID: 8300000, guid: 4b8eb88680231e04e961fab070832e18, type: 3}
+  - {fileID: 8300000, guid: 1132b9f45f03f66408b70c18d7218bba, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -20412,6 +20412,7 @@ MonoBehaviour:
   Hp: {fileID: 109334600}
   Lose: {fileID: 1370756451}
   Highlight: {fileID: 2111070035}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 1321645373}
   StateContent: {fileID: 1461907268}
   PrefabIco: {fileID: 0}
@@ -21617,6 +21618,8 @@ MonoBehaviour:
     RePos: 0.3
     ChessGridFadingSec: 3
     ChessGridFading: 0.2
+    JBAnimLasting: 2
+    JBOffensiveAnimLasting: 2
 --- !u!1 &1673655643
 GameObject:
   m_ObjectHideFlags: 0
@@ -28750,6 +28753,7 @@ MonoBehaviour:
   Hp: {fileID: 1006282847}
   Lose: {fileID: 974142404}
   Highlight: {fileID: 780435136}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 126803747}
   StateContent: {fileID: 1160769885}
   PrefabIco: {fileID: 0}
@@ -30813,6 +30817,7 @@ MonoBehaviour:
   Hp: {fileID: 1582223450626749959}
   Lose: {fileID: 1582223450820175388}
   Highlight: {fileID: 1582223450030107949}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 1124407326919173097}
   StateContent: {fileID: 1582223450811852888}
   PrefabIco: {fileID: 0}
