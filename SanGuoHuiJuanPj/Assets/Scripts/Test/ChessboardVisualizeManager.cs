@@ -325,18 +325,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return DOTween.Sequence()
             .AppendCallback(() =>
             {
-                foreach (var card in jbCards) card.cardObj.SetHighLight(true);
+                foreach (var card in jbCards) card.cardObj.SetHighLight(true);//仅仅发光
                 PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse), 0);
-            }).AppendInterval(0.5f)
+            }).AppendInterval(0.5f)//0.5秒
             .AppendCallback(() =>
             {
-                foreach (var card in jbCards) card.cardObj.SetHighLight(false);
+                foreach (var card in jbCards) card.cardObj.SetHighLight(false);//发光消失
+                //开始播放动图
                 JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
                 JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
                 DisplayJiBanObj(isChallenger, JiBanEffect.transform);
             })
-            .AppendInterval(2f)
-            .OnComplete(() => JiBanEffect.gameObject.SetActive(false));
+            .AppendInterval(CardAnimator.instance.Misc.JBAnimLasting)//1秒后
+            .OnComplete(() => JiBanEffect.gameObject.SetActive(false));//关闭动图
     }
     void DisplayJiBanObj(bool isPlayer, Transform obj)
     {
@@ -386,7 +387,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 DisplayJiBanObj(isPlayer, offensiveEffect.transform);
                 PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id), 0);
             })
-            .AppendInterval(0.5f)
+            .AppendInterval(CardAnimator.instance.Misc.JBOffensiveAnimLasting)
             .OnComplete(
                 () =>
                 {

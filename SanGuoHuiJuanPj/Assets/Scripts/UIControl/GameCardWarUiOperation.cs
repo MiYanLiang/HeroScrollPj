@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.System.WarModule;
 using UnityEngine;
@@ -10,6 +11,7 @@ public class GameCardWarUiOperation : MonoBehaviour
     public Image Hp;
     public Image Lose;
     public Image Highlight;
+    public Animator JbAnim;
     public Image Selected;
     public Transform StateContent;
     public Image PrefabIco;
@@ -49,6 +51,7 @@ public class GameCardWarUiOperation : MonoBehaviour
         Selected.gameObject.SetActive(false);
         Highlight.gameObject.SetActive(false);
         Lose.gameObject.SetActive(false);
+        if (JbAnim) JbAnim.gameObject.SetActive(false);
     }
 
     public void Show(GameCardUiBase ui)
@@ -56,6 +59,18 @@ public class GameCardWarUiOperation : MonoBehaviour
         baseUi = ui;
         Hp.fillAmount = 0;
         gameObject.SetActive(true);
+    }
+
+    public void DisplayJiBanAnim(float sec = 1f)
+    {
+        StartCoroutine(OnStartJiBanAnim(sec));
+    }
+
+    private IEnumerator OnStartJiBanAnim(float sec)
+    {
+        JbAnim.gameObject.SetActive(true);
+        yield return new WaitForSeconds(sec);
+        JbAnim.gameObject.SetActive(false);
     }
 
     public virtual void UpdateHpUi(float hp) => Hp.fillAmount = 1f - hp;

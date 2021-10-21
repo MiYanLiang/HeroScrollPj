@@ -12,14 +12,13 @@ namespace Assets.System.WarModule
     public class ChessStatus : BuffStatus
     {
         public static ChessStatus Instance(int hp, int maxHp, int pos, int speed, Dictionary<int, int> states,
-            List<int> last) =>
-            new ChessStatus(hp, maxHp, pos, speed, states, last);
+            List<int> last, int lastHeal, int lastEaseShield = 0) =>
+            new ChessStatus(hp, maxHp, pos, speed, states, last, lastHeal, lastEaseShield);
 
-        public static ChessStatus Instance(ChessStatus ps) => new ChessStatus
-        {
-            Hp = ps.Hp, MaxHp = ps.MaxHp, Pos = ps.Pos, Speed = ps.Speed,
-            Buffs = ps.Buffs.ToDictionary(s => s.Key, s => s.Value), LastSuffers = ps.LastSuffers.ToList()
-        };
+        public static ChessStatus Instance(ChessStatus ps) => Instance(ps.Hp, ps.MaxHp, ps.Pos, ps.Speed,
+            ps.Buffs.ToDictionary(s => s.Key, s => s.Value), ps.LastSuffers.ToList(), ps.LastHeal,
+            ps.LastEaseShieldDamage);
+        
 
         public int Hp { get; private set; }
         public int Pos { get; private set; }
@@ -36,7 +35,9 @@ namespace Assets.System.WarModule
         {
             
         }
-        private ChessStatus(int hp, int maxHp, int pos,int speed, Dictionary<int, int> buffs,List<int> last)
+
+        private ChessStatus(int hp, int maxHp, int pos, int speed, Dictionary<int, int> buffs, List<int> last,
+            int lastHeal, int lastEaseShield)
         {
             Hp = hp;
             Buffs = buffs;
@@ -44,6 +45,8 @@ namespace Assets.System.WarModule
             MaxHp = maxHp;
             Speed = speed;
             LastSuffers = last;
+            LastHeal = lastHeal;
+            LastEaseShieldDamage = lastEaseShield;
         }
 
         public ChessStatus Clone() => Instance(this);

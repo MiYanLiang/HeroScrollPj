@@ -25,7 +25,7 @@ using UnityEngine;
         var baseCard = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level)); //GetCard(17, true);
         baseCard.isPlayerCard = isPlayer;
         baseCard.posIndex = 17;
-        baseCard.status = ChessStatus.Instance(hp, hp, 17, 0, new Dictionary<int, int>(), new List<int>());
+        baseCard.status = ChessStatus.Instance(hp, hp, 17, 0, new Dictionary<int, int>(), new List<int>(), 0);
         baseCard.ResetHp(hp);
         return baseCard;
     }
@@ -88,7 +88,7 @@ using UnityEngine;
         cardDamageType = info.DamageType;
         combatType = info.CombatType;
         var hp = info.GetHp(card.Level);
-        status = ChessStatus.Instance(hp,hp,Pos,0,new Dictionary<int, int>(),new List<int>());
+        status = ChessStatus.Instance(hp, hp, Pos, 0, new Dictionary<int, int>(), new List<int>(), 0);
         StatesUi = new Dictionary<int, EffectStateUi>();
         var force = -1;
         switch (card.typeIndex)

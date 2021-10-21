@@ -133,6 +133,7 @@ public abstract class CardStyle : ChessmanStyle
                 break;
             case ActivityResult.Types.EaseShield:
                 value = result.Status.LastEaseShieldDamage;
+                color = ColorDataStatic.name_gray;
                 break;
             case ActivityResult.Types.Heal:
                 value = result.Status.LastHeal;

@@ -184,7 +184,7 @@ namespace Assets.System.WarModule
             }
 
             return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, status.Speed, dic,
-                status.LastSuffers.ToList());
+                status.LastSuffers.ToList(), status.LastHeal, status.LastEaseShieldDamage);
         }
 
         #endregion

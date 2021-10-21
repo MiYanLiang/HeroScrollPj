@@ -502,18 +502,13 @@ namespace Assets.System.WarModule
         public override int TypeId { get; } = (int)Kinds.RollingStone;
         public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
         {
-            var verticalIndex = Pos % 5;
-            var targets = chessboard.GetRivals(offender, p => p.IsPostedAlive && p.Pos % 5 == verticalIndex)
-                .OrderBy(p => p.Pos).ToList();
-            for (var i = 0; i < targets.Count; i++)
-            {
-                var pos = targets[i];
-                chessboard.AppendOpActivity(offender, pos, Activity.Intentions.Offensive, conducts, actId: -2, skill: 1);
-            }
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            if (target.IsPostedAlive)
+                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
         }
     }
     /// <summary>
-    /// 滚石精灵
+    /// 滚木精灵
     /// </summary>
     public class RollingWoodSprite : RoundSprite
     {

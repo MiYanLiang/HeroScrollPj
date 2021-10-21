@@ -47,7 +47,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive, CounterConducts, actId: 0, skill: 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive, CounterConducts, actId: -1, skill: 1);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Assets.System.WarModule
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive,
-                Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: 0, skill: 1);
+                Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: -1, skill: 1);
         }
 
         protected override CombatConduct[] CounterConducts => null;//拒马不需要基础伤害
@@ -86,7 +86,7 @@ namespace Assets.System.WarModule
         protected override void OnDeadTrigger(int conduct)
         {
             var target = Chessboard.GetChessPos(!IsChallenger, Chessboard.GetStatus(this).Pos % 5);//最上一层棋格
-            Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, target, InstanceConduct(), 0, 1);
+            Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, target, InstanceConduct(), actId: -2, 1);
             CombatConduct[] InstanceConduct()
             {
                 var basicDmg = InstanceMechanicalDamage(Strength);
@@ -111,8 +111,13 @@ namespace Assets.System.WarModule
         protected override void OnDeadTrigger(int damage)
         {
             var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//最上一排
-            var target = Chessboard.GetChessPos(!IsChallenger, verticalIndex);
-            Chessboard.DelegateSpriteActivity<RollingStoneSprite>(this, target, InstanceConduct(), 0, 1);
+            var targets = Chessboard.GetRivals(this, p => p.Pos % 5 == verticalIndex)
+                .OrderBy(p => p.Pos).ToList();
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var pos = targets[i];
+                Chessboard.DelegateSpriteActivity<RollingStoneSprite>(this, pos, InstanceConduct(), -2, 1);
+            }
 
             CombatConduct[] InstanceConduct()
             {

@@ -334,7 +334,7 @@ namespace Assets.System.WarModule
         public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.MaxHitPoint,
             chessman.Pos,
             chessman.Pos,
-            new Dictionary<int, int>(), new List<int>());
+            new Dictionary<int, int>(), new List<int>(), 0);
 
         public override string ToString()
         {
