@@ -43,22 +43,18 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
     public UnityEvent<FightCardData> OnCardDefeated = new CardDefeatedEvent();
-    private int shadyActivityId = -1;
     private bool isShady = false;
-    private Tween ShadyTween(int activityId,float alpha)
+    private Tween ShadyTween(float alpha)
     {
-        if (alpha > 0.5)
+        if (alpha > 0)
         {
-            if(activityId != shadyActivityId)//音效只播放一次
-            {
-                shadyActivityId = activityId;
-                var audioId =
-                    Effect.GetChessboardAudioId(alpha >= 0.8
-                        ? Effect.ChessboardEvent.Dark
-                        : Effect.ChessboardEvent.Shady);
-                PlayAudio(audioId, 0);
-            }
+            var audioId =
+                Effect.GetChessboardAudioId(alpha >= 0.8
+                    ? Effect.ChessboardEvent.Dark
+                    : Effect.ChessboardEvent.Shady);
+            PlayAudio(audioId);
         }
+
         return ShadyImage.DOFade(alpha, 1f);
     }
 
@@ -145,12 +141,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
         fireUIObj.transform.position =
             gongKeUIObj.transform.position = Chessboard.GetChessPos(7, false).transform.position;
         yield return new WaitForSeconds(0.5f);
-        PlayAudio(91, 0);
+        PlayAudio(91);
         boomUIObj.SetActive(true);
         yield return new WaitForSeconds(1.5f);
         boomUIObj.SetActive(false);
         //欢呼声
-        PlayAudio(90, 0);
+        PlayAudio(90);
 
         //火焰
         fireUIObj.SetActive(true);
@@ -326,7 +322,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .AppendCallback(() =>
             {
                 foreach (var card in jbCards) card.cardObj.SetHighLight(true);//仅仅发光
-                PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse), 0);
+                PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
             }).AppendInterval(0.5f)//0.5秒
             .AppendCallback(() =>
             {
@@ -385,7 +381,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .AppendCallback(() =>
             {
                 DisplayJiBanObj(isPlayer, offensiveEffect.transform);
-                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id), 0);
+                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id));
             })
             .AppendInterval(CardAnimator.instance.Misc.JBOffensiveAnimLasting)
             .OnComplete(
@@ -523,7 +519,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (shady != null && shady.Skill > 0 && !isShady)
             {
                 isShady = true;
-                yield return ShadyTween(shady.InstanceId,shady.Skill == 1 ? 0.6f : 0.8f).WaitForCompletion();
+                yield return ShadyTween(shady.Skill == 1 ? 0.6f : 0.8f).WaitForCompletion();
             }
 
             var listTween = new List<TweenCard>();
@@ -663,7 +659,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         if (isShady)
         {
-            yield return ShadyTween(shadyActivityId, 0).WaitForCompletion();
+            yield return ShadyTween(0).WaitForCompletion();
             isShady = false;
         }
 
@@ -788,8 +784,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     Sprites.Add(sp);
                 }
 
-                if (sp.Obj == null)
+                //统帅业火特别处理爆炸演示
+                if (sp.SpriteType == (int)PosSprite.Kinds.YeHuo)
+                {
+                    if (sp.Obj != null)
+                        EffectsPoolingControl.instance.RecycleEffect(sp.Obj);
                     sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
+                }
+                else
+                {
+                    if (sp.Obj == null)
+                        sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
+                }
+
                 continue;
             }
 
@@ -832,18 +839,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (RouseEffectObj.activeSelf)
                 RouseEffectObj.SetActive(false);
             RouseEffectObj.SetActive(true);
-            PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse), 0f);
+            PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
         }).AppendInterval(1.5f);
 
     private void PlayAudio(AudioSection section)
     {
-        foreach (var id in section.Offensive.Concat(section.Result).Where(id => id >= 0)) PlayAudio(id, 0);
+        foreach (var id in section.Offensive.Concat(section.Result).Where(id => id >= 0)) PlayAudio(id);
     }
 
-    private void PlayAudio(int clipIndex, float delayedTime)
+    private void PlayAudio(int clipIndex)
     {
         if (clipIndex < 0) return;
-        if (!GamePref.PrefMusicPlay) return;
         if (WarsUIManager.instance == null || AudioController0.instance == null) return;
         var clip = WarsUIManager.instance.audioClipsFightEffect[clipIndex];
 #if UNITY_EDITOR
@@ -851,18 +857,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             Debug.LogError($"找不到音效id = {clipIndex}!");
 #endif
         var volume = WarsUIManager.instance.audioVolumeFightEffect[clipIndex];
-        if (AudioController0.instance.ChangeAudioClip(clip, volume))
-        {
-            AudioController0.instance.PlayAudioSource(0);
-            return;
-        }
-
-        AudioController0.instance.audioSource.volume *= 0.75f;
-        audioSource.clip = WarsUIManager.instance.audioClipsFightEffect[clipIndex];
-        audioSource.volume = WarsUIManager.instance.audioVolumeFightEffect[clipIndex];
-        if (!GamePref.PrefMusicPlay)
-            return;
-        audioSource.PlayDelayed(delayedTime);
+        AudioController0.instance.StackPlaying(clip, volume);
     }
 
     private class SpriteObj

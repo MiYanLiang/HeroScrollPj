@@ -85,8 +85,20 @@ namespace Assets.System.WarModule
         private int StunningRate => 100;
         protected override void OnDeadTrigger(int conduct)
         {
-            var target = Chessboard.GetChessPos(!IsChallenger, Chessboard.GetStatus(this).Pos % 5);//最上一层棋格
-            Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, target, InstanceConduct(), actId: -2, 1);
+            var scope = Chessboard.GetRivals(this, _ => true).OrderBy(pos => pos.Pos).ToArray();
+            var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
+            var lastRow = -1;
+            foreach (var pos in scope)
+            {
+                var column = pos.Pos % 5; //获取直线排数
+                var row = pos.Pos / 5;
+                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
+                Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, pos, InstanceConduct(),
+                    actId: lastRow != row ? -2 : -1,
+                    skill: 1);
+                lastRow = row;
+                mapper[column] = pos.IsPostedAlive;
+            }
             CombatConduct[] InstanceConduct()
             {
                 var basicDmg = InstanceMechanicalDamage(Strength);

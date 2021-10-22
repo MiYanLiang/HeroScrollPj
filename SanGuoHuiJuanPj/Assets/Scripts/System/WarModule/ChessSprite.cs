@@ -64,43 +64,6 @@ namespace Assets.System.WarModule
 
         public static Kinds GetKind(int typeId) => (Kinds)typeId;
 
-        public static bool TryGetKind(CardState.Cons con,out Kinds kind)
-        {
-            switch (con)
-            {
-                case CardState.Cons.StrengthUp: kind = Kinds.Strength;break;
-                case CardState.Cons.DodgeUp: kind =  Kinds.Dodge; break;
-                case CardState.Cons.CriticalUp: kind =  Kinds.Critical; break;
-                case CardState.Cons.RouseUp: kind =  Kinds.Rouse; break;
-                case CardState.Cons.ArmorUp: kind =  Kinds.Armor; break;
-                case CardState.Cons.Forge: kind =  Kinds.Forge; break;
-                case CardState.Cons.YellowBand: kind =  Kinds.YellowBand; break;
-                case CardState.Cons.Chained: kind =  Kinds.Chained; break;
-                case CardState.Cons.Murderous:
-                case CardState.Cons.Neizhu:
-                case CardState.Cons.ShenZhu:
-                case CardState.Cons.Stunned:
-                case CardState.Cons.Poison:
-                case CardState.Cons.Burn:
-                case CardState.Cons.Shield:
-                case CardState.Cons.Invincible:
-                case CardState.Cons.Bleed:
-                case CardState.Cons.BattleSoul:
-                case CardState.Cons.Imprisoned:
-                case CardState.Cons.Cowardly:
-                case CardState.Cons.DeathFight:
-                case CardState.Cons.Disarmed:
-                case CardState.Cons.EaseShield:
-                case CardState.Cons.Stimulate:
-                case CardState.Cons.Confuse:
-                    kind = Kinds.Unknown;
-                    return false;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(con), con, null);
-            }
-            return true;
-        }
-
         /// <summary>
         /// 类型
         /// </summary>
@@ -244,7 +207,12 @@ namespace Assets.System.WarModule
         }
 
         public virtual void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
-            CombatConduct[] conducts,int actId,int skill) {}
+            CombatConduct[] conducts, int actId, int skill)
+        {
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            if (target.IsPostedAlive)
+                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
+        }
         public virtual void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
         }
@@ -500,12 +468,6 @@ namespace Assets.System.WarModule
     public class RollingStoneSprite : RoundSprite
     {
         public override int TypeId { get; } = (int)Kinds.RollingStone;
-        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
-        {
-            var target = chessboard.GetChessPos(IsChallenger, Pos);
-            if (target.IsPostedAlive)
-                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
-        }
     }
     /// <summary>
     /// 滚木精灵
@@ -513,19 +475,6 @@ namespace Assets.System.WarModule
     public class RollingWoodSprite : RoundSprite
     {
         public override int TypeId { get; } = (int)Kinds.RollingWood;
-        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)
-        {
-            var scope = chessboard.Grid.GetScope(IsChallenger);
-            var mapper = chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
-            foreach (var pos in scope)
-            {
-                if (!pos.Value.IsPostedAlive) continue;
-                var column = pos.Key % 5; //获取直线排数
-                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
-                chessboard.AppendOpActivity(offender, pos.Value, Activity.Intentions.Offensive, conducts, actId: 0, skill: 1);
-                mapper[column] = true;
-            }
-        }
     }
 
     /// <summary>
@@ -582,7 +531,7 @@ namespace Assets.System.WarModule
             for (var index = 0; index < burnPoses.Length; index++)
             {
                 var chessPos = burnPoses[index];
-                chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: 5, actId: -1);
+                chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: -1, actId: -1);
                 if (chessPos.Operator == null || chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
                 chessboard.AppendOpActivity(offender, chessPos, Activity.Intentions.Offensive, conducts, actId: 0, skill: 1);
             }
