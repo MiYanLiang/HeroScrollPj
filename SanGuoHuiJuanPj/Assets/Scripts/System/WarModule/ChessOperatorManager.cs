@@ -300,45 +300,21 @@ namespace Assets.System.WarModule
             TrapOperator op = null;
             switch (card.CardId)
             {
-                case 0:
-                    op = new JuMaOperator();
-                    break;
-                case 1:
-                    op = new DiLeiOperator();
-                    break;
-                case 2:
-                    op = new ShiQiangOperator();
-                    break;
-                case 3:
-                    op = new BaZhenTuOperator();
-                    break;
-                case 4:
-                    op = new JinSuoZhenOperator();
-                    break;
-                case 5:
-                    op = new GuiBingZhenOperator();
-                    break;
-                case 6:
-                    op = new FireWallOperator();
-                    break;
-                case 7:
-                    op = new PoisonSpringOperator();
-                    break;
-                case 8:
-                    op = new BladeWallOperator();
-                    break;
-                case 9:
-                    op = new GunShiOperator();
-                    break;
-                case 10:
-                    op = new GunMuOperator();
-                    break;
-                case 11:
-                    op = new TreasureOperator();
-                    break;
-                case 12:
-                    op = new JuMaOperator();
-                    break;
+                case 0: op = new JuMaOperator(); break;
+                case 1: op = new DiLeiOperator(); break;
+                case 2: op = new ShiQiangOperator(); break;
+                case 3: op = new BaZhenTuOperator(); break;
+                case 4: op = new JinSuoZhenOperator(); break;
+                case 5: op = new GuiBingZhenOperator(); break;
+                case 6: op = new FireWallOperator(); break;
+                case 7: op = new PoisonSpringOperator(); break;
+                case 8: op = new BladeWallOperator(); break;
+                case 9: op = new GunShiOperator(); break;
+                case 10: op = new GunMuOperator(); break;
+                case 11: op = new TreasureOperator(); break;
+                case 12: op = new WarChestOperator(); break;
+                case 13: op = new WarChestOperator(); break;
+                case 14: op = new WarChestOperator(); break;
                 default:
                     op = new BlankTrapOperator();
                     break;
