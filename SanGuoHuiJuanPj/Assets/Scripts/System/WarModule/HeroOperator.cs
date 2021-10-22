@@ -1235,8 +1235,6 @@ namespace Assets.System.WarModule
         }
         private float DamageRate => 0.3f;//旧数据表
         private int PoisonRate => 20;//旧数据表
-        private int CriticalRate() => 5;
-        private int RouseRate() => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1251,25 +1249,11 @@ namespace Assets.System.WarModule
             var damage = InstanceGenericDamage();
             damage.Multiply(DamageRate);
             damage.Element = CombatConduct.PoisonDmg;
-            
-            var poisonRate = PoisonRate;
-            if (damage.IsCriticalDamage()) 
-            {
-                poisonRate += CriticalRate();
-            }
-            if (damage.IsRouseDamage())
-            {
-                poisonRate += RouseRate();
-            }
+            damage.Rate = PoisonRate;
 
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                if (target.IsAliveHero && Chessboard.IsRandomPass(poisonRate)) 
-                {
-                    
-                    continue;
-                }
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
             }
         }
@@ -1281,7 +1265,17 @@ namespace Assets.System.WarModule
     public class ShuShiOperator : HeroOperator
     {
         private bool isInit = false;
-        private static int PresetBuff = 2;
+        private int PresetBuff()
+        {
+            switch (Style.Military)
+            {
+                case 28: return 1;
+                case 29: return 2;
+                case 204: return 3;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        
         private int[] TargetRange()
         {
             switch (Style.Military)
@@ -1310,23 +1304,25 @@ namespace Assets.System.WarModule
         {
             var murderous = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             var conduct = InstanceGenericDamage();
+            conduct.Multiply(0.3f);//临时
             conduct.Element = CombatConduct.ThunderDmg;
-            conduct.Rate = Chessboard.Randomize(10);
+            conduct.Rate = 10;
             var addOn = conduct.IsRouseDamage() ? RouseAddOn : conduct.IsCriticalDamage() ? CriticalAddOn : 0;
             var range = TargetRange();
             var isUlti = murderous >= Ultimate;//是不是大招
             var attackTimes = isUlti ? UltiAttackTimes() : 1;
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self,
-                actId: -1, skill: -1, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -1));
+            if (isUlti)
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, value: -Ultimate));
             for (var j = 0; j < attackTimes; j++)
             {
                 var thunders = Chessboard.Randomize(range[0], range[1]) + addOn;
-                var targetPoses = Chessboard.GetRivals(this, _ => true).Select(pos => new WeightElement<IChessPos>
-                { Obj = pos, Weight = WeightElement<IChessPos>.Random.Next(1, 4) }).Pick(thunders).ToArray();
-                for (int index = 0; index < targetPoses.Length; index++)
+                var targetPoses = Chessboard.GetRivals(this, _ => true).Select(pos => new
+                        { Obj = pos, Random = Chessboard.Randomize(4) }).OrderByDescending(c => c.Random).Take(thunders)
+                    .ToArray();
+                foreach (var pos in targetPoses)
                 {
-                    var pos = targetPoses[index];
-                    Chessboard.DelegateSpriteActivity<ThunderSprite>(this, pos.Obj, Helper.Singular(conduct), j,
+                    Chessboard.DelegateSpriteActivity<ThunderSprite>(this, pos.Obj, Helper.Singular(conduct), actId: j,
                         isUlti ? 2 : 1);
                 }
             }
@@ -1334,16 +1330,19 @@ namespace Assets.System.WarModule
 
         public override void OnSomebodyDie(ChessOperator death)
         {
-            if (death.Style.Military < 0) return;
+            if (death.Style.ArmedType < 0) return;
             OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: 3,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous));
         }
 
         public override void OnRoundStart()
         {
-            if (isInit) return;
-            isInit = true;
-            SelfBuffering(CardState.Cons.Murderous, PresetBuff, 3);
+            if (!isInit)
+            {
+                isInit = true;
+                SelfBuffering(CardState.Cons.Murderous, value: PresetBuff(), skill: 3);
+            }
+            else SelfBuffering(CardState.Cons.Murderous, value: 1, skill: 3);
         }
 
     }

@@ -59,7 +59,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 PlayAudio(audioId, 0);
             }
         }
-        return ShadyImage.DOFade(alpha, 0.3f);
+        return ShadyImage.DOFade(alpha, 1f);
     }
 
     public void Init()

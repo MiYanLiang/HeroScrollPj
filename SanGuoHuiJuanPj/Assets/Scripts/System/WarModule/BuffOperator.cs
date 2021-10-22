@@ -413,7 +413,7 @@ namespace Assets.System.WarModule
                 if (pos.Operator == op)
                     continue;
                 Chessboard.AppendOpActivity(op, pos, Activity.Intentions.Friendly, Helper.Singular(fixedDmg), actId: -1,
-                    skill: -1);
+                    skill: 2);
             }
         }
     }

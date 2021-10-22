@@ -391,8 +391,11 @@ public static class Effect
             case 58:
             case 152:
             case 153://铁骑
-                value = 010; break;
-
+                switch (skill)
+                {
+                    case 1: value = 010; break;
+                }
+                break;
             case 154:
             case 155:
             case 156://骁骑
@@ -515,6 +518,8 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
+                if (skill == 3)
+                    return -1;
                 //switch (skill) 
                 //{
                 //    case 1://小技能
@@ -1066,8 +1071,12 @@ public static class Effect
             case 58:
             case 152:
             case 153://铁骑
-                return 229;
-
+                switch (skill)
+                {
+                    case 1: return 229;
+                    case 2: return 115;
+                }
+                break;
             case 154:
             case 155:
             case 156://骁骑
