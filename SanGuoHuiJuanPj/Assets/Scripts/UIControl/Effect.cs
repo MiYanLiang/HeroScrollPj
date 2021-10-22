@@ -394,6 +394,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1: value = 010; break;
+                    case 2: value = -1;break;
                 }
                 break;
             case 154:
@@ -519,7 +520,7 @@ public static class Effect
             case 29:
             case 204://术士
                 if (skill == 3)
-                    return -1;
+                    return 528;
                 //switch (skill) 
                 //{
                 //    case 1://小技能
