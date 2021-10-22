@@ -47,6 +47,7 @@ public class WarsUIManager : MonoBehaviour
     public int baYeDefaultLevel = 3;
     public int cityLevel = 1; //记录城池等级
     public int goldForCity; //记录城池金币
+    private int battleId = -1;
 
     public int GoldForCity
     {
@@ -650,6 +651,9 @@ public class WarsUIManager : MonoBehaviour
 
     IEnumerator OnPlayerWin()
     {
+        var battle = DataTable.BattleEvent[battleId];
+        TempGold += battle.GoldReward;
+        WarChests.AddRange(battle.WarChestTableIds);
         WarChests.AddRange(TempChest);
         UpdateInfoUis();
         ChangeTimeScale(1, false);
@@ -677,6 +681,7 @@ public class WarsUIManager : MonoBehaviour
         var enemyBase = FightCardData.BaseCard(false, stage.BattleEvent.BaseHp, 1);
 
         var battle = stage.BattleEvent;
+        battleId = battle.Id;
         var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
         var enemyCards = new List<ChessCard>();
         //随机敌人卡牌
