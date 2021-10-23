@@ -923,7 +923,7 @@ namespace Assets.System.WarModule
                         bo.OnElementConduct(op, conduct);
                 }
                 /***执行Activities***/
-                op.ProceedActivity(activity, result.Type);
+                op.ProceedActivity(offender, activity, result.Type);
             }
 
             result.Status = GetStatus(op);

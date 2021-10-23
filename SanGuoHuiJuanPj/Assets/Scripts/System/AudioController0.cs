@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class AudioController0 : MonoBehaviour
@@ -15,6 +16,8 @@ public class AudioController0 : MonoBehaviour
     public float[] audioVolumes;
 
     bool isPlaying;
+    private List<AudioSource> StackAudios { get; set; } = new List<AudioSource>();
+    private AudioSource AudioPrefab { get; set; }
 
     private void Awake()
     {
@@ -28,6 +31,23 @@ public class AudioController0 : MonoBehaviour
         }
         isPlaying = false;
         audioSource = GetComponent<AudioSource>();
+    }
+
+    private AudioSource InstanceNewAudioSource()
+    {
+        var aus = gameObject.AddComponent<AudioSource>();
+        StackAudios.Add(aus);
+        return aus;
+    }
+
+    public void StackPlaying(AudioClip clip, float volume)
+    {
+        if (!GamePref.PrefMusicPlay) return;
+        var aus = StackAudios.FirstOrDefault(s => !s.isPlaying);
+        if (aus == null)
+            aus = InstanceNewAudioSource();
+        aus.volume = volume;
+        aus.PlayOneShot(clip);
     }
 
     /// <summary>
@@ -101,5 +121,11 @@ public class AudioController0 : MonoBehaviour
     {
         if(isPlayMusic) audioSource.Play();
         else audioSource.Pause();
+    }
+
+    private class StackAudio
+    {
+        public bool IsPlaying { get; set; }
+        public AudioSource Source { get; set; }
     }
 }

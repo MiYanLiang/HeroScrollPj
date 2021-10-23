@@ -47,6 +47,7 @@ public class WarsUIManager : MonoBehaviour
     public int baYeDefaultLevel = 3;
     public int cityLevel = 1; //记录城池等级
     public int goldForCity; //记录城池金币
+    private int battleId = -1;
 
     public int GoldForCity
     {
@@ -63,8 +64,6 @@ public class WarsUIManager : MonoBehaviour
             BaYeManager.instance.SetGold(value);
         }
     }
-
-    private List<int> WarChests;
 
     int indexLastGuanQiaId; //记录上一个关卡id
 
@@ -184,7 +183,6 @@ public class WarsUIManager : MonoBehaviour
                 throw new ArgumentOutOfRangeException();
         }
 
-        WarChests = new List<int>();
         indexLastGuanQiaId = 0;
         PassCheckpoints = new bool[DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints];
         playerCardsDatas = new List<FightCardData>();
@@ -624,7 +622,8 @@ public class WarsUIManager : MonoBehaviour
     }
 
     #endregion
-    private List<int> TempChest { get; } = new List<int>();
+
+    private List<int> PlayerRewardChests => PlayerDataForGame.instance.WarReward.Chests;
     private int TempGold { get; set; }
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }
@@ -635,7 +634,7 @@ public class WarsUIManager : MonoBehaviour
         if (id == -1) TempGold += value;
         if (id >= 0)
             for (int i = 0; i < value; i++)
-                TempChest.Add(id);
+                PlayerRewardChests.Add(id);
     }
     public void FinalizeWar(bool isChallengerWin)
     {
@@ -650,22 +649,16 @@ public class WarsUIManager : MonoBehaviour
 
     IEnumerator OnPlayerWin()
     {
-        WarChests.AddRange(TempChest);
+        var battle = DataTable.BattleEvent[battleId];
+        TempGold += battle.GoldReward;
+        PlayerRewardChests.AddRange(battle.WarChestTableIds);
         UpdateInfoUis();
         ChangeTimeScale(1, false);
-        if (TempChest.Count > 0)
-        {
-            var warReward = PlayerDataForGame.instance.WarReward;
-            foreach (var id in TempChest)
-                warReward.Chests.Add(id);
-        }
         yield return new WaitForSeconds(2);
-        GenericWindow.SetReward(TempGold, TempChest.Count);
+        GenericWindow.SetReward(TempGold, PlayerRewardChests.Count);
         GoldForCity += TempGold;
         UpdateInfoUis();
-        PlayerDataForGame.instance.WarReward.Chests.AddRange(TempChest);
         TempGold = 0;
-        TempChest.Clear();
     }
 
     public void InitChessboard(GameStage stage)
@@ -677,6 +670,7 @@ public class WarsUIManager : MonoBehaviour
         var enemyBase = FightCardData.BaseCard(false, stage.BattleEvent.BaseHp, 1);
 
         var battle = stage.BattleEvent;
+        battleId = battle.Id;
         var enemyRandId = stage.BattleEvent.EnemyTableIndexes[stage.RandomId];
         var enemyCards = new List<ChessCard>();
         //随机敌人卡牌
@@ -1274,7 +1268,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //刷新金币宝箱的显示
-    private void UpdateInfoUis() => infoUis.Set(GoldForCity, WarChests);
+    private void UpdateInfoUis() => infoUis.Set(GoldForCity, PlayerDataForGame.instance.WarReward.Chests);
 
     public bool IsPlayerAvailableToPlace(int targetPos,bool isAddIn)
     {

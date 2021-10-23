@@ -36,6 +36,7 @@ public class JiBanWindowUi : MonoBehaviour
             ui.Init(card);
             ui.Set(GameCardUi.CardModes.Desk);
             ui.CityOperation.OffChipValue();
+            ui.Level.gameObject.SetActive(false);
             ui.CityOperation.SetDisable(!gameCards.Any(g => g.CardId == element.CardId && g.Type == element.CardType));
         }
     }

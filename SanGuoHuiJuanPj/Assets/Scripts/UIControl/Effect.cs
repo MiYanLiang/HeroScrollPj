@@ -705,7 +705,7 @@ public static class Effect
             case 9://滚石
                 return -1;
             case 10://滚木
-                return 063;
+                return -1;
             default:
                 return 001;
         }
@@ -1829,8 +1829,8 @@ public static class Effect
             case PosSprite.Kinds.Earthquake:return 166;//狂士地震
             case PosSprite.Kinds.Catapult: return 061;//抛石
             case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
+            case PosSprite.Kinds.RollingWood://滚木
             case PosSprite.Kinds.RollingStone:return 063;//滚石
-            case PosSprite.Kinds.RollingWood:return -1;//滚木
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.YellowBand:
@@ -2274,14 +2274,14 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
-                switch (skill)
-                {
-                    case 1://小技能
-                        audioId = 43; break;
-                    case 2://大技能
-                        audioId = 42; break;
-                }
-                break;
+                //switch (skill)
+                //{
+                //    case 1://小技能
+                //        audioId = 43; break;
+                //    case 2://大技能
+                //        audioId = 42; break;
+                //}
+                //break;
 
             case 205:
             case 206:

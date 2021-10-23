@@ -104,7 +104,7 @@ namespace Assets.System.WarModule
             if (activity.Intention == Activity.Intentions.ChessboardBuffing)
             {
                 foreach (var conduct in activity.Conducts)
-                    UpdateConduct(activity.Intention, conduct);
+                    UpdateConduct(offender, activity.Intention, conduct);
                 result.Status = Chessboard.GetStatus(this);
                 return result;
             }
@@ -118,7 +118,7 @@ namespace Assets.System.WarModule
                     result.Result = activity.Intention == Activity.Intentions.Self
                         ? (int)ActivityResult.Types.Suicide
                         : (int)ActivityResult.Types.Kill;
-                    ProceedActivity(activity, result.Type);
+                    ProceedActivity(offender, activity, result.Type);
                     result.Status = Chessboard.GetStatus(this);
                     return result;
                 }
@@ -151,7 +151,7 @@ namespace Assets.System.WarModule
             if (result.Type == ActivityResult.Types.Assist || 
                 result.Type == ActivityResult.Types.Heal)
             {
-                ProceedActivity(activity, result.Type);
+                ProceedActivity(offender, activity, result.Type);
                 result.Status = Chessboard.GetStatus(this);
             }
             else
@@ -164,7 +164,7 @@ namespace Assets.System.WarModule
             return result;
         }
 
-        public void ProceedActivity(Activity activity, ActivityResult.Types result)
+        public void ProceedActivity(ChessOperator offender,Activity activity, ActivityResult.Types result)
         {
             var conducts = activity.Conducts;
             if (result == ActivityResult.Types.Shield)
@@ -173,7 +173,7 @@ namespace Assets.System.WarModule
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
-                UpdateConduct(activity.Intention, conduct);
+                UpdateConduct(offender, activity.Intention, conduct);
             }
         }
 
@@ -197,10 +197,11 @@ namespace Assets.System.WarModule
         /// 更新行动，主要是分类调用
         /// 另外如果来自伤害死亡，将触发<see cref="OnDeadTrigger"/>
         /// </summary>
+        /// <param name="offender"></param>
         /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
         /// <param name="chessboardInvocation"></param>
-        private void UpdateConduct(Activity.Intentions activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
+        private void UpdateConduct(ChessOperator offender,Activity.Intentions activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
         {
             var conductTotal = (int) conduct.Total;
             var status = Chessboard.GetStatus(this);
@@ -263,7 +264,7 @@ namespace Assets.System.WarModule
             {
                 status.SubtractHp(damage);
                 if (status.IsDeath)
-                    OnDeadTrigger(damage);
+                    OnDeadTrigger(offender, damage);
             }
         }
 
@@ -293,9 +294,10 @@ namespace Assets.System.WarModule
 
         protected virtual int OnArmorReduction(CombatConduct damage) => (int) damage.Total;
 
-        protected virtual void OnDeadTrigger(int damage)
+        protected virtual void OnDeadTrigger(ChessOperator offender, int damage)
         {
         }
+
         public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
 

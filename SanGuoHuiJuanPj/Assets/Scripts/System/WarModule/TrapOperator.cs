@@ -47,7 +47,8 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive, CounterConducts, actId: -1, skill: 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
+                CounterConducts, actId: -1, skill: 1);
         }
 
         /// <summary>
@@ -71,7 +72,7 @@ namespace Assets.System.WarModule
         {
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
             var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Offensive,
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
                 Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: -1, skill: 1);
         }
 
@@ -83,10 +84,22 @@ namespace Assets.System.WarModule
     public class GunMuOperator : TrapOperator
     {
         private int StunningRate => 100;
-        protected override void OnDeadTrigger(int conduct)
+        protected override void OnDeadTrigger(ChessOperator offender, int conduct)
         {
-            var target = Chessboard.GetChessPos(!IsChallenger, Chessboard.GetStatus(this).Pos % 5);//最上一层棋格
-            Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, target, InstanceConduct(), actId: -2, 1);
+            var scope = Chessboard.GetRivals(this, _ => true).OrderBy(pos => pos.Pos).ToArray();
+            var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
+            var lastRow = -1;
+            foreach (var pos in scope)
+            {
+                var column = pos.Pos % 5; //获取直线排数
+                var row = pos.Pos / 5;
+                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
+                Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, pos, InstanceConduct(),
+                    actId: lastRow != row ? -2 : -1,
+                    skill: 1);
+                lastRow = row;
+                mapper[column] = pos.IsPostedAlive;
+            }
             CombatConduct[] InstanceConduct()
             {
                 var basicDmg = InstanceMechanicalDamage(Strength);
@@ -108,7 +121,7 @@ namespace Assets.System.WarModule
         /// 眩晕几率
         /// </summary>
         private int StunningRate => 100;
-        protected override void OnDeadTrigger(int damage)
+        protected override void OnDeadTrigger(ChessOperator offender, int damage)
         {
             var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//最上一排
             var targets = Chessboard.GetRivals(this, p => p.Pos % 5 == verticalIndex)
@@ -137,6 +150,13 @@ namespace Assets.System.WarModule
     public class DiLeiOperator : ReflexiveTrapOperator
     {
         private float DamageRate => 6;
+
+        protected override void OnDeadTrigger(ChessOperator offender, int damage)
+        {
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
+                CounterConducts, actId: -1, skill: 1);
+        }
+
         protected override CombatConduct[] CounterConducts =>
             Helper.Singular(InstanceMechanicalDamage(Strength * DamageRate));
     }
@@ -194,13 +214,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TreasureOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Strength);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Strength);
     }
     /// <summary>
     /// 战役宝箱
     /// </summary>
     public class WarChestOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(int damage) => Chessboard.RegResources(this, !IsChallenger, Strength, 1);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, Strength, 1);
     }
 }
