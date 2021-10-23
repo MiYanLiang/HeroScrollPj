@@ -125,7 +125,14 @@ public abstract class CardStyle : ChessmanStyle
     {
         var value = 0;
         var color = ColorDataStatic.name_deepRed;
-            
+        if (target.ChessmanStyle.ArmedType == -3 &&
+            target.ChessmanStyle.Military == 11 && 
+            result.IsDeath) //金币宝箱
+        {
+            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Info.GetDamage(target.Level)}", Color.yellow,
+                Damage.Types.Rouse);
+            return;
+        }
         switch (result.Type)
         {
             case ActivityResult.Types.Suffer:
