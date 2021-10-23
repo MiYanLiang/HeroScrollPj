@@ -2274,14 +2274,14 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
-                switch (skill)
-                {
-                    case 1://小技能
-                        audioId = 43; break;
-                    case 2://大技能
-                        audioId = 42; break;
-                }
-                break;
+                //switch (skill)
+                //{
+                //    case 1://小技能
+                //        audioId = 43; break;
+                //    case 2://大技能
+                //        audioId = 42; break;
+                //}
+                //break;
 
             case 205:
             case 206:
