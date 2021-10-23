@@ -157,11 +157,15 @@ public class CardAnimator : MonoBehaviour
     public void NumberEffectTween(FightCardData target, int value, Color color, Damage.Types dmgType)
     {
         if (value == 0) return;
+        NumberEffectTween(target, value.ToString(), color, dmgType);
+    }
+    public void NumberEffectTween(FightCardData target, string value, Color color, Damage.Types dmgType)
+    {
         var effect =
             EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, Misc.VTextLasting,
                 target.cardObj.transform);
         var text = effect.GetComponentInChildren<Text>();
-        text.text = value.ToString();
+        text.text = value;
         text.color = color;
         switch (dmgType)
         {

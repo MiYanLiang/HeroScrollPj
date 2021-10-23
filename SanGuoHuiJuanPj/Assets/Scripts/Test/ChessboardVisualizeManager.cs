@@ -118,6 +118,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         if (IsBusy) return;
         if (OnRoundBegin != null && !OnRoundBegin.Invoke()) return;
         StartCoroutine(Round());
+        PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
     }
 
     private IEnumerator Round()
@@ -228,20 +229,26 @@ public class ChessboardVisualizeManager : MonoBehaviour
             Chessboard.ResetPos(tmp.Value);
             if (tmp.Value.CardType == GameCardType.Base) continue;
             if (!tmp.Value.Status.IsDeath) continue;
-            var card = CardMap[tmp.Key];
-            CardMap.Remove(tmp.Key);
-            OnCardDefeated.Invoke(card);
-            card.cardObj.gameObject.SetActive(false);
+            RemoveCard(tmp.Key);
         }
+    }
+
+    private void RemoveCard(int key)
+    {
+        var card = CardMap[key];
+        CardMap.Remove(key);
+        OnCardDefeated.Invoke(card);
+        card.cardObj.gameObject.SetActive(false);
     }
 
     private void OnPreRoundUpdate(ChessRound round)
     {
-        foreach (var stat in round.PreRoundStats)
+        foreach (var gc in CardMap.ToList())
         {
-            if (!CardMap.ContainsKey(stat.Key)) continue;
-            var card = CardMap[stat.Key];
-            card.ChessmanStyle.UpdateStatus(stat.Value, card);
+            if (!round.PreRoundStats.TryGetValue(gc.Key, out var stat))
+                RemoveCard(gc.Key);
+            var card = CardMap[gc.Key];
+            card.ChessmanStyle.UpdateStatus(stat, card);
         }
     }
 

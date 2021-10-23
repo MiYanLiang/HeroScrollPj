@@ -21,7 +21,11 @@ public static class Effect
         /// <summary>
         /// 天暗(大)
         /// </summary>
-        Dark
+        Dark,
+        /// <summary>
+        /// 回合开始
+        /// </summary>
+        RoundStart
     }
 
     public const string GetGold = "GetGold";
@@ -747,6 +751,7 @@ public static class Effect
         {
             case ChessboardEvent.PlaceCardToBoard:
                 return 527;
+            case ChessboardEvent.RoundStart:
             case ChessboardEvent.Rouse:
             case ChessboardEvent.Shady:
             case ChessboardEvent.Dark:
@@ -2600,6 +2605,7 @@ public static class Effect
             case ChessboardEvent.Rouse:
                 return 64;
             case ChessboardEvent.PlaceCardToBoard:
+            case ChessboardEvent.RoundStart:
                 return -1;
             case ChessboardEvent.Shady:
                 return 43;
