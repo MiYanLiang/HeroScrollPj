@@ -2314,9 +2314,9 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://小技能
-                        audioId = 43; break;
+                        audioId = -1; break;
                     case 2://大技能
-                        audioId = 42; break;
+                        audioId = -1; break;
                 }
                 break;
 
