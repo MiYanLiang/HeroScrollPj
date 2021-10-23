@@ -17,9 +17,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public NewWarManager NewWar;
     public Chessboard Chessboard;
     public GameObject RouseEffectObj;
-    public JiBanEffectUi JiBanEffect;
-    public GameObject[] JiBanOffensiveEffects;
     public Image ShadyImage;
+    [SerializeField] private JiBanAnimationManager JiBanManager;
 
     [SerializeField] private AudioSource audioSource;
 
@@ -61,6 +60,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public void Init()
     {
         Chessboard.Init();
+        JiBanManager.Init();
         NewWar.Init();
         NewWar.StartButton.onClick.AddListener(InvokeRound);
     }
@@ -182,9 +182,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
         }
 #endif
-        OnPreRoundUpdate(round);
+        var cards = OnPreRoundUpdate(round);
+        var jbs = JiBanManager.GetAvailableJiBan(cards);
+        
         //回合开始演示
-        yield return OnRoundBeginAnimation(round.PreAction);
+        yield return OnRoundBeginAnimation(round.PreAction, jbs);
         //执行回合每一个棋子活动
         for (int i = 0; i < round.Processes.Count; i++)
         {
@@ -241,37 +243,49 @@ public class ChessboardVisualizeManager : MonoBehaviour
         card.cardObj.gameObject.SetActive(false);
     }
 
-    private void OnPreRoundUpdate(ChessRound round)
+    private List<FightCardData> OnPreRoundUpdate(ChessRound round)
     {
+        var list = new List<FightCardData>();
         foreach (var gc in CardMap.ToList())
         {
             if (!round.PreRoundStats.TryGetValue(gc.Key, out var stat))
                 RemoveCard(gc.Key);
             var card = CardMap[gc.Key];
             card.ChessmanStyle.UpdateStatus(stat, card);
+            list.Add(card);
         }
+        return list;
     }
 
-    private IEnumerator OnRoundBeginAnimation(RoundAction action)
+    private IEnumerator OnRoundBeginAnimation(RoundAction action, (int JiBanId, bool IsChallenger)[] jbT)
     {
+        var jbProcesses = action.ChessProcesses.Where(p => p.Type == ChessProcess.Types.JiBan).ToArray();
+        //无活动羁绊演示
+        foreach (var jb in jbT)
+        {
+            //检查羁绊是否有活动
+            var process = jbProcesses.FirstOrDefault(p => p.Major == jb.JiBanId && p.Scope == 0 && jb.IsChallenger);
+            if (process != null)continue;//如果有活动等下演示
+            yield return JiBanManager.JiBanDisplay(jb.JiBanId, jb.IsChallenger);
+            if (JiBanManager.IsOffensiveJiBan(jb.JiBanId))
+                yield return JiBanManager.JiBanOffensive(jb.JiBanId, jb.IsChallenger);
+        }
+        //根据活动演示羁绊
         foreach (var process in action.ChessProcesses)
         {
-            var offenseTween = DOTween.Sequence().Pause();
-            var tween = DOTween.Sequence().Pause();
             if (process.Type == ChessProcess.Types.JiBan)
             {
                 var jb = DataTable.JiBan[process.Major];
                 foreach (var map in process.CombatMaps)
                 foreach (var activity in map.Value.Activities)
                     UpdateTargetStatus(activity);
-                tween.Append(OnJiBanEffect(process.Scope == 0, jb));
-                offenseTween.Append(OnJiBanOffenseAnim(process.Scope != 0, jb));
+                var isChallenger = process.Scope == 0;
+                yield return JiBanManager.JiBanDisplay(jb.Id, isChallenger);
+                if (JiBanManager.IsOffensiveJiBan(jb.Id)) StartCoroutine(JiBanManager.JiBanOffensive(jb.Id, isChallenger));
             }
 
-            yield return tween.Play().WaitForCompletion();
-            yield return offenseTween.Join(OnBasicChessProcess(process)).Play().WaitForCompletion();
+            yield return OnBasicChessProcess(process).Play().WaitForCompletion();
             //播放
-            //yield return OnInstantUpdate(process.CombatMaps.Values.ToArray()).WaitForCompletion();
             yield return new WaitForSeconds(1);
         }
     }
@@ -317,86 +331,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             });
         }
         return tween;
-    }
-
-    private Tween OnJiBanEffect(bool isChallenger, JiBanTable jb)
-    {
-        var jbCards = Chessboard.Data.Values
-            .Where(c => c.isPlayerCard == isChallenger)
-            .Join(jb.Cards, c => (c.cardId, c.cardType), j => (j.CardId, j.CardType), (c, _) => c).ToArray();
-        //Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanEffect)} [{Sw.Elapsed}]");
-        return DOTween.Sequence()
-            .AppendCallback(() =>
-            {
-                foreach (var card in jbCards) card.cardObj.SetHighLight(true);//仅仅发光
-                PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
-            }).AppendInterval(0.5f)//0.5秒
-            .AppendCallback(() =>
-            {
-                foreach (var card in jbCards) card.cardObj.SetHighLight(false);//发光消失
-                //开始播放动图
-                JiBanEffect.Image.sprite = GameResources.Instance.JiBanBg[jb.Id];
-                JiBanEffect.TitleImg.sprite = GameResources.Instance.JiBanHText[jb.Id];
-                DisplayJiBanObj(isChallenger, JiBanEffect.transform);
-            })
-            .AppendInterval(CardAnimator.instance.Misc.JBAnimLasting)//1秒后
-            .OnComplete(() => JiBanEffect.gameObject.SetActive(false));//关闭动图
-    }
-    void DisplayJiBanObj(bool isPlayer, Transform obj)
-    {
-        var targetTransform = isPlayer ? JiBanEffect.Player : JiBanEffect.Opposite;
-        obj.SetParent(targetTransform);
-        obj.gameObject.SetActive(true);
-        obj.localPosition = Vector3.zero;
-    }
-
-    private Tween OnJiBanOffenseAnim(bool isPlayer, JiBanTable jb)
-    {
-        //Debug.Log($"Jb[{jb.Id}].{nameof(OnJiBanOffenseAnim)} [{Sw.Elapsed}]");
-        GameObject offensiveEffect = null;
-        switch ((JiBanSkillName)jb.Id)
-        {
-            case JiBanSkillName.WuHuShangJiang:
-                offensiveEffect = JiBanOffensiveEffects[0];
-                break;
-            case JiBanSkillName.WuZiLiangJiang:
-                offensiveEffect = JiBanOffensiveEffects[3];
-                break;
-            case JiBanSkillName.WeiWuMouShi:
-                offensiveEffect = JiBanOffensiveEffects[2];
-                break;
-            case JiBanSkillName.ShuiShiDuDu:
-                offensiveEffect = JiBanOffensiveEffects[1];
-                break;
-            case JiBanSkillName.HeBeiSiTingZhu:
-                offensiveEffect = JiBanOffensiveEffects[4];
-                break;
-            case JiBanSkillName.TaoYuanJieYi:
-            case JiBanSkillName.WoLongFengChu:
-            case JiBanSkillName.HuChiELai:
-            case JiBanSkillName.HuJuJiangDong:
-            case JiBanSkillName.TianZuoZhiHe:
-            case JiBanSkillName.JueShiWuShuang:
-            case JiBanSkillName.HanMoSanXian:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        if (offensiveEffect == null) return DOTween.Sequence();
-        return DOTween.Sequence()
-            .AppendCallback(() =>
-            {
-                DisplayJiBanObj(isPlayer, offensiveEffect.transform);
-                PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id));
-            })
-            .AppendInterval(CardAnimator.instance.Misc.JBOffensiveAnimLasting)
-            .OnComplete(
-                () =>
-                {
-                    offensiveEffect.gameObject.SetActive(false);
-                    offensiveEffect.transform.SetParent(JiBanEffect.transform);
-                });
     }
 
     private void OnInstantUpdate(IList<CombatSet> combats)
