@@ -2605,8 +2605,9 @@ public static class Effect
             case ChessboardEvent.Rouse:
                 return 64;
             case ChessboardEvent.PlaceCardToBoard:
+                return 85;
             case ChessboardEvent.RoundStart:
-                return -1;
+                return 99;
             case ChessboardEvent.Shady:
                 return 43;
             case ChessboardEvent.Dark:
