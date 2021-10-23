@@ -37,7 +37,7 @@ public class TimeSystemControl : MonoBehaviour
 
     public bool IsCountdown { get; private set; }
 
-    //鸡坛相关存档字符
+    //烧鸡相关存档字符
     public static string openCKTime0_str = "openCKTime0"; //12点
     public static string openCKTime1_str = "openCKTime1"; //17点
     public static string openCKTime2_str = "openCKTime2"; //21点
