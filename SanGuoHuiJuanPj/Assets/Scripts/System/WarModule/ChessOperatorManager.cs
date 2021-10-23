@@ -316,8 +316,7 @@ namespace Assets.System.WarModule
                 case 13: op = new WarChestOperator(); break;
                 case 14: op = new WarChestOperator(); break;
                 default:
-                    op = new BlankTrapOperator();
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(card), card, $"未能识别的陷阱类型 = {card.CardId}");
             }
 
             op.Init(card, this);
@@ -424,8 +423,7 @@ namespace Assets.System.WarModule
                     op = new ZhanChuanYingOperator();
                     break;
                 default:
-                    op = new BlankTowerOperator();
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(card), card, $"未能识别的塔类型 = {card.CardId}");
             }
 
             op.Init(card, this);
