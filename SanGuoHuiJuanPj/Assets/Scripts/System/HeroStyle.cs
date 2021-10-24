@@ -129,7 +129,8 @@ public abstract class CardStyle : ChessmanStyle
             target.ChessmanStyle.Military == 11 && 
             result.IsDeath) //金币宝箱
         {
-            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Info.GetDamage(target.Level)}", Color.yellow,
+            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Info.GetDamage(target.Level)}",
+                CardAnimator.instance.Misc.TreasureChestTextColor,
                 Damage.Types.Rouse);
             return;
         }
