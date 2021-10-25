@@ -23,19 +23,10 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class ReflexiveTrapOperator : TrapOperator
     {
-        /// <summary>
-        /// 是否攻城车
-        /// </summary>
-        /// <param name="chess"></param>
-        /// <returns></returns>
-        protected bool IsGongChengChe(IChessOperator chess) => GongChengCheOperator.IsGongChengChe(chess);
-
-        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
+        protected override void OnReflectingConduct(Activity activity, ChessOperator offender)
         {
-            if (offender == null ||
-                IsGongChengChe(offender) ||
-                activity.Intention != Activity.Intentions.Offensive ||
-                offender.IsRangeHero) return;
+            if (GongChengCheOperator.IsGongChengChe(offender)) //对象是攻城车
+                return;
             InstanceReflection(activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind), offender);
         }
 

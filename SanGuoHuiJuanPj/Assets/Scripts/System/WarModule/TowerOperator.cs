@@ -294,7 +294,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class MiWuOperator : NeighborSpriteTowerOperator
     {
-        protected override int Surround => CardId == 18 ? 2 : 1;
+        protected override int Surround => Style.Military == 18 ? 2 : 1;
 
         protected override PosSprite InstanceSprite(IChessPos pos) =>
             Chessboard.InstanceSprite<ForgeSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);

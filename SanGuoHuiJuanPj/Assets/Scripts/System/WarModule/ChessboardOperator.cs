@@ -465,6 +465,34 @@ namespace Assets.System.WarModule
         private Activity InstanceActivity(bool fromChallenger, ChessOperator offender, int targetInstance, Activity.Intentions intent,
             CombatConduct[] conducts, int skill, int rePos)
         {
+            switch (RoundState)
+            {
+                case ProcessCondition.PlaceActions:
+                    switch (intent)
+                    {
+                        case Activity.Intentions.ChessboardBuffing:
+                        case Activity.Intentions.PlayerResource:
+                        case Activity.Intentions.Sprite:
+                            break;
+                        case Activity.Intentions.Offensive:
+                        case Activity.Intentions.Counter:
+                        case Activity.Intentions.Reflect:
+                        case Activity.Intentions.Friendly:
+                        case Activity.Intentions.Self:
+                        case Activity.Intentions.Attach:
+                        case Activity.Intentions.Inevitable:
+                            throw new InvalidOperationException($"{nameof(ProcessCondition.PlaceActions)}放置动作不允许棋子活动[{intent}]。");
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(intent), intent, null);
+                    }
+                    break;
+                case ProcessCondition.RoundStart:
+                case ProcessCondition.Chessman:
+                case ProcessCondition.RoundEnd:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             RecursiveActionCount++;
             ActivitySeed++;
             var processId = GetMajorProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), fromChallenger).InstanceId;

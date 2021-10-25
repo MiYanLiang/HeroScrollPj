@@ -42,6 +42,7 @@ public class JiBanAnimationManager : MonoBehaviour
         var con = GetController(isChallenger);
         con.MainImage.sprite = GameResources.Instance.JiBanBg[jbId];
         con.MainTitle.sprite = GameResources.Instance.JiBanHText[jbId];
+        con.JiBanImageObj.transform.localPosition = Vector3.zero;
         con.JiBanImageObj.SetActive(true);
         yield return new WaitForSeconds(CardAnimator.instance.Misc.JBAnimLasting);
         con.JiBanImageObj.SetActive(false);
@@ -51,6 +52,7 @@ public class JiBanAnimationManager : MonoBehaviour
         var field = GetField(jbId);
         var con = GetController(isChallenger);
         field.OffensiveAnim.transform.SetParent(con.AnimTransform);
+        field.OffensiveAnim.transform.localPosition = Vector3.zero;
         field.OffensiveAnim.SetActive(true);
         yield return new WaitForSeconds(field.AnimSecs);
         field.OffensiveAnim.SetActive(false);

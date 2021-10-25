@@ -158,7 +158,7 @@ namespace Assets.System.WarModule
             {
                 //执行对方棋子的攻击
                 result = Chessboard.OnOffensiveActivity(activity, this, offender);
-                OnSufferConduct(activity, offender);
+                OnSuffering(activity, offender);
             }
 
             return result;
@@ -178,6 +178,28 @@ namespace Assets.System.WarModule
         }
 
         public abstract int GetDodgeRate();
+
+        
+        private void OnSuffering(Activity activity, ChessOperator offender)
+        {
+            OnSufferConduct(activity, offender);
+            if (offender == null || //没对象
+                !offender.IsAlive || //对象已死亡
+                offender.Style.ArmedType < 0 || //对象不是武将
+                offender.Style.Type == CombatStyle.Types.Range || //对方是远程
+                activity.Intention != Activity.Intentions.Offensive) //对象并非主动攻击标签
+                return;
+            OnReflectingConduct(activity, offender);
+        }
+
+        /// <summary>
+        /// 反伤逻辑。预先判断死亡，非武将，远程，或是非<see cref="Activity.Intentions.Offensive"/>标签，不会触发
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="offender"></param>
+        protected virtual void OnReflectingConduct(Activity activity, ChessOperator offender)
+        {
+        }
 
         /// <summary>
         /// 当被攻击伤害后
@@ -301,6 +323,9 @@ namespace Assets.System.WarModule
         public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
 
+        /// <summary>
+        /// 棋子放置的预设活动，严禁任何攻击活动
+        /// </summary>
         public virtual void OnPlaceInvocation() { }
 
         public virtual void OnSomebodyDie(ChessOperator death){}
