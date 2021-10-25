@@ -556,7 +556,7 @@ public class WarsUIManager : MonoBehaviour
     {
         //从暂存区，交接到棋盘区
         foreach (var tmp in TempScope.ToDictionary(c => c.Key, c => c.Value)) 
-            ChessmanInit(tmp.Key);
+            ChessmanInit(tmp.Key,tmp.Value);
         return true;
     }
 
@@ -564,9 +564,9 @@ public class WarsUIManager : MonoBehaviour
      * 1.分解棋子回答暂存区的方法
      * 2.分解从暂存区放置到棋盘区的方法
      */
-    private void ChessmanInit(FightCardData card)
+    private void ChessmanInit(FightCardData card, WarGameCardUi ui)
     {
-        var ui = card.cardObj;
+        //var ui = card.cardObj;TODO 这个会导致报错! Ui实例并不是同一个，是被销毁的那个.
         ui.DragDisable();
         ui.transform.SetParent(Chessboard.transform);
         PlayerScope.Add(card, ui);

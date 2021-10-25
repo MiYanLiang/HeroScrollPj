@@ -56,7 +56,7 @@ public class JiBanAnimationManager : MonoBehaviour
     public IEnumerator JiBanOffensive(int jbId,bool isChallenger)
     {
         var field = GetField(jbId);
-        var con = GetController(!isChallenger);
+        var con = GetController(field.IsOffensive ? !isChallenger : isChallenger);
         field.OffensiveAnim.transform.SetParent(con.AnimTransform);
         field.OffensiveAnim.transform.localPosition = Vector3.zero;
         field.OffensiveAnim.SetActive(true);
@@ -90,6 +90,7 @@ public class JiBanAnimationManager : MonoBehaviour
     public class JiBanOffensiveField
     {
         public int JiBanId;
+        public bool IsOffensive;
         public GameObject OffensiveAnim;
         public float AnimSecs = 1.5f;
     }

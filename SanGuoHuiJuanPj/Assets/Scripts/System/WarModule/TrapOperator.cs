@@ -142,12 +142,6 @@ namespace Assets.System.WarModule
     {
         private float DamageRate => 6;
 
-        protected override void OnDeadTrigger(ChessOperator offender, int damage)
-        {
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
-                CounterConducts, actId: -1, skill: 1);
-        }
-
         protected override CombatConduct[] CounterConducts =>
             Helper.Singular(InstanceMechanicalDamage(Strength * DamageRate));
     }

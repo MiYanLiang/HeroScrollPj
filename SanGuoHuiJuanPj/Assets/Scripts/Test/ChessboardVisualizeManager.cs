@@ -257,20 +257,20 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return list;
     }
 
-    private IEnumerator OnRoundBeginAnimation(RoundAction action, (int JiBanId, bool IsChallenger)[] jbT)
+    private IEnumerator OnRoundBeginAnimation(RoundAction action, IEnumerable<(int JiBanId, bool IsChallenger)> jbs)
     {
         var jbProcesses = action.ChessProcesses.Where(p => p.Type == ChessProcess.Types.JiBan).ToArray();
         //无活动羁绊演示
-        foreach (var jb in jbT)
+        foreach (var (jiBanId, isChallenger) in jbs)
         {
             //检查羁绊是否有活动
-            var process = jbProcesses.FirstOrDefault(p => p.Major == jb.JiBanId && p.Scope == 0 && jb.IsChallenger);
+            var process = jbProcesses.FirstOrDefault(p => p.Major == jiBanId && p.IsChallenger == isChallenger);
             if (process != null)continue;//如果有活动等下演示
             PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
-            yield return JiBanManager.JiBanDisplay(jb.JiBanId, jb.IsChallenger);
-            if (!JiBanManager.IsOffensiveJiBan(jb.JiBanId)) continue;
-            PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.JiBanId));
-            yield return JiBanManager.JiBanOffensive(jb.JiBanId, jb.IsChallenger);
+            yield return JiBanManager.JiBanDisplay(jiBanId, isChallenger);
+            if (!JiBanManager.IsOffensiveJiBan(jiBanId)) continue;
+            PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jiBanId));
+            yield return JiBanManager.JiBanOffensive(jiBanId, isChallenger);
         }
         //根据活动演示羁绊
         foreach (var process in action.ChessProcesses)

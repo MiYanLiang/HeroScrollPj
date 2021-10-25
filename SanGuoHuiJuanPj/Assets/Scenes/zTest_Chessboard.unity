@@ -238,6 +238,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: 082
       objectReference: {fileID: 0}
+    - target: {fileID: 1094516868578211405, guid: ac33d4b159311c745b7abff96c22cd1a,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ac33d4b159311c745b7abff96c22cd1a, type: 3}
 --- !u!224 &3693083 stripped
@@ -1510,7 +1515,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &268157206
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2610,8 +2615,28 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 59
+  - Id: 6
+    Pos: 0
+    Type: 0
+    Level: 10
+  - Id: 50
     Pos: 1
+    Type: 0
+    Level: 10
+  - Id: 57
+    Pos: 2
+    Type: 0
+    Level: 10
+  - Id: 54
+    Pos: 3
+    Type: 0
+    Level: 10
+  - Id: 51
+    Pos: 4
+    Type: 0
+    Level: 10
+  - Id: 59
+    Pos: 5
     Type: 0
     Level: 10
   Player:
@@ -2619,16 +2644,28 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 8
-  - Id: 311
-    Pos: 2
+  - Id: 7
+    Pos: 0
     Type: 0
     Level: 1
-  - Id: 139
-    Pos: 5
+  - Id: 43
+    Pos: 1
     Type: 0
     Level: 2
-  - Id: 139
-    Pos: 6
+  - Id: 45
+    Pos: 2
+    Type: 0
+    Level: 2
+  - Id: 56
+    Pos: 3
+    Type: 0
+    Level: 2
+  - Id: 41
+    Pos: 4
+    Type: 0
+    Level: 2
+  - Id: 45
+    Pos: 5
     Type: 0
     Level: 2
 --- !u!4 &413234022
@@ -2745,20 +2782,25 @@ MonoBehaviour:
     MainTitle: {fileID: 771591663}
   JiBanOffensiveFields:
   - JiBanId: 1
+    IsOffensive: 1
     OffensiveAnim: {fileID: 1051438560}
-    AnimSecs: 2
+    AnimSecs: 1.5
   - JiBanId: 7
+    IsOffensive: 1
     OffensiveAnim: {fileID: 470477977}
-    AnimSecs: 2
+    AnimSecs: 1.5
   - JiBanId: 5
+    IsOffensive: 1
     OffensiveAnim: {fileID: 3693084}
-    AnimSecs: 0
+    AnimSecs: 1
   - JiBanId: 4
+    IsOffensive: 0
     OffensiveAnim: {fileID: 269398167}
-    AnimSecs: 2
+    AnimSecs: 1
   - JiBanId: 9
+    IsOffensive: 0
     OffensiveAnim: {fileID: 601348010}
-    AnimSecs: 2
+    AnimSecs: 1
 --- !u!1 &420174418
 GameObject:
   m_ObjectHideFlags: 0

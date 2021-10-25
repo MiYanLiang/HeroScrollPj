@@ -57,6 +57,7 @@ namespace Assets.System.WarModule
         public Types Type { get; set; }
         //[JsonProperty("S")] 
         public int Scope { get; set; }
+        public bool IsChallenger => Scope == 0;
         public override string ToString()
         {
             string challengerText;

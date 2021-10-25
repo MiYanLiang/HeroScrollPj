@@ -21565,18 +21565,23 @@ MonoBehaviour:
     MainTitle: {fileID: 8692228848071685377}
   JiBanOffensiveFields:
   - JiBanId: 1
+    IsOffensive: 1
     OffensiveAnim: {fileID: 2832571329716917879}
     AnimSecs: 1.5
   - JiBanId: 7
+    IsOffensive: 1
     OffensiveAnim: {fileID: 1254267938287127850}
     AnimSecs: 1.5
   - JiBanId: 5
+    IsOffensive: 1
     OffensiveAnim: {fileID: 787100996898329803}
     AnimSecs: 1
   - JiBanId: 4
+    IsOffensive: 0
     OffensiveAnim: {fileID: 6374207955513889277}
     AnimSecs: 1
   - JiBanId: 9
+    IsOffensive: 0
     OffensiveAnim: {fileID: 756047797369973301}
     AnimSecs: 1
 --- !u!1 &1673655643
@@ -31530,7 +31535,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!222 &2701939700601891934
 CanvasRenderer:
   m_ObjectHideFlags: 0
