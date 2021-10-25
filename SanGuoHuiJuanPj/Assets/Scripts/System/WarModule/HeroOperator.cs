@@ -2063,11 +2063,8 @@ namespace Assets.System.WarModule
             base.MilitaryPerforms(0);//刺甲攻击是普通攻击
         }
 
-        protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
+        protected override void OnReflectingConduct(Activity activity, ChessOperator offender)
         {
-            if (offender == null ||
-                offender.Style.Type == CombatStyle.Types.Range ||
-                offender.Style.ArmedType < 0) return;
             var damage = activity.Conducts.Where(c => c.Kind == CombatConduct.DamageKind)
                              .Sum(c => c.Total) * ReflectRate();
             OnPerformActivity(Chessboard.GetChessPos(offender), Activity.Intentions.Reflect, actId: -1, skill: 1,

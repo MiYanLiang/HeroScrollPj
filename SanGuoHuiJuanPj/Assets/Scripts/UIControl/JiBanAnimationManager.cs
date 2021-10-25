@@ -15,6 +15,8 @@ public class JiBanAnimationManager : MonoBehaviour
     public Dictionary<int, (int CardId, GameCardType CardType)[]> JiBanMap;
     public void Init()
     {
+        Player.JiBanImageObj.SetActive(false);
+        Opposite.JiBanImageObj.SetActive(false);
         JiBanMap = new Dictionary<int, (int, GameCardType)[]>();
         foreach (var itm in DataTable.JiBan.Where(j=>j.Value.IsOpen > 0))
         {
@@ -22,7 +24,11 @@ public class JiBanAnimationManager : MonoBehaviour
             JiBanMap.Add(itm.Key, jiBan.Cards.Select(j => (j.CardId, (GameCardType)j.CardType)).ToArray());
         }
     }
-
+    /// <summary>
+    /// 返回可触发羁绊
+    /// </summary>
+    /// <param name="cards"></param>
+    /// <returns></returns>
     public (int JiBanId, bool IsChallenger)[] GetAvailableJiBan(List<FightCardData> cards)
     {
         var list = new List<(int, bool)>();
@@ -42,6 +48,7 @@ public class JiBanAnimationManager : MonoBehaviour
         var con = GetController(isChallenger);
         con.MainImage.sprite = GameResources.Instance.JiBanBg[jbId];
         con.MainTitle.sprite = GameResources.Instance.JiBanHText[jbId];
+        con.JiBanImageObj.transform.localPosition = Vector3.zero;
         con.JiBanImageObj.SetActive(true);
         yield return new WaitForSeconds(CardAnimator.instance.Misc.JBAnimLasting);
         con.JiBanImageObj.SetActive(false);
@@ -49,8 +56,9 @@ public class JiBanAnimationManager : MonoBehaviour
     public IEnumerator JiBanOffensive(int jbId,bool isChallenger)
     {
         var field = GetField(jbId);
-        var con = GetController(isChallenger);
+        var con = GetController(field.IsOffensive ? !isChallenger : isChallenger);
         field.OffensiveAnim.transform.SetParent(con.AnimTransform);
+        field.OffensiveAnim.transform.localPosition = Vector3.zero;
         field.OffensiveAnim.SetActive(true);
         yield return new WaitForSeconds(field.AnimSecs);
         field.OffensiveAnim.SetActive(false);
@@ -82,6 +90,7 @@ public class JiBanAnimationManager : MonoBehaviour
     public class JiBanOffensiveField
     {
         public int JiBanId;
+        public bool IsOffensive;
         public GameObject OffensiveAnim;
         public float AnimSecs = 1.5f;
     }

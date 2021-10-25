@@ -257,22 +257,25 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return list;
     }
 
-    private IEnumerator OnRoundBeginAnimation(RoundAction action, (int JiBanId, bool IsChallenger)[] jbT)
+    private IEnumerator OnRoundBeginAnimation(RoundAction action, IEnumerable<(int JiBanId, bool IsChallenger)> jbs)
     {
         var jbProcesses = action.ChessProcesses.Where(p => p.Type == ChessProcess.Types.JiBan).ToArray();
         //无活动羁绊演示
-        foreach (var jb in jbT)
+        foreach (var (jiBanId, isChallenger) in jbs)
         {
             //检查羁绊是否有活动
-            var process = jbProcesses.FirstOrDefault(p => p.Major == jb.JiBanId && p.Scope == 0 && jb.IsChallenger);
+            var process = jbProcesses.FirstOrDefault(p => p.Major == jiBanId && p.IsChallenger == isChallenger);
             if (process != null)continue;//如果有活动等下演示
-            yield return JiBanManager.JiBanDisplay(jb.JiBanId, jb.IsChallenger);
-            if (JiBanManager.IsOffensiveJiBan(jb.JiBanId))
-                yield return JiBanManager.JiBanOffensive(jb.JiBanId, jb.IsChallenger);
+            PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
+            yield return JiBanManager.JiBanDisplay(jiBanId, isChallenger);
+            if (!JiBanManager.IsOffensiveJiBan(jiBanId)) continue;
+            PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jiBanId));
+            yield return JiBanManager.JiBanOffensive(jiBanId, isChallenger);
         }
         //根据活动演示羁绊
         foreach (var process in action.ChessProcesses)
         {
+            Coroutine attackCoroutine = null;
             if (process.Type == ChessProcess.Types.JiBan)
             {
                 var jb = DataTable.JiBan[process.Major];
@@ -280,13 +283,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 foreach (var activity in map.Value.Activities)
                     UpdateTargetStatus(activity);
                 var isChallenger = process.Scope == 0;
+                PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
                 yield return JiBanManager.JiBanDisplay(jb.Id, isChallenger);
-                if (JiBanManager.IsOffensiveJiBan(jb.Id)) StartCoroutine(JiBanManager.JiBanOffensive(jb.Id, isChallenger));
+                if (JiBanManager.IsOffensiveJiBan(jb.Id))
+                {
+                    attackCoroutine = StartCoroutine(JiBanManager.JiBanOffensive(jb.Id, isChallenger));
+                    PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id));
+                }
             }
 
             yield return OnBasicChessProcess(process).Play().WaitForCompletion();
-            //播放
-            yield return new WaitForSeconds(1);
+            if (attackCoroutine != null)
+                //播放
+                yield return attackCoroutine;
         }
     }
 
