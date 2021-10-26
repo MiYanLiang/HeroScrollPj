@@ -3,23 +3,18 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Assets;
-using Assets.System.WarModule;
 using Beebyte.Obfuscator;
 using CorrelateLib;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class WarsUIManager : MonoBehaviour
 {
     public static WarsUIManager instance;
-
-    public Transform herosCardListTran;
-    public ScrollRect herosCardListScrollRect;
-    public bool isDragDelegated;
+    [SerializeField] private PlayerCardRack Rack;
+    [SerializeField] private ChessboardInputController _chessboardInputControl;
     public bool isDragDisable;
     public ChessboardVisualizeManager chessboardManager;
     [SerializeField] private PlayerInfoUis infoUis; //玩家信息UI
@@ -133,7 +128,7 @@ public class WarsUIManager : MonoBehaviour
     private EventTypes currentEvent = EventTypes.初始;
 
     #endregion
-
+    private ObjectPool<WarGameCardUi> UiPool { get; set; }
     private GameResources GameResources => GameResources.Instance;
 
     private void Awake()
@@ -152,10 +147,12 @@ public class WarsUIManager : MonoBehaviour
         if (!EffectsPoolingControl.instance.IsInit) EffectsPoolingControl.instance.Init();
         chessboardManager.Init();
         chessboardManager.OnRoundBegin += OnChessRoundBegin;
+        chessboardManager.OnRoundPause += () => isDragDisable = false;
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
         chessboardManager.OnCardDefeated.AddListener(OnCardDefeated);
         chessboardManager.OnGameSet.AddListener(FinalizeWar);
         speedBtn.onClick.AddListener(()=>ChangeTimeScale());
+        UiPool = new ObjectPool<WarGameCardUi>(InstanceWarGameCardUi);
     }
 
     IEnumerator Initialize()
@@ -193,7 +190,6 @@ public class WarsUIManager : MonoBehaviour
         point2Pos = point2Tran.position;
 
         Input.multiTouchEnabled = false; //限制多指拖拽
-        isDragDelegated = false;
         isGettingStage = false;
         //------------Awake----------------//
         PlayerDataForGame.instance.lastSenceIndex = 2;
@@ -557,6 +553,7 @@ public class WarsUIManager : MonoBehaviour
         //从暂存区，交接到棋盘区
         foreach (var tmp in TempScope.ToDictionary(c => c.Key, c => c.Value)) 
             ChessmanInit(tmp.Key,tmp.Value);
+        isDragDisable = true;
         return true;
     }
 
@@ -567,7 +564,7 @@ public class WarsUIManager : MonoBehaviour
     private void ChessmanInit(FightCardData card, WarGameCardUi ui)
     {
         //var ui = card.cardObj;TODO 这个会导致报错! Ui实例并不是同一个，是被销毁的那个.
-        ui.DragDisable();
+        //ui.DragDisable();
         ui.transform.SetParent(Chessboard.transform);
         PlayerScope.Add(card, ui);
         TempScope.Remove(card);
@@ -598,7 +595,7 @@ public class WarsUIManager : MonoBehaviour
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
             ui.War.UpdateHpUi(card.Status.HpRate);
             ui.gameObject.SetActive(true);
-            ui.DragComponent.UpdateSelectionUi();
+            //ui.DragComponent.UpdateSelectionUi();
             UpdateHeroEnlistText();
         }
     }
@@ -606,7 +603,7 @@ public class WarsUIManager : MonoBehaviour
     /// 根据棋子PosIndex标记更新暂存区
     /// </summary>
     /// <param name="card"></param>
-    public void UpdateCardTempScope(FightCardData card)
+    public void PlaceCard(FightCardData card)
     {
         if (!TempScope.ContainsKey(card))
             TempScope.Add(card, card.cardObj);
@@ -617,11 +614,14 @@ public class WarsUIManager : MonoBehaviour
             card.cardObj.transform.position = chessPos.transform.position;
             EffectsPoolingControl.instance.GetSparkEffect(
                 Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
+            card.cardObj.DragComponent.SetController(_chessboardInputControl);
         }
         else
         {
             TempScope.Remove(card);
-            card.cardObj.transform.position = Vector3.zero;
+            card.cardObj.transform.SetParent(Rack.ScrollRect.content);
+            card.cardObj.transform.localPosition = Vector3.zero;
+            card.cardObj.DragComponent.SetController(Rack);
         }
 
         UpdateHeroEnlistText();
@@ -694,9 +694,7 @@ public class WarsUIManager : MonoBehaviour
                 //var card = CreateEnemyFightUnit(i,1, true, chessman);
                 //PlaceCardOnBoard(card, i, false);
                 enemyCards.Add(ChessCard.Instance(chessman.CardId, chessman.CardType, chessman.Star, i));
-
             }
-
         }
         else
         {
@@ -1207,8 +1205,7 @@ public class WarsUIManager : MonoBehaviour
 
     private void CreateCardToList(GameCard card, GameCardInfo info)
     {
-        var ui = PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform);
-        var cardDrag = ui.DragComponent;
+        var ui = InstanceWarGameCardUi();
         ui.Init(card);
         ui.SetSize(Vector3.one);
         ui.tag = GameSystem.PyCard;
@@ -1216,10 +1213,12 @@ public class WarsUIManager : MonoBehaviour
         var fightCard = new FightCardData(card);
         fightCard.cardObj = ui;
         fightCard.isPlayerCard = true;
-        cardDrag.Init(fightCard, herosCardListTran, herosCardListScrollRect);
+        
+        ui.DragComponent.Init(fightCard);
+        ui.DragComponent.SetController(Rack);
         playerCardsDatas.Add(fightCard);
     }
-
+    private WarGameCardUi InstanceWarGameCardUi()=> PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform);
     //展示卡牌详细信息
     private void ShowInfoOfCardOrArms(string text)
     {

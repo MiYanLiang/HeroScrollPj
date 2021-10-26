@@ -3532,18 +3532,6 @@ public class FightController : MonoBehaviour
     //锁定玩家上场卡牌
     private void LockFightCardState()
     {
-        var list = FightForManager.instance.GetCardList(true);
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (i != 17 && list[i] != null)
-            {
-                if (!list[i].cardObj.DragComponent.IsLocked)
-                {
-                    list[i].cardObj.DragComponent.IsLocked = true;
-                    list[i].cardObj.SetSelected(false);
-                }
-            }
-        }
     }
 
     /// <summary>

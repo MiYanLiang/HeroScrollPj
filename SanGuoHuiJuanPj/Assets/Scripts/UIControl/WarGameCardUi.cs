@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class WarGameCardUi : GameCardUiBase
+public class WarGameCardUi : GameCardUiBase,IPoolObject
 {
     public GameCardWarUiOperation War;
     public DragController DragComponent;
@@ -26,7 +26,13 @@ public class WarGameCardUi : GameCardUiBase
         obj.gameObject.SetActive(isActive);
     }
 
-    public void DragDisable() => DragComponent?.Disable();
+    //public void DragDisable() => DragComponent?.Disable();
+    public void ObjReset()
+    {
+        SetSelected(false);
+        SetLose(false);
+        ResetUi();
+    }
 }
 
 public class GameCardUiBase : MonoBehaviour
@@ -49,6 +55,12 @@ public class GameCardUiBase : MonoBehaviour
         SetName(CardInfo);
         SetLevel(Card.Level);
         ShowFrame(false);
+    }
+
+    public void ResetUi()
+    {
+        Card = null;
+        CardInfo = null;
     }
 
     protected void Set()

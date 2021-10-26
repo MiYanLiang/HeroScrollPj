@@ -39,6 +39,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private static InstantEffectStyle InstantEffectStyle { get; } = new InstantEffectStyle();
     private List<SpriteObj> Sprites { get; } = new List<SpriteObj>();
     public event Func<bool> OnRoundBegin;
+    public event Func<bool> OnRoundPause;
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
     public UnityEvent<FightCardData> OnCardDefeated = new CardDefeatedEvent();
@@ -106,7 +107,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
     {
         var gc = GameCard.Instance(card.cardId, card.cardType, card.Level);
         var ui = Instantiate(card.CardType == GameCardType.Base ? HomePrefab : PrefabUi);
-        ui.DragDisable();
         card.cardObj = ui;
         Chessboard.PlaceCard(card.Pos, card);
         CardMap.Add(card.InstanceId, card);
@@ -222,6 +222,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         IsBusy = false;
         NewWar.StartButtonShow(true);
+        OnRoundPause?.Invoke();
     }
     private void FilterDeathChessman()
     {

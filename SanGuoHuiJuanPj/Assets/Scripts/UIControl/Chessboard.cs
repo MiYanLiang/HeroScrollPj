@@ -89,8 +89,8 @@ public class Chessboard : MonoBehaviour
     }
 
     public bool IsPlayerScopeAvailable(int index) =>
-        PlayerScope[index].Card == null || PlayerScope[index].Card.Status.IsDeath ||
-        !PlayerScope[index].Card.cardObj.DragComponent.IsLocked;
+        PlayerScope[index].Card == null || PlayerScope[index].Card.Status.IsDeath ;
+                                        //|| !PlayerScope[index].Card.cardObj.DragComponent.IsLocked;
 
     public void ClearEnemyCards()
     {

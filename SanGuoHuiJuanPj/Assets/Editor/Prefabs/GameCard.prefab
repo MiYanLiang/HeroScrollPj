@@ -1202,6 +1202,7 @@ MonoBehaviour:
   Level: {fileID: 6784055028249413227}
   Short: {fileID: 6784055028249414237}
   Frame: {fileID: 6784055028249413231}
+  GrayScale: {fileID: 0}
   CityOperation: {fileID: 4330266872826533676}
   WarOperation: {fileID: 4330266872321034616}
 --- !u!1 &6784055028249414171
@@ -1559,8 +1560,6 @@ GameObject:
   - component: {fileID: 7127321604898431671}
   - component: {fileID: 1608856440222575829}
   - component: {fileID: 4330266872321034616}
-  - component: {fileID: 9121949606713956335}
-  - component: {fileID: 5159912341964102285}
   - component: {fileID: 386869326592187569}
   m_Layer: 5
   m_Name: WarOperations
@@ -1682,83 +1681,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aed5009a4c931f45b501a1ba23bf3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Button: {fileID: 1608856440222575829}
   Hp: {fileID: 4330266873594626235}
   Lose: {fileID: 4330266873132503200}
   Highlight: {fileID: 4330266873885088657}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 4330266874121739908}
   StateContent: {fileID: 4330266873107537636}
---- !u!114 &9121949606713956335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7127321604898431669}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 13
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 386869326592187569}
-          m_MethodName: BeginDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - eventID: 5
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 386869326592187569}
-          m_MethodName: OnDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - eventID: 14
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 386869326592187569}
-          m_MethodName: EndDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
---- !u!114 &5159912341964102285
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7127321604898431669}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27b8b4a0d51d3234bbbe13d7207147f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates: []
+  PrefabIco: {fileID: 0}
 --- !u!114 &386869326592187569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1771,8 +1700,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  posIndex: 2
-  isFightCard: 1
 --- !u!1 &7127321605338431250
 GameObject:
   m_ObjectHideFlags: 0
@@ -1968,6 +1895,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Button: {fileID: 6774785404255035738}
   Chips: {fileID: 6784055028249411983}
+  HighlightColor: {r: 0.003921569, g: 0.7372549, b: 0.003921569, a: 1}
+  NormalColor: {r: 1, g: 1, b: 1, a: 1}
   Enlisted: {fileID: 6784055028249413153}
   Disabled: {fileID: 59859479283641747}
   Selected: {fileID: 59859479283640887}
+  OnclickAction:
+    m_PersistentCalls:
+      m_Calls: []

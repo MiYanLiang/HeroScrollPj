@@ -8,7 +8,7 @@ using CorrelateLib;
 using Newtonsoft.Json;
 using UnityEngine;
 
-[Serializable]public class FightCardData : ICardDrag,IChessman
+[Serializable]public class FightCardData : IChessman
 {
     public static FightCardData PlayerBaseCard(int level, int cityLevel = 1)
     {
@@ -199,6 +199,8 @@ using UnityEngine;
     }
     [Obsolete("新战斗系统别用")]
     public HitPoint Hp { get; set; }
+
+    public bool IsLock { get; set; }
 
     private ChessmanStyle GetChessmanStyle()
     {

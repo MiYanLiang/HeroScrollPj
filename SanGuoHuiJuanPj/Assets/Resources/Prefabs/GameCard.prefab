@@ -223,8 +223,6 @@ GameObject:
   - component: {fileID: 1700715423807361580}
   - component: {fileID: 7142916810297318479}
   - component: {fileID: 5290392904260827618}
-  - component: {fileID: 857054196788356981}
-  - component: {fileID: 3668395724678916631}
   - component: {fileID: 8083148845017820203}
   - component: {fileID: 1005915645226686972}
   m_Layer: 5
@@ -318,84 +316,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aed5009a4c931f45b501a1ba23bf3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Button: {fileID: 7142916810297318479}
   Hp: {fileID: 5290392905404330017}
   Lose: {fileID: 5290392905059704890}
   Highlight: {fileID: 5290392905917082379}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 251625514542748103}
   StateContent: {fileID: 5290392905085070974}
-  CardDrag: {fileID: 8083148845017820203}
---- !u!114 &857054196788356981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700715423807361583}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 13
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 8083148845017820203}
-          m_MethodName: BeginDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - eventID: 5
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 8083148845017820203}
-          m_MethodName: OnDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-  - eventID: 14
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 8083148845017820203}
-          m_MethodName: EndDrag
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
---- !u!114 &3668395724678916631
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700715423807361583}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27b8b4a0d51d3234bbbe13d7207147f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates: []
+  PrefabIco: {fileID: 0}
 --- !u!114 &8083148845017820203
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -408,8 +335,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  posIndex: 2
-  isFightCard: 1
 --- !u!114 &1005915645226686972
 MonoBehaviour:
   m_ObjectHideFlags: 0
