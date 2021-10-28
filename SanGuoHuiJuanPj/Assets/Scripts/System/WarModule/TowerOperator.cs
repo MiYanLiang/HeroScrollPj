@@ -132,7 +132,7 @@ namespace Assets.System.WarModule
         /// </summary>
         protected virtual int Surround { get; } = 1;
 
-        public override void OnPlaceInvocation()
+        public override void OnRoundStart()
         {
             //除去所有精灵(如果被移位)
             foreach (var sprite in Chessboard.ChessSprites.Where(s => s.Value == InstanceId))
@@ -294,7 +294,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class MiWuOperator : NeighborSpriteTowerOperator
     {
-        protected override int Surround => Style.Military == 18 ? 2 : 1;
+        protected override int Surround => Style.Military == 17 ? 2 : 1;
 
         protected override PosSprite InstanceSprite(IChessPos pos) =>
             Chessboard.InstanceSprite<ForgeSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);

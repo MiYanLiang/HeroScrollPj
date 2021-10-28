@@ -38,7 +38,7 @@ public class ChessPos : MonoBehaviour,IChessPos
     public void RemoveCard() => Card = null;
     public void PlaceCard(FightCardData chessman, bool resetPos)
     {
-        chessman.UpdatePos(posIndex);
+        chessman.SetPos(posIndex);
         chessman.cardObj.transform.SetParent(transform);
         Card = chessman;
         if (resetPos)

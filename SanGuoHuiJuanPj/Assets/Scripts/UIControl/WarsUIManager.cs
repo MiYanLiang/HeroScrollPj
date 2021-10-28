@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Assets;
+using Beebyte.Obfuscator;
+using CorrelateLib;
 using DG.Tweening;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Assets;
-using Beebyte.Obfuscator;
-using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -14,7 +14,7 @@ public class WarsUIManager : MonoBehaviour
 {
     public static WarsUIManager instance;
     [SerializeField] private PlayerCardRack Rack;
-    [SerializeField] private ChessboardInputController _chessboardInputControl;
+    [SerializeField] private ChessboardInputController ChessboardInputControl;
     public bool isDragDisable;
     public ChessboardVisualizeManager chessboardManager;
     [SerializeField] private PlayerInfoUis infoUis; //玩家信息UI
@@ -70,11 +70,11 @@ public class WarsUIManager : MonoBehaviour
     public float cardMoveSpeed; //卡牌移动速度
 
     public AudioClip[] audioClipsFightEffect;
-    [Range(0,1)]
+    [Range(0, 1)]
     public float[] audioVolumeFightEffect;
 
     public AudioClip[] audioClipsFightBack;
-    [Range(0,1)]
+    [Range(0, 1)]
     public float[] audioVolumeFightBack;
 
     [SerializeField] AudioSource audioSource;
@@ -146,13 +146,13 @@ public class WarsUIManager : MonoBehaviour
         StartCoroutine(Initialize());
         if (!EffectsPoolingControl.instance.IsInit) EffectsPoolingControl.instance.Init();
         chessboardManager.Init();
-        chessboardManager.OnRoundBegin += OnChessRoundBegin;
+        chessboardManager.OnRoundBegin += OnRoundStart;
         chessboardManager.OnRoundPause += () => isDragDisable = false;
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
-        chessboardManager.OnCardDefeated.AddListener(OnCardDefeated);
+        chessboardManager.OnCardRemove.AddListener(OnCardRemove);
         chessboardManager.OnGameSet.AddListener(FinalizeWar);
-        speedBtn.onClick.AddListener(()=>ChangeTimeScale());
-        UiPool = new ObjectPool<WarGameCardUi>(InstanceWarGameCardUi);
+        speedBtn.onClick.AddListener(() => ChangeTimeScale());
+        UiPool = new ObjectPool<WarGameCardUi>(()=>PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform));
     }
 
     IEnumerator Initialize()
@@ -206,7 +206,7 @@ public class WarsUIManager : MonoBehaviour
         yield return new WaitUntil(() => PlayerDataForGame.instance.WarReward != null);
         InitMainUiShow();
 
-        InitCardListShow();
+        InitCardToRack();
 
         InitState();
     }
@@ -283,7 +283,7 @@ public class WarsUIManager : MonoBehaviour
             selectParentIndex = checkpointId;
 
             //关卡艺术图
-            levelIntroText.transform.parent.GetComponent<Image>().DOFade(0, 0.5f).OnComplete(delegate()
+            levelIntroText.transform.parent.GetComponent<Image>().DOFade(0, 0.5f).OnComplete(delegate ()
             {
                 levelIntroText.transform.parent.GetComponent<Image>().sprite = GameResources.ArtWindow[randArtImg];
                 levelIntroText.transform.parent.GetComponent<Image>().DOFade(1, 1f);
@@ -374,7 +374,7 @@ public class WarsUIManager : MonoBehaviour
             //if (treasureChestNums > 0) rewardMap.Trade(2, treasureChestNums); //index2是宝箱图
             var viewBag = ViewBag.Instance()
                 .WarCampaignDto(new WarCampaignDto
-                    { IsFirstRewardTaken = ca.isTakeReward, UnlockProgress = ca.unLockCount, WarId = ca.warId })
+                { IsFirstRewardTaken = ca.isTakeReward, UnlockProgress = ca.unLockCount, WarId = ca.warId })
                 .SetValues(reward.Token, reward.Chests);
 
             ApiPanel.instance.Invoke(vb =>
@@ -508,7 +508,7 @@ public class WarsUIManager : MonoBehaviour
     private const string Multiply = "×";
 
     //改变游戏速度
-    public void ChangeTimeScale(int scale = 0,bool save = true)
+    public void ChangeTimeScale(int scale = 0, bool save = true)
     {
         var warScale = GamePref.PrefWarSpeed;
         if (scale <= 0)
@@ -518,7 +518,7 @@ public class WarsUIManager : MonoBehaviour
                 warScale = 1;
         }
         else warScale = scale;
-        if(save) GamePref.SetPrefWarSpeed(warScale);
+        if (save) GamePref.SetPrefWarSpeed(warScale);
         Time.timeScale = warScale;
         speedBtnText.text = Multiply + warScale;
     }
@@ -531,106 +531,162 @@ public class WarsUIManager : MonoBehaviour
      * 2.当棋局结束的时候，将残余的棋子提取以便在新棋局重复使用。(维持当前血量)
      * 3.统计当前玩家手上已上阵的棋子。(死亡忽略)
      */
-
-    //记录当前在棋盘上的卡牌与UI，棋局结束后会统计并销毁死亡的卡牌
-    private Dictionary<FightCardData, WarGameCardUi> PlayerScope { get; set; } =
-        new Dictionary<FightCardData, WarGameCardUi>();
-    //记录暂时摆放的卡牌与位置，直到点击开始战斗的时候会把卡牌记录到棋盘上
-    public Dictionary<FightCardData, WarGameCardUi> TempScope { get; private set; } =
-        new Dictionary<FightCardData, WarGameCardUi>();
-    private void OnCardDefeated(FightCardData defeatedCard)
+    public List<FightCardData> PlayerScope { get; } = new List<FightCardData>();
+    private void OnCardRemove(FightCardData remCard)
     {
-        if (!defeatedCard.IsPlayer ||
-            defeatedCard.CardType == GameCardType.Base) return;//老巢不提取棋子
-        var ui = PlayerScope[defeatedCard];
-        PlayerScope.Remove(defeatedCard);
-        Destroy(ui);
+        if (!remCard.IsPlayer ||
+            remCard.CardType == GameCardType.Base) return;//老巢不提取棋子
+        var card = PlayerScope.FirstOrDefault(f => f == remCard);
+        if (card == null)
+            throw new InvalidOperationException($"找不到战败的卡牌，Id = {remCard.InstanceId}");
+        PlayerScope.Remove(card);
         UpdateHeroEnlistText();
     }
 
-    private bool OnChessRoundBegin()
+    private void ChessmanInit(FightCardData card)
     {
-        //从暂存区，交接到棋盘区
-        foreach (var tmp in TempScope.ToDictionary(c => c.Key, c => c.Value)) 
-            ChessmanInit(tmp.Key,tmp.Value);
+        chessboardManager.SetPlayerChess(card);
+        chessboardManager.InstanceChessman(card);
+        var ui = card.cardObj;
+        card.UpdateHpUi();
+        ui.DragComponent.Init(card);
+    }
+
+    private bool OnRoundStart()
+    {
         isDragDisable = true;
+        //移除地块精灵
+        foreach (var pos in PresetMap.Keys.ToArray())
+            RemovePreFloorBuff(pos);
+        foreach (var card in PlayerScope.Where(c=>!c.IsLock))
+        {
+            RecycleCardUi(card);
+            ChessmanInit(card);
+            card.IsLock = true;
+        }
+
         return true;
     }
 
-    /**
-     * 1.分解棋子回答暂存区的方法
-     * 2.分解从暂存区放置到棋盘区的方法
-     */
-    private void ChessmanInit(FightCardData card, WarGameCardUi ui)
-    {
-        //var ui = card.cardObj;TODO 这个会导致报错! Ui实例并不是同一个，是被销毁的那个.
-        //ui.DragDisable();
-        ui.transform.SetParent(Chessboard.transform);
-        PlayerScope.Add(card, ui);
-        TempScope.Remove(card);
-        ui.gameObject.SetActive(false);
-        chessboardManager.SetPlayerChess(card);
-        chessboardManager.InstanceChessmanUi(card);
-    }
-    //让所有棋子回到暂存区
-    private void ResetChessboardPlacingScope()
-    {
-        foreach (var gc in PlayerScope.ToDictionary(c => c.Key, c => c.Value))
-        {
-            var card = gc.Key;
-            var ui = gc.Value;
-            var chessman = card.cardObj;
-            PlayerScope.Remove(card);
-            if (card.Status.IsDeath)//死亡棋子直接销毁
-            {
-                Destroy(ui.gameObject);
-                continue;
-            }
-
-            TempScope.Add(card, ui);
-            ui.transform.position = chessman.transform.position; //被改位置重置
-            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Info.GameSetRecovery * 0.01f)),
-                card.Status.MaxHp);
-            card.Status.SetHp(hp);
-            //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
-            ui.War.UpdateHpUi(card.Status.HpRate);
-            ui.gameObject.SetActive(true);
-            //ui.DragComponent.UpdateSelectionUi();
-            UpdateHeroEnlistText();
-        }
-    }
     /// <summary>
     /// 根据棋子PosIndex标记更新暂存区
     /// </summary>
     /// <param name="card"></param>
     public void PlaceCard(FightCardData card)
     {
-        if (!TempScope.ContainsKey(card))
-            TempScope.Add(card, card.cardObj);
-
-        if (card.Pos > -1)
+        var chessman = PlayerScope.FirstOrDefault(c => c == card);
+        if (card.Pos <= -1)//回到卡组
         {
-            var chessPos = Chessboard.GetChessPos(card.Pos, true);
-            card.cardObj.transform.position = chessPos.transform.position;
-            EffectsPoolingControl.instance.GetSparkEffect(
-                Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
-            card.cardObj.DragComponent.SetController(_chessboardInputControl);
+            card.cardObj.transform.SetParent(Rack.ScrollRect.content);
+            card.cardObj.transform.localPosition = Vector3.zero;
+            if(!card.IsLock) card.cardObj.DragComponent.SetController(Rack);
+            if (chessman != null) PlayerScope.Remove(chessman);
+            
         }
         else
         {
-            TempScope.Remove(card);
-            card.cardObj.transform.SetParent(Rack.ScrollRect.content);
+            if (chessman == null) PlayerScope.Add(card);
+            var chessPos = Chessboard.GetChessPos(card);
+            if (!card.IsLock)
+            {
+                card.cardObj.DragComponent.SetController(ChessboardInputControl);
+                PlayAudioForSecondClip(85, 0);
+            }
+            card.cardObj.transform.SetParent(chessPos.transform);
             card.cardObj.transform.localPosition = Vector3.zero;
-            card.cardObj.DragComponent.SetController(Rack);
+            EffectsPoolingControl.instance.GetSparkEffect(
+                Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
+        }
+        OnPreChessboardFloorBuff(chessboardManager.IsFirstRound);
+        UpdateHeroEnlistText();
+    }
+
+    public void RecycleCardUi(FightCardData card)
+    {
+        if (card.cardObj == null)
+            throw new InvalidOperationException($"卡牌[{card.InstanceId}]({card.Info.Intro})找不到UI!");
+        var ui = card.cardObj;
+        card.cardObj = null;
+        ui.transform.SetParent(Chessboard.transform);
+        UiPool.Recycle(ui);
+    }
+
+    private Dictionary<ChessPos, (FightCardData, List<Effect.PresetSprite>)> PresetMap { get; } =
+        new Dictionary<ChessPos, (FightCardData, List<Effect.PresetSprite>)>();
+
+    private void OnPreChessboardFloorBuff(bool includeLocked)
+    {
+        var cards = chessboardManager.CardData.Values.Concat(PlayerScope)
+            .Where(c => IncludeLock(c.IsLock, includeLocked)).ToArray();
+        foreach (var pos in Chessboard.GetScope(true).Concat(Chessboard.GetScope(false)).Where(c => c.Pos != 17))
+        {
+            var card = cards.FirstOrDefault(c => c.Pos == pos.Pos && c.isPlayerCard == pos.IsChallenger);
+            var isMapped = PresetMap.ContainsKey(pos);
+            //移除FloorBuff
+            if (isMapped && PresetMap[pos].Item1 == card)
+            {
+                RemovePreFloorBuff(pos);
+                continue;
+            }
+
+            if (card == null) continue;
+            var preSprite = Effect.PresetFloorBuff(card);
+            //添加FloorBuff
+            if (preSprite == null) continue;
+            if (isMapped) continue;
+            PresetMap.Add(pos, (null, new List<Effect.PresetSprite>()));
+            PresetMap[pos].Item2.Add(preSprite);
+            InstanceFloorBuffs(preSprite, pos);
+        }
+        bool IncludeLock(bool isLock, bool included)
+        {
+            if (included) return true;
+            return !isLock;
+        }
+    }
+
+    private void RemovePreFloorBuff(ChessPos pos)
+    {
+        foreach (var floorBuff in PresetMap[pos].Item2.SelectMany(s => s.Sprites))
+            EffectsPoolingControl.instance.RecycleEffect(floorBuff);
+        PresetMap.Remove(pos);
+    }
+
+    private void InstanceFloorBuffs(Effect.PresetSprite preSprite, ChessPos chessPos)
+    {
+        switch (preSprite.Kind)
+        {
+            case Effect.PresetKinds.SelfPos:
+                InstanceSprite(preSprite.FloorBuffId, chessPos);
+                break;
+            case Effect.PresetKinds.Surround:
+                foreach (var pos in Chessboard.GetNeighborIndexes(chessPos.Pos, 1, false)
+                             .Join(Chessboard.GetScope(chessPos.IsChallenger), i => i, p => p.Pos, (_, p) => p))
+                    InstanceSprite(preSprite.FloorBuffId, pos);
+                break;
+            case Effect.PresetKinds.Surround2:
+                foreach (var pos in Chessboard.GetNeighborIndexes(chessPos.Pos, 2, false)
+                             .Join(Chessboard.GetScope(chessPos.IsChallenger), i => i, p => p.Pos, (_, p) => p))
+                    InstanceSprite(preSprite.FloorBuffId, pos);
+                
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        UpdateHeroEnlistText();
+        void InstanceSprite(int floorBuffId,ChessPos pos)
+        {
+            var effect = EffectsPoolingControl.instance.GetFloorBuff(floorBuffId, pos.transform);
+            effect.Animator.enabled = false;
+            preSprite.Sprites.Add(effect);
+        }
     }
 
     #endregion
 
     private List<int> PlayerRewardChests => PlayerDataForGame.instance.WarReward.Chests;
     private int TempGold { get; set; }
+    private List<int> TempChest { get; set; } = new List<int>();
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }
 
@@ -640,37 +696,62 @@ public class WarsUIManager : MonoBehaviour
         if (id == -1) TempGold += value;
         if (id >= 0)
             for (int i = 0; i < value; i++)
-                PlayerRewardChests.Add(id);
+                TempChest.Add(id);
     }
-    public void FinalizeWar(bool isChallengerWin)
+
+    private void FinalizeWar(bool isChallengerWin)
     {
-        ResetChessboardPlacingScope();
         if (!isChallengerWin)
         {
             ExpeditionFinalize(false);
             return;
         }
+        ResetChessboardPlayerScope();
+        isDragDisable = false;
         StartCoroutine(OnPlayerWin());
+    }
+    private void ResetChessboardPlayerScope()
+    {
+        foreach (var card in PlayerScope.ToArray())
+        {
+            if (card.Status.IsDeath)//死亡棋子直接销毁
+            {
+                PlayerScope.Remove(card);
+                continue;
+            }
+            var ui = card.cardObj; //GenerateCardUi(card);
+            //PlaceCard(card);
+            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Info.GameSetRecovery * 0.01f)),
+                card.Status.MaxHp);
+            card.Status.SetHp(hp);
+            //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
+            ui.War.UpdateHpUi(card.Status.HpRate);//这个更新是演示层的ui更新
+            ui.gameObject.SetActive(true);
+            EffectsPoolingControl.instance.GetSparkEffect(092, ui.transform);
+            UpdateHeroEnlistText();
+        }
     }
 
     IEnumerator OnPlayerWin()
     {
         var battle = DataTable.BattleEvent[battleId];
         TempGold += battle.GoldReward;
-        PlayerRewardChests.AddRange(battle.WarChestTableIds);
+        TempChest.AddRange(battle.WarChestTableIds);
+        PlayerRewardChests.AddRange(TempChest);
         UpdateInfoUis();
         ChangeTimeScale(1, false);
         yield return new WaitForSeconds(2);
-        GenericWindow.SetReward(TempGold, PlayerRewardChests.Count);
+        GenericWindow.SetReward(TempGold, TempChest.Count);
         GoldForCity += TempGold;
         UpdateInfoUis();
         TempGold = 0;
+        TempChest.Clear();
     }
 
     public void InitChessboard(GameStage stage)
     {
-        if(playerBaseObj!=null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
-        if(enemyBaseObj!=null && enemyBaseObj.gameObject) Destroy(enemyBaseObj.gameObject);
+        if (playerBaseObj != null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
+        if (enemyBaseObj != null && enemyBaseObj.gameObject) Destroy(enemyBaseObj.gameObject);
         chessboardManager.NewGame();
         var playerBase = FightCardData.PlayerBaseCard(PlayerDataForGame.instance.pyData.Level, cityLevel);
         var enemyBase = FightCardData.BaseCard(false, stage.BattleEvent.BaseHp, 1);
@@ -722,9 +803,11 @@ public class WarsUIManager : MonoBehaviour
         }
 
         foreach (var card in chessboardManager.SetEnemyChess(enemyBase, enemyCards.ToArray()))
-            chessboardManager.InstanceChessmanUi(card);
+            chessboardManager.InstanceChessman(card);
         chessboardManager.SetPlayerBase(playerBase);
-        chessboardManager.InstanceChessmanUi(playerBase);
+        chessboardManager.InstanceChessman(playerBase);
+        foreach (var card in PlayerScope.Where(p => p.IsLock)) 
+            ChessmanInit(card);
         enemyBaseObj = enemyBase.cardObj;
         playerBaseObj = playerBase.cardObj;
         //调整游戏速度
@@ -788,12 +871,10 @@ public class WarsUIManager : MonoBehaviour
         currentEvent = EventTypes.回春;
         PlayAudioClip(19);
         GenericWindow.SetRecovery(DataTable.GetStringText(55));
-        foreach (var itm in TempScope)
+        foreach (var card in PlayerScope)
         {
-            var ui = itm.Value;
-            var card = itm.Key;
             card.ResetHp(card.MaxHitPoint);
-            ui.War.UpdateHpUi(card.Status.HpRate);
+            card.cardObj.War.UpdateHpUi(card.Status.HpRate);
         }
     }
 
@@ -818,7 +899,7 @@ public class WarsUIManager : MonoBehaviour
         point0Tran.gameObject.SetActive(false);
         point1Tran.position = point0Pos;
 
-        point1Tran.DOMove(point1Pos, 1.5f).SetEase(Ease.Unset).OnComplete(delegate()
+        point1Tran.DOMove(point1Pos, 1.5f).SetEase(Ease.Unset).OnComplete(delegate ()
         {
             isPointMoving = false;
 
@@ -1122,7 +1203,7 @@ public class WarsUIManager : MonoBehaviour
             ui.Off();
         }
 
-        CreateCardToList(card, info);
+        CreateCardToRack(card);
         if (!isBuy) PassStage();
 
         ui.SetSelect(false);
@@ -1132,33 +1213,24 @@ public class WarsUIManager : MonoBehaviour
     private void OnAnswerQuiz(bool isCorrect)
     {
         PlayAudioClip(13);
-
-        //for (int i = 3; i < 6; i++)
-        //{
-        //    eventsWindows[2].transform.GetChild(i).GetComponent<Button>().onClick.RemoveAllListeners();
-        //}
-
         string rewardStr = "";
         if (isCorrect)
         {
             rewardStr = DataTable.GetStringText(58);
-            //eventsWindows[2].transform.GetChild(btnIndex).GetChild(0).GetComponent<Text>().color = Color.green;
             var pick = DataTable.QuestReward.Values.Select(r => new WeightElement { Id = r.Id, Weight = r.Weight })
                 .PickOrDefault().Id;
             var reward = DataTable.QuestReward[pick].Produce;
 
             var info = RandomPickFromRareClass((GameCardType)reward.CardType, reward.Rarity);
             var card = new GameCard().Instance(info.Type, info.Id, reward.Star);
-            CreateCardToList(card, info);
+            CreateCardToRack(card);
         }
         else
         {
             rewardStr = DataTable.GetStringText(59);
-            //eventsWindows[2].transform.GetChild(btnIndex).GetChild(0).GetComponent<Text>().color = Color.red;
         }
 
         PlayerDataForGame.instance.ShowStringTips(rewardStr);
-        //eventsWindows[2].transform.GetChild(6).gameObject.SetActive(true);
     }
 
     //根据稀有度返回随机id
@@ -1171,7 +1243,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //初始化卡牌列表
-    private void InitCardListShow()
+    private void InitCardToRack()
     {
         var forceId = PlayerDataForGame.instance.CurrentWarForceId;
 #if UNITY_EDITOR
@@ -1182,7 +1254,7 @@ public class WarsUIManager : MonoBehaviour
                     new GameCard().Instance(GameCardType.Tower, id, 1)))
                 .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
                     new GameCard().Instance(GameCardType.Trap, id, 1)))
-                .ToList().ForEach(CreateCardToList);
+                .ToList().ForEach(CreateCardToRack);
             return;
         }
 #endif
@@ -1193,32 +1265,34 @@ public class WarsUIManager : MonoBehaviour
         var hstData = PlayerDataForGame.instance.hstData;
         //临时记录武将存档信息
         hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(CreateCardToList);
+            .ForEach(CreateCardToRack);
         hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(CreateCardToList);
+            .ForEach(CreateCardToRack);
         hstData.trapSaveData.Enlist(forceId).ToList()
-            .ForEach(CreateCardToList);
+            .ForEach(CreateCardToRack);
     }
 
     //创建玩家卡牌
-    private void CreateCardToList(GameCard card) => CreateCardToList(card, card.GetInfo());
-
-    private void CreateCardToList(GameCard card, GameCardInfo info)
+    private void CreateCardToRack(GameCard card)
     {
-        var ui = InstanceWarGameCardUi();
-        ui.Init(card);
-        ui.SetSize(Vector3.one);
-        ui.tag = GameSystem.PyCard;
-        GiveGameObjEventForHoldOn(ui, info.About);
         var fightCard = new FightCardData(card);
-        fightCard.cardObj = ui;
         fightCard.isPlayerCard = true;
-        
-        ui.DragComponent.Init(fightCard);
-        ui.DragComponent.SetController(Rack);
+        GenerateCardUi(fightCard);
         playerCardsDatas.Add(fightCard);
+        PlaceCard(fightCard);
+
+        void GenerateCardUi(FightCardData fCard)
+        {
+            var wUi = UiPool.Get();
+            wUi.Init(fCard.Card);
+            wUi.SetSize(Vector3.one);
+            wUi.tag = GameSystem.PyCard;
+            GiveGameObjEventForHoldOn(wUi, fCard.Info.About);
+            wUi.DragComponent.Init(fCard);
+            fCard.cardObj = wUi;
+        }
     }
-    private WarGameCardUi InstanceWarGameCardUi()=> PrefabManager.NewWarGameCardUi(PlayerCardsRack.transform);
+
     //展示卡牌详细信息
     private void ShowInfoOfCardOrArms(string text)
     {
@@ -1275,21 +1349,14 @@ public class WarsUIManager : MonoBehaviour
     //刷新金币宝箱的显示
     private void UpdateInfoUis() => infoUis.Set(GoldForCity, PlayerDataForGame.instance.WarReward.Chests);
 
-    public bool IsPlayerAvailableToPlace(int targetPos,bool isAddIn)
+    public bool IsPlayerAvailableToPlace(int targetPos, bool isAddIn)
     {
         var isAvailable = Chessboard.IsPlayerScopeAvailable(targetPos);
         if (!isAvailable) return false;
-        if (TempScope.Any(c => c.Key.Pos == targetPos && targetPos >= 0)) return false;
-        var balance = maxHeroNums - TempScope.Count - PlayerScope.Count;
+        if (PlayerScope.Any(c => c.Pos == targetPos && targetPos >= 0 && c.IsLock)) return false;
+        var balance = maxHeroNums - PlayerScope.Count;
         if (balance <= 0 && isAddIn) PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(38));
         return !isAddIn || balance > 0;
-    }
-
-    public void RemoveCardFromBoard(FightCardData card)
-    {
-        card.posIndex = -1;
-        TempScope.Remove(card);
-        UpdateHeroEnlistText();
     }
 
     /// <summary>
@@ -1345,9 +1412,9 @@ public class WarsUIManager : MonoBehaviour
         }
     }
 
-    private void UpdateHeroEnlistText() => heroEnlistText.text = 
+    private void UpdateHeroEnlistText() => heroEnlistText.text =
         string.Format(DataTable.GetStringText(24),
-        TempScope.Count + PlayerScope.Count, 
+        PlayerScope.Count,
         maxHeroNums);
 
 
@@ -1394,7 +1461,7 @@ public class WarsUIManager : MonoBehaviour
     {
         needMoveObj.transform.DOMove(vec3, cardMoveSpeed)
             .SetEase(Ease.Unset)
-            .OnComplete(delegate()
+            .OnComplete(delegate ()
             {
                 //Debug.Log("-----Move Over"); 
             }).SetAutoKill(true);

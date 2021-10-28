@@ -10,6 +10,7 @@ public class WarGameCardUi : GameCardUiBase,IPoolObject
     public override void Init(GameCard card)
     {
         base.Init(card);
+        gameObject.SetActive(true);
         War.Init(DragComponent);
         War.Show(this);
     }
@@ -31,7 +32,9 @@ public class WarGameCardUi : GameCardUiBase,IPoolObject
     {
         SetSelected(false);
         SetLose(false);
+        Display(true);
         ResetUi();
+        gameObject.SetActive(false);
     }
 }
 
@@ -55,6 +58,17 @@ public class GameCardUiBase : MonoBehaviour
         SetName(CardInfo);
         SetLevel(Card.Level);
         ShowFrame(false);
+    }
+    
+    public void Display(bool isShow)
+    {
+        Image.enabled = isShow;
+        Name.enabled = isShow;
+        Level.enabled = isShow;
+        Frame.enabled = isShow;
+        if(isShow)
+            Short.Show();
+        else Short.Off();
     }
 
     public void ResetUi()

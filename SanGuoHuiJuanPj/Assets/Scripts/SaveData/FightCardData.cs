@@ -24,7 +24,8 @@ using UnityEngine;
     {
         var baseCard = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level)); //GetCard(17, true);
         baseCard.isPlayerCard = isPlayer;
-        baseCard.posIndex = 17;
+        baseCard.IsLock = true;
+        baseCard.SetPos(17);
         baseCard.status = ChessStatus.Instance(hp, hp, 17, 0, new Dictionary<int, int>(), new List<int>(), 0);
         baseCard.ResetHp(hp);
         return baseCard;
@@ -78,6 +79,7 @@ using UnityEngine;
 
     public FightCardData(GameCard card)
     {
+        Card = card;
         info = card.GetInfo();
         unitId = 1;
         cardType = card.typeIndex;
@@ -125,7 +127,7 @@ using UnityEngine;
                 throw new ArgumentOutOfRangeException();
         }
     }
-
+    public GameCard Card { get; }
     public int PosIndex => posIndex;
     public int CardId => cardId;
     public GameCardType CardType => (GameCardType) cardType;
@@ -135,7 +137,7 @@ using UnityEngine;
     public int Level => level;
     private CombatStyle style;
     public CombatStyle Style => style;
-    private int instanceId;
+    private int instanceId = -1;
     private ChessmanStyle chessmanStyle;
     private ChessStatus status;
 
@@ -144,7 +146,7 @@ using UnityEngine;
 
     public Dictionary<int, EffectStateUi> StatesUi { get; }
 
-    public void UpdatePos(int pos)
+    public void SetPos(int pos)
     {
         posIndex = pos;
     }
@@ -219,7 +221,6 @@ using UnityEngine;
                 throw new ArgumentOutOfRangeException();
         }
     }
-
 }
 
 [Serializable]

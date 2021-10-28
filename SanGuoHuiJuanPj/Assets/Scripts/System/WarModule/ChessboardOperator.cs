@@ -140,7 +140,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 是否是新摆入的棋子
         /// </summary>
-        protected List<ChessOperator> PlaceList = new List<ChessOperator>();
+        protected List<ChessOperator> NewPlaceList = new List<ChessOperator>();
 
         protected ChessboardOperator(ChessGrid grid, ILogger log = null)
         {
@@ -194,12 +194,12 @@ namespace Assets.System.WarModule
         public List<ChessProcess> OnPlaceInvocation()
         {
             RoundState = ProcessCondition.PlaceActions;
-            GetActiveRound().PlaceActions.Clear();
-            foreach (var op in PlaceList.ToArray())
-            {
-                PlaceList.Remove(op);
-                op.OnPlaceInvocation();
-            }
+            //GetActiveRound().PlaceActions.Clear();
+            //foreach (var op in NewPlaceList.ToArray())
+            //{
+            //    NewPlaceList.Remove(op);
+            //    op.OnPlaceInvocation();
+            //}
             return GetActiveRound().PlaceActions;
         }
 

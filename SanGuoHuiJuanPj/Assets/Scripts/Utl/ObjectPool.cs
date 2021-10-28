@@ -1,32 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Events;
+
 public interface IPoolObject
 {
     void ObjReset();
 }
 public class ObjectPool<TObj> where TObj : IPoolObject
 {
+    public event UnityAction<TObj> OnGet;
+    public event UnityAction<TObj> OnRecycle;
     public ObjectPool(Func<TObj> instanceFunc)
     {
         Instance = instanceFunc;
     }
-    public List<TObj> Pool { get; set; } = new List<TObj>();
-    public List<TObj> Uses { get; set; } = new List<TObj>();
+    //key = obj, value = in used
+    private Dictionary<TObj,bool> Pool { get; set; } = new Dictionary<TObj,bool>();
 
     public TObj Get()
     {
-        var obj = Pool.FirstOrDefault();
-        if (obj == null) obj = Instance.Invoke();
-        Uses.Add(obj);
+        var o = Pool.FirstOrDefault(e => !e.Value);
+        var obj = o.Key;
+        if (obj == null)
+        {
+            obj = Instance.Invoke();
+            Pool.Add(obj, true);
+        }
+        else Pool[obj] = true;
+        OnGet?.Invoke(obj);
         return obj;
     }
 
-    public void Recycle(TObj obj)
+    public virtual void Recycle(TObj obj)
     {
+        OnRecycle?.Invoke(obj);
         obj.ObjReset();
-        Uses.Remove(obj);
-        Pool.Add(obj);
+        Pool[obj] = false;
     }
 
     private Func<TObj> Instance { get; }

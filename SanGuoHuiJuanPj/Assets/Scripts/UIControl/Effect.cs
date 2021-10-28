@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Assets.System.WarModule;
 using CorrelateLib;
 
@@ -2676,5 +2677,44 @@ public static class Effect
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
+    }
+
+    public class PresetSprite
+    {
+        public static PresetSprite Instance(int floorBuffId, PresetKinds kind) =>
+            new PresetSprite { FloorBuffId = floorBuffId, Kind = kind };
+        public PresetKinds Kind { get; set; }
+        public int FloorBuffId { get; set; }
+        public List<EffectStateUi> Sprites { get; set; } = new List<EffectStateUi>();
+    }
+    /// <summary>
+    /// 预设精灵
+    /// </summary>
+    public enum PresetKinds
+    {
+        /// <summary>
+        /// 自身棋格
+        /// </summary>
+        SelfPos,
+        /// <summary>
+        /// 环绕棋格(1圈)
+        /// </summary>
+        Surround,
+        /// <summary>
+        /// 环绕棋格(2圈)
+        /// </summary>
+        Surround2
+    }
+
+    public static PresetSprite PresetFloorBuff(FightCardData card)
+    {
+        switch (card.Style.Military)
+        {
+            case 17 when card.CardType == GameCardType.Tower://id = 17,-2 = 塔类型
+                return PresetSprite.Instance(GetFloorBuffId(PosSprite.Kinds.Forge), PresetKinds.Surround2);
+            case 18 when card.CardType == GameCardType.Tower://id = 18,-2 = 塔类型
+                return PresetSprite.Instance(GetFloorBuffId(PosSprite.Kinds.Forge), PresetKinds.Surround);
+        }
+        return null;
     }
 }

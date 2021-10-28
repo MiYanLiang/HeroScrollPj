@@ -323,10 +323,10 @@ namespace Assets.System.WarModule
         public virtual void OnPostingTrigger(IChessPos chessPos){}
         public abstract ChessStatus GenerateStatus();
 
-        /// <summary>
-        /// 棋子放置的预设活动，严禁任何攻击活动
-        /// </summary>
-        public virtual void OnPlaceInvocation() { }
+        ///// <summary>
+        ///// 棋子放置的预设活动，严禁任何攻击活动
+        ///// </summary>
+        //public virtual void OnPlaceInvocation() { }
 
         public virtual void OnSomebodyDie(ChessOperator death){}
 

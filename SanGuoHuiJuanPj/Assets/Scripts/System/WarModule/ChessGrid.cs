@@ -16,26 +16,26 @@ namespace Assets.System.WarModule
         public int[] FrontRows { get; } = { 0, 1, 2, 3, 4 };
 
         private static int[][] NeighborCards { get; }= new int[20][] {
-            new int[3]{ 2, 3, 5},           //0
-            new int[3]{ 2, 4, 6},           //1
-            new int[5]{ 0, 1, 5, 6, 7},     //2
-            new int[3]{ 0, 5, 8},           //3
-            new int[3]{ 1, 6, 9},           //4
-            new int[6]{ 0, 2, 3, 7, 8, 10}, //5
-            new int[6]{ 1, 2, 4, 7, 9, 11}, //6
-            new int[6]{ 2, 5, 6, 10,11,12}, //7
-            new int[4]{ 3, 5, 10,13},       //8
-            new int[4]{ 4, 6, 11,14},       //9
-            new int[6]{ 5, 7, 8, 12,13,15}, //10
-            new int[6]{ 6, 7, 9, 12,14,16}, //11
-            new int[6]{ 7, 10,11,15,16,17}, //12
-            new int[4]{ 8, 10,15,18},       //13
-            new int[4]{ 9, 11,16,19},       //14
-            new int[5]{ 10,12,13,17,18},    //15
-            new int[5]{ 11,12,14,17,19},    //16
-            new int[3]{ 12,15,16},          //17
-            new int[2]{ 13,15},             //18
-            new int[2]{ 14,16},             //19
+            new int[]{ 2, 3, 5},           //0
+            new int[]{ 2, 4, 6},           //1
+            new int[]{ 0, 1, 5, 6, 7},     //2
+            new int[]{ 0, 5, 8},           //3
+            new int[]{ 1, 6, 9},           //4
+            new int[]{ 0, 2, 3, 7, 8, 10}, //5
+            new int[]{ 1, 2, 4, 7, 9, 11}, //6
+            new int[]{ 2, 5, 6, 10,11,12}, //7
+            new int[]{ 3, 5, 10,13},       //8
+            new int[]{ 4, 6, 11,14},       //9
+            new int[]{ 5, 7, 8, 12,13,15}, //10
+            new int[]{ 6, 7, 9, 12,14,16}, //11
+            new int[]{ 7, 10,11,15,16,17}, //12
+            new int[]{ 8, 10,15,18},       //13
+            new int[]{ 9, 11,16,19},       //14
+            new int[]{ 10,12,13,17,18},    //15
+            new int[]{ 11,12,14,17,19},    //16
+            new int[]{ 12,15,16},          //17
+            new int[]{ 13,15},             //18
+            new int[]{ 14,16},             //19
         };
         //位置列攻击目标选择次序
         private static int[][] AttackPath { get; }= new int[5][]
@@ -122,11 +122,12 @@ namespace Assets.System.WarModule
             var list = NeighborCards[pos].ToList();
             for (var i = 1; i < surround; i++)
             {
-                foreach (var n in list.ToArray())
-                foreach (var p in NeighborCards[n])
+                foreach (var neighbor in list.ToArray())
+                foreach (var related in NeighborCards[neighbor])
                 {
-                    if (!list.Contains(p))
-                        list.Add(p);
+                    if (related == pos) continue;
+                    if (!list.Contains(related))
+                        list.Add(related);
                 }
             }
             return list.ToArray();

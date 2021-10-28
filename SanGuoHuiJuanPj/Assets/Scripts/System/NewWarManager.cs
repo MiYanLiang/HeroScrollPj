@@ -52,7 +52,7 @@ public class NewWarManager : MonoBehaviour, ILogger
     public FightCardData RegChessCard(ChessCard chessCard, bool isChallenger)
     {
         var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
-        card.UpdatePos(chessCard.Pos);
+        card.SetPos(chessCard.Pos);
         card.isPlayerCard = isChallenger;
         //card = ChessOperator.RegOperator(card);
         RegCard(card);

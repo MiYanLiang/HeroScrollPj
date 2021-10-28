@@ -68,7 +68,7 @@ public class Chessboard : MonoBehaviour
             if (pos != null) RemoveCard(pos.Pos, card.IsPlayer); //移除卡牌前位置
             if (scope[index].Card != null) RemoveCard(index, card.isPlayerCard); //移除目标位置上的卡牌
             scope[index].PlaceCard(card, true);
-            card.UpdatePos(index);
+            card.SetPos(index);
             card.cardObj.transform.SetAsFirstSibling();
         }
         catch (IndexOutOfRangeException e)
@@ -84,13 +84,14 @@ public class Chessboard : MonoBehaviour
             throw XDebug.Throw<Chessboard>($"位置[{index}] 没有卡牌！");
         var card = scope[index].Card;
         scope[index].RemoveCard();
-        card.UpdatePos(-1);
+        card.SetPos(-1);
         return card;
     }
 
     public bool IsPlayerScopeAvailable(int index) =>
-        PlayerScope[index].Card == null || PlayerScope[index].Card.Status.IsDeath ;
-                                        //|| !PlayerScope[index].Card.cardObj.DragComponent.IsLocked;
+        index != 17 &&
+        (PlayerScope[index].Card == null ||
+         PlayerScope[index].Card.Status.IsDeath);
 
     public void ClearEnemyCards()
     {
@@ -117,6 +118,8 @@ public class Chessboard : MonoBehaviour
             Destroy(card.cardObj.gameObject);
     }
 
-    public int[] GetNeighborIndexes(int pos) => grid.GetNeighborIndexes(pos);
+    public int[] GetNeighborIndexes(int pos, int round = 1, bool includeHome = true) => includeHome
+        ? grid.GetNeighborIndexes(pos, round)
+        : grid.GetNeighborIndexes(pos, round).Where(i => i != 17).ToArray();
 
 }

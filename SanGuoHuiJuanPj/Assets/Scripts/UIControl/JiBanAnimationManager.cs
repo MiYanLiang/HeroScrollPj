@@ -29,18 +29,26 @@ public class JiBanAnimationManager : MonoBehaviour
     /// </summary>
     /// <param name="cards"></param>
     /// <returns></returns>
-    public (int JiBanId, bool IsChallenger)[] GetAvailableJiBan(List<FightCardData> cards)
+    public (int JiBanId, bool IsChallenger)[] GetAvailableJiBan(List<FightCardData> cardList)
     {
-        var list = new List<(int, bool)>();
-        foreach (var jb in JiBanMap)
+        var playerList = GetActiveJiBan(cardList.Where(c => c.isPlayerCard).ToArray());
+        var opponentList = GetActiveJiBan(cardList.Where(c => !c.isPlayerCard).ToArray());
+        return playerList.Concat(opponentList).ToArray();
+
+        IEnumerable<(int, bool)> GetActiveJiBan(IList<FightCardData> cards)
         {
-            if (cards.Count == 0) break;
-            var jbCards = cards.Join(jb.Value, c => (c.cardId, c.CardType), j => (j.CardId, j.CardType), (c, _) => c)
-                .DistinctBy(j => j.CardId).ToArray();
-            if (jbCards.Length != jb.Value.Length) continue;
-            list.Add((jb.Key, jbCards.First().IsPlayer));
+            var list = new List<(int, bool)>();
+            foreach (var jb in JiBanMap)
+            {
+                if (cards.Count == 0) break;
+                var jbCards = cards.Join(jb.Value, c => (c.cardId, c.CardType), j => (j.CardId, j.CardType),
+                        (c, _) => c)
+                    .DistinctBy(j => j.CardId).ToArray();
+                if (jbCards.Length != jb.Value.Length) continue;
+                list.Add((jb.Key, jbCards.First().IsPlayer));
+            }
+            return list;
         }
-        return list.ToArray();
     }
 
     public IEnumerator JiBanDisplay(int jbId, bool isChallenger)

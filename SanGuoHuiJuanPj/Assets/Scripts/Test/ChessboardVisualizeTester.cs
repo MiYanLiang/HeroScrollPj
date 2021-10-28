@@ -37,7 +37,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
 
     private void GenerateChessmanFromList()
     {
-        foreach (var card in NewWar.CardData.Values) InstanceChessmanUi(card);
+        foreach (var card in NewWar.CardData.Values) InstanceChessman(card);
     }
 
 }

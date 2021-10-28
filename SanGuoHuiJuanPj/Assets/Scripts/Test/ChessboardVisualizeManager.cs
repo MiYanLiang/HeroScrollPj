@@ -42,8 +42,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public event Func<bool> OnRoundPause;
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
-    public UnityEvent<FightCardData> OnCardDefeated = new CardDefeatedEvent();
+    public UnityEvent<FightCardData> OnCardRemove = new CardDefeatedEvent();
+    
     private bool isShady = false;
+
+    private List<WarGameCardUi> GarbageUi = new List<WarGameCardUi>();//垃圾UI，千万别重用UI，如果没分开重写放置棋格上的方法，会造成演示UI引用混乱
     private Tween ShadyTween(float alpha)
     {
         if (alpha > 0)
@@ -67,20 +70,26 @@ public class ChessboardVisualizeManager : MonoBehaviour
     }
 
     public IDictionary<int, FightCardData> CardData => NewWar.CardData;
+
     public void NewGame()
     {
+        foreach (var ui in GarbageUi.ToArray())
+        {
+            GarbageUi.Remove(ui);
+            Destroy(ui.gameObject);
+        }
+        foreach (var sp in Sprites.ToArray()) RemoveSpriteObj(sp);
         foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
             CardMap.Remove(card.Key);
             Destroy(card.Value.cardObj.gameObject);
         }
 
-        foreach (var sp in Sprites.ToArray()) RemoveSpriteObj(sp);
         IsFirstRound = true;
         NewWar.NewGame();
         Chessboard.ResetChessboard();
         IsGameOver = false;
-        if(AutoRoundSlider) AutoRoundSlider.value = 0;
+        if (AutoRoundSlider) AutoRoundSlider.value = 0;
     }
 
     public void SetPlayerBase(FightCardData playerBase)
@@ -103,14 +112,25 @@ public class ChessboardVisualizeManager : MonoBehaviour
     /// 初始化卡牌UI
     /// </summary>
     /// <param name="card"></param>
-    public void InstanceChessmanUi(FightCardData card)
+    public void InstanceChessman(FightCardData card)
     {
         var gc = GameCard.Instance(card.cardId, card.cardType, card.Level);
-        var ui = Instantiate(card.CardType == GameCardType.Base ? HomePrefab : PrefabUi);
+        var ui = card.CardType == GameCardType.Base 
+            ? Instantiate(HomePrefab) 
+            : Instantiate(PrefabUi);
+
         card.cardObj = ui;
+        card.UpdateHpUi();
         Chessboard.PlaceCard(card.Pos, card);
         CardMap.Add(card.InstanceId, card);
         if (card.CardType != GameCardType.Base) ui.Init(gc);
+    }
+
+    private void RemoveUi(WarGameCardUi obj)
+    {
+        obj.gameObject.SetActive(false);
+        obj.transform.SetParent(Chessboard.transform);
+        GarbageUi.Add(obj);
     }
 
     protected void InvokeRound()
@@ -219,6 +239,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             IsBusy = false;
             yield break;
         }
+
         yield return new WaitForSeconds(0.5f);
         IsBusy = false;
         NewWar.StartButtonShow(true);
@@ -236,12 +257,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
     }
 
-    private void RemoveCard(int key)
+    private void RemoveCard(int key,bool trigger = true)
     {
         var card = CardMap[key];
         CardMap.Remove(key);
-        OnCardDefeated.Invoke(card);
-        card.cardObj.gameObject.SetActive(false);
+        RemoveUi(card.cardObj);
+        if (trigger) OnCardRemove.Invoke(card);
     }
 
     private List<FightCardData> OnPreRoundUpdate(ChessRound round)

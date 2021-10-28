@@ -29,7 +29,7 @@ public abstract class DragObjectSender<T> : MonoBehaviour
     }
 
     public void SetController(IDragInputControl<T> controller) => Controller = controller;
-    public virtual void BeginDrag(BaseEventData data) => Controller.StartDrag(data, ThisObj);
-    public virtual void OnDrag(BaseEventData data) => Controller.OnDrag(data, ThisObj);
-    public virtual void EndDrag(BaseEventData data) => Controller.EndDrag(data, ThisObj);
+    public virtual void BeginDrag(BaseEventData data) => Controller?.StartDrag(data, ThisObj);
+    public virtual void OnDrag(BaseEventData data) => Controller?.OnDrag(data, ThisObj);
+    public virtual void EndDrag(BaseEventData data) => Controller?.EndDrag(data, ThisObj);
 }

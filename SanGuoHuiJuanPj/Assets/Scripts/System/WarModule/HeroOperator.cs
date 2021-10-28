@@ -432,7 +432,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        public override void OnPlaceInvocation()
+        public override void OnRoundStart()
         {
             if (Chessboard.GetSpriteInChessPos(this).Any(s => s.GetKind() == PosSprite.Kinds.YellowBand)) return;
             var cluster = Chessboard.GetFriendly(this,

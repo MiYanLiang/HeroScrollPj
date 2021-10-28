@@ -78,8 +78,11 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
         {
             var pos = GetRayCastResults(pointer).FirstOrDefault(r => r.gameObject.CompareTag(GameSystem.CardPos))
                 .gameObject?.GetComponent<ChessPos>();
-            if (pos != null) PlaceOnInvocation(pos, card);
-            return;
+            if (pos != null)
+            {
+                PlaceOnInvocation(pos, card);
+                return;
+            }
         }
 
         ResetPos(card);
@@ -114,14 +117,19 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     private void PlaceOnInvocation(ChessPos pos, FightCardData card)
     {
-        if (!WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, LastPos == -1) ||
-            pos.Card != null)
+        if (!WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, LastPos == -1))
         {
             ResetPos(card);
             return;
         }
 
-        card.posIndex = pos.Pos;
+        var replaceCard = WarsUIManager.instance.PlayerScope.FirstOrDefault(c => c != card && c.Pos == pos.Pos);
+        if (replaceCard != null)
+        {
+            replaceCard.SetPos(-1);
+            WarsUIManager.instance.PlaceCard(replaceCard);
+        }
+        card.SetPos(pos.Pos);
         WarsUIManager.instance.PlaceCard(card);
     }
 }
