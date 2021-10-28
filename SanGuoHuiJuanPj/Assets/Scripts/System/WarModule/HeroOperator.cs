@@ -277,15 +277,15 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 16: return 20;//15
-                case 142: return 20;
-                case 143: return 25;
+                case 16: return 25;//20
+                case 142: return 25;
+                case 143: return 30;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        private int RouseAddOn => 80;
-        private int CriticalAddOn => 50;
+        private int RouseAddOn => 50;
+        private int CriticalAddOn => 30;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1455,14 +1455,13 @@ namespace Assets.System.WarModule
             var targets = Chessboard.GetRivals(this,
                     p => p.IsPostedAlive)
                 .Join(TargetPoses, t => t.Pos, p => p, (t, _) => t).ToArray();
-            var damage = InstanceGenericDamage();
-            damage.Element = CombatConduct.MechanicalDmg;
-            damage.Multiply(DamageRate);
             for (int i = 0; i < ComboRate(); i++)
             {
+                var damage = InstanceGenericDamage();
+                damage.Element = CombatConduct.MechanicalDmg;
+                //damage.Multiply(DamageRate);
                 var target = targets.RandomPick();
                 OnPerformActivity(target, Activity.Intentions.Offensive, i, skill: 1, damage);
-                //if (!target.IsPostedAlive) return;//击杀目标后会停止连击
             }
         }
     }
