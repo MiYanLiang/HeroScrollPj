@@ -14,7 +14,6 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     public override void StartDrag(BaseEventData data, FightCardData card)
     {
-        if (WarsUIManager.instance.isDragDisable) return;
 
         Vector2 deltaPosition = Vector2.zero;
 #if UNITY_EDITOR
@@ -35,6 +34,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
             ScrollRect.OnBeginDrag(pointer);
             return;
         }
+        if (WarsUIManager.instance.isDragDisable) return;
 
         IsDragDelegated = false;
 
@@ -45,24 +45,19 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     public override void OnDrag(BaseEventData data, FightCardData obj)
     {
-        if (WarsUIManager.instance.isDragDisable) return;
-
         if (IsDragDelegated)
         {
             var eventData = data as PointerEventData;
             ScrollRect.OnDrag(eventData);
             return;
         }
+        if (WarsUIManager.instance.isDragDisable) return;
+
         obj.cardObj.transform.position = Input.mousePosition;
     }
 
     public override void EndDrag(BaseEventData eventData, FightCardData card)
     {
-        if (WarsUIManager.instance.isDragDisable)
-        {
-            ResetPos(card);
-            return;
-        }
         if (!(eventData is PointerEventData pointer))
         {
             ResetPos(card);
@@ -74,6 +69,11 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
             return;
         }
 
+        if (WarsUIManager.instance.isDragDisable)
+        {
+            ResetPos(card);
+            return;
+        }
         if (!WarsUIManager.instance.isDragDisable)
         {
             var pos = GetRayCastResults(pointer).FirstOrDefault(r => r.gameObject.CompareTag(GameSystem.CardPos))

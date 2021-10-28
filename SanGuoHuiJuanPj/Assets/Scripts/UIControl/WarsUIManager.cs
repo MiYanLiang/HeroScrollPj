@@ -815,6 +815,7 @@ public class WarsUIManager : MonoBehaviour
         Time.timeScale = speed;
         speedBtnText.text = Multiply + speed;
 
+        OnPreChessboardFloorBuff(chessboardManager.IsFirstRound);
         Chessboard.gameObject.SetActive(true);
     }
 
