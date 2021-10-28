@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public class PointDesk : MonoBehaviour
 {
     public ForceFlagUI FlagUi;
-    public Text EnlistText;
+    public Text EnlistText;//出战数
 
     //信息物件
     public GameCardUi SelectedCard;
@@ -98,7 +98,7 @@ public class PointDesk : MonoBehaviour
 
     private void UpdateMergeInfo(GameCard card)
     {
-        var isFragment = card.Level == 0;
+        var isFragment = card.Level == 0;//合成还是升星
         MergeImg.gameObject.SetActive(isFragment);
         UpgradeImg.gameObject.SetActive(!isFragment);
         var isMax = card.Level >= DataTable.CardLevel.Keys.Max();
