@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -7227,8 +7227,9 @@ GameObject:
   - component: {fileID: 562278722}
   - component: {fileID: 562278724}
   - component: {fileID: 562278723}
+  - component: {fileID: 562278725}
   m_Layer: 5
-  m_Name: HerosCardList
+  m_Name: CardRack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7294,6 +7295,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 562278721}
   m_CullTransparentMesh: 0
+--- !u!114 &562278725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562278721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7e8f43ce741afe4b8023298c1778bba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ScrollRect: {fileID: 407564373}
+  Chessboard: {fileID: 1914077672}
 --- !u!114 &575002883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9718,9 +9733,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 249cb8ca9a0bc5a4a8fc112364e981cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  herosCardListTran: {fileID: 562278722}
-  herosCardListScrollRect: {fileID: 407564373}
-  isDragDelegated: 0
+  Rack: {fileID: 562278725}
+  ChessboardInputControl: {fileID: 1914077673}
   isDragDisable: 0
   chessboardManager: {fileID: 1672411071}
   infoUis:
@@ -24709,6 +24723,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1914077671}
   - component: {fileID: 1914077672}
+  - component: {fileID: 1914077673}
   m_Layer: 5
   m_Name: Chessboard
   m_TagString: Untagged
@@ -24797,6 +24812,18 @@ MonoBehaviour:
   - {fileID: 653596008}
   - {fileID: 690417046}
   - {fileID: 342535828}
+--- !u!114 &1914077673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914077670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45cf61006281fdd42b2509086dc52d40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1914330803
 MonoBehaviour:
   m_ObjectHideFlags: 0
