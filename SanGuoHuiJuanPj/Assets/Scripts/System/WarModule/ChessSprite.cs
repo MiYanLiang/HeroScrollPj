@@ -497,37 +497,65 @@ namespace Assets.System.WarModule
     /// </summary>
     public class YeHuoSprite : FireSprite
     {
-        private int[][] FireRings { get; } = new int[3][] {
-            new int[1] { 7},
-            new int[6] { 2, 5, 6,10,11,12},
-            new int[11]{ 0, 1, 3, 4, 8, 9,13,14,15,16,17},
+        public static int ChallengerRelay = 0;
+        public static int OppositeRelay = 0;
+
+        private int[][] FireRings { get; } = new int[][]
+        {
+            new int[] { 7 },
+            new int[] { 2, 5, 6, 10, 11, 12 },
+            new int[] { 0, 1, 3, 4, 8, 9, 13, 14, 15, 16, 17 },
+            new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 },
         };
 
         public override int TypeId { get; } = (int)Kinds.YeHuo;
+
+        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        {
+            ChallengerRelay = 0;
+            OppositeRelay = 0;
+        }
+
+        private int[] GetRelay()
+        {
+            return IsChallenger 
+                ? CounterFunc(ref ChallengerRelay) 
+                : CounterFunc(ref OppositeRelay);
+
+            int[] CounterFunc(ref int index)
+            {
+                if (index >= FireRings.Length)
+                    index = FireRings.Length -1;
+                var array = FireRings[index];
+                index++;
+                return array;
+            }
+        }
 
         public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId,
             int skill)
         {
             var scope = chessboard.GetRivals(offender, _ => true).ToArray();
-            var ringIndex = -1;
+            //var ringIndex = -1;
 
-            for (int i = FireRings.Length - 1; i >= 0; i--)
-            {
-                var sprite = chessboard.GetSpriteInChessPos(FireRings[i][0], IsChallenger)
-                    .FirstOrDefault(s => s.GetKind() == Kinds.YeHuo && s != this);
-                if (sprite == null) continue;
-                ringIndex = i;
-                break;
-            }
-            ringIndex++;
-            if (ringIndex >= FireRings.Length)
-                ringIndex = 0;
+            //for (int i = FireRings.Length - 1; i >= 0; i--)
+            //{
+            //    var sprite = chessboard.GetSpriteInChessPos(FireRings[i][0], IsChallenger)
+            //        .FirstOrDefault(s => s.GetKind() == Kinds.YeHuo && s != this);
+            //    if (sprite == null) continue;
+            //    ringIndex = i;
+            //    break;
+            //}
+            //var ringIndex = GetRelay();
+            //if (ringIndex >= FireRings.Length)
+            //    ringIndex = 0;
             var burnPoses = scope
-                .Join(FireRings.SelectMany(i => i), p => p.Pos, i => i, (p, _) => p)
-                .All(p => p.Terrain.Sprites.Any(s => s.GetKind() == Kinds.YeHuo))
-                ? //是否满足满圈条件
-                scope
-                : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
+                .Join(GetRelay().Select(i => i), p => p.Pos, i => i, (p, _) => p).ToArray();
+            //    .All(p => p.Terrain.Sprites.Any(s => s.GetKind() == Kinds.YeHuo))
+            //    ? //是否满足满圈条件
+            //    scope
+            //    : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
+            
             for (var index = 0; index < burnPoses.Length; index++)
             {
                 var chessPos = burnPoses[index];

@@ -1153,13 +1153,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TongShuaiOperator : HeroOperator
     {
-        //统帅回合攻击目标
-        private int[][] FireRings { get; } = new int[3][] {
-            new int[1] { 7},
-            new int[6] { 2, 5, 6,10,11,12},
-            new int[11]{ 0, 1, 3, 4, 8, 9,13,14,15,16,17},
-        };
-
         private int BurnRatio => 10;
 
         /// <summary>
@@ -1178,43 +1171,12 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            //var scope = Chessboard.GetRivals(this, _ => true).ToArray();
-            //var ringIndex = -1;
-            //
-            //for (int i = FireRings.Length - 1; i >= 0; i--)
-            //{
-            //    var sprite = Chessboard.GetSpriteInChessPos(FireRings[i][0], !IsChallenger)
-            //        .FirstOrDefault(s => s.TypeId == PosSprite.YeHuo);
-            //    if (sprite == null) continue;
-            //    ringIndex = i;
-            //    break;
-            //}
-            //ringIndex++;
-            //if (ringIndex >= FireRings.Length)
-            //    ringIndex = 0;
-            //var outRingDamageDecrease = GeneralDamage() * DamageRatio * ringIndex * 0.01f;
             var damage = InstanceGenericDamage();
             damage.Multiply(DamageRate());
             damage.Element = CombatConduct.FireDmg;
             damage.Rate = BurnRatio;
             Chessboard.DelegateSpriteActivity<YeHuoSprite>(this, Chessboard.GetChessPos(!IsChallenger, 7),
                 Helper.Singular(damage), actId: 0, skill: 1, lasting: 2);
-            //var burnBuff = CombatConduct.InstanceBuff(CardState.Cons.Burn, 3);
-            //var burnPoses = scope
-            //    .Join(FireRings.SelectMany(i => i), p => p.Pos, i => i, (p, _) => p)
-            //    .All(p => p.Terrain.Sprites.Any(s => s.TypeId == PosSprite.YeHuo))
-            //    ? //是否满足满圈条件
-            //    scope
-            //    : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
-            //var combat = Helper.Singular(damage);
-            //for (var index = 0; index < burnPoses.Length; index++)
-            //{
-            //    var chessPos = burnPoses[index];
-            //    //if (Chessboard.IsRandomPass(BurnRatio + Chessboard.Randomize(10))) combat.Add(burnBuff);
-            //    Chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: 5, actId: -1);
-            //    if (chessPos.Operator == null || Chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
-            //    OnPerformActivity(chessPos, Activity.Offensive, actId: 0, skill: 1, combat);
-            //}
         }
     }
 
