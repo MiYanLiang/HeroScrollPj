@@ -11,9 +11,6 @@ public class EffectsPoolingControl : MonoBehaviour
     private int maxCount = 3;   //最大展示数目
 
     [SerializeField]
-    Transform effectContentTran;
-
-    [SerializeField]
     string[] effectsNameStr;    //技能特效名
 
     [SerializeField]
@@ -53,7 +50,7 @@ public class EffectsPoolingControl : MonoBehaviour
             List<GameObject> effectList = new List<GameObject>();
             for (int j = 0; j < maxCount; j++)
             {
-                GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectsNameStr[i]], effectContentTran);
+                GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectsNameStr[i]], transform);
                 effectObj.SetActive(false);
                 effectList.Add(effectObj);
             }
@@ -136,7 +133,7 @@ public class EffectsPoolingControl : MonoBehaviour
             effect.transform.localScale = Vector3.one;
             effect.transform.localRotation = Quaternion.identity;
             effect.SetActive(false);
-            effect.transform.SetParent(effectContentTran);
+            effect.transform.SetParent(transform);
         }
     }
 
@@ -176,7 +173,7 @@ public class EffectsPoolingControl : MonoBehaviour
                 }
             }
 
-            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], effectContentTran);
+            GameObject effectObj = Instantiate(GameResources.Instance.Effects[effectName], transform);
             effectObj.transform.position = usedTran.position;
             effectObj.SetActive(true);
             effectsPoolingList[index].Add(effectObj);
@@ -275,7 +272,7 @@ public class EffectsPoolingControl : MonoBehaviour
 
     public void RecycleStateBuff(EffectStateUi go)
     {
-        go.transform.SetParent(effectContentTran);
+        go.transform.SetParent(transform);
         go.gameObject.SetActive(false);
     }
 
@@ -285,7 +282,7 @@ public class EffectsPoolingControl : MonoBehaviour
     public void RecycleEffect(EffectStateUi go)
     {
         go.Animator.enabled = true;
-        go.transform.SetParent(effectContentTran);
+        go.transform.SetParent(transform);
         go.gameObject.SetActive(false);
     }
 
@@ -296,7 +293,7 @@ public class EffectsPoolingControl : MonoBehaviour
         if (go != null)
         {
             go.transform.localScale = Vector3.one;
-            go.transform.SetParent(effectContentTran);
+            go.transform.SetParent(transform);
             go.SetActive(false);
         }
     }

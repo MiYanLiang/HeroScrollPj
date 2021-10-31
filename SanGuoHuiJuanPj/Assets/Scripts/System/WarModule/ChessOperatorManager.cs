@@ -121,8 +121,8 @@ namespace Assets.System.WarModule
         private ChessOperator InstanceHero(TCard card)
         {
             HeroOperator op = null;
-            var military = MilitaryInfo.GetInfo(card.CardId);
-            switch (military.Id)
+            var military = DataTable.Hero[card.CardId].MilitaryUnitTableId;
+            switch (military)
             {
                 case 1: op = new JinZhanOperator(); break; //1   近战
                 case 2: op = new TieWeiOperator(); break; //2   铁卫

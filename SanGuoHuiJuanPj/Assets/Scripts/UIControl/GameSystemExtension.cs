@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Assets.System.WarModule;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -156,6 +157,7 @@ public enum GuideProps
 public class GameCardInfo
 {
     public static GameCardInfo GetInfo(GameCard card) => GetInfo((GameCardType) card.typeIndex, card.id);
+    public static GameCardInfo GetInfo(IChessman card) => GetInfo(card.CardType, card.CardId);
 
     public static GameCardInfo GetInfo(GameCardType type,int id)
     {
@@ -165,29 +167,25 @@ public class GameCardInfo
             {
                 var c = DataTable.Hero[id];
                 var military = DataTable.Military[c.MilitaryUnitTableId];
-                return new GameCardInfo(c.Id, GameCardType.Hero, c.Name, c.Intro, c.Rarity, c.ForceTableId,
-                    c.ImageId, c.IsProduce > 0, military.Short, c.GameSetRecovery, c.Damages, c.Hps, c.CombatType,
-                    c.DamageType, military.Info);
+                return new GameCardInfo(id, GameCardType.Hero, c.Name, military.Short, c.Intro, military.About,
+                    c.ImageId, c.Rarity, c.HitPoint, c.Strength, military.CombatStyle, military.Element, c.ForceTableId,
+                    c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Tower:
             {
                 var c = DataTable.Tower[id];
-                return new GameCardInfo(c.Id, GameCardType.Tower, c.Name, c.Intro, c.Rarity, c.ForceId,
-                    c.ImageId, c.IsProduce > 0, c.Short, c.GameSetRecovery, c.Damages, c.Hps, 1, 0, c.About);
+                return new GameCardInfo(c.Id, GameCardType.Tower, c.Name, c.Short, c.Intro, c.About, c.ImageId,
+                    c.Rarity, c.HitPoint, c.Strength, combatType: 1, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Trap:
             {
                 var c = DataTable.Trap[id];
-                return new GameCardInfo(c.Id, GameCardType.Trap, c.Name, c.Intro, c.Rarity, c.ForceId, c.ImageId,
-                    c.IsProduce > 0, c.Short, c.GameSetRecovery, c.Damages, c.Hps, 0, 0, c.About);
+                return new GameCardInfo(c.Id, GameCardType.Trap, c.Name, c.Short, c.Intro, c.About, c.ImageId, c.Rarity,
+                    c.HitPoint, c.Strength, combatType: 0, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Base:
-                var addOn = PlayerDataForGame.instance.pyData == null
-                    ? 0
-                    : DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].BaseHpAddOn;
-                var bl = DataTable.BaseLevel.Values.ToArray();
-                return new GameCardInfo(0, GameCardType.Base, string.Empty, string.Empty, 1, 0, 0, false, string.Empty,
-                    0, new int[bl.Length], bl.Select(l => l.BaseHp + addOn).ToArray(), 0, 0, string.Empty);
+                return new GameCardInfo(id: 0, type: GameCardType.Base, name: string.Empty, @short: string.Empty, intro: string.Empty, about: string.Empty, imageId: 0,
+                    rare: 1, hitPoint: 0, strength: 0, combatType: -1, element: 0, forceId: -1, isProduce: false, gameSetRecovery: 0);
             case GameCardType.Soldier:
             case GameCardType.Spell:
             default:
@@ -229,14 +227,12 @@ public class GameCardInfo
     public string Short { get; }
     public int GameSetRecovery { get; }
     public int CombatType { get; }
-    public int DamageType { get; }
-    private readonly Dictionary<int, int> damageMap;
-    private readonly Dictionary<int, int> hpsMap;
-    public IReadOnlyDictionary<int, int> DamageMap => damageMap;
-    public IReadOnlyDictionary<int, int> HpMap => hpsMap;
+    public int Element { get; }
+    public int Strength { get; }
+    public int HitPoint { get; }
 
-    private GameCardInfo(int id, GameCardType type, string name, string intro, int rare, int forceId, int imageId,
-        bool isProduce, string @short, int gameSetRecovery, int[] damages, int[] hps, int combatType, int damageType, string about)
+    private GameCardInfo(int id, GameCardType type, string name, string @short, string intro, string about, int imageId,
+        int rare, int hitPoint, int strength, int combatType, int element, int forceId, bool isProduce, int gameSetRecovery)
     {
         Id = id;
         Name = name;
@@ -248,28 +244,11 @@ public class GameCardInfo
         Short = @short;
         GameSetRecovery = gameSetRecovery;
         CombatType = combatType;
-        DamageType = damageType;
+        Element = element;
         About = about;
+        Strength = strength;
+        HitPoint = hitPoint;
         Type = type;
-        damageMap = new Dictionary<int, int>();
-        hpsMap = new Dictionary<int, int>();
-        var index = 1;
-        if(damages!=null)
-        {
-            foreach (var damage in damages)
-            {
-                damageMap.Add(index, damage);
-                index++;
-            }
-
-            index = 1;
-        }
-        if (hps == null) return;
-        foreach (var hp in hps)
-        {
-            hpsMap.Add(index, hp);
-            index++;
-        }
     }
     /// <summary>
     /// 玩家起名
@@ -283,116 +262,7 @@ public class GameCardInfo
         Intro = $"字 【{nickname}】\n {sign}";
     }
 
-    public int GetDamage(int level)
-    {
-        if (!damageMap.ContainsKey(level))
-            throw new InvalidOperationException($"Level = {level} not in damageMap");
-        return damageMap[level];
-    }
+    public int GetDamage(int level) => CombatStyle.DamageFormula(Strength, level);
 
-    public int GetHp(int level)
-    {
-        if(!hpsMap.ContainsKey(level))
-            throw new InvalidOperationException($"Level = {level} not in hpMap");
-        return hpsMap[level];
-    }
-
-    public Color GetNameColor()
-    {
-        switch (Rare)
-        {
-            case 1:
-                return ColorDataStatic.name_gray;
-            case 2:
-                return ColorDataStatic.name_green;
-            case 3:
-                return ColorDataStatic.name_blue;
-            case 4:
-                return ColorDataStatic.name_purple;
-            case 5:
-                return ColorDataStatic.name_orange;
-            case 6:
-                return ColorDataStatic.name_red;
-            case 7:
-                return ColorDataStatic.name_black;
-            default:
-                return ColorDataStatic.name_gray;
-        }
-    }
-}
-
-/// <summary>
-/// 兵种信息(仅限英雄类)
-/// </summary>
-public class MilitaryInfo
-{
-    public static MilitaryInfo GetInfo(int heroId) => new MilitaryInfo(DataTable.Military[DataTable.Hero[heroId].MilitaryUnitTableId]);
-    public int Id { get; }
-    public string Name { get; }
-    public string Specialty { get; }
-    public string Short { get; }
-    public string Info { get; }
-    public int ArmedType { get; }
-
-    private MilitaryInfo(MilitaryTable t)
-    {
-        Id = t.Id;
-        Name = t.Type;
-        Specialty = t.Specialty;
-        Short = t.Short;
-        Info = t.Info;
-        ArmedType = t.ArmedType;
-    }
-}
-
-/// <summary>
-/// 英雄战斗信息结构
-/// </summary>
-public class HeroCombatInfo
-{
-    public static HeroCombatInfo GetInfo(int heroId) => new HeroCombatInfo (DataTable.Hero[heroId]);
-    public int DodgeRatio { get; }
-    public int Armor { get; }
-    public int CriticalRatio { get; }
-    public int CriticalDamage { get; }
-    public int RouseRatio { get; }
-    public int RouseDamage { get; }
-    public int ConditionResist { get; }
-    public int PhysicalResist { get; }
-    public int MagicResist { get; }
-
-    private HeroCombatInfo(HeroTable h)
-    {
-        DodgeRatio = h.DodgeRatio;
-        Armor = h.ArmorResist;
-        CriticalRatio = h.CriticalRatio;
-        CriticalDamage = h.CriticalDamage;
-        RouseRatio = h.RouseRatio;
-        RouseDamage = h.RouseDamage;
-        ConditionResist = h.ConditionResist;
-        PhysicalResist = h.PhysicalResist;
-        MagicResist = h.MagicResist;
-    }
-    /// <summary>
-    /// 获取会心伤害，注意：伤害不包括基础伤害
-    /// </summary>
-    /// <param name="damage"></param>
-    /// <returns></returns>
-    public float GetRouseDamage(int damage) => GetRouseDamageRate() * damage;
-    /// <summary>
-    /// 获取会心伤害比率
-    /// </summary>
-    /// <returns></returns>
-    public float GetRouseDamageRate() => RouseDamage * 0.01f;
-    /// <summary>
-    /// 获取暴击伤害，注意：伤害不包括基础伤害
-    /// </summary>
-    /// <param name="damage"></param>
-    /// <returns></returns>
-    public float GetCriticalDamage(int damage) => GetCriticalDamageRate() * damage;
-    /// <summary>
-    /// 获取暴击伤害比率
-    /// </summary>
-    /// <returns></returns>
-    public float GetCriticalDamageRate() => CriticalDamage * 0.01f;
+    public int GetHp(int level) => CombatStyle.HitPointFormula(HitPoint, level);
 }

@@ -14,10 +14,11 @@ public class ChessUiStyle : CombatStyle
     {
         
     }
-    protected ChessUiStyle(int military, int armedType, int combatStyle, int element, int strength, int level,
-        int troop) : base(military, armedType, combatStyle, element, strength, level, troop)
-    {
 
+    protected ChessUiStyle(int military, int armedType, int combat, int element,
+        int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery,int rare) : base(military,
+        armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent, recovery,rare)
+    {
     }
 
     public static T Instance<T>(CombatStyle style) where T : ChessUiStyle, new() =>
@@ -129,7 +130,7 @@ public abstract class CardStyle : ChessmanStyle
             target.ChessmanStyle.Military == 11 && 
             result.IsDeath) //金币宝箱
         {
-            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Info.GetDamage(target.Level)}",
+            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.ChessmanStyle.Strength}",
                 CardAnimator.instance.Misc.TreasureChestTextColor,
                 Damage.Types.Rouse);
             return;

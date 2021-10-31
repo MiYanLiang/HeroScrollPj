@@ -604,7 +604,7 @@ public class WarsUIManager : MonoBehaviour
     public void RecycleCardUi(FightCardData card)
     {
         if (card.cardObj == null)
-            throw new InvalidOperationException($"卡牌[{card.InstanceId}]({card.Info.Intro})找不到UI!");
+            throw new InvalidOperationException($"卡牌[{card.InstanceId}]({card.GetInfo().Intro})找不到UI!");
         var ui = card.cardObj;
         card.cardObj = null;
         ui.transform.SetParent(Chessboard.transform);
@@ -721,7 +721,7 @@ public class WarsUIManager : MonoBehaviour
             }
             var ui = card.cardObj; //GenerateCardUi(card);
             //PlaceCard(card);
-            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Info.GameSetRecovery * 0.01f)),
+            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Style.Recovery * 0.01f)),
                 card.Status.MaxHp);
             card.Status.SetHp(hp);
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
@@ -1288,7 +1288,7 @@ public class WarsUIManager : MonoBehaviour
             wUi.Init(fCard.Card);
             wUi.SetSize(Vector3.one);
             wUi.tag = GameSystem.PyCard;
-            GiveGameObjEventForHoldOn(wUi, fCard.Info.About);
+            GiveGameObjEventForHoldOn(wUi, fCard.GetInfo().About);
             wUi.DragComponent.Init(fCard);
             fCard.cardObj = wUi;
         }

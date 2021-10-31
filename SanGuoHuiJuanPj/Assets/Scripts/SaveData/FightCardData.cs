@@ -31,9 +31,6 @@ using UnityEngine;
         return baseCard;
     }
 
-    //单位id,为0表示null
-    public int unitId;
-
     public WarGameCardUi cardObj;
     //卡牌obj
     //public GameObject cardObj;
@@ -44,16 +41,13 @@ using UnityEngine;
     //等级
     public int level;
     //伤害
-    public int damage;
+    public int Damage { get; }
 
     //战斗状态
     [JsonIgnore]public CardState CardState = new CardState();
     //摆放位置记录
     public int posIndex = -1;
-    //生命值回复
-    public int hpr;
-    //主被动单位
-    public bool activeUnit;
+
     //此回合是否行动
     public bool isActionDone;
     //是否是玩家卡牌
@@ -61,15 +55,11 @@ using UnityEngine;
     /// <summary>
     /// 单位伤害类型0物理，1法术
     /// </summary>
-    public int cardDamageType;
+    public int element;
     /// <summary>
     /// 单位行动类型0近战，1远程
     /// </summary>
     public int combatType;
-    /// <summary>
-    /// 被攻击者的行为，0受击，1防护盾，2闪避，3护盾，4无敌
-    /// </summary>
-    public int attackedBehavior;
 
     private GameCardInfo info;
 
@@ -81,60 +71,100 @@ using UnityEngine;
     {
         Card = card;
         info = card.GetInfo();
-        unitId = 1;
         cardType = card.typeIndex;
         cardId = card.CardId;
         level = card.Level;
-        damage = info.GetDamage(card.Level);
-        hpr = info.GameSetRecovery;
-        cardDamageType = info.DamageType;
-        combatType = info.CombatType;
-        var hp = info.GetHp(card.Level);
-        status = ChessStatus.Instance(hp, hp, Pos, 0, new Dictionary<int, int>(), new List<int>(), 0);
-        StatesUi = new Dictionary<int, EffectStateUi>();
+        this.element = info.Element;
+        var strength = 0;
         var force = -1;
-        switch (card.typeIndex)
-        {
-            case 0:
-                force = DataTable.Hero[card.id].ForceTableId;
-                break;
-            case 2:
-                force = DataTable.Tower[card.id].ForceId;
-                break;
-            case 3:
-                force = DataTable.Trap[card.id].ForceId;
-                break;
-        }
-
-        switch (CardType)
+        var speed = 0;
+        var intelligent = 0;
+        var military = -1;
+        var armedType = -4;
+        var combatType = -1;
+        var element = 0;
+        var hitpoint = 0;
+        switch (info.Type)
         {
             case GameCardType.Hero:
-                var m = MilitaryInfo.GetInfo(card.CardId);
-                style = CombatStyle.Instance(m.Id, m.ArmedType, info.CombatType, info.DamageType, info.GetDamage(card.Level), card.Level,force);
+            {
+                var hero = DataTable.Hero[card.id];
+                var m = DataTable.Military[hero.MilitaryUnitTableId];
+                strength = hero.Strength;
+                force = hero.ForceTableId;
+                speed = hero.Speed;
+                intelligent = hero.Intelligent;
+                military = m.Id;
+                armedType = m.ArmedType;
+                combatType = m.CombatStyle;
+                element = m.Element;
+                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, level);
                 break;
+            }
             case GameCardType.Tower:
-                style = CombatStyle.Instance(cardId, -2, 1, 0, info.GetDamage(card.Level), card.Level,force);
+            {
+                var tower = DataTable.Tower[card.id];
+                force = tower.ForceId;
+                strength = tower.Strength;
+                speed = tower.Speed;
+                intelligent = 0;
+                military = tower.Id;
+                armedType = -2;
+                combatType = 1;
+                element = 0;
+                hitpoint = CombatStyle.HitPointFormula(tower.HitPoint, level);
+            }
                 break;
             case GameCardType.Trap:
-                style = CombatStyle.Instance(cardId, -3, -1, 0, info.GetDamage(card.Level), card.Level, force);
+            {
+                var trap = DataTable.Trap[card.id];
+                strength = trap.Strength;
+                force = trap.ForceId;
+                speed = 0;
+                intelligent = 0;
+                military = trap.Id;
+                armedType = -3;
+                combatType = -1;
+                element = 0;
+                hitpoint = CombatStyle.HitPointFormula(trap.HitPoint, level);
+            }
                 break;
             case GameCardType.Base:
-                style = CombatStyle.Instance(-1, -4, -1, 0, 0, card.Level, force);
+            {
+                strength = 0;
+                force = 0;
+                speed = 0;
+                intelligent = 0;
+                military = -1;
+                armedType = -4;
+                combatType = -1;
+                element = 0;
+                hitpoint = DataTable.BaseLevel[level].BaseHp;//老巢血量不在这里初始化
+            }
                 break;
             case GameCardType.Soldier:
             case GameCardType.Spell:
             default:
                 throw new ArgumentOutOfRangeException();
         }
+        Troop = force;
+        Speed = speed;
+        Damage = CombatStyle.DamageFormula(strength, level);
+        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, 0, new Dictionary<int, int>(), new List<int>(), 0);
+        StatesUi = new Dictionary<int, EffectStateUi>();
+        style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
+            intelligent, info.GameSetRecovery, info.Rare);
     }
+
     public GameCard Card { get; }
     public int PosIndex => posIndex;
     public int CardId => cardId;
     public GameCardType CardType => (GameCardType) cardType;
-    public GameCardInfo Info => info;
     public int HitPoint => status.Hp;
     public int MaxHitPoint => status.MaxHp;
     public int Level => level;
+    public int Speed { get; }
+    public int Troop { get; }
     private CombatStyle style;
     public CombatStyle Style => style;
     private int instanceId = -1;
@@ -142,7 +172,6 @@ using UnityEngine;
     private ChessStatus status;
 
     public CombatStyle GetStyle() => style;
-
 
     public Dictionary<int, EffectStateUi> StatesUi { get; }
 
@@ -221,6 +250,8 @@ using UnityEngine;
                 throw new ArgumentOutOfRangeException();
         }
     }
+
+    public GameCardInfo GetInfo() => Card.GetInfo();
 }
 
 [Serializable]

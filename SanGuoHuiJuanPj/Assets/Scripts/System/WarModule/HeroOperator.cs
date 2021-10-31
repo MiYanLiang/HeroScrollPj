@@ -7,7 +7,7 @@ namespace Assets.System.WarModule
 {
     public class HeroOperator : CardOperator
     {
-        protected HeroCombatInfo CombatInfo { get; private set; }
+        //public HeroCombatInfo CombatInfo { get; private set; }
 
         /// <summary>
         /// 根据当前血量损失的<see cref="gap"/>%，根据<see cref="gapValue"/>的值倍增
@@ -35,9 +35,15 @@ namespace Assets.System.WarModule
         protected static int HpDepletedRatioWithGap(ChessStatus status, int basicValue, int gap, int gapValue) =>
             HpDepletedRatioWithGap(status.Hp, status.MaxHp, basicValue, gap, gapValue);
 
+        protected int MagicResist { get; private set; }
+        protected int Armor { get; private set; }
+        protected int Dodge { get; private set; }
         public override void Init(IChessman card, ChessboardOperator chessboardOp)
         {
-            CombatInfo = HeroCombatInfo.GetInfo(card.CardId);
+            var combatInfo = HeroCombatInfo.GetInfo(card.CardId);
+            MagicResist = combatInfo.MagicResist;
+            Armor = combatInfo.Armor;
+            Dodge = combatInfo.DodgeRatio;
             base.Init(card, chessboardOp);
         }
 
@@ -61,7 +67,7 @@ namespace Assets.System.WarModule
         }
 
         private CombatConduct[] BasicDamage() =>
-            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength, Style.Element));
+            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Damage, Style.Element));
 
         /// <summary>
         /// 兵种攻击，base攻击是基础英雄属性攻击
@@ -117,14 +123,12 @@ namespace Assets.System.WarModule
         }
 
 
-        protected int MagicResist => CombatInfo.MagicResist;
         /// <summary>
         /// 法术免伤
         /// </summary>
         /// <returns></returns>
         public override int GetMagicArmor() => MagicResist;
 
-        protected int Armor => CombatInfo.PhysicalResist;
         /// <summary>
         /// 物理免伤
         /// </summary>
@@ -137,10 +141,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected CombatConduct InstanceGenericDamage(float additionDamage = 0)
         {
-            var damage = GeneralDamage() + additionDamage;
+            var damage = StateDamage() + additionDamage;
             if (Chessboard.IsRouseDamagePass(this))
             {
-                var rouse = RouseDamage();
+                var rouse = RouseAddOn();
                 if (rouse > 0)
                     return CombatConduct.Instance(damage, 0, rouse, Style.Element,
                         CombatConduct.DamageKind, 0, InstanceId);
@@ -148,36 +152,30 @@ namespace Assets.System.WarModule
 
             if (Chessboard.IsCriticalDamagePass(this))
             {
-                var critical = CriticalDamage();
+                var critical = CriticalAddOn();
                 if (critical > 0) return CombatConduct.InstanceDamage(InstanceId, damage, critical, 0, Style.Element);
             }
 
             return CombatConduct.InstanceDamage(InstanceId, damage, Style.Element);
         }
-        /// <summary>
-        /// 武力值
-        /// </summary>
-        public override int Strength => Style.Strength;
 
         /// <summary>
         /// 根据状态算出基础伤害
         /// </summary>
         /// <returns></returns>
-        protected override int GeneralDamage() => Chessboard.GetCompleteDamageWithBond(this);
+        protected override int StateDamage() => Chessboard.GetCompleteDamageWithBond(this);
 
         /// <summary>
-        /// 跟据会心率获取会心伤害
+        /// 会心加成
         /// </summary>
         /// <returns></returns>
-        private float RouseDamage() => CombatInfo.GetRouseDamage(Strength) - Strength;
+        private float RouseAddOn() => StateDamage();
 
         /// <summary>
-        /// 根据暴击率获取暴击伤害
+        /// 暴击加成
         /// </summary>
         /// <returns></returns>
-        private float CriticalDamage() => CombatInfo.GetCriticalDamage(Strength) - Strength;
-
-        protected int Dodge => CombatInfo.DodgeRatio;
+        private float CriticalAddOn() => StateDamage() * 0.5f;
         public override int GetDodgeRate() => Dodge;
 
         protected static MilitaryNotValid MilitaryNotValidError(HeroOperator op) =>
@@ -359,7 +357,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var conduct = InstanceGenericDamage(Strength * chainedList.Length * DamageRate() * 0.01f);
+            var conduct = InstanceGenericDamage(Damage * chainedList.Length * DamageRate() * 0.01f);
             OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, conduct);
         }
 
@@ -462,7 +460,7 @@ namespace Assets.System.WarModule
         }
         public override int GetPhysicArmor()
         {
-            var armor = CombatInfo.PhysicalResist;
+            var armor = Armor;
             armor += PhysicArmorAddedValue();
             return armor;
         }
@@ -597,7 +595,7 @@ namespace Assets.System.WarModule
             if (Chessboard.GetStatus(this).HpRate < 0.5)
             {
                 var explode = new List<CombatConduct>
-                    { CombatConduct.InstanceDamage(InstanceId,(int)(GeneralDamage() * ExplodeDamageRate()), Style.Element) };
+                    { CombatConduct.InstanceDamage(InstanceId,(int)(StateDamage() * ExplodeDamageRate()), Style.Element) };
                 var surrounded = Chessboard.GetNeighbors(target, false).ToList();
                 surrounded.Insert(0, target);
                 for (var i = 0; i < surrounded.Count; i++)
@@ -838,7 +836,7 @@ namespace Assets.System.WarModule
             float rate = 1;//Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
-            var heal = (int)(rate * Strength);
+            var heal = (int)(rate * Damage);
             foreach (var target in targets)
             {
                 if (heal <= 0) break;
@@ -971,7 +969,7 @@ namespace Assets.System.WarModule
             float rate = 1;// Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
-            var shield = rate * Strength;
+            var shield = rate * Damage;
             foreach (var target in targets)
             {
                 OnPerformActivity(target, Activity.Intentions.Friendly, actId: 0, skill: 1,
@@ -1013,7 +1011,7 @@ namespace Assets.System.WarModule
                 base.MilitaryPerforms(0);
                 return;
             }
-            var rate = Info.Rare * 20;//暂时随机值是根据稀有度
+            var rate = Style.Rare * 20;//暂时随机值是根据稀有度
             var combat = InstanceGenericDamage();
             var deplete = 1;
             if (combat.IsCriticalDamage())
@@ -1537,7 +1535,7 @@ namespace Assets.System.WarModule
                         backPos.Operator == null &&
                         target.IsAliveHero ? backPos.Pos : -1;
             combatConducts.Add(rePos == -1&&target.IsAliveHero
-                ? InstanceGenericDamage((int)(GeneralDamage() * (DamageRate()-1f)))
+                ? InstanceGenericDamage((int)(StateDamage() * (DamageRate()-1f)))
                 : InstanceGenericDamage());
             OnPerformActivity(target, Activity.Intentions.Offensive, combatConducts.ToArray(), 0, 1, rePos);
         }
@@ -1642,7 +1640,7 @@ namespace Assets.System.WarModule
                 var targetStatus = Chessboard.GetStatus(target.Operator);
                 var targetShields = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield);
                 var shieldBalance = targetShields - BreakShields();
-                var dmgGapValue = Strength * DamageRate() * 0.01; //每10%掉血增加数
+                var dmgGapValue = Damage * DamageRate() * 0.01; //每10%掉血增加数
                 var additionDamage = HpDepletedRatioWithGap(targetStatus, 0, 10, (int)dmgGapValue);
                 var performDamage = InstanceGenericDamage(additionDamage);
                 var combat = new List<CombatConduct>();
@@ -1691,7 +1689,7 @@ namespace Assets.System.WarModule
                     InstanceGenericDamage(addOnDmg)); //第1斩开始算技能连斩
                 if (result != null && !result.IsDeath)
                     break;
-                addOnDmg += (int)(GeneralDamage() * DamageRate() * 0.01f);
+                addOnDmg += (int)(StateDamage() * DamageRate() * 0.01f);
             }
         }
     }
@@ -1762,7 +1760,7 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetLaneTarget(this);
             var soul = Chessboard.GetCondition(this, CardState.Cons.BattleSoul);
-            var addOn = DamageRate * 0.01f * soul * GeneralDamage();
+            var addOn = DamageRate * 0.01f * soul * StateDamage();
             var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, InstanceGenericDamage(addOn));
             if (result == null) return;
 
@@ -1821,7 +1819,7 @@ namespace Assets.System.WarModule
         public override int GetDodgeRate() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeGapRate());
 
-        public override int Strength => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
+        public override int Damage => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
     /// <summary>
     /// 虎豹骑
@@ -1854,7 +1852,7 @@ namespace Assets.System.WarModule
         public override int GetPhysicArmor() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Armor, 10, DamageResistGapRate());
 
-        public override int Strength =>
+        public override int Damage =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
 
@@ -1882,7 +1880,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var damage = Strength * DamageRate();
+            var damage = Damage * DamageRate();
             var target = Chessboard.GetLaneTarget(this);
             var array = Chessboard.GetRivals(this)
                 .ToArray();
@@ -1900,7 +1898,7 @@ namespace Assets.System.WarModule
         }
 
         public override int GetDodgeRate() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.DodgeRatio, 10, DodgeAddingRate);
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeAddingRate);
     }
 
     /// <summary>
@@ -2164,7 +2162,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), CombatInfo.DodgeRatio,
+        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge,
             10, DodgeRate());
     }
 
@@ -2185,7 +2183,7 @@ namespace Assets.System.WarModule
         }
         public override int GetPhysicArmor()
         {
-            var armor = CombatInfo.PhysicalResist;
+            var armor = Armor;
             var status = Chessboard.GetStatus(this);
             return HpDepletedRatioWithGap(status, armor, 10, ArmorRate());
         }

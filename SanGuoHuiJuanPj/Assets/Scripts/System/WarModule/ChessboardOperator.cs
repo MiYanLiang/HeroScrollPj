@@ -243,6 +243,8 @@ namespace Assets.System.WarModule
                 InstanceChessmanProcess(op);
 
                 op.MainActivity();
+                //更新棋格状态
+                RefreshChessPosses();
 
                 currentOps.Remove(op);
                 CheckIsGameOver();
@@ -668,7 +670,6 @@ namespace Assets.System.WarModule
         private void RegSprite(PosSprite sprite,int actId)
         {
             var activity = SpriteActivity(sprite, true);
-            //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, actId);
             Sprites.Add(sprite);
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.AddSprite(sprite);
@@ -685,7 +686,6 @@ namespace Assets.System.WarModule
 
             RemoveSprite(sprite);
             var activity = SpriteActivity(sprite, false);
-            //activity.Result = ActivityResult.Instance(ActivityResult.Types.ChessPos);
             AddToCurrentProcess(ChessProcess.Types.Chessboard, sprite.IsChallenger ? -1 : -2, activity, -1);
             ProcessActivityResult(activity);
             if (HasLogger) LogSprite(sprite, false, activity.To);
@@ -897,7 +897,7 @@ namespace Assets.System.WarModule
         public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
-            return (int)(op.Strength + op.Strength * 0.01f * ratio);
+            return (int)(op.Damage + op.Damage * 0.01f * ratio);
         }
         /// <summary>
         /// 完全动态伤害=进攻方伤害转化(buff,羁绊)

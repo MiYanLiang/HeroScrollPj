@@ -46,7 +46,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     
     private bool isShady = false;
 
-    private List<WarGameCardUi> GarbageUi = new List<WarGameCardUi>();//垃圾UI，千万别重用UI，如果没分开重写放置棋格上的方法，会造成演示UI引用混乱
+    private List<WarGameCardUi> GarbageUi = new List<WarGameCardUi>();//UI垃圾收集器，千万别重用UI，如果没分开重写放置棋格上的方法，会造成演示UI引用混乱
     private Tween ShadyTween(float alpha)
     {
         if (alpha > 0)
@@ -199,7 +199,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             var card = GetCardMap(stat.Key);
             if (card.HitPoint != stat.Value.Hp)
-                Debug.LogWarning($"卡牌[{card.Info.Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
+                Debug.LogWarning($"卡牌[{card.GetInfo().Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
         }
 #endif
         var cards = OnPreRoundUpdate(round);

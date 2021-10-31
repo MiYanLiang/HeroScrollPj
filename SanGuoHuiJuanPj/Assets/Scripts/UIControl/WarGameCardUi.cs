@@ -90,7 +90,7 @@ public class GameCardUiBase : MonoBehaviour
     public void SetName(GameCardInfo info)
     {
         NameTextSizeAlignment(Name, info.Name);
-        Name.color = info.GetNameColor();
+        Name.color = ColorDataStatic.GetNameColor(info.Rare);
     }
 
     public void SetLevel(int level) => Level.sprite = GameResources.Instance.GradeImg[level];

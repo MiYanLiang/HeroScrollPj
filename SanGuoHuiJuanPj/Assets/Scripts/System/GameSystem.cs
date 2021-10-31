@@ -162,8 +162,6 @@ public class GameSystem : MonoBehaviour
         StartSceneUIManager.instance.Init();
         StartSceneToServerCS.instance.Init();
         BarrageUiController.instance.Init();
-        FightForManagerForStart.instance.Init();
-        FightControlForStart.instance.Init();
     }
 
     protected void InitEnqueue(Action action)
