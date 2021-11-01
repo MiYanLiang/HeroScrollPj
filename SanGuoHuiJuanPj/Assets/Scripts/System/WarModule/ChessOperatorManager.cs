@@ -124,74 +124,136 @@ namespace Assets.System.WarModule
             var military = MilitaryInfo.GetInfo(card.CardId);
             switch (military.Id)
             {
-                case 1: op = new JinZhanOperator(); break; //1   近战
-                case 2: op = new TieWeiOperator(); break; //2   铁卫
-                case 3: op = new FeiJiaOperator(); break; //3   飞甲
-                case 4: op = new DaDunOperator(); break; //4   大盾
-                case 5: op = new XianZhenOperator(); break; //5   陷阵
-                case 6: op = new HuWeiOperator(); break; //6   虎卫
-                case 7: op = new CiDunOperator(); break; //7   刺甲
-                case 8: op = new ZhanXiangOperator(); break; //8   象兵
-                case 9:
-                case 60: op = new FeiQiOperator(); break; //9   先锋 //60  急先锋
-                case 10: op = new XianDengOperator(); break; //10  先登
-                case 11: op = new HuBaoQiOperator(); break; //11  白马
-                case 12: op = new ShenWuOperator(); break; //12  神武
-                case 13: op = new YuLinOperator(); break; //13  禁卫
-                case 15: op = new DaJiOperator(); break; //15  大戟
-                case 16: op = new PiaoQiOperator(); break; //16  骠骑
-                case 17: op = new DaDaoOperator(); break; //17  大刀
-                case 18: op = new DaFuOperator(); break; //18  大斧
-                case 19:
-                case 51: op = new LianNuOperator(); break; //19  连弩  //51  强弩
-                case 20:
-                case 52: op = new DaGongOperator(); break; //20  弓兵 //52  大弓
-                case 21: op = new ZhanChuanOperator(); break; //21  战船
-                case 22: op = new ZhanCheOperator(); break; //22  战车
-                case 23: op = new GongChengCheOperator(); break; //23  攻城车
-                case 24: op = new TouShiCheOperator(); break; //24  投石车
-                case 25: op = new CiKeOperator(); break; //25  刺客
-                case 26: 
-                case 27: op = new JunShiOperator(); break; //26  军师 //27  大军师
-                case 28:
-                case 29: op = new ShuShiOperator(); break; //28  术士 //29  大术士
-                case 30:
-                case 31: op = new DuShiOperator(); break; //30  毒士 //31  大毒士
-                case 32:
-                case 33: op = new TongShuaiOperator(); break; //32  统帅//33  大统帅
-                case 34:
-                case 35: op = new BianShiOperator(); break; //34  辩士 //35  大辩士
-                case 36:
-                case 37: op = new MouShiOperator(); break; //36  谋士 //37  大谋士
-                case 38: op = new NeiZhengOperator(); break; //38  内政
-                case 39: op = new FuZuoOperator(); break; //39  辅佐
-                case 40: op = new QiXieOperator(); break; //40  器械
-                case 41: op = new GanSiOperator(); break; //41  敢死
-                case 42:
-                case 43: op = new YiShiOperator(); break; //42  医师 //43  大医师
-                case 44: op = new JingGuoOperator(); break; //44  巾帼
-                case 45: op = new QingChengOperator(); break; //45  美人
-                case 46: op = new QingGuoOperator(); break; //46  大美人
-                case 47:
-                case 48: op = new ShuiKeOperator(); break; //47  说客 //48  大说客
-                case 53:
-                case 54: op = new YinShiOperator(); break; //53  隐士 //54  大隐士
-                case 55: op = new HuoChuanOperator(); break; //55  火船
-                case 56: op = new ManZuOperator(); break; //56  蛮族
-                case 57: op = new TengJiaOperator(); break; //57  藤甲
-                case 58: op = new TieQiOperator(); break; //58  铁骑
-                case 59:
-                case 14: op = new ChangQiangOperator(); break; //59  短枪
-                ////61  红颜
-                ////62  妖师
-                ////63  大妖师
-                ////64  锦帆
-                case 65: op = new HuangJinOperator(); break; //65  黄巾
-                case 49: op = new DuanGongOperator(); break;//49  短弓
-                case 50: op = new WenShiOperator(); break;//50  文士
-                default: op = new HeroOperator(); break; //0   普通
-            }
+                default: op = new HeroOperator(); break; //0   武夫
 
+                case 49: op = new DuanGongOperator(); break;//49  短弓
+
+                case 50: op = new WenShiOperator(); break;//50  文士
+
+                case 1: case 66: case 67: op = new JinZhanOperator(); break; //1   近战
+
+                case 4: case 68: case 69: op = new DaDunOperator(); break; //4   大盾
+
+                case 2: case 70: case 71: op = new TieWeiOperator(); break; //2   铁卫
+
+                case 3: case 72: case 73: op = new FeiJiaOperator(); break; //3   飞甲
+
+                case 6: case 74: case 75: op = new HuWeiOperator(); break; //6   虎卫
+
+                case 7: case 76: case 77: op = new CiDunOperator(); break; //7   刺盾
+
+                                                                           //血衣78|79|80
+
+                case 5: case 81: case 82: op = new XianZhenOperator(); break; //5   陷阵
+
+                case 41: case 83: case 84: op = new GanSiOperator(); break; //41  敢死
+
+                case 10: case 85: case 86: op = new XianDengOperator(); break; //10  先登
+
+                                                             //青州 87|88|89
+                                                             //链锁 90|91|92
+                                                             //解烦 93|94|95
+
+                case 57: case 96: case 97: op = new TengJiaOperator(); break; //57  藤甲
+
+                                                                              //鬼兵 98|99|100
+
+                case 59: case 14: case 101: op = new ChangQiangOperator(); break; //59  短枪
+
+                case 15: case 102: case 103: op = new DaJiOperator(); break; //15  大戟
+
+                case 17: case 104: case 105: op = new DaDaoOperator(); break; //17  大刀
+
+                case 18: case 106: case 107: op = new DaFuOperator(); break; //18  大斧
+
+                                                                             //狼牙棒 108|109|110
+                                                                             //魔王 111|112|113
+
+                case 12: case 114: case 115: op = new ShenWuOperator(); break; //12  神武
+
+                                                                               //白毦 116|117|118
+                                                                               //朴刀 119|120|121
+
+                case 13: case 122: case 123: op = new YuLinOperator(); break; //13  羽林
+
+                                                                              //双戟 124|125|126
+
+                case 65: case 127: case 128: op = new HuangJinOperator(); break; //65  黄巾
+
+                case 25: case 129: case 130: op = new CiKeOperator(); break; //25  刺客
+
+                case 56: case 131: case 132: op = new ManZuOperator(); break; //56  蛮族
+
+                                                                              //丹阳 133|134|135
+
+                case 9: case 60: case 136: op = new FeiQiOperator(); break; //9   飞骑
+
+                case 137: case 138: case 139: op = new BaiMaOperator();break;// 白马
+
+                case 11: case 140: case 141: op = new HuBaoQiOperator(); break; //11  虎豹骑
+
+                case 16: case 142: case 143: op = new PiaoQiOperator(); break; //16  骠骑
+
+                case 44: case 144: case 145: op = new JingGuoOperator(); break; //44  巾帼
+
+                case 146: case 147: case 148: break;//弓骑
+
+                case 149: case 150: case 151: break;//狼骑
+
+                case 58: case 152: case 153: op = new TieQiOperator(); break; //58  铁骑
+
+                case 22: case 172: case 173: op = new ZhanCheOperator(); break; //22  战车
+
+                case 8: case 174: case 175: op = new ZhanXiangOperator(); break; //8   象兵
+
+                case 23: case 176: case 177: op = new GongChengCheOperator(); break; //23  攻城车
+
+                case 24: case 178: case 179: op = new TouShiCheOperator(); break; //24  投石车
+
+                case 19: case 51: case 180: op = new LianNuOperator(); break; //19  连弩  //51  强弩
+
+                case 20: case 52: case 184: op = new DaGongOperator(); break; //20  弓兵 //52  大弓
+
+                case 185: case 186: case 187: break;//火弓
+
+                case 21: case 194: case 195: op = new ZhanChuanOperator(); break; //21  艨艟
+
+                case 55: case 196: case 197: op = new HuoChuanOperator(); break; //55  火船
+
+                case 26: case 27: case 203: op = new JunShiOperator(); break; //26  军师 //27  大军师
+
+                case 28: case 29: case 204: op = new ShuShiOperator(); break; //28  术士 //29  大术士
+
+                case 30: case 31: case 208: op = new DuShiOperator(); break; //30  毒士 //31  大毒士
+
+                case 32: case 33: case 209: op = new TongShuaiOperator(); break; //32  统帅//33  大统帅
+
+                case 53: case 54: case 210: op = new YinShiOperator(); break; //53  隐士 //54  大隐士
+
+                case 214: case 215: case 216:break;//狂士
+
+                case 36: case 37: case 217: op = new MouShiOperator(); break; //36  谋士 //37  大谋士
+
+                case 34: case 35: case 221: op = new BianShiOperator(); break; //34  辩士 //35  大辩士
+
+                case 47: case 48: case 222: op = new ShuiKeOperator(); break; //47  说客 //48  大说客
+
+                case 38: case 226: case 227: op = new NeiZhengOperator(); break; //38  内政
+
+                case 45: case 231: case 232: op = new QingChengOperator(); break; //45  倾城
+
+                case 46: case 233: case 234: op = new QingGuoOperator(); break; //46  倾国
+
+                case 39: case 238: case 239: op = new FuZuoOperator(); break; //39  辅佐
+
+                case 40: case 240: case 241: op = new QiXieOperator(); break; //40  器械
+
+                case 42: case 43: case 242: op = new YiShiOperator(); break; //42  医师 //43  大医师
+
+                case 243: break;//壮士
+
+                case 244: break;//短弩
+            }
             op.Init(card, this);
             return op;
         }
