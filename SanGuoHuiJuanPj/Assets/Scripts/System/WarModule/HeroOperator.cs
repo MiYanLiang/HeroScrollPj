@@ -196,6 +196,23 @@ namespace Assets.System.WarModule
         protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Any;
 
     }
+
+    /// <summary>
+    /// 短弩
+    /// </summary>
+    public class DuanNuOperator : HeroOperator
+    {
+        protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Contra;
+
+    }
+    /// <summary>
+    /// 壮士
+    /// </summary>
+    public class ZhuangShi : HeroOperator 
+    {
+        protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Contra;
+    }
+
     /// <summary>
     /// 文士
     /// </summary>
@@ -203,6 +220,7 @@ namespace Assets.System.WarModule
     {
         protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.AnyHero;
     }
+
     /// <summary>
     /// (1)近战 - 武将受到重创时，为自身添加1层【护盾】，可叠加。
     /// </summary>
@@ -769,7 +787,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 44: return 50;//30
+                case 44: return 30;
                 case 144: return 50;
                 case 145: return 70;
                 default: throw MilitaryNotValidError(this);
@@ -862,7 +880,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 41: return 1;//2
+                case 41: return 2;
                 case 83: return 1;
                 case 84: return 0;
                 default: throw MilitaryNotValidError(this);
@@ -1193,7 +1211,6 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float DamageRate => 0.3f;//旧数据表
         private int PoisonRate => 20;//旧数据表
 
         protected override void MilitaryPerforms(int skill = 1)
@@ -1207,7 +1224,6 @@ namespace Assets.System.WarModule
                 }).OrderBy(p => p.Random).Take(Targets()).ToArray();
             if (targets.Length == 0) base.MilitaryPerforms(0);
             var damage = InstanceGenericDamage();
-            damage.Multiply(DamageRate);
             damage.Element = CombatConduct.PoisonDmg;
             damage.Rate = PoisonRate;
 
@@ -1372,7 +1388,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 25: return 75;//50
+                case 25: return 50;
                 case 129: return 75;
                 case 130: return 100;
                 default: throw MilitaryNotValidError(this);
@@ -1435,7 +1451,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 23: return 2;//1
+                case 23: return 1;
                 case 176: return 2;
                 case 177: return 3;
                 default: throw MilitaryNotValidError(this);
@@ -1477,7 +1493,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 22: return 50;//30
+                case 22: return 30;
                 case 172: return 50;
                 case 173: return 70;
                 default: throw MilitaryNotValidError(this);
@@ -1520,7 +1536,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 21: return 2f;//1.5
+                case 21: return 1.5f;
                 case 194: return 2f;
                 case 195: return 2.5f;
                 default: throw MilitaryNotValidError(this);
@@ -1571,7 +1587,60 @@ namespace Assets.System.WarModule
             }
         }
     }
+    /// <summary>
+    /// 火弓
+    /// </summary>
+    public class HuoGongOperator : HeroOperator
+    {
+        private int Targets()
+        {
+            switch (Style.Military)
+            {
+                case 185: return 3;
+                case 186: return 5;
+                case 187: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
 
+        private int BurnRate() 
+        {
+            switch (Style.Military) 
+            {
+                case 185:return 30;
+                case 186:return 50;
+                case 187:return 70;
+                default:throw MilitaryNotValidError(this);
+            }
+        }
+        private int CriticalAddOn => 10;
+        private int RouseAddOn => 30;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this).Select(p => new { chessPos = p, random = Chessboard.Randomize(5) })
+                .OrderBy(p => p.random).Take(Targets()).ToArray();
+            if (targets.Length == 0) return;
+            var perform = InstanceGenericDamage();
+            perform.Multiply(0.3f);
+
+            var dmg = new List<CombatConduct> { perform };
+            var burnRate = BurnRate();
+            if (perform.IsCriticalDamage()) { burnRate += CriticalAddOn; }
+            if (perform.IsRouseDamage()) { burnRate += RouseAddOn; }
+
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var target = targets[i].chessPos;
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, perform);
+
+                if (target.IsAliveHero && Chessboard.IsRandomPass(burnRate))
+                {
+                    dmg.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn));
+                }
+            }
+        }
+    }
     /// <summary>
     /// 19  连弩 - 武将攻击时，有几率连续射击2次。
     /// </summary>
@@ -1616,7 +1685,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 18: return 3;//2
+                case 18: return 2;
                 case 106: return 3;
                 case 107: return 5;
                 default: throw MilitaryNotValidError(this);
@@ -1626,7 +1695,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 18: return 10;//5
+                case 18: return 5;
                 case 106: return 10;
                 case 107: return 15;
                 default: throw MilitaryNotValidError(this);
@@ -1670,7 +1739,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 17: return 20;//15
+                case 17: return 15;
                 case 104: return 20;
                 case 105: return 30;
                 default: throw MilitaryNotValidError(this);
@@ -1703,7 +1772,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 15: return 45;//30
+                case 15: return 30;
                 case 102: return 45;
                 case 103: return 60;
                 default: throw MilitaryNotValidError(this);

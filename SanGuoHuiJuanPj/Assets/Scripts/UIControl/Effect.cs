@@ -386,12 +386,30 @@ public static class Effect
             case 146:
             case 147:
             case 148://弓骑
-                value = 025;break;
+                switch (skill) 
+                {
+                    case 1://普通攻击
+                        value = 025;break;
+                    case 2://标记
+                        value = 025;break;
+                    case 3://协战攻击
+                        value = 025;break;
+                }
+                break;
 
             case 149:
             case 150:
             case 151://狼骑
-                value = 085;break;
+                switch (skill)
+                {
+                    case 1://普通攻击
+                        value = 085; break;
+                    case 2://战嚎
+                        break;
+                    case 3://狂暴
+                        value = 085; break;
+                }
+                break;
 
             case 58:
             case 152:
@@ -1068,12 +1086,30 @@ public static class Effect
             case 146:
             case 147:
             case 148://弓骑
-                return -1;
+                switch (skill) 
+                {
+                    case 1://普通攻击
+                        return -1;
+                    case 2://标记
+                        return 241;
+                    case 3://协战攻击
+                        return 242;
+                }
+                break;
 
             case 149:
             case 150:
             case 151://狼骑
-                return -1;
+                switch (skill) 
+                {
+                    case 1://普通攻击
+                        return -1;
+                    case 2://战嚎
+                        return 243;
+                    case 3://狂暴
+                        return 244;
+                }
+                break;
 
             case 58:
             case 152:
@@ -1832,7 +1868,7 @@ public static class Effect
             case PosSprite.Kinds.YeHuo:return 50501;//爆炸+火焰
             case PosSprite.Kinds.FireFlame:return 50502;//一般火焰
             case PosSprite.Kinds.Thunder:return 200;//术士落雷
-            case PosSprite.Kinds.Earthquake:return 166;//狂士地震
+            case PosSprite.Kinds.Earthquake:return 166;//狂士地怒
             case PosSprite.Kinds.Catapult: return 061;//抛石
             case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
             case PosSprite.Kinds.RollingWood://滚木
@@ -2146,12 +2182,30 @@ public static class Effect
             case 146:
             case 147:
             case 148://弓骑
-                audioId = 0; break;
+                switch (skill) 
+                {
+                    case 1://普通攻击
+                        audioId = 73;break;
+                    case 2://标记
+                        audioId = 73;break;
+                    case 3://协战
+                        audioId = 73;break;
+                }
+                break;
 
             case 149:
             case 150:
             case 151://狼骑
-                audioId = 0; break;
+                switch (skill) 
+                {
+                    case 1://普通攻击
+                        audioId = 75;break;
+                    case 2://战嚎
+                        audioId = 74;break;
+                    case 3://狂暴
+                        audioId = 75;break;
+                }
+                break;
 
             case 58:
             case 152:
@@ -2201,7 +2255,7 @@ public static class Effect
                     case 1://普通攻击
                         audioId = 8; break;
                     case 2://暴击或会心
-                        audioId = 8; break;
+                        audioId = 76; break;
                 }
                 break;
 
@@ -2280,14 +2334,7 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
-                //switch (skill)
-                //{
-                //    case 1://小技能
-                //        audioId = 43; break;
-                //    case 2://大技能
-                //        audioId = 42; break;
-                //}
-                //break;
+                break;
 
             case 205:
             case 206:
@@ -2317,13 +2364,6 @@ public static class Effect
             case 214:
             case 215:
             case 216://狂士
-                switch (skill)
-                {
-                    case 1://小技能
-                        audioId = -1; break;
-                    case 2://大技能
-                        audioId = -1; break;
-                }
                 break;
 
             case 36:
@@ -2656,11 +2696,11 @@ public static class Effect
         switch (kind)
         {
             case PosSprite.Kinds.Thunder: return true;
+            case PosSprite.Kinds.Earthquake:return true;
             case PosSprite.Kinds.Unknown:
             case PosSprite.Kinds.YeHuo:
             case PosSprite.Kinds.FireFlame:
             case PosSprite.Kinds.CastSprite:
-            case PosSprite.Kinds.Earthquake:
             case PosSprite.Kinds.Catapult:
             case PosSprite.Kinds.Arrow:
             case PosSprite.Kinds.RollingStone:
