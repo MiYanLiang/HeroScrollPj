@@ -66,7 +66,7 @@ public class StartSceneUIManager : MonoBehaviour
             chooseForceCityObj.transform.GetChild(i).GetComponent<Button>().onClick.AddListener(() =>
                 AudioController0.instance.RandomPlayGuZhengAudio());
         }
-        FightForManagerForStart.instance.InitEnemyCardForFight();
+        //这里开始生成战斗
     }
 
     //结束剧情选择势力

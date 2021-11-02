@@ -4,11 +4,14 @@ using Newtonsoft.Json;
 namespace Assets.System.WarModule
 {
     /// <summary>
-    /// 战斗方式类。描述战斗单位的抽象层。
-    /// 远程，近战，兵种系数
+    /// 战斗方式类。
+    /// 主要用于战斗中交互的单位信息的抽象层。
     /// </summary>
     public class CombatStyle
     {
+        public static int DamageFormula(int strength, int level) => (int)(strength * (1 + (level - 1) * 0.2f));
+        public static int IntelligentFormula(int intelligent, int level) => (int)(intelligent * (1 + (level - 1) * 0.1f));
+        public static int HitPointFormula(int hitpoint, int level) => (int)(hitpoint * (1 + (level - 1) * 0.2f));
         public enum Types
         {
             None = -1,
@@ -25,81 +28,16 @@ namespace Assets.System.WarModule
         /// <param name="element">0=物理，负数=特殊物理，正数=魔法</param>
         /// <param name="strength">力量/基础伤害值</param>
         /// <param name="level">等级</param>
+        /// <param name="speed"></param>
         /// <param name="troop">军团</param>
+        /// <param name="hitPoint"></param>
+        /// <param name="intelligent"></param>
+        /// <param name="recovery"></param>
         /// <returns></returns>
         public static CombatStyle Instance(int military, int armedType, int combat, int element,
-            int strength, int level, int troop) =>
-            new CombatStyle(military, armedType, combat, element, strength, level, troop);
-
-        /// <summary>
-        /// 普通系
-        /// </summary>
-        public const int General = 0;
-
-        /// <summary>
-        /// 护盾系
-        /// </summary>
-        public const int Shield = 1;
-
-        /// <summary>
-        /// 步兵系
-        /// </summary>
-        public const int Infantry = 2;
-
-        /// <summary>
-        /// 长持系
-        /// </summary>
-        public const int LongArmed = 3;
-
-        /// <summary>
-        /// 短持系
-        /// </summary>
-        public const int ShortArmed = 4;
-
-        /// <summary>
-        /// 骑兵系
-        /// </summary>
-        public const int Knight = 5;
-
-        /// <summary>
-        /// 特种系
-        /// </summary>
-        public const int Special = 6;
-
-        /// <summary>
-        /// 战车系
-        /// </summary>
-        public const int Chariot = 7;
-
-        /// <summary>
-        /// 战船系
-        /// </summary>
-        public const int Warship = 8;
-
-        /// <summary>
-        /// 弓兵系
-        /// </summary>
-        public const int Archer = 9;
-
-        /// <summary>
-        /// 蛮族系
-        /// </summary>
-        public const int Barbarian = 10;
-
-        /// <summary>
-        /// 统御系
-        /// </summary>
-        public const int Commander = 11;
-
-        /// <summary>
-        /// 干扰系
-        /// </summary>
-        public const int Interfere = 12;
-
-        /// <summary>
-        /// 辅助系
-        /// </summary>
-        public const int Assist = 13;
+            int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery, int rare) =>
+            new CombatStyle(military, armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent,
+                recovery, rare);
 
         /// <summary>
         /// 攻击分类
@@ -127,14 +65,19 @@ namespace Assets.System.WarModule
         public int Troop { get; set; }
         public int Strength { get; set; }
         public int Level { get; set; }
+        public int Speed { get; set; }
+        public int Intelligent { get; set; }
+        public int HitPoint { get; set; }
+        public int Recovery { get; set; }
+        public int Rare { get; set; }
 
         [JsonConstructor]
         protected CombatStyle()
         {
         }
-
+        
         protected CombatStyle(int military, int armedType, int combatStyle, int element, int strength, int level,
-            int troop)
+            int hitPoint, int speed, int troop, int intelligent, int recovery, int rare)
         {
             Element = element;
             Type = (Types)combatStyle;
@@ -143,9 +86,19 @@ namespace Assets.System.WarModule
             Strength = strength;
             Level = level;
             Troop = troop;
+            Intelligent = intelligent;
+            Recovery = recovery;
+            Rare = rare;
+            Speed = speed;
+            HitPoint = hitPoint;
         }
         protected CombatStyle(CombatStyle s)
         {
+            Rare = s.Rare;
+            Recovery = s.Recovery;
+            Intelligent = s.Intelligent;
+            Speed = s.Speed;
+            HitPoint = s.HitPoint;
             Element = s.Element;
             Type = s.Type;
             ArmedType = s.ArmedType;
@@ -156,6 +109,5 @@ namespace Assets.System.WarModule
         }
 
         public override string ToString() => $"Combat({Type}).Armed[{ArmedType}] MId({Military}):E[{Element}]";
-
     }
 }

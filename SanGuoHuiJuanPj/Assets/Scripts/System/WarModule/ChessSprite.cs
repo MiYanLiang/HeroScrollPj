@@ -79,41 +79,6 @@ namespace Assets.System.WarModule
             Round
         }
 
-        ///// <summary>
-        ///// 爆炸+火焰
-        ///// </summary>
-        //public const int YeHuo = 6;
-        ///// <summary>
-        ///// 一般火焰
-        ///// </summary>
-        //public const int FireFlame = 7;
-        ///// <summary>
-        ///// 落雷
-        ///// </summary>
-        //public const int Thunder = 3;
-        ///// <summary>
-        ///// 投射精灵， 
-        ///// </summary>
-        //public const int CastSprite = 4;
-        ///// <summary>
-        ///// 地震
-        ///// </summary>
-        //public const int Earthquake = 8;
-        ///// <summary>
-        ///// 抛石精灵
-        ///// </summary>
-        //public const int Rock = 22;
-        //public const int Arrow = 21;
-        ///// <summary>
-        ///// 迷雾精灵(依赖类)
-        ///// </summary>
-        //public const int Forge = 20;
-        //public const int Strength = 10;
-        //public const int Armor = 14;
-        //public const int Dodge = 11;
-        //public const int Critical = 12;
-        //public const int Rouse = 13;
-
         public static T Instance<T>(ChessboardOperator chessboardOp, int instanceId, int lasting, int value, int pos,
             bool isChallenger)
             where T : PosSprite, new()
@@ -368,9 +333,17 @@ namespace Assets.System.WarModule
     {
         public override int TypeId => (int)Kinds.Forge;
 
-        protected override int BuffRespond(CardState.Cons con, IChessOperator op) =>
-            con == CardState.Cons.DodgeUp || 
-            con == CardState.Cons.Forge ? Value : 0;
+        protected override int BuffRespond(CardState.Cons con, IChessOperator op)
+        {
+            switch (con)
+            {
+                case CardState.Cons.DodgeUp:
+                    return Value;
+                case CardState.Cons.Forge:
+                    return 1;
+                default: return 0;
+            }
+        }
     }
 
     public class YellowBandSprite : StrengthSprite
@@ -536,25 +509,9 @@ namespace Assets.System.WarModule
             int skill)
         {
             var scope = chessboard.GetRivals(offender, _ => true).ToArray();
-            //var ringIndex = -1;
 
-            //for (int i = FireRings.Length - 1; i >= 0; i--)
-            //{
-            //    var sprite = chessboard.GetSpriteInChessPos(FireRings[i][0], IsChallenger)
-            //        .FirstOrDefault(s => s.GetKind() == Kinds.YeHuo && s != this);
-            //    if (sprite == null) continue;
-            //    ringIndex = i;
-            //    break;
-            //}
-            //var ringIndex = GetRelay();
-            //if (ringIndex >= FireRings.Length)
-            //    ringIndex = 0;
             var burnPoses = scope
                 .Join(GetRelay().Select(i => i), p => p.Pos, i => i, (p, _) => p).ToArray();
-            //    .All(p => p.Terrain.Sprites.Any(s => s.GetKind() == Kinds.YeHuo))
-            //    ? //是否满足满圈条件
-            //    scope
-            //    : scope.Join(FireRings[ringIndex], p => p.Pos, i => i, (p, _) => p).ToArray();
             
             for (var index = 0; index < burnPoses.Length; index++)
             {

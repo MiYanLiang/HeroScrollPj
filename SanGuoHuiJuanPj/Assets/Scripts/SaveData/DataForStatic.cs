@@ -64,6 +64,29 @@ public static class ColorDataStatic
     /// 回复生命绿色
     /// </summary>
     public static readonly Color huiFu_green = new Color(0f / 255f, 152f / 255f, 0f / 255f, 1);
+
+    public static Color GetNameColor(int rare)
+    {
+        switch (rare)
+        {
+            case 1:
+                return ColorDataStatic.name_gray;
+            case 2:
+                return ColorDataStatic.name_green;
+            case 3:
+                return ColorDataStatic.name_blue;
+            case 4:
+                return ColorDataStatic.name_purple;
+            case 5:
+                return ColorDataStatic.name_orange;
+            case 6:
+                return ColorDataStatic.name_red;
+            case 7:
+                return ColorDataStatic.name_black;
+            default:
+                return ColorDataStatic.name_gray;
+        }
+    }
 }
 
 /// <summary>
@@ -221,31 +244,4 @@ public static class StringForGuide
     /// 战役中升级战鼓
     /// </summary>
     public static readonly string guideShengJIZG = "ShengJiZG";
-}
-
-/// <summary>
-/// 登录相关方法索引
-/// </summary>
-public enum LoginFunIndex
-{
-    /// <summary>
-    /// 0 申请一个账号
-    /// </summary>
-    CREATE_ACCOUNT_NAME,
-    /// <summary>
-    /// 1 创建账号
-    /// </summary>
-    CREATE_ACCOUNT,
-    /// <summary>
-    /// 2 绑定手机
-    /// </summary>
-    BIND_PHONE,
-    /// <summary>
-    /// 3 账号登陆
-    /// </summary>
-    ACCOUNT_LOGIN,
-    /// <summary>
-    /// 4 上传存档
-    /// </summary>
-    UPLOAD_ARCHIVE
 }

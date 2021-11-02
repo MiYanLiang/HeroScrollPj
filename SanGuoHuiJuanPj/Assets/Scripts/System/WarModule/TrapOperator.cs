@@ -93,7 +93,7 @@ namespace Assets.System.WarModule
             }
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = InstanceMechanicalDamage(Strength);
+                var basicDmg = InstanceMechanicalDamage(Damage);
                 //根据比率给出是否眩晕
                 return new[]
                 {
@@ -125,7 +125,7 @@ namespace Assets.System.WarModule
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = InstanceMechanicalDamage(Strength);
+                var basicDmg = InstanceMechanicalDamage(Damage);
                 //根据比率给出是否眩晕
                 return new[]
                 {
@@ -143,7 +143,7 @@ namespace Assets.System.WarModule
         private float DamageRate => 6;
 
         protected override CombatConduct[] CounterConducts =>
-            Helper.Singular(InstanceMechanicalDamage(Strength * DamageRate));
+            Helper.Singular(InstanceMechanicalDamage(Damage * DamageRate));
     }
     /// <summary>
     /// 石墙
@@ -199,13 +199,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TreasureOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Strength);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Level);
     }
     /// <summary>
     /// 战役宝箱
     /// </summary>
     public class WarChestOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, Strength, 1);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, Level, 1);
     }
 }

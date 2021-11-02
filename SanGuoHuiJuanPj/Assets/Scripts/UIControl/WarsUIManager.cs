@@ -604,7 +604,7 @@ public class WarsUIManager : MonoBehaviour
     public void RecycleCardUi(FightCardData card)
     {
         if (card.cardObj == null)
-            throw new InvalidOperationException($"卡牌[{card.InstanceId}]({card.Info.Intro})找不到UI!");
+            throw new InvalidOperationException($"卡牌[{card.InstanceId}]({card.GetInfo().Intro})找不到UI!");
         var ui = card.cardObj;
         card.cardObj = null;
         ui.transform.SetParent(Chessboard.transform);
@@ -721,7 +721,7 @@ public class WarsUIManager : MonoBehaviour
             }
             var ui = card.cardObj; //GenerateCardUi(card);
             //PlaceCard(card);
-            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Info.GameSetRecovery * 0.01f)),
+            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Style.Recovery * 0.01f)),
                 card.Status.MaxHp);
             card.Status.SetHp(hp);
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
@@ -784,19 +784,19 @@ public class WarsUIManager : MonoBehaviour
             {
                 var enemyId = enemies[i];
                 if (enemyId == 0) continue;
-                var enemy = DataTable.EnemyUnit[enemyId];
-                var cardType = enemy.CardType;
+                var enemyUnit = DataTable.EnemyUnit[enemyId];
+                var cardType = enemyUnit.CardType;
                 ChessCard chessCard;
-                if (enemy.CardType >= 0)
+                if (enemyUnit.CardType >= 0)
                 {
-                    var card = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity);
-                    var level = enemy.Star;
+                    var card = GameCardInfo.RandomPick((GameCardType)enemyUnit.CardType, enemyUnit.Rarity);
+                    var level = enemyUnit.Star;
                     chessCard = ChessCard.Instance(card.Id, cardType, level, i);
                 }
-                else
+                else//宝箱类
                 {
-                    var trap = DataTable.Trap[enemy.Rarity];
-                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemy.Star, i);
+                    var trap = DataTable.Trap[enemyUnit.Rarity];
+                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemyUnit.Star, i);
                 }
                 enemyCards.Add(chessCard);
             }
@@ -1288,7 +1288,7 @@ public class WarsUIManager : MonoBehaviour
             wUi.Init(fCard.Card);
             wUi.SetSize(Vector3.one);
             wUi.tag = GameSystem.PyCard;
-            GiveGameObjEventForHoldOn(wUi, fCard.Info.About);
+            GiveGameObjEventForHoldOn(wUi, fCard.GetInfo().About);
             wUi.DragComponent.Init(fCard);
             fCard.cardObj = wUi;
         }

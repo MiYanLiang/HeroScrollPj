@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
@@ -74,9 +75,12 @@ public class PointDesk : MonoBehaviour
         SelectedCard.Set(GameCardUi.CardModes.Desk);
         var info = card.GetInfo();
         Fullname.text = info.Name;
-        Fullname.color = info.GetNameColor();
+        Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
         Attack.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(32),info.GetDamage(card.Level)) : string.Empty
+            ? card.level > 0
+                ?
+                string.Format(DataTable.GetStringText(32), info.GetDamage(card.Level))
+                : string.Empty
             : string.Empty;
         Hp.text = info.Type == GameCardType.Hero
             ? card.level > 0 ? string.Format(DataTable.GetStringText(33), info.GetHp(card.Level)) : string.Empty

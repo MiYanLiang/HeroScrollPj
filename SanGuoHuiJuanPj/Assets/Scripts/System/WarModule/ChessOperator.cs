@@ -32,7 +32,7 @@ namespace Assets.System.WarModule
     {
         public int InstanceId { get; protected set; }
         public abstract CombatStyle Style { get; }
-        public virtual int Strength => Style.Strength;
+        public virtual int Damage => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
@@ -47,7 +47,7 @@ namespace Assets.System.WarModule
         /// </summary>
         public virtual bool IsIgnoreShieldUnit { get; set; }
 
-        protected abstract int GeneralDamage();
+        protected abstract int StateDamage();
         public virtual void OnRoundStart() {}
 
         public virtual void OnRoundEnd() {}
@@ -169,7 +169,7 @@ namespace Assets.System.WarModule
             var conducts = activity.Conducts;
             if (result == ActivityResult.Types.Shield)
                 conducts = conducts.Where(c =>
-                    !(c.Kind == CombatConduct.DamageKind && Damage.GetKind(c) == Damage.Kinds.Physical)).ToList();
+                    !(c.Kind == CombatConduct.DamageKind && WarModule.Damage.GetKind(c) == WarModule.Damage.Kinds.Physical)).ToList();
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
@@ -331,6 +331,7 @@ namespace Assets.System.WarModule
         public virtual void OnSomebodyDie(ChessOperator death){}
 
         public virtual bool IsNotCounterAble(ChessOperator op) => false;
+
     }
 
     public abstract class CardOperator : ChessOperator
@@ -338,24 +339,22 @@ namespace Assets.System.WarModule
         private IChessman chessman;
         private CombatStyle combatStyle;
         private ChessboardOperator chessboard;
-
-        protected GameCardInfo Info { get; private set; }
+        public string Name { get; private set; }
         protected override ChessboardOperator Chessboard => chessboard;
         public override CombatStyle Style => combatStyle;
         public override GameCardType CardType => chessman.CardType;
         public override int CardId => chessman.CardId;
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
-        protected override int GeneralDamage() => Style.Strength;
+        protected override int StateDamage() => Style.Strength;
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {
+            Name = GameCardInfo.GetInfo(card).Name;
             InstanceId = card.InstanceId;
             chessman = card;
             combatStyle = card.GetStyle();
             chessboard = chessboardOp;
-            if (card.CardType != GameCardType.Base)
-                Info = card.Info;
         }
 
         public override ChessStatus GenerateStatus() => ChessStatus.Instance(chessman.HitPoint, chessman.MaxHitPoint,
@@ -368,7 +367,12 @@ namespace Assets.System.WarModule
             var sideText = IsChallenger ? "玩家" : "对方";
             if (CardType == GameCardType.Base)
                 return $"{sideText} 老巢{CardId}({Level})";
-            return $"{sideText} {Info.Name}({CardId})等级({Level})力量({Style.Strength})";
+            return $"{sideText} {Name}({CardId})等级({Level})伤害({Damage})";
         }
+
+        /// <summary>
+        /// 基础伤害
+        /// </summary>
+        public override int Damage => Style.Strength;
     }
 }

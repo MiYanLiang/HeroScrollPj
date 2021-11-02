@@ -121,8 +121,8 @@ namespace Assets.System.WarModule
         private ChessOperator InstanceHero(TCard card)
         {
             HeroOperator op = null;
-            var military = MilitaryInfo.GetInfo(card.CardId);
-            switch (military.Id)
+            var military = DataTable.Hero[card.CardId].MilitaryUnitTableId;
+            switch (military)
             {
                 default: op = new HeroOperator(); break; //0   武夫
 
@@ -254,8 +254,16 @@ namespace Assets.System.WarModule
 
                 case 244: op = new DuanNuOperator(); break;//短弩
             }
+
+            CheckNull(op, card);
             op.Init(card, this);
             return op;
+        }
+
+        private void CheckNull(IChessOperator op, IChessman card)
+        {
+            if (op == null)
+                throw new NullReferenceException($"找不到卡牌id[{card.CardId}].{card.CardType}的执行代理。");
         }
 
         private ChessOperator InstanceTrap(TCard card)
@@ -276,12 +284,10 @@ namespace Assets.System.WarModule
                 case 10: op = new GunMuOperator(); break;
                 case 11: op = new TreasureOperator(); break;
                 case 12: op = new WarChestOperator(); break;
-                case 13: op = new WarChestOperator(); break;
-                case 14: op = new WarChestOperator(); break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(card), card, $"未能识别的陷阱类型 = {card.CardId}");
             }
-
+            CheckNull(op, card);
             op.Init(card, this);
             return op;
         }
@@ -342,7 +348,7 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException(nameof(card), card, $"未能识别的塔类型 = {card.CardId}");
             }
-
+            CheckNull(op, card);
             op.Init(card, this);
             return op;
         }

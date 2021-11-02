@@ -2758,3 +2758,58 @@ public static class Effect
         return null;
     }
 }
+
+/// <summary>
+/// 羁绊名索引
+/// </summary>
+public enum JiBanSkillName
+{
+    /// <summary>
+    /// 桃园结义
+    /// </summary>
+    TaoYuanJieYi = 0,
+    /// <summary>
+    /// 五虎上将
+    /// </summary>
+    WuHuShangJiang = 1,
+    /// <summary>
+    /// 卧龙凤雏
+    /// </summary>
+    WoLongFengChu = 2,
+    /// <summary>
+    /// 虎痴恶来
+    /// </summary>
+    HuChiELai = 3,
+    /// <summary>
+    /// 五子良将
+    /// </summary>
+    WuZiLiangJiang = 4,
+    /// <summary>
+    /// 魏五谋士
+    /// </summary>
+    WeiWuMouShi = 5,
+    /// <summary>
+    /// 虎踞江东
+    /// </summary>
+    HuJuJiangDong = 6,
+    /// <summary>
+    /// 水师都督
+    /// </summary>
+    ShuiShiDuDu = 7,
+    /// <summary>
+    /// 天作之合
+    /// </summary>
+    TianZuoZhiHe = 8,
+    /// <summary>
+    /// 河北四庭柱
+    /// </summary>
+    HeBeiSiTingZhu = 9,
+    /// <summary>
+    /// 绝世无双
+    /// </summary>
+    JueShiWuShuang = 10,
+    /// <summary>
+    /// 汉末三仙
+    /// </summary>
+    HanMoSanXian = 11
+}

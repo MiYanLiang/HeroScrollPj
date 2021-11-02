@@ -14,10 +14,11 @@ namespace Assets.System.WarModule
         bool IsPlayer { get; }
         int CardId { get; }
         GameCardType CardType { get; }
-        GameCardInfo Info { get; }
         int HitPoint { get; }
         int MaxHitPoint { get; }
         int Level { get; }
+        int Speed { get; }
+        int Troop { get; }
         ChessStatus Status { get; }
         CombatStyle GetStyle();
     }
