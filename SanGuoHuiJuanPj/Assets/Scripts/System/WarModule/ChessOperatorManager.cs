@@ -214,7 +214,7 @@ namespace Assets.System.WarModule
 
                 case 20: case 52: case 184: op = new DaGongOperator(); break; //20  弓兵 //52  大弓
 
-                case 185: case 186: case 187: break;//火弓
+                case 185: case 186: case 187: op = new HuoGongOperator(); break;//火弓
 
                 case 21: case 194: case 195: op = new ZhanChuanOperator(); break; //21  艨艟
 
@@ -250,9 +250,9 @@ namespace Assets.System.WarModule
 
                 case 42: case 43: case 242: op = new YiShiOperator(); break; //42  医师 //43  大医师
 
-                case 243: break;//壮士
+                case 243: op = new ZhuangShi(); break;//壮士
 
-                case 244: break;//短弩
+                case 244: op = new DuanNuOperator(); break;//短弩
             }
             op.Init(card, this);
             return op;
