@@ -49,7 +49,7 @@ public class NewWarManager : MonoBehaviour, ILogger
         return cards;
     }
 
-    public FightCardData RegChessCard(ChessCard chessCard, bool isChallenger)
+    private FightCardData RegChessCard(ChessCard chessCard, bool isChallenger)
     {
         var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
         card.SetPos(chessCard.Pos);

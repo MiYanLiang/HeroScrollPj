@@ -199,13 +199,13 @@ namespace Assets.System.WarModule
     /// </summary>
     public class TreasureOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Damage);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, -1, Level);
     }
     /// <summary>
     /// 战役宝箱
     /// </summary>
     public class WarChestOperator : TrapOperator
     {
-        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, Damage, 1);
+        protected override void OnDeadTrigger(ChessOperator offender, int damage) => Chessboard.RegResources(this, !IsChallenger, Level, 1);
     }
 }

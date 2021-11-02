@@ -784,19 +784,19 @@ public class WarsUIManager : MonoBehaviour
             {
                 var enemyId = enemies[i];
                 if (enemyId == 0) continue;
-                var enemy = DataTable.EnemyUnit[enemyId];
-                var cardType = enemy.CardType;
+                var enemyUnit = DataTable.EnemyUnit[enemyId];
+                var cardType = enemyUnit.CardType;
                 ChessCard chessCard;
-                if (enemy.CardType >= 0)
+                if (enemyUnit.CardType >= 0)
                 {
-                    var card = GameCardInfo.RandomPick((GameCardType)enemy.CardType, enemy.Rarity);
-                    var level = enemy.Star;
+                    var card = GameCardInfo.RandomPick((GameCardType)enemyUnit.CardType, enemyUnit.Rarity);
+                    var level = enemyUnit.Star;
                     chessCard = ChessCard.Instance(card.Id, cardType, level, i);
                 }
-                else
+                else//宝箱类
                 {
-                    var trap = DataTable.Trap[enemy.Rarity];
-                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemy.Star, i);
+                    var trap = DataTable.Trap[enemyUnit.Rarity];
+                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemyUnit.Star, i);
                 }
                 enemyCards.Add(chessCard);
             }
