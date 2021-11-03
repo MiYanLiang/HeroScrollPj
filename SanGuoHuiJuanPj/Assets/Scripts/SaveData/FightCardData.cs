@@ -26,7 +26,7 @@ using UnityEngine;
         baseCard.isPlayerCard = isPlayer;
         baseCard.IsLock = true;
         baseCard.SetPos(17);
-        baseCard.status = ChessStatus.Instance(hp, hp, 17, 0, new Dictionary<int, int>(), new List<int>(), 0);
+        baseCard.status = ChessStatus.Instance(hp, hp, 17, new Dictionary<int, int>(), new List<int>(), 0);
         baseCard.ResetHp(hp);
         return baseCard;
     }
@@ -150,7 +150,7 @@ using UnityEngine;
         Troop = force;
         Speed = speed;
         Damage = CombatStyle.DamageFormula(strength, level);
-        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, 0, new Dictionary<int, int>(), new List<int>(), 0);
+        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
         StatesUi = new Dictionary<int, EffectStateUi>();
         style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
             intelligent, info.GameSetRecovery, info.Rare);

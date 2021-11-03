@@ -785,6 +785,7 @@ public class WarsUIManager : MonoBehaviour
                 var enemyId = enemies[i];
                 if (enemyId == 0) continue;
                 var enemyUnit = DataTable.EnemyUnit[enemyId];
+                if (enemyUnit.Rarity == 0) continue;
                 var cardType = enemyUnit.CardType;
                 ChessCard chessCard;
                 if (enemyUnit.CardType >= 0)

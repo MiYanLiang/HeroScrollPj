@@ -11,19 +11,17 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ChessStatus : BuffStatus
     {
-        public static ChessStatus Instance(int hp, int maxHp, int pos, int speed, Dictionary<int, int> states,
+        public static ChessStatus Instance(int hp, int maxHp, int pos, Dictionary<int, int> states,
             List<int> last, int lastHeal, int lastEaseShield = 0) =>
-            new ChessStatus(hp, maxHp, pos, speed, states, last, lastHeal, lastEaseShield);
+            new ChessStatus(hp, maxHp, pos, states, last, lastHeal, lastEaseShield);
 
-        public static ChessStatus Instance(ChessStatus ps) => Instance(ps.Hp, ps.MaxHp, ps.Pos, ps.Speed,
-            ps.Buffs.ToDictionary(s => s.Key, s => s.Value), ps.LastSuffers.ToList(), ps.LastHeal,
+        public static ChessStatus Instance(ChessStatus ps) => Instance(ps.Hp, ps.MaxHp, ps.Pos, ps.Buffs.ToDictionary(s => s.Key, s => s.Value), ps.LastSuffers.ToList(), ps.LastHeal,
             ps.LastEaseShieldDamage);
         
 
         public int Hp { get; private set; }
         public int Pos { get; private set; }
         public int MaxHp { get; private set; }
-        public int Speed { get; private set; }
 
         //[JsonIgnore] 
         public bool IsDeath => Hp <= 0;
@@ -33,17 +31,15 @@ namespace Assets.System.WarModule
         public int LastHeal { get; set; }
         private ChessStatus()
         {
-            
         }
 
-        private ChessStatus(int hp, int maxHp, int pos, int speed, Dictionary<int, int> buffs, List<int> last,
+        private ChessStatus(int hp, int maxHp, int pos, Dictionary<int, int> buffs, List<int> last,
             int lastHeal, int lastEaseShield)
         {
             Hp = hp;
             Buffs = buffs;
             Pos = pos;
             MaxHp = maxHp;
-            Speed = speed;
             LastSuffers = last;
             LastHeal = lastHeal;
             LastEaseShieldDamage = lastEaseShield;
@@ -58,7 +54,6 @@ namespace Assets.System.WarModule
             if (Hp < 0) Hp = 0;
         }
 
-        public void SetSpeed(int speed) => Speed = speed;
         public void SetPos(int pos) => Pos = pos;
 
         public override string ToString() =>

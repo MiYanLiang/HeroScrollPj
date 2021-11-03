@@ -183,8 +183,15 @@ namespace Assets.System.WarModule
                 if (value > 0) dic.Add(key, value);
             }
 
-            return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, status.Speed, dic,
+            return ChessStatus.Instance(status.Hp, status.MaxHp, status.Pos, dic,
                 status.LastSuffers.ToList(), status.LastHeal, status.LastEaseShieldDamage);
+        }
+
+        public int GetSpeed(IChessOperator op)
+        {
+            var pos = GetChessPos(op).Pos;
+            var speed = op.Style.Speed;
+            return speed - pos;
         }
 
         #endregion
@@ -380,7 +387,8 @@ namespace Assets.System.WarModule
         //执行代理的排列逻辑
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
             list.Where(o => !GetStatus(o).IsDeath)
-                .OrderBy(o => GetStatus(o).Pos)
+                .OrderBy(GetSpeed)
+                .ThenBy(o => GetStatus(o).Pos)
                 .ThenByDescending(o => o.IsChallenger)
                 .FirstOrDefault();
 
