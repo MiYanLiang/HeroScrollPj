@@ -365,7 +365,7 @@ namespace Assets.System.WarModule
             var sideText = IsChallenger ? "玩家" : "对方";
             if (CardType == GameCardType.Base)
                 return $"{sideText} 老巢{CardId}({Level})";
-            return $"{sideText} {Name}({CardId})等级({Level})伤害({Strength})";
+            return $"{sideText} {Name}({CardId})[等:{Level}|力:{Strength}|速:{Style.Speed}|智:{Style.Intelligent}]";
         }
 
         /// <summary>
