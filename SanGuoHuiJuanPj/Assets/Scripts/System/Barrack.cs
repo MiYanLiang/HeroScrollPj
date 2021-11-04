@@ -59,7 +59,9 @@ public class Barrack : MonoBehaviour
             selected = _cardPool.First(c => c.gameObject.activeSelf).Card;
         PointDesk.SelectCard(selected);
         HighlightSelected(selected);
-        AudioController0.instance.RandomPlayGuZhengAudio(); //播放随机音效 
+        //AudioController0.instance.ChangeAudioClip(13); //播放随机音效 
+        UIManager.instance.PlayOnClickMusic();
+
     }
 
     private void HighlightSelected(GameCard card) =>
