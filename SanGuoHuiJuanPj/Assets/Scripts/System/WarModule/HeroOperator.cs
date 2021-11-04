@@ -481,8 +481,9 @@ namespace Assets.System.WarModule
         public override void OnRoundEnd()
         {
             var howl = Chessboard.GetCondition(this, CardState.Cons.Murderous);
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 0,
-                CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -howl));
+            if (howl > 0)
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 0,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -howl));
         }
     }
 
