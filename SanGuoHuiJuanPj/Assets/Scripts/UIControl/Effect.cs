@@ -401,7 +401,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://战嚎
-                        value = 085; break;//圆月
+                        value = 524; break;//圆月
                     case 2://攻击、狂暴攻击
                         value = 085; break;
                 }
@@ -1767,9 +1767,10 @@ public static class Effect
     {
         switch (military)
         {
+            //狼骑
             case 149:
             case 150:
-            case 151: return 510;
+            case 151: return 530;
             default: return -1;
         }
     }
