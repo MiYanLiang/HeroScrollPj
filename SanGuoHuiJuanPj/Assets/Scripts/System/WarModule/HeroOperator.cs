@@ -67,7 +67,7 @@ namespace Assets.System.WarModule
         }
 
         private CombatConduct[] BasicDamage() =>
-            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Damage, Style.Element));
+            Helper.Singular(CombatConduct.InstanceDamage(InstanceId, Strength, Style.Element));
 
         /// <summary>
         /// 兵种攻击，base攻击是基础英雄属性攻击
@@ -375,7 +375,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var conduct = InstanceGenericDamage(Damage * chainedList.Length * DamageRate() * 0.01f);
+            var conduct = InstanceGenericDamage(Strength * chainedList.Length * DamageRate() * 0.01f);
             OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, conduct);
         }
 
@@ -409,6 +409,80 @@ namespace Assets.System.WarModule
         public override void OnSomebodyDie(ChessOperator death)
         {
             if (IsChainable(death)) UpdateChain();
+        }
+    }
+
+    /// <summary>
+    /// 146 弓骑
+    /// </summary>
+    public class GongQiOperator : HeroOperator
+    {
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            base.MilitaryPerforms(skill);
+        }
+    }
+
+    /// <summary>
+    /// 149 狼骑
+    /// </summary>
+    public class LangQiOperator : HeroOperator
+    {
+        private bool IsSameType(IChessOperator op) => op.Style.ArmedType >= 0 &&
+                                                      (op.Style.Military == 149 ||
+                                                       op.Style.Military == 150 ||
+                                                       op.Style.Military == 151);
+
+        private int PerformRate()
+        {
+            switch (Style.Military)
+            {
+                case 149: return 2;
+                case 150: return 5;
+                case 151: return 10;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int CriticalRate => 5;
+        private int RouseRate => 10;
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var langQiList = Chessboard.GetFriendly(this, p => p.IsAliveHero && 
+                                                          IsSameType(p.Operator)).ToArray();
+            var rate = 10 + langQiList.Length * PerformRate();
+            var combat = InstanceGenericDamage();
+            switch (Damage.GetType(combat))
+            {
+                case Damage.Types.General: break;
+                case Damage.Types.Critical:
+                    rate += CriticalRate;
+                    break;
+                case Damage.Types.Rouse:
+                    rate += RouseRate;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            foreach (var langQi in langQiList)
+            {
+                if (Chessboard.IsRandomPass(rate))
+                    OnPerformActivity(langQi, Activity.Intentions.Friendly, 0, 1,
+                        CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous));
+            }
+
+            var target = Chessboard.GetLaneTarget(this);
+            var howl = Chessboard.GetCondition(this, CardState.Cons.Murderous);
+            OnPerformActivity(target, Activity.Intentions.Offensive, 0, howl > 0 ? 2 : 0, combat);
+            for (int i = 0; i < howl; i++)
+                OnPerformActivity(target, Activity.Intentions.Offensive, i + 1, 2, combat);
+        }
+
+        public override void OnRoundEnd()
+        {
+            var howl = Chessboard.GetCondition(this, CardState.Cons.Murderous);
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 0,
+                CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -howl));
         }
     }
 
@@ -854,7 +928,7 @@ namespace Assets.System.WarModule
             float rate = 1;//Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
-            var heal = (int)(rate * Damage);
+            var heal = (int)(rate * Strength);
             foreach (var target in targets)
             {
                 if (heal <= 0) break;
@@ -987,7 +1061,7 @@ namespace Assets.System.WarModule
             float rate = 1;// Chessboard.Randomize(1, 5);
             if (basicDamage.IsCriticalDamage()) rate += 1.5f;
             if (basicDamage.IsRouseDamage()) rate += 2f;
-            var shield = rate * Damage;
+            var shield = rate * Strength;
             foreach (var target in targets)
             {
                 OnPerformActivity(target, Activity.Intentions.Friendly, actId: 0, skill: 1,
@@ -1709,7 +1783,7 @@ namespace Assets.System.WarModule
                 var targetStatus = Chessboard.GetStatus(target.Operator);
                 var targetShields = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield);
                 var shieldBalance = targetShields - BreakShields();
-                var dmgGapValue = Damage * DamageRate() * 0.01; //每10%掉血增加数
+                var dmgGapValue = Strength * DamageRate() * 0.01; //每10%掉血增加数
                 var additionDamage = HpDepletedRatioWithGap(targetStatus, 0, 10, (int)dmgGapValue);
                 var performDamage = InstanceGenericDamage(additionDamage);
                 var combat = new List<CombatConduct>();
@@ -1888,7 +1962,7 @@ namespace Assets.System.WarModule
         public override int GetDodgeRate() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeGapRate());
 
-        public override int Damage => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
+        public override int Strength => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
     /// <summary>
     /// 虎豹骑
@@ -1921,7 +1995,7 @@ namespace Assets.System.WarModule
         public override int GetPhysicArmor() =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Armor, 10, DamageResistGapRate());
 
-        public override int Damage =>
+        public override int Strength =>
             HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Strength, 10, DamageGapRate());
     }
 
@@ -1949,7 +2023,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var damage = Damage * DamageRate();
+            var damage = Strength * DamageRate();
             var target = Chessboard.GetLaneTarget(this);
             var array = Chessboard.GetRivals(this)
                 .ToArray();

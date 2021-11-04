@@ -196,9 +196,9 @@ namespace Assets.System.WarModule
 
                 case 44: case 144: case 145: op = new JingGuoOperator(); break; //44  巾帼
 
-                case 146: case 147: case 148: break;//弓骑
+                case 146: case 147: case 148: op = new GongQiOperator();break;//弓骑
 
-                case 149: case 150: case 151: break;//狼骑
+                case 149: case 150: case 151:op= new LangQiOperator(); break;//狼骑
 
                 case 58: case 152: case 153: op = new TieQiOperator(); break; //58  铁骑
 

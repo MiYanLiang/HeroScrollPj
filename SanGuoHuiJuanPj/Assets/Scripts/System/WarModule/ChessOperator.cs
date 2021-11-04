@@ -32,7 +32,7 @@ namespace Assets.System.WarModule
     {
         public int InstanceId { get; protected set; }
         public abstract CombatStyle Style { get; }
-        public virtual int Damage => Style.Strength;
+        public virtual int Strength => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
@@ -365,12 +365,12 @@ namespace Assets.System.WarModule
             var sideText = IsChallenger ? "玩家" : "对方";
             if (CardType == GameCardType.Base)
                 return $"{sideText} 老巢{CardId}({Level})";
-            return $"{sideText} {Name}({CardId})等级({Level})伤害({Damage})";
+            return $"{sideText} {Name}({CardId})等级({Level})伤害({Strength})";
         }
 
         /// <summary>
         /// 基础伤害
         /// </summary>
-        public override int Damage => Style.Strength;
+        public override int Strength => Style.Strength;
     }
 }
