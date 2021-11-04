@@ -417,9 +417,42 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GongQiOperator : HeroOperator
     {
+        private bool IsSameType(int value)
+        {
+            switch (value)
+            {
+                case 146: 
+                case 147: 
+                case 148: 
+                    return true;
+                default: return false;
+            }
+        }
+
+        private float CoordinationRate => 1.5f;
         protected override void MilitaryPerforms(int skill = 1)
         {
-            base.MilitaryPerforms(skill);
+            var marked = Chessboard.GetMarked(this, IsSameType);
+            var combat = InstanceGenericDamage();
+            if (marked != null)
+            {
+                combat.Multiply(CoordinationRate);
+                OnPerformActivity(marked, Activity.Intentions.Offensive, -1, 2, combat);
+                return;
+            }
+            
+            var target = Chessboard.GetRivals(this)
+                .OrderByDescending(p => p.Operator.IsRangeHero)
+                .ThenByDescending(p => p.Operator.CardType == GameCardType.Hero)
+                .FirstOrDefault();
+            if (target?.Operator == null)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
+
+            OnPerformActivity(target, Activity.Intentions.Offensive, 0, 1, combat,
+                CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Mark, Style.Military));
         }
     }
 
@@ -1111,7 +1144,7 @@ namespace Assets.System.WarModule
                 deplete += 1;
             if (combat.IsRouseDamage())
                 deplete += 2;
-
+            
             for (var i = 0; i < targets.Length; i++)
             {
                 var combats = new List<CombatConduct>();
@@ -1128,11 +1161,12 @@ namespace Assets.System.WarModule
                     for (int j = 0; j < buffs.Length; j++)
                     {
                         var con = buffs[Chessboard.Randomize(buffs.Length)];
-                        if (value <= con.Value)
+                        if (con.Buff != CardState.Cons.Mark && value <= con.Value)
                         {
                             combats.Add(CombatConduct.InstanceBuff(InstanceId, con.Buff, -value));
                             break;
                         }
+
                         combats.Add(CombatConduct.InstanceBuff(InstanceId, con.Buff, -con.Value));
                         value -= con.Value;
                         if (value <= 0) break;

@@ -320,6 +320,7 @@ public class CardAnimator : MonoBehaviour
                         case CardState.Cons.YellowBand:
                         case CardState.Cons.Chained:
                         case CardState.Cons.Murderous:
+                        case CardState.Cons.Mark:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(conduct.Element), conduct.Element.ToString());

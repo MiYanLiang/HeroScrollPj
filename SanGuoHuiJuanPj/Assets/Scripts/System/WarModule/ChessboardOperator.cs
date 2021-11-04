@@ -1241,6 +1241,16 @@ namespace Assets.System.WarModule
             return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
         }
 
+        public IChessPos GetMarked(ChessOperator op, Func<int, bool> militaryCondition)
+        {
+            var scope = op.IsChallenger 
+                ? Grid.GetRivalScope(op) 
+                : Grid.GetRivalScope(!op.IsChallenger);
+            return scope.Values.FirstOrDefault(p =>
+                p.Operator != null &&
+                militaryCondition(GetStatus(p.Operator).GetBuff(CardState.Cons.Mark)));
+        }
+
         public IEnumerable<IChessPos> GetNeighbors(IChessPos pos, bool includeUnPost, int surround= 1) => Grid.GetNeighbors(pos, includeUnPost, surround);
         public IEnumerable<IChessPos> GetFriendly(ChessOperator op, Func<IChessPos, bool> condition = null)
         {
