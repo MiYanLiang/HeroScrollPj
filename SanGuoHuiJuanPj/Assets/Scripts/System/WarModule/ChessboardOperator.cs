@@ -387,7 +387,7 @@ namespace Assets.System.WarModule
         //执行代理的排列逻辑
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
             list.Where(o => !GetStatus(o).IsDeath)
-                .OrderBy(GetSpeed)
+                .OrderByDescending(GetSpeed)
                 .ThenBy(o => GetStatus(o).Pos)
                 .ThenByDescending(o => o.IsChallenger)
                 .FirstOrDefault();
@@ -624,12 +624,19 @@ namespace Assets.System.WarModule
         public T InstanceSprite<T>(IChessPos target, int lasting,int value,int actId)
             where T : PosSprite, new()
         {
+            var sprite = GenerateSprite<T>(target, lasting, value, actId);
+            RegSprite(sprite, actId);
+            return sprite;
+        }
+
+        private T GenerateSprite<T>(IChessPos target, int lasting, int value, int actId)
+            where T : PosSprite, new()
+        {
             var sprite =
                 PosSprite.Instance<T>(this,ChessSpriteSeed,
                     value: value,
                     pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
             ChessSpriteSeed++;
-            RegSprite(sprite, actId);
             return sprite;
         }
 
@@ -654,10 +661,19 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         /// <returns></returns>
         public void DelegateSpriteActivity<T>(ChessOperator op, IChessPos target, CombatConduct[] conducts, int actId,
-            int skill, int lasting = 1, int value = 0)
-            where T : PosSprite, new()
+            int skill, int lasting = 1, int value = 0) where T : PosSprite, new()
         {
             var sprite = InstanceSprite<T>(target, lasting, value, actId);
+            sprite.OnActivity(op, this, conducts, actId, skill);
+        }
+
+        public void CastSpriteActivity(ChessOperator op, IChessPos target, PosSprite.Kinds kind,
+            CombatConduct[] conducts, int actId,
+            int skill, int lasting = 1, int value = 0)
+        {
+            var sprite = GenerateSprite<CastSprite>(target, lasting, value, actId);
+            sprite.SetKind(kind);
+            RegSprite(sprite,actId);
             sprite.OnActivity(op, this, conducts, actId, skill);
         }
 
@@ -1239,6 +1255,16 @@ namespace Assets.System.WarModule
                 ? Grid.GetRivalScope(!op.IsChallenger)
                 : Grid.GetRivalScope(op);
             return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
+        }
+
+        public IChessPos GetMarked(ChessOperator op, Func<int, bool> militaryCondition)
+        {
+            var scope = op.IsChallenger 
+                ? Grid.GetRivalScope(op) 
+                : Grid.GetRivalScope(!op.IsChallenger);
+            return scope.Values.FirstOrDefault(p =>
+                p.Operator != null &&
+                militaryCondition(GetStatus(p.Operator).GetBuff(CardState.Cons.Mark)));
         }
 
         public IEnumerable<IChessPos> GetNeighbors(IChessPos pos, bool includeUnPost, int surround= 1) => Grid.GetNeighbors(pos, includeUnPost, surround);

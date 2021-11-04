@@ -19,6 +19,7 @@ namespace Assets.System.WarModule
             Cons.Cowardly,
             Cons.Disarmed,
             Cons.Confuse,
+            Cons.Mark
         };
         public static bool IsNegativeBuff(Cons con) => NegativeBuffs.Contains(con);
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
@@ -71,51 +72,15 @@ namespace Assets.System.WarModule
                 case Cons.Murderous:
                     return StringNameStatic.StateIconPath_miWuZhenAddtion;
                 case Cons.Chained:
-                    return StringNameStatic.StateIconPath_lianHuan;
+                case Cons.Mark:
                 case Cons.YellowBand:
-                    return Effect.YellowBand65B;
-                    break;
+                    return StringNameStatic.StateIconPath_lianHuan;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }
             return string.Empty;
         }
 
-        public static bool IsDamageBuff(Cons con)
-        {
-            switch (con)
-            {
-                case Cons.Bleed:
-                case Cons.Poison:
-                case Cons.Burn:
-                    return true;
-                case Cons.Stunned:
-                case Cons.Shield:
-                case Cons.Invincible:
-                case Cons.BattleSoul:
-                case Cons.Imprisoned:
-                case Cons.Cowardly:
-                case Cons.StrengthUp:
-                case Cons.DodgeUp:
-                case Cons.CriticalUp:
-                case Cons.RouseUp:
-                case Cons.ArmorUp:
-                case Cons.DeathFight:
-                case Cons.Disarmed:
-                case Cons.Neizhu:
-                case Cons.ShenZhu:
-                case Cons.EaseShield:
-                case Cons.Forge:
-                case Cons.Stimulate:
-                case Cons.Confuse:
-                case Cons.Murderous:
-                case Cons.YellowBand:
-                case Cons.Chained:
-                    return false;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(con), con, null);
-            }
-        }
         public enum Cons
         {
             /// <summary>
@@ -218,6 +183,10 @@ namespace Assets.System.WarModule
             /// 杀气
             /// </summary>
             Murderous = 25,
+            /// <summary>
+            /// 标记
+            /// </summary>
+            Mark = 26
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -326,6 +295,7 @@ namespace Assets.System.WarModule
         [JsonIgnore] public int YellowBand { get => data[23]; set => data[23] = value; }
         [JsonIgnore] public int Chained { get => data[24]; set => data[24] = value; }
         [JsonIgnore] public int Murderous { get => data[25]; set => data[25] = value; }
+        [JsonIgnore] public int Mark { get => data[26]; set => data[26] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
         public const int EaseShieldMax = 1000;
@@ -408,6 +378,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Murderous:
                     Murderous += MinZeroAlign(Murderous);
+                    break;
+                case Cons.Mark:
+                    Mark += MinZeroAlign(Mark);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
@@ -495,6 +468,9 @@ namespace Assets.System.WarModule
                     break;
                 case Cons.Murderous:
                     Murderous = 0;
+                    break;
+                case Cons.Mark:
+                    Mark = 0;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);

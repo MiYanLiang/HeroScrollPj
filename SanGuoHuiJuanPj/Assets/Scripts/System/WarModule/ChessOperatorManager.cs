@@ -228,7 +228,7 @@ namespace Assets.System.WarModule
 
                 case 53: case 54: case 210: op = new YinShiOperator(); break; //53  隐士 //54  大隐士
 
-                case 214: case 215: case 216:break;//狂士
+                case 214: case 215: case 216: op = new KuangShiOperator(); break;//狂士
 
                 case 36: case 37: case 217: op = new MouShiOperator(); break; //36  谋士 //37  大谋士
 
