@@ -58,7 +58,7 @@ namespace Assets.System.WarModule
         {
             // 获取对位与周围的单位
             var target = Chessboard.GetTargetByMode(this, ChessboardOperator.Targeting.Contra);
-            var combat = Helper.Singular(InstanceMechanicalDamage(Damage));
+            var combat = Helper.Singular(InstanceMechanicalDamage(Strength));
             Chessboard.DelegateSpriteActivity<CatapultSprite>(this, target, combat, actId: 0, skill: 1);
         }
     }
@@ -75,7 +75,7 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 Chessboard.AppendOpActivity(this, target, Activity.Intentions.Friendly,
-                    Helper.Singular(CombatConduct.InstanceHeal(Damage, InstanceId)), actId: 0, skill: 1);
+                    Helper.Singular(CombatConduct.InstanceHeal(Strength, InstanceId)), actId: 0, skill: 1);
             }
         }
     }
@@ -92,7 +92,7 @@ namespace Assets.System.WarModule
                 .Select(p => new { p, random = Chessboard.Randomize(3) })
                 .OrderBy(p => p.random).Take(Targets).ToArray();
             //17, 箭楼远射伤害百分比
-            var damage = InstanceMechanicalDamage(Damage * DamageRate * 0.01f);
+            var damage = InstanceMechanicalDamage(Strength * DamageRate * 0.01f);
             for (var i = 0; i < chessPoses.Length; i++)
             {
                 var target = chessPoses[i].p;
@@ -111,7 +111,7 @@ namespace Assets.System.WarModule
                 .Where(p => p.IsPostedAlive &&
                             p.Operator.CardType == GameCardType.Hero)
                 .OrderBy(p => Chessboard.GetCondition(p.Operator, CardState.Cons.Shield))
-                .Take(Damage).ToArray(); //Style.Strength = 最大添加数
+                .Take(Strength).ToArray(); //Style.Strength = 最大添加数
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i];
@@ -163,7 +163,7 @@ namespace Assets.System.WarModule
     public class ZhanGuTaiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ namespace Assets.System.WarModule
     public class HaoJiaoTaiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<MeleeStrengthSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -181,14 +181,14 @@ namespace Assets.System.WarModule
     public class LiaoWangTaiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<RangeStrengthSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<RangeStrengthSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 七星坛
     /// </summary>
     public class QiXingTanOperator : NeighborSpriteTowerOperator
     {
-        protected override PosSprite InstanceSprite(IChessPos pos) => Chessboard.InstanceSprite<MagicForceSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+        protected override PosSprite InstanceSprite(IChessPos pos) => Chessboard.InstanceSprite<MagicForceSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ namespace Assets.System.WarModule
     public class FengShenTaiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<DodgeSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<DodgeSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -206,7 +206,7 @@ namespace Assets.System.WarModule
     public class ZhuTieLuOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CriticalSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<CriticalSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -215,7 +215,7 @@ namespace Assets.System.WarModule
     public class SiFangDingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<RouseSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<RouseSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 烽火台
@@ -223,7 +223,7 @@ namespace Assets.System.WarModule
     public class FengHuoTaiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ArmorSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<ArmorSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 演武场
@@ -231,7 +231,7 @@ namespace Assets.System.WarModule
     public class YanWuChangOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<PhysicalSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<PhysicalSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ namespace Assets.System.WarModule
     public class CaoWeiQiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CaoWeiSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<CaoWeiSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 蜀汉旗
@@ -248,7 +248,7 @@ namespace Assets.System.WarModule
     public class SuHanQiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<SuHanSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<SuHanSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 东吴旗
@@ -256,7 +256,7 @@ namespace Assets.System.WarModule
     public class DongWuQiOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<DongWuSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<DongWuSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 骑兵营
@@ -264,7 +264,7 @@ namespace Assets.System.WarModule
     public class QiBingYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<CavalrySprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<CavalrySprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -273,7 +273,7 @@ namespace Assets.System.WarModule
     public class GongNuYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ArrowUpSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<ArrowUpSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -282,7 +282,7 @@ namespace Assets.System.WarModule
     public class BuBingYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<InfantrySprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<InfantrySprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -291,7 +291,7 @@ namespace Assets.System.WarModule
     public class ChangChiYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<StickWeaponSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<StickWeaponSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
     /// <summary>
     /// 战船营
@@ -299,7 +299,7 @@ namespace Assets.System.WarModule
     public class ZhanChuanYingOperator : NeighborSpriteTowerOperator
     {
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<WarshipSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<WarshipSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 
     /// <summary>
@@ -310,6 +310,6 @@ namespace Assets.System.WarModule
         protected override int Surround => Style.Military == 17 ? 2 : 1;
 
         protected override PosSprite InstanceSprite(IChessPos pos) =>
-            Chessboard.InstanceSprite<ForgeSprite>(pos, lasting: InstanceId, value: Damage, actId: -1);
+            Chessboard.InstanceSprite<ForgeSprite>(pos, lasting: InstanceId, value: Strength, actId: -1);
     }
 }

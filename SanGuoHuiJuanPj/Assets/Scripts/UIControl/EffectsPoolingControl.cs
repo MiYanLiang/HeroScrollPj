@@ -233,16 +233,20 @@ public class EffectsPoolingControl : MonoBehaviour
     public EffectStateUi GetStateBuff(CardState.Cons con, Transform trans)
     {
         var id = Effect.GetBuffId(con);
-        if (id == -1) return null;
+        return GetStateBuff(id, trans);
+    }
+    public EffectStateUi GetStateBuff(int buffId, Transform trans)
+    {
+        if (buffId == -1) return null;
         foreach (var tmp in BuffPool.Where(b=>b.Value.Any(e=>e ==null)).ToArray())
             BuffPool[tmp.Key] = tmp.Value.Where(e => e != null).ToList();
-        if (!BuffPool.ContainsKey(id))
-            BuffPool.Add(id, new List<EffectStateUi>());
-        var buff = BuffPool[id].FirstOrDefault(e => !e.gameObject.activeSelf);
+        if (!BuffPool.ContainsKey(buffId))
+            BuffPool.Add(buffId, new List<EffectStateUi>());
+        var buff = BuffPool[buffId].FirstOrDefault(e => !e.gameObject.activeSelf);
         if (buff == null)
         {
-            buff = Instantiate(GameResources.Instance.Buff[id], trans);
-            BuffPool[id].Add(buff);
+            buff = Instantiate(GameResources.Instance.Buff[buffId], trans);
+            BuffPool[buffId].Add(buff);
         }
 
         buff.transform.position = trans.position;

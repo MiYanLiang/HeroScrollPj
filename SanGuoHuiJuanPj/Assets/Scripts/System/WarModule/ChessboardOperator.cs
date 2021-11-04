@@ -905,7 +905,7 @@ namespace Assets.System.WarModule
         public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
-            return (int)(op.Damage + op.Damage * 0.01f * ratio);
+            return (int)(op.Strength + op.Strength * 0.01f * ratio);
         }
         /// <summary>
         /// 完全动态伤害=进攻方伤害转化(buff,羁绊)
