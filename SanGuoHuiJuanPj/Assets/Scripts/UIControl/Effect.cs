@@ -401,7 +401,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://战嚎
-                        value = 999; break;//圆月
+                        value = 085; break;//圆月
                     case 2://攻击、狂暴攻击
                         value = 085; break;
                 }
@@ -1749,6 +1749,7 @@ public static class Effect
                 return -1;
             // 杀气
             case CardState.Cons.Murderous:
+                XDebug.LogError($"[{con}]状态并不用于这里获取buff Id。",nameof(Effect));
                 return -1;
             // 连环
             case CardState.Cons.Chained:
@@ -1763,6 +1764,16 @@ public static class Effect
         }
     }
 
+    public static int GetMurderousBuffId(int military)
+    {
+        switch (military)
+        {
+            case 149:
+            case 150:
+            case 151: return 510;
+            default: return -1;
+        }
+    }
     /// <summary>
     /// Buff亮度
     /// </summary>

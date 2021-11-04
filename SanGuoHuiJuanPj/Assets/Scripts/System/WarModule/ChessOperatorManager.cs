@@ -165,12 +165,10 @@ namespace Assets.System.WarModule
                 case 17: case 104: case 105: op = new DaDaoOperator(); break; //17  大刀
 
                 case 18: case 106: case 107: op = new DaFuOperator(); break; //18  大斧
-
                                                                              //狼牙棒 108|109|110
                                                                              //魔王 111|112|113
 
                 case 12: case 114: case 115: op = new ShenWuOperator(); break; //12  神武
-
                                                                                //白毦 116|117|118
                                                                                //朴刀 119|120|121
 

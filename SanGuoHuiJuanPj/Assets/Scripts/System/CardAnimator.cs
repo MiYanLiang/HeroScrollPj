@@ -228,7 +228,7 @@ public class CardAnimator : MonoBehaviour
         var iconId = Effect.GetStateIconId(con);
         if (stateValue <= 0)
         {
-            //更新效果图
+            //更新Buff效果
             if (target.StatesUi.ContainsKey(key))
             {
                 var e = target.StatesUi[key];
@@ -236,7 +236,7 @@ public class CardAnimator : MonoBehaviour
                 if (e != null) EffectsPoolingControl.instance.RecycleStateBuff(e);
             }
 
-            //更新小图标
+            //更新Icon小图标
             if (target.cardObj.War.CardStates.ContainsKey(iconId))
                 DestroySateIcon(target.cardObj, con);
 
@@ -245,7 +245,13 @@ public class CardAnimator : MonoBehaviour
 
         if (!target.StatesUi.ContainsKey(key) || target.StatesUi[key] == null) //添加效果图
         {
-            var effect = EffectsPoolingControl.instance.GetStateBuff(con, target.cardObj.transform);
+            EffectStateUi effect;
+            if (con == CardState.Cons.Murderous) //杀气的特效是根据兵种提现不同特效
+            {
+                var murderousBuffId = Effect.GetMurderousBuffId(target.ChessmanStyle.Military);
+                effect = EffectsPoolingControl.instance.GetStateBuff(murderousBuffId, target.cardObj.transform);
+            }
+            else effect = EffectsPoolingControl.instance.GetStateBuff(con, target.cardObj.transform);
             if (!target.StatesUi.ContainsKey(key))
                 target.StatesUi.Add(key, null);
             target.StatesUi[key] = effect;
