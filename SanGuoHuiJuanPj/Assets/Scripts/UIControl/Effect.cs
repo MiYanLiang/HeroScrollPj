@@ -388,11 +388,9 @@ public static class Effect
             case 148://弓骑
                 switch (skill) 
                 {
-                    case 1://普通攻击
+                    case 1://标记
                         value = 025;break;
-                    case 2://标记
-                        value = 025;break;
-                    case 3://协战攻击
+                    case 2://协战攻击
                         value = 025;break;
                 }
                 break;
@@ -402,11 +400,9 @@ public static class Effect
             case 151://狼骑
                 switch (skill)
                 {
-                    case 1://普通攻击
-                        value = 085; break;
-                    case 2://战嚎
-                        break;
-                    case 3://狂暴
+                    case 1://战嚎
+                        value = 999; break;//圆月
+                    case 2://攻击、狂暴攻击
                         value = 085; break;
                 }
                 break;
@@ -1088,11 +1084,9 @@ public static class Effect
             case 148://弓骑
                 switch (skill) 
                 {
-                    case 1://普通攻击
-                        return -1;
-                    case 2://标记
+                    case 1://标记
                         return 241;
-                    case 3://协战攻击
+                    case 2://协战攻击
                         return 242;
                 }
                 break;
@@ -1102,11 +1096,9 @@ public static class Effect
             case 151://狼骑
                 switch (skill) 
                 {
-                    case 1://普通攻击
-                        return -1;
-                    case 2://战嚎
+                    case 1://战嚎
                         return 243;
-                    case 3://狂暴
+                    case 2://狂暴
                         return 244;
                 }
                 break;
@@ -2184,11 +2176,9 @@ public static class Effect
             case 148://弓骑
                 switch (skill) 
                 {
-                    case 1://普通攻击
+                    case 1://标记
                         audioId = 73;break;
-                    case 2://标记
-                        audioId = 73;break;
-                    case 3://协战
+                    case 2://协战
                         audioId = 73;break;
                 }
                 break;
@@ -2198,11 +2188,9 @@ public static class Effect
             case 151://狼骑
                 switch (skill) 
                 {
-                    case 1://普通攻击
-                        audioId = 75;break;
-                    case 2://战嚎
+                    case 1://战嚎
                         audioId = 74;break;
-                    case 3://狂暴
+                    case 2://狂暴
                         audioId = 75;break;
                 }
                 break;
