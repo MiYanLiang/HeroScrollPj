@@ -470,20 +470,20 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 149: return 2;
-                case 150: return 5;
-                case 151: return 10;
+                case 149: return 30;
+                case 150: return 50;
+                case 151: return 70;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        private int CriticalRate => 5;
-        private int RouseRate => 10;
+        private int CriticalRate => 10;
+        private int RouseRate => 30;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var langQiList = Chessboard.GetFriendly(this, p => p.IsAliveHero && 
                                                           IsSameType(p.Operator)).ToArray();
-            var rate = 10 + langQiList.Length * PerformRate();
+            var rate = PerformRate();
             var combat = InstanceGenericDamage();
             switch (Damage.GetType(combat))
             {
