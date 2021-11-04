@@ -387,7 +387,7 @@ namespace Assets.System.WarModule
         //执行代理的排列逻辑
         private ChessOperator GetSortedOperator(IEnumerable<ChessOperator> list) =>
             list.Where(o => !GetStatus(o).IsDeath)
-                .OrderBy(GetSpeed)
+                .OrderByDescending(GetSpeed)
                 .ThenBy(o => GetStatus(o).Pos)
                 .ThenByDescending(o => o.IsChallenger)
                 .FirstOrDefault();
