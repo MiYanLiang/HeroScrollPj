@@ -403,9 +403,30 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
+    /// 投射精灵
+    /// </summary>
+    public class CastSprite : RoundSprite
+    {
+        private int _typeId = (int)Kinds.CastSprite;
+
+        public override int TypeId => _typeId;
+
+        public override HostType Host => HostType.Round;
+
+        public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard,
+            CombatConduct[] conducts, int actId, int skill)
+        {
+            var target = chessboard.GetChessPos(IsChallenger, Pos);
+            if (target.IsPostedAlive)
+                chessboard.AppendOpActivity(offender, target, Activity.Intentions.Offensive, conducts, actId, skill);
+        }
+        public void SetKind(Kinds kind) => _typeId = (int)kind;
+    }
+
+    /// <summary>
     /// 箭精灵
     /// </summary>
-    public class ArrowSprite : RouseSprite
+    public class ArrowSprite : RoundSprite
     {
         public override int TypeId { get; } = (int)Kinds.Arrow;
         public override void OnActivity(ChessOperator offender, ChessboardOperator chessboard, CombatConduct[] conducts, int actId, int skill)

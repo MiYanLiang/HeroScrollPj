@@ -624,12 +624,19 @@ namespace Assets.System.WarModule
         public T InstanceSprite<T>(IChessPos target, int lasting,int value,int actId)
             where T : PosSprite, new()
         {
+            var sprite = GenerateSprite<T>(target, lasting, value, actId);
+            RegSprite(sprite, actId);
+            return sprite;
+        }
+
+        private T GenerateSprite<T>(IChessPos target, int lasting, int value, int actId)
+            where T : PosSprite, new()
+        {
             var sprite =
                 PosSprite.Instance<T>(this,ChessSpriteSeed,
                     value: value,
                     pos: target.Pos, isChallenger: target.IsChallenger, lasting: lasting);
             ChessSpriteSeed++;
-            RegSprite(sprite, actId);
             return sprite;
         }
 
@@ -654,10 +661,19 @@ namespace Assets.System.WarModule
         /// <param name="value"></param>
         /// <returns></returns>
         public void DelegateSpriteActivity<T>(ChessOperator op, IChessPos target, CombatConduct[] conducts, int actId,
-            int skill, int lasting = 1, int value = 0)
-            where T : PosSprite, new()
+            int skill, int lasting = 1, int value = 0) where T : PosSprite, new()
         {
             var sprite = InstanceSprite<T>(target, lasting, value, actId);
+            sprite.OnActivity(op, this, conducts, actId, skill);
+        }
+
+        public void CastSpriteActivity(ChessOperator op, IChessPos target, PosSprite.Kinds kind,
+            CombatConduct[] conducts, int actId,
+            int skill, int lasting = 1, int value = 0)
+        {
+            var sprite = GenerateSprite<CastSprite>(target, lasting, value, actId);
+            sprite.SetKind(kind);
+            RegSprite(sprite,actId);
             sprite.OnActivity(op, this, conducts, actId, skill);
         }
 

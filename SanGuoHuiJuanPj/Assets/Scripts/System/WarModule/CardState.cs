@@ -72,10 +72,9 @@ namespace Assets.System.WarModule
                 case Cons.Murderous:
                     return StringNameStatic.StateIconPath_miWuZhenAddtion;
                 case Cons.Chained:
-                    return StringNameStatic.StateIconPath_lianHuan;
-                case Cons.YellowBand:
                 case Cons.Mark:
-                    return Effect.YellowBand65B;
+                case Cons.YellowBand:
+                    return StringNameStatic.StateIconPath_lianHuan;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }

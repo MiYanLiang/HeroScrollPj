@@ -1345,53 +1345,28 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 28  术士 - 洞察天机，召唤3次天雷，随机落在敌阵中，并有几率造成【眩晕】。
+    /// 元素执行者。
     /// </summary>
-    public class ShuShiOperator : HeroOperator
+    public abstract class ElementOperator : HeroOperator
     {
         private bool isInit = false;
-        private int PresetBuff()
-        {
-            switch (Style.Military)
-            {
-                case 28: return 1;
-                case 29: return 2;
-                case 204: return 3;
-                default: throw MilitaryNotValidError(this);
-            }
-        }
-        
-        private int[] TargetRange()
-        {
-            switch (Style.Military)
-            {
-                case 28: return new[] { 1, 3 };
-                case 29: return new[] { 2, 5 };
-                case 204: return new[] { 3, 5 };
-                default: throw MilitaryNotValidError(this);
-            }
-        }
-        private int UltiAttackTimes()
-        {
-            switch (Style.Military)
-            {
-                case 28: return 3;
-                case 29: return 5;
-                case 204: return 5;
-                default: throw MilitaryNotValidError(this);
-            }
-        }
-        private int Ultimate => 3;
-        private int CriticalAddOn => 1;
-        private int RouseAddOn => 2;
-
+        protected  virtual int Ultimate => 3;
+        protected  virtual int CriticalAddOn => 1;
+        protected  virtual int RouseAddOn => 2;
+        protected  virtual float DamageRate => 0.3f;
+        protected virtual int ElementRate => 10;
+        protected abstract PosSprite.Kinds SpriteKind { get; }
+        protected abstract int ConductElement { get; }
+        protected abstract int PresetBuff();
+        protected abstract int[] TargetRange();
+        protected abstract int UltiAttackTimes();
         protected override void MilitaryPerforms(int skill = 1)
         {
             var murderous = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             var conduct = InstanceGenericDamage();
-            conduct.Multiply(0.3f);//临时
-            conduct.Element = CombatConduct.ThunderDmg;
-            conduct.Rate = 10;
+            conduct.Multiply(DamageRate);//临时
+            conduct.Element = ConductElement;
+            conduct.Rate = ElementRate;
             var addOn = conduct.IsRouseDamage() ? RouseAddOn : conduct.IsCriticalDamage() ? CriticalAddOn : 0;
             var range = TargetRange();
             var isUlti = murderous >= Ultimate;//是不是大招
@@ -1407,7 +1382,7 @@ namespace Assets.System.WarModule
                     .ToArray();
                 foreach (var pos in targetPoses)
                 {
-                    Chessboard.DelegateSpriteActivity<ThunderSprite>(this, pos.Obj, Helper.Singular(conduct), actId: j,
+                    Chessboard.CastSpriteActivity(this, pos.Obj, SpriteKind, Helper.Singular(conduct), actId: j,
                         isUlti ? 2 : 1);
                 }
             }
@@ -1429,7 +1404,89 @@ namespace Assets.System.WarModule
             }
             else SelfBuffering(CardState.Cons.Murderous, value: 1, skill: 3);
         }
+    }
 
+    /// <summary>
+    /// 28  术士 - 洞察天机，召唤3次天雷，随机落在敌阵中，并有几率造成【眩晕】。
+    /// </summary>
+    public class ShuShiOperator : ElementOperator
+    {
+        protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Thunder;
+        protected override int ConductElement => CombatConduct.ThunderDmg;
+
+        protected override int PresetBuff()
+        {
+            switch (Style.Military)
+            {
+                case 28: return 1;
+                case 29: return 2;
+                case 204: return 3;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override int[] TargetRange()
+        {
+            switch (Style.Military)
+            {
+                case 28: return new[] { 1, 3 };
+                case 29: return new[] { 2, 5 };
+                case 204: return new[] { 3, 5 };
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override int UltiAttackTimes()
+        {
+            switch (Style.Military)
+            {
+                case 28: return 3;
+                case 29: return 5;
+                case 204: return 5;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+    }
+    /// <summary>
+    /// 68 狂士
+    /// </summary>
+    public class KuangShiOperator : ElementOperator
+    {
+        protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Earthquake;
+        protected override int ConductElement => CombatConduct.EarthDmg;
+
+        protected override int PresetBuff()
+        {
+            switch (Style.Military)
+            {
+                case 214: return 1;
+                case 215: return 2;
+                case 216: return 3;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override int[] TargetRange()
+        {
+            switch (Style.Military)
+            {
+                case 214: return new[] { 1, 3 };
+                case 215: return new[] { 2, 5 };
+                case 216: return new[] { 3, 5 };
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override int UltiAttackTimes()
+        {
+            switch (Style.Military)
+            {
+                case 214: return 3;
+                case 215: return 5;
+                case 216: return 5;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
     }
 
     /// <summary>
