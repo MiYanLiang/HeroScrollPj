@@ -348,6 +348,8 @@ namespace Assets.System.WarModule
 
     public class YellowBandSprite : StrengthSprite
     {
+        private int _typeId = (int)Kinds.YellowBand;
+        public override int TypeId => _typeId;
         protected override Func<IChessOperator, bool> OpCondition => op => op.InstanceId == Lasting;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op)
         {

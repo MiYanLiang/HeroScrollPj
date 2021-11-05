@@ -208,7 +208,7 @@ namespace Assets.System.WarModule
         public override void OnSufferConduct(Activity.Intentions activityIntent, ChessOperator op, CombatConduct conduct)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
-            conduct.Multiply(DataTable.GetGameValue(117) * 0.01f);
+            conduct.Multiply(1.5f);
         }
 
     }

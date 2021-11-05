@@ -24,63 +24,6 @@ namespace Assets.System.WarModule
         public static bool IsNegativeBuff(Cons con) => NegativeBuffs.Contains(con);
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
         public static Cons[] ConsArray { get; } = Enum.GetValues(typeof(Cons)).Cast<Cons>().ToArray();
-        public static string IconName(Cons con)
-        {
-            switch (con)
-            {
-                case Cons.Stunned:
-                    return StringNameStatic.StateIconPath_dizzy;
-                case Cons.Shield:
-                    return StringNameStatic.StateIconPath_withStand;
-                case Cons.Invincible:
-                    return StringNameStatic.StateIconPath_invincible;
-                case Cons.Bleed:
-                    return StringNameStatic.StateIconPath_bleed;
-                case Cons.Poison:
-                    return StringNameStatic.StateIconPath_poisoned;
-                case Cons.Burn:
-                    return StringNameStatic.StateIconPath_burned;
-                case Cons.BattleSoul:
-                case Cons.Stimulate:
-                    return StringNameStatic.StateIconPath_willFight;
-                case Cons.Imprisoned:
-                case Cons.Confuse:
-                    return StringNameStatic.StateIconPath_imprisoned;
-                case Cons.Cowardly:
-                    return StringNameStatic.StateIconPath_cowardly;
-                case Cons.StrengthUp:
-                    return StringNameStatic.StateIconPath_zhangutaiAddtion;
-                case Cons.DodgeUp:
-                    return StringNameStatic.StateIconPath_fengShenTaiAddtion;
-                case Cons.CriticalUp:
-                    return StringNameStatic.StateIconPath_pilitaiAddtion;
-                case Cons.RouseUp:
-                    return StringNameStatic.StateIconPath_langyataiAddtion;
-                case Cons.ArmorUp:
-                    return StringNameStatic.StateIconPath_fenghuotaiAddtion;
-                case Cons.DeathFight:
-                    return StringNameStatic.StateIconPath_deathFight;
-                case Cons.Disarmed:
-                    return StringNameStatic.StateIconPath_removeArmor;
-                case Cons.Neizhu:
-                    return StringNameStatic.StateIconPath_neizhu;
-                case Cons.ShenZhu:
-                    return StringNameStatic.StateIconPath_shenzhu;
-                case Cons.EaseShield:
-                    return StringNameStatic.StateIconPath_shield;
-                case Cons.Forge:
-                case Cons.Murderous:
-                    return StringNameStatic.StateIconPath_miWuZhenAddtion;
-                case Cons.Chained:
-                case Cons.Mark:
-                case Cons.YellowBand:
-                    return StringNameStatic.StateIconPath_lianHuan;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(con), con, null);
-            }
-            return string.Empty;
-        }
-
         public enum Cons
         {
             /// <summary>

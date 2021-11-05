@@ -1586,12 +1586,13 @@ public static class Effect
                 return 01;
             // 连环
             case CardState.Cons.Chained:
-            case CardState.Cons.Mark:
                 return 48;
             // 黄巾
             case CardState.Cons.YellowBand:
                 return 47;
-
+            //标记
+            case CardState.Cons.Mark:
+                return 49;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
@@ -1691,11 +1692,13 @@ public static class Effect
                 return -1;
             // 连环
             case CardState.Cons.Chained:
-            case CardState.Cons.Mark:
                 return 515;
             // 黄巾
             case CardState.Cons.YellowBand:
                 return 529;
+            //标记
+            case CardState.Cons.Mark:
+                return 525;
             default:
                 return -1;//返回-1表示没有buff特效
         }

@@ -230,7 +230,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 1: return 25;//
+                case 1: return 20;
                 case 66: return 25;
                 case 67: return 30;
             }
@@ -293,7 +293,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 16: return 25;//20
+                case 16: return 20;
                 case 142: return 25;
                 case 143: return 30;
                 default: throw MilitaryNotValidError(this);
@@ -429,29 +429,43 @@ namespace Assets.System.WarModule
             }
         }
 
-        private float CoordinationRate => 1.5f;
+        private int CoordinationRate()
+        {
+            switch (Style.Military)
+            {
+                case 146: return 30;
+                case 147: return 50;
+                case 148: return 80;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var marked = Chessboard.GetMarked(this, IsSameType);
             var combat = InstanceGenericDamage();
             if (marked != null)
             {
-                combat.Multiply(CoordinationRate);
+                combat.Multiply(1 + CoordinationRate() * 0.01f);
                 OnPerformActivity(marked, Activity.Intentions.Offensive, -1, 2, combat);
                 return;
             }
+                                    
+            //如果对面没有标记         
             
             var target = Chessboard.GetRivals(this)
-                .OrderByDescending(p => p.Operator.IsRangeHero)
-                .ThenByDescending(p => p.Operator.CardType == GameCardType.Hero)
+                .Select(p=>new {p,random= Chessboard.Randomize(3)})
+                .OrderByDescending(p => p.p.Operator.IsRangeHero)
+                .ThenByDescending(p => p.p.Operator.CardType == GameCardType.Hero)
+                .ThenBy(p=>p.random)
                 .FirstOrDefault();
-            if (target?.Operator == null)
+            if (target?.p?.Operator == null)
             {
                 base.MilitaryPerforms(0);
                 return;
             }
 
-            OnPerformActivity(target, Activity.Intentions.Offensive, 0, 1, combat,
+            OnPerformActivity(target.p, Activity.Intentions.Offensive, 0, 1, combat,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Mark, Style.Military));
         }
     }
@@ -515,7 +529,7 @@ namespace Assets.System.WarModule
         {
             var howl = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             if (howl > 0)
-                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 0,
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
                     CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, -howl));
         }
     }
@@ -527,7 +541,13 @@ namespace Assets.System.WarModule
     {
         private const int YellowBand = (int)CardState.Cons.YellowBand;
         private const int Max = 15;
-        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con) => sprites.Where(s => s.TypeId == YellowBand).Take(Max).Count() * GetDamageRate();
+
+        public override int OnSpritesValueConvert(PosSprite[] sprites, CardState.Cons con)
+        {
+            var count = sprites.Where(s => s.Pos != Chessboard.GetChessPos(this).Pos && s.TypeId == YellowBand)
+                .Take(Max).Count();
+            return count * GetDamageRate();
+        }
 
         protected override void MilitaryPerforms(int skill = 1) => base.MilitaryPerforms(Chessboard.GetCondition(this, CardState.Cons.YellowBand) > 0 ? 1 : 0);
 
@@ -578,7 +598,7 @@ namespace Assets.System.WarModule
         {
             switch (Style .Military) 
             {
-                case 57:return 20;//10
+                case 57:return 10;
                 case 96:return 20;
                 case 97:return 30;
                 default: throw MilitaryNotValidError(this);
@@ -647,7 +667,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 56: return 50;//30
+                case 56: return 30;
                 case 131: return 50;
                 case 132: return 70;
                 default: throw MilitaryNotValidError(this);
@@ -895,9 +915,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 44: return 30;
-                case 144: return 50;
-                case 145: return 70;
+                case 44: return 50;
+                case 144: return 70;
+                case 145: return 90;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1569,7 +1589,7 @@ namespace Assets.System.WarModule
                 .OrderByDescending(p => p.Random).FirstOrDefault()?.Pos;
             if (target == null) target = Chessboard.GetLaneTarget(this);
             var combats = new List<CombatConduct> { InstanceGenericDamage() };
-            if (Chessboard.IsRandomPass(BleedRate())&&target.IsAliveHero)
+            if (Chessboard.IsRandomPass(BleedRate()) && target.IsAliveHero)
                 combats.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed));
             Chessboard.AppendOpActivity(this, target, Activity.Intentions.Offensive, combats.ToArray(), 0, skill: 2);
         }
@@ -1892,7 +1912,6 @@ namespace Assets.System.WarModule
                 return;
             }
             OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, Helper.Singular(InstanceGenericDamage()));
-            //var breakShield = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield) > 0 ? 1 : 0;
         }
     }
 
@@ -1938,8 +1957,8 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 15: return 30;
-                case 102: return 45;
+                case 15:  return 40;
+                case 102: return 50;
                 case 103: return 60;
                 default: throw MilitaryNotValidError(this);
             }
@@ -1987,15 +2006,24 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ShenWuOperator : HeroOperator
     {
-        private int DamageRate => 10;//武魂：武力提升百分比
+        private int DamageRate()
+        {
+            switch (Style.Military)
+            {
+                case 12: return 5;
+                case 114: return 10;
+                case 115: return 20;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
         private const int RecursiveLimit = 20;//武魂：上限
         private static int loopCount = 0;
-
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetLaneTarget(this);
             var soul = Chessboard.GetCondition(this, CardState.Cons.BattleSoul);
-            var addOn = DamageRate * 0.01f * soul * StateDamage();
+            var addOn = DamageRate() * 0.01f * soul * StateDamage();
             var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, InstanceGenericDamage(addOn));
             if (result == null) return;
 
@@ -2065,7 +2093,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 11: return 15;//10
+                case 11: return 10;
                 case 140: return 15;
                 case 141: return 20;
                 default: throw MilitaryNotValidError(this);
@@ -2075,7 +2103,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 11: return 5;//3
+                case 11: return 3;
                 case 140: return 5;
                 case 141: return 7;
                 default: throw MilitaryNotValidError(this);
@@ -2101,7 +2129,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 10: return 1.5f;//1f
+                case 10: return 1f;//1f
                 case 85: return 1.5f;
                 case 86: return 2f;
                 default: throw MilitaryNotValidError(this);
@@ -2111,10 +2139,10 @@ namespace Assets.System.WarModule
         {
             if (Chessboard.GetStatus(this).HpRate * 100 > 30)
             {
-                base.MilitaryPerforms(1);
+                base.MilitaryPerforms(skill);
                 return;
             }
-
+            //当自爆的时候
             var damage = Strength * DamageRate();
             var target = Chessboard.GetLaneTarget(this);
             var array = Chessboard.GetRivals(this)
@@ -2246,7 +2274,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 7: return 1.5f;//1.0f
+                case 7: return 1f;
                 case 76: return 1.5f;
                 case 77: return 2f;
                 default: throw MilitaryNotValidError(this);
@@ -2275,7 +2303,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 6: return 5;//3
+                case 6: return 3;
                 case 74: return 5;
                 case 75: return 7;
                 default: throw MilitaryNotValidError(this);
@@ -2325,7 +2353,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 5: return 10;//5
+                case 5: return 5;
                 case 81: return 10;
                 case 82: return 15;
             }
@@ -2356,7 +2384,7 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 4: return 1;
-                case 68: return 1;
+                case 68: return 2;
                 case 69: return 2;
                 default: throw MilitaryNotValidError(this);
             }
@@ -2390,7 +2418,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 3: return 5;//3
+                case 3: return 3;
                 case 72: return 5;
                 case 73: return 7;
                 default: throw MilitaryNotValidError(this);
@@ -2410,7 +2438,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 2: return 5;//3
+                case 2: return 3;
                 case 70: return 5;
                 case 71: return 7;
                 default: throw MilitaryNotValidError(this);

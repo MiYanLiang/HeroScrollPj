@@ -546,7 +546,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     case CombatStyle.Types.Melee:
                         //为了避免被反伤把卡牌引走
                         if (map.Value.Activities.Any(a => a.From == major.InstanceId &&
-                                                          (a.Intention == Activity.Intentions.Offensive)))
+                                                          (a.Intention == Activity.Intentions.Offensive || 
+                                                           a.Intention == Activity.Intentions.Inevitable)))
                             yield return CardAnimator.instance.StepBackAndHit(major)
                                 .WaitForCompletion();
                         break;
