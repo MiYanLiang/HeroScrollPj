@@ -51,6 +51,10 @@ namespace Assets.System.WarModule
             /// 滚木
             /// </summary>
             RollingWood = 109,
+            /// <summary>
+            /// 阴天精灵
+            /// </summary>
+            Shady = 110,
             /**下列是跟状态有关的精灵类型**/
             YellowBand = 23,
             Chained = 24,
@@ -154,6 +158,7 @@ namespace Assets.System.WarModule
                 case Kinds.Rouse: return (nameof(Kinds.Rouse));
                 case Kinds.RollingStone: return (nameof(Kinds.RollingStone));
                 case Kinds.RollingWood: return (nameof(Kinds.RollingWood));
+                case Kinds.Shady: return (nameof(Kinds.Shady));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -471,6 +476,13 @@ namespace Assets.System.WarModule
     public class RollingWoodSprite : RoundSprite
     {
         public override int TypeId { get; } = (int)Kinds.RollingWood;
+    }
+    /// <summary>
+    /// 阴天精灵
+    /// </summary>
+    public class ShadySprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Shady;
     }
 
     /// <summary>
