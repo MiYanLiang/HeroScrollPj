@@ -338,7 +338,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://战嚎
-                        value = 524; break;//圆月
+                        value = 531; break;
                     case 2://攻击、狂暴攻击
                         value = 085; break;
                 }
@@ -1592,7 +1592,7 @@ public static class Effect
                 return 47;
             //标记
             case CardState.Cons.Mark:
-                return 49;
+                return 52;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
