@@ -318,7 +318,7 @@ namespace Assets.System.WarModule
         {
             if (IsBuffActive(op) &&
                 Damage.GetKind(conduct) == Damage.Kinds.Physical)
-                return -(int)(armor * 0.5f);
+                return -(int)armor;
             return 0;
         }
     }
@@ -407,7 +407,6 @@ namespace Assets.System.WarModule
             conduct.Multiply(1f / chainCount);
             var fixedDmg =
                 CombatConduct.InstanceElementDamage((int)Buff, (int)conduct.Total, CombatConduct.FixedDmg);
-                //CombatConduct.InstanceDamage(op.InstanceId, conduct.Basic, conduct.Critical, conduct.Rouse, CombatConduct.FixedDmg);
             foreach (var pos in poses)
             {
                 if (pos.Operator == op)

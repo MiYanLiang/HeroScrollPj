@@ -113,7 +113,7 @@ namespace Assets.System.WarModule
             var kills = activity.Conducts.Where(c => c.Kind == CombatConduct.KillingKind).ToArray();
             if (kills.Length > 0)
             {
-                if (kills.Any(kill => kill.Rate == 0 || Chessboard.IsRandomPass(kill.Rate)))
+                if (kills.Any(kill => kill.GetRate() == 0 || Chessboard.IsRandomPass(kill.GetRate())))
                 {
                     result.Result = activity.Intention == Activity.Intentions.Self
                         ? (int)ActivityResult.Types.Suicide
@@ -214,6 +214,28 @@ namespace Assets.System.WarModule
         }
 
         protected virtual void OnCounter(Activity activity, IChessOperator offender){}
+
+        protected bool IsHit(ActivityResult result)
+        {
+            if (result == null || result.IsDeath) return false;
+            switch (result.Type)
+            {
+                case ActivityResult.Types.Suffer:
+                case ActivityResult.Types.Shield:
+                case ActivityResult.Types.EaseShield:
+                    return true;
+                case ActivityResult.Types.ChessPos:
+                case ActivityResult.Types.Dodge:
+                case ActivityResult.Types.Assist:
+                case ActivityResult.Types.Heal:
+                case ActivityResult.Types.Invincible:
+                case ActivityResult.Types.Kill:
+                case ActivityResult.Types.Suicide:
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(result.Type), result.Type, null);
+            }
+        }
 
         /// <summary>
         /// 更新行动，主要是分类调用

@@ -1827,7 +1827,9 @@ public static class Effect
             case PosSprite.Kinds.Dodge:
             case PosSprite.Kinds.Critical:
             case PosSprite.Kinds.Rouse:
+            case PosSprite.Kinds.Shady:
             case PosSprite.Kinds.Unknown: return -1;
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -2498,7 +2500,9 @@ public static class Effect
             case PosSprite.Kinds.Dodge: 
             case PosSprite.Kinds.Critical: 
             case PosSprite.Kinds.Rouse: 
+            case PosSprite.Kinds.Shady:
                 return -1;
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -2638,6 +2642,7 @@ public static class Effect
         switch (kind)
         {
             case PosSprite.Kinds.Thunder:
+            case PosSprite.Kinds.Shady:
             case PosSprite.Kinds.Earthquake:return true;
             case PosSprite.Kinds.Unknown:
             case PosSprite.Kinds.YeHuo:
@@ -2656,6 +2661,7 @@ public static class Effect
             case PosSprite.Kinds.Dodge:
             case PosSprite.Kinds.Rouse:
                 return false;
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }

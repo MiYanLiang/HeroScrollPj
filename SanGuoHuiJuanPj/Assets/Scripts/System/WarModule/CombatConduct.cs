@@ -96,7 +96,7 @@ namespace Assets.System.WarModule
         }
 
         public int Rate { get; set; }
-
+        public int GetRate() => Rate == 0 ? 100 : Rate;
         public static CombatConduct Instance(float value, float critical, float rouse, int element, int kind,
             int rate, int refId) =>
             new CombatConduct
@@ -244,14 +244,6 @@ namespace Assets.System.WarModule
 
         public bool IsRouseDamage() => Rouse > 0;
         public bool IsCriticalDamage() => Critical > 0;
-
-        public int GetRate()
-        {
-            if (Rate <= 0) return 100;
-            if (IsRouseDamage()) return Rate + 10;
-            if (IsCriticalDamage()) return Rate + 5;
-            return Rate;
-        }
     }
 
     public class Damage
