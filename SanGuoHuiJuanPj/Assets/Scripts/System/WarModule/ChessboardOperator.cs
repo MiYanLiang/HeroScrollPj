@@ -28,7 +28,7 @@ namespace Assets.System.WarModule
         protected abstract Dictionary<ChessOperator,ChessStatus> StatusMap { get; }
         public IEnumerable<PosSprite> ChessSprites => Sprites;
         protected abstract List<PosSprite> Sprites { get; }
-
+        public List<StateFlag> StateFlags { get; set; } = new List<StateFlag>();
         public int ChallengerGold { get; protected set; }
         public int OpponentGold { get; protected set; }
         public List<int> ChallengerChests { get; set; } = new List<int>();
@@ -163,15 +163,22 @@ namespace Assets.System.WarModule
         }
 
         public int GetCondition(IChessOperator op, CardState.Cons con) => GetCondition(GetOperator(op.InstanceId), con);
-        public int GetCondition(ChessOperator op,CardState.Cons con)
+
+        public int GetCondition(ChessOperator op, CardState.Cons con)
         {
-            return GetStatus(op).GetBuff(con) +
-                   GetChessPos(op).Terrain.GetServed(con, op);
+            return GetStatus(op).GetBuff(con) + CheckTerrainServed();
+
+            int CheckTerrainServed()
+            {
+                var pos = GetChessPos(op);
+                return pos == null ? 0 : pos.Terrain.GetServed(con, op);
+            }
         }
+
         public ChessStatus GetFullCondition(IChessOperator op)
         {
             var status = GetStatus(op);
-            var pos = GetChessPos(op).Terrain;
+            var terrain = GetChessPos(op)?.Terrain;
             var dic = new Dictionary<int, int>();
             foreach (var con in CardState.ConsArray)
             {
@@ -179,7 +186,8 @@ namespace Assets.System.WarModule
                 var value = 0;
                 if (status.Buffs.ContainsKey(key))
                     value += status.Buffs[key];
-                value += pos.GetServed(con, op);
+                if (terrain != null)
+                    value += terrain.GetServed(con, op);
                 if (value > 0) dic.Add(key, value);
             }
 
@@ -283,6 +291,7 @@ namespace Assets.System.WarModule
             }
             RoundState = ProcessCondition.RoundEnd;
             InvokeRoundEndTriggers();
+            StateFlags.ForEach(s => s.State = default);
             currentRound.IsEnd = true;
             return currentRound;
         }
@@ -438,6 +447,7 @@ namespace Assets.System.WarModule
             CombatConduct[] conducts, int actId, int skill, int rePos = -1)
         {
             if (target == null) return null;
+            if (conducts == null || !conducts.Any()) return null;
             if (isCounterFlagged) return ProcessActivity();
 
             isCounterFlagged = intent == Activity.Intentions.Counter;
@@ -447,9 +457,18 @@ namespace Assets.System.WarModule
 
             ActivityResult ProcessActivity()
             {
-                //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
-                var activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
-                    conducts, skill, rePos);
+                Activity activity;
+                try
+                {
+                    //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
+                    activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+                        conducts, skill, rePos);
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+
                 if (target.Operator != null)
                     activity.TargetStatus = GetFullCondition(target.Operator);
                 AddToCurrentProcess(ChessProcess.Types.Chessman, CurrentMajor.GetMajor(), activity, actId);
@@ -921,7 +940,7 @@ namespace Assets.System.WarModule
         public int GetHeroBuffDamage(ChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
-            return (int)(op.Strength + op.Strength * 0.01f * ratio);
+            return (int)(op.Style.Strength + op.Style.Strength * 0.01f * ratio);
         }
         /// <summary>
         /// 完全动态伤害=进攻方伤害转化(buff,羁绊)
@@ -1109,7 +1128,7 @@ namespace Assets.System.WarModule
         /// <param name="ratio"></param>
         /// <param name="range"></param>
         /// <returns></returns>
-        public bool IsRandomPass(int ratio, int range = 100) => random.Next(1, range) <= ratio;
+        public bool IsRandomPass(int ratio, int range = 101) => random.Next(1, range) <= ratio;
 
         /// <summary>
         /// Randomize
@@ -1290,6 +1309,11 @@ namespace Assets.System.WarModule
             public BondOperator Operator;
             public List<ChessOperator> Chessmen;
         }
-
+        public class StateFlag
+        {
+            public bool IsChallenger { get; set; }
+            public int StateId { get; set; }
+            public int State { get; set; }
+        }
     }
 }

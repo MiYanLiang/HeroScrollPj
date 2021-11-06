@@ -93,7 +93,7 @@ namespace Assets.System.WarModule
             }
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = InstanceMechanicalDamage(Strength);
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
                 //根据比率给出是否眩晕
                 return new[]
                 {
@@ -125,7 +125,7 @@ namespace Assets.System.WarModule
 
             CombatConduct[] InstanceConduct()
             {
-                var basicDmg = InstanceMechanicalDamage(Strength);
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
                 //根据比率给出是否眩晕
                 return new[]
                 {
@@ -143,7 +143,7 @@ namespace Assets.System.WarModule
         private float DamageRate => 6;
 
         protected override CombatConduct[] CounterConducts =>
-            Helper.Singular(InstanceMechanicalDamage(Strength * DamageRate));
+            Helper.Singular(InstanceMechanicalDamage(StateDamage() * DamageRate));
     }
     /// <summary>
     /// 石墙

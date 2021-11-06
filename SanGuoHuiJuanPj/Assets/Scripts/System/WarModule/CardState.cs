@@ -18,8 +18,7 @@ namespace Assets.System.WarModule
             Cons.Imprisoned,
             Cons.Cowardly,
             Cons.Disarmed,
-            Cons.Confuse,
-            Cons.Mark
+            Cons.Confuse
         };
         public static bool IsNegativeBuff(Cons con) => NegativeBuffs.Contains(con);
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
@@ -129,7 +128,7 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 标记
             /// </summary>
-            Mark = 26
+            Mark = 26,
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);

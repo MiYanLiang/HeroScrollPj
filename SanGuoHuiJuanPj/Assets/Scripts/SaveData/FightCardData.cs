@@ -93,12 +93,12 @@ using UnityEngine;
                 strength = hero.Strength;
                 force = hero.ForceTableId;
                 speed = hero.Speed;
-                intelligent = hero.Intelligent;
+                intelligent = CombatStyle.IntelligentFormula(hero.Intelligent, level);
                 military = m.Id;
                 armedType = m.ArmedType;
                 combatType = m.CombatStyle;
                 element = m.Element;
-                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, level);
+                hitpoint = hero.HitPoint;
                 break;
             }
             case GameCardType.Tower:
@@ -112,7 +112,7 @@ using UnityEngine;
                 armedType = -2;
                 combatType = 1;
                 element = 0;
-                hitpoint = CombatStyle.HitPointFormula(tower.HitPoint, level);
+                hitpoint = tower.HitPoint;
             }
                 break;
             case GameCardType.Trap:
@@ -126,7 +126,7 @@ using UnityEngine;
                 armedType = -3;
                 combatType = -1;
                 element = 0;
-                hitpoint = CombatStyle.HitPointFormula(trap.HitPoint, level);
+                hitpoint = trap.HitPoint;
             }
                 break;
             case GameCardType.Base:
@@ -147,6 +147,8 @@ using UnityEngine;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        hitpoint = CombatStyle.HitPointFormula(hitpoint, level);
         Troop = force;
         Speed = speed;
         Damage = CombatStyle.DamageFormula(strength, level);
