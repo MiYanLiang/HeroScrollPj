@@ -57,8 +57,18 @@ namespace Assets.System.WarModule
         public void SetPos(int pos) => Pos = pos;
 
         public override string ToString() =>
-            $"[{Hp}/{MaxHp}]Buffs[{Buffs.Count(b => b.Value > 0)}].LastS[{LastSuffers.Sum()}]";
+            $"[{Hp}/{MaxHp}]Buffs[{BuffCount()}].LastS[{LastSuffersCount()}]";
 
+        private int LastSuffersCount()
+        {
+            if (LastSuffers == null || !LastSuffers.Any()) return 0;
+            return LastSuffers.Sum();
+        }
+        private int BuffCount()
+        {
+            if (Buffs == null || !Buffs.Any()) return 0;
+            return Buffs.Count(b => b.Value > 0);
+        }
         public void OnHeal(int value, bool overLimit = false)
         {
             if (value < 0)

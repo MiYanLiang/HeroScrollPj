@@ -99,7 +99,7 @@ public class EffectsPoolingControl : MonoBehaviour
         return null;
     }
 
-    public GameObject GetSparkEffect(int sparkId, Transform targetTransform, float lasting = 1.5f)
+    public GameObject GetSparkEffect(int sparkId, Transform targetTransform, float lasting = 2.5f)
     {
         GameObject effect = null;
         if (!EffectPool.ContainsKey(sparkId))

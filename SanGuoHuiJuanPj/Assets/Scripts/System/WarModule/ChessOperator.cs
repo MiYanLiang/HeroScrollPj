@@ -32,7 +32,6 @@ namespace Assets.System.WarModule
     {
         public int InstanceId { get; protected set; }
         public abstract CombatStyle Style { get; }
-        public virtual int Strength => Style.Strength;
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
@@ -169,7 +168,7 @@ namespace Assets.System.WarModule
             var conducts = activity.Conducts;
             if (result == ActivityResult.Types.Shield)
                 conducts = conducts.Where(c =>
-                    !(c.Kind == CombatConduct.DamageKind && WarModule.Damage.GetKind(c) == WarModule.Damage.Kinds.Physical)).ToList();
+                    !(c.Kind == CombatConduct.DamageKind && Damage.GetKind(c) == Damage.Kinds.Physical)).ToList();
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
@@ -387,12 +386,7 @@ namespace Assets.System.WarModule
             var sideText = IsChallenger ? "玩家" : "对方";
             if (CardType == GameCardType.Base)
                 return $"{sideText} 老巢{CardId}({Level})";
-            return $"{sideText} {Name}({CardId})[等:{Level}|力:{Strength}|速:{Style.Speed}|智:{Style.Intelligent}]";
+            return $"{sideText} {Name}({CardId})[等:{Level}|力:{StateDamage()}|速:{Style.Speed}|智:{Style.Intelligent}]";
         }
-
-        /// <summary>
-        /// 基础伤害
-        /// </summary>
-        public override int Strength => Style.Strength;
     }
 }

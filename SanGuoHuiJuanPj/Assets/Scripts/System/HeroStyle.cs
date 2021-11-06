@@ -192,12 +192,11 @@ public abstract class CardStyle : ChessmanStyle
             switch (activity.Skill)
             {
                 case 0:
-                    effect = EffectsPoolingControl.instance.GetSparkEffect(Effect.Basic001, target.cardObj.transform,
-                        0.5f);
+                    effect = EffectsPoolingControl.instance.GetSparkEffect(Effect.Basic001, target.cardObj.transform);
                     effect.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
                     break;
                 default:
-                    effect = EffectsPoolingControl.instance.GetSparkEffect(effectId, target.cardObj.transform, 1f);
+                    effect = EffectsPoolingControl.instance.GetSparkEffect(effectId, target.cardObj.transform);
                     break;
                 case -1: continue; //-1 = 没有特效
             }

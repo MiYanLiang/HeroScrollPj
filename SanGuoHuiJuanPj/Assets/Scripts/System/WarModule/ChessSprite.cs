@@ -505,8 +505,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class YeHuoSprite : FireSprite
     {
-        public static int ChallengerRelay = 0;
-        public static int OppositeRelay = 0;
 
         private int[][] FireRings { get; } = new int[][]
         {
@@ -518,24 +516,26 @@ namespace Assets.System.WarModule
 
         public override int TypeId { get; } = (int)Kinds.YeHuo;
 
-        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        private int[] GetRelay(ChessboardOperator chessboard)
         {
-            ChallengerRelay = 0;
-            OppositeRelay = 0;
-        }
-
-        private int[] GetRelay()
-        {
-            return IsChallenger 
-                ? CounterFunc(ref ChallengerRelay) 
-                : CounterFunc(ref OppositeRelay);
-
-            int[] CounterFunc(ref int index)
+            var yeHuoState =
+                chessboard.StateFlags.FirstOrDefault(s => s.StateId == TypeId && s.IsChallenger == IsChallenger);
+            if (yeHuoState == null)
             {
+                yeHuoState = new ChessboardOperator.StateFlag
+                    { IsChallenger = IsChallenger, State = 0, StateId = TypeId };
+                chessboard.StateFlags.Add(yeHuoState);
+            }
+
+            return CounterFunc(yeHuoState);
+
+            int[] CounterFunc(ChessboardOperator.StateFlag state)
+            {
+                var index = state.State;
                 if (index >= FireRings.Length)
                     index = FireRings.Length -1;
                 var array = FireRings[index];
-                index++;
+                state.State++;
                 return array;
             }
         }
@@ -546,7 +546,7 @@ namespace Assets.System.WarModule
             var scope = chessboard.GetRivals(offender, _ => true).ToArray();
 
             var burnPoses = scope
-                .Join(GetRelay().Select(i => i), p => p.Pos, i => i, (p, _) => p).ToArray();
+                .Join(GetRelay(chessboard).Select(i => i), p => p.Pos, i => i, (p, _) => p).ToArray();
             
             for (var index = 0; index < burnPoses.Length; index++)
             {
