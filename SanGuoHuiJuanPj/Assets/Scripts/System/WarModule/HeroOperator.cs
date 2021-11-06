@@ -727,7 +727,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 55: return 2f;//1.5f
+                case 55: return 1.5f;
                 case 196: return 2f;
                 case 197: return 2.5f;
                 default: throw MilitaryNotValidError(this);
@@ -738,7 +738,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military) 
             {
-                case 55:return 70;//50
+                case 55:return 50;
                 case 196:return 70;
                 case 197:return 90;
                 default:throw MilitaryNotValidError(this);
@@ -1633,7 +1633,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 24: return 2;//1
+                case 24: return 1;
                 case 178: return 2;
                 case 179: return 3;
                 default: throw MilitaryNotValidError(this);
