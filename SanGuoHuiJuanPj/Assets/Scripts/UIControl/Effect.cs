@@ -1177,7 +1177,7 @@ public static class Effect
                     case 1://小技能
                         return 302;
                     case 2://大技能
-                        return 302;
+                        return 309;
                 }
                 break;
 
@@ -1212,7 +1212,7 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://小技能
-                        return 311;
+                        return 317;
                     case 2://大技能
                         return 311;
                 }
