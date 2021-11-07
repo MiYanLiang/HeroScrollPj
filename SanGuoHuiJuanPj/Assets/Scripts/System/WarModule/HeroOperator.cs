@@ -211,23 +211,6 @@ namespace Assets.System.WarModule
             return Math.Max(0, diff);
         }
 
-        /// <summary>
-        /// 根据击中结果决定是否叠加后面的活动
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="intent"></param>
-        /// <param name="actId"></param>
-        /// <param name="skill"></param>
-        /// <param name="list"></param>
-        protected void OnHitSequenceTrigger(IChessPos target, Activity.Intentions intent, int actId, int skill, params CombatConduct[] list)
-        {
-            foreach (var conduct in list)
-            {
-                var result = OnPerformActivity(target, intent, actId, skill, conduct);
-                if (IsHit(result))
-                    OnPerformActivity(target, intent, -1, -1, conduct);
-            }
-        }
         protected static MilitaryNotValid MilitaryNotValidError(HeroOperator op) =>
             new MilitaryNotValid(nameof(op.Style.Military), op.Style.Military.ToString());
         protected class MilitaryNotValid : ArgumentOutOfRangeException
@@ -803,7 +786,7 @@ namespace Assets.System.WarModule
                 for (var i = 0; i < surrounded.Count; i++)
                 {
                     var chessPos = surrounded[i];
-                    OnHitSequenceTrigger(chessPos, Activity.Intentions.Inevitable, actId: 0, skill: i == 0 ? 2 : -1, explode, burnBuff);
+                    OnPerformActivity(chessPos, Activity.Intentions.Inevitable, actId: 0, skill: i == 0 ? 2 : -1, explode, burnBuff);
                 }
 
                 OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
@@ -812,7 +795,7 @@ namespace Assets.System.WarModule
             }
 
             var damage= InstanceGenericDamage();
-            OnHitSequenceTrigger(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage,
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(damage, BurningRate())));
         }
     }
@@ -1803,7 +1786,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            OnHitSequenceTrigger(target, Activity.Intentions.Offensive, actId: -1, skill: -1, damage,
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1, damage,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1,
                     rate: CountRate(damage, StunningRate(), CriticalRate, RouseRate)));
         }
@@ -1909,7 +1892,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                OnHitSequenceTrigger(target, Activity.Intentions.Offensive, actId: 0, skill: 1, perform,
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, perform,
                     CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(perform, BurnRate(), CriticalAddOn, RouseAddOn)));
             }
         }
@@ -2112,11 +2095,14 @@ namespace Assets.System.WarModule
             var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, InstanceGenericDamage(addOn));
             if (result == null) return;
 
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self,
-                -1, -1, BattleSoulConduct);
+            if (target.Operator.CardType == GameCardType.Hero)
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self,
+                    -1, -1, BattleSoulConduct);
+
             var targetStat = Chessboard.GetStatus(target.Operator);
             var resultType = result.Type;
-            while ((resultType == ActivityResult.Types.Shield ||
+            while (target.IsAliveHero &&
+                   (resultType == ActivityResult.Types.Shield ||
                     resultType == ActivityResult.Types.Dodge) &&
                    !targetStat.IsDeath &&
                    loopCount <= RecursiveLimit)
@@ -2134,7 +2120,9 @@ namespace Assets.System.WarModule
         private CombatConduct BattleSoulConduct => CombatConduct.InstanceBuff(InstanceId, CardState.Cons.BattleSoul);
         protected override void OnSufferConduct(Activity activity, IChessOperator offender = null)
         {
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: 0, skill: 2, BattleSoulConduct);
+            if (offender != null && offender.CardType == GameCardType.Hero)
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: 0, skill: 2,
+                    BattleSoulConduct);
         }
     }
 
@@ -2322,7 +2310,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetLaneTarget(this);
             var majorCombat = InstanceGenericDamage();
             var combatState = Damage.GetType(majorCombat);
-            OnHitSequenceTrigger(target, Activity.Intentions.Offensive, actId: 0,
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0,
                 skill: combatState == Damage.Types.General ? 1 : 2, majorCombat, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned,
                     rate: CountRate(majorCombat, StunRate(combatState, true))));
 
@@ -2332,7 +2320,7 @@ namespace Assets.System.WarModule
             var splashDamage = majorCombat.Clone(SplashDamageRate(combatState) * 0.01f);
             foreach (var splashTarget in splashTargets)
             {
-                OnHitSequenceTrigger(splashTarget, Activity.Intentions.Offensive, actId: -1, skill: -1, splashDamage, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned,
+                OnPerformActivity(splashTarget, Activity.Intentions.Offensive, actId: -1, skill: -1, splashDamage, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned,
                         rate: CountRate(splashDamage, StunRate(Damage.GetType(splashDamage), false))));
             }
         }
