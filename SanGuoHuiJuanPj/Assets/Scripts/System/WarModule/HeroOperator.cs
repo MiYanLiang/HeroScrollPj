@@ -58,11 +58,11 @@ namespace Assets.System.WarModule
             MilitaryPerforms();
         }
 
-        private IChessPos GetTarget() => Chessboard.GetTargetByMode(this, TargetingMode);
+        private IChessPos GetTargetPos() => Chessboard.GetTargetByMode(this, TargetingMode);
         protected virtual ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Lane;
         protected void NoSkillAction()
         {
-            var target = GetTarget();
+            var target = GetTargetPos();
             if (target == null) return;
             Chessboard.AppendOpActivity(this, target, Activity.Intentions.Offensive, BasicDamage(), 0, 0);
         }
@@ -77,16 +77,17 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected virtual void MilitaryPerforms(int skill = 1)
         {
-            var target = GetTarget();
-            if (target == null) return;
-            Chessboard.AppendOpActivity(this, target, Activity.Intentions.Offensive, Helper.Singular(InstanceGenericDamage()), 0, skill);
+            var target = GetTargetPos();
+            if (target.IsPostedAlive)
+                Chessboard.AppendOpActivity(this, target, Activity.Intentions.Offensive,
+                    Helper.Singular(InstanceGenericDamage()), 0, skill);
         }
 
         /// <summary>
         /// 武将技活动
         /// </summary>
         /// <param name="target">目标</param>
-        /// <param name="intent">活动标记，查<see cref="Activity"/>常量如：<see cref="Activity.Offensive"/></param>
+        /// <param name="intent">活动标记，查<see cref="Activity.Intentions"/></param>
         /// <param name="actId">组合技标记，-1 = 追随上套组合，0或大于0都是各别组合标记。例如大弓：攻击多人，但是组合技都标记为0，它將同时间多次攻击。而连弩的连击却是每个攻击标记0,1,2,3(不同标记)，这样它会依次执行而不是一次执行一组</param>
         /// <param name="skill">武将技标记，-1为隐式技能，0为普通技能，大于0为武将技</param>
         /// <param name="conducts">招式，每一式会有一个招式效果。如赋buff，伤害，补血等...一个活动可以有多个招式</param>
@@ -97,7 +98,7 @@ namespace Assets.System.WarModule
         /// 武将技活动
         /// </summary>
         /// <param name="target">目标</param>
-        /// <param name="intent">活动标记，查<see cref="Activity"/>常量如：<see cref="Activity.Offensive"/></param>
+        /// <param name="intent">活动标记，查<see cref="Activity.Intentions"/></param>
         /// <param name="actId">组合技标记，-1 = 追随上套组合，0或大于0都是各别组合标记。例如大弓：攻击多人，但是组合技都标记为0，它將同时间多次攻击。而连弩的连击却是每个攻击标记0,1,2,3(不同标记)，这样它会依次执行而不是一次执行一组</param>
         /// <param name="skill">武将技标记，-1为隐式技能，0为普通技能，大于0为武将技</param>
         /// <param name="conducts">招式，每一式会有一个招式效果。如赋buff，伤害，补血等...一个活动可以有多个招式</param>
@@ -243,7 +244,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ZhuangShi : HeroOperator 
     {
-        protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Contra;
+        protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Lane;
     }
 
     /// <summary>
