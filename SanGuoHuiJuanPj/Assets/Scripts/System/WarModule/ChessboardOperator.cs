@@ -466,7 +466,8 @@ namespace Assets.System.WarModule
                 }
                 catch (Exception e)
                 {
-                    throw;
+                    throw XDebug.Throw<ChessboardOperator>(
+                        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]");
                 }
 
                 if (target.Operator != null)
@@ -1236,17 +1237,15 @@ namespace Assets.System.WarModule
                     break;
                 case Targeting.Any:
                     chessPos = GetRivals(op).RandomPick();
-                    if (chessPos == null)
-                        chessPos = GetLaneTarget(op);
                     break;
                 case Targeting.AnyHero:
                     chessPos = GetRivals(op, p => p.IsAliveHero).RandomPick();
-                    if (chessPos == null)
-                        chessPos = GetLaneTarget(op);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
+            //任何一种找目标的方式，如果找不到对象都最终用路线寻找.
+            if (chessPos == null || !chessPos.IsPostedAlive) chessPos = GetLaneTarget(op);
             return chessPos;
         }
 
