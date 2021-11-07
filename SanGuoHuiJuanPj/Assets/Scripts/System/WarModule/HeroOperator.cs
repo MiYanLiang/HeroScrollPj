@@ -1790,7 +1790,11 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var target = Chessboard.GetLaneTarget(this);
-
+            if (target.Operator.CardType != GameCardType.Hero) 
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
             var damage = InstanceGenericDamage();
             if (Chessboard.GetCondition(target.Operator, CardState.Cons.Stunned) > 0)
             {

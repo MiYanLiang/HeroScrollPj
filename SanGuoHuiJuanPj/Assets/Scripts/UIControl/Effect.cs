@@ -1813,7 +1813,7 @@ public static class Effect
             case PosSprite.Kinds.YeHuo:return 50501;//爆炸+火焰
             case PosSprite.Kinds.FireFlame:return 50502;//一般火焰
             case PosSprite.Kinds.Thunder:return 200;//术士落雷
-            case PosSprite.Kinds.Earthquake:return 166;//狂士地怒
+            case PosSprite.Kinds.Earthquake:return 243;//狂士地怒
             case PosSprite.Kinds.Catapult: return 061;//抛石
             case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
             case PosSprite.Kinds.RollingWood://滚木
@@ -2198,7 +2198,7 @@ public static class Effect
                     case 1://普通攻击
                         audioId = 8; break;
                     case 2://暴击或会心
-                        audioId = 76; break;
+                        audioId = 8; break;
                 }
                 break;
 
