@@ -466,7 +466,8 @@ namespace Assets.System.WarModule
                 }
                 catch (Exception e)
                 {
-                    throw;
+                    throw XDebug.Throw<ChessboardOperator>(
+                        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]");
                 }
 
                 if (target.Operator != null)
