@@ -144,4 +144,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Image: {fileID: 3693696685203644445}
-  Animator: {fileID: 0}
+  Animator: {fileID: 2849335960838539524}

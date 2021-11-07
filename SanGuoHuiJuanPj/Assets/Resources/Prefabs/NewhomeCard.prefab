@@ -617,6 +617,7 @@ MonoBehaviour:
   Hp: {fileID: 4263009085430308139}
   Lose: {fileID: 330312936574843571}
   Highlight: {fileID: 0}
+  JbAnim: {fileID: 0}
   Selected: {fileID: 0}
   StateContent: {fileID: 0}
   PrefabIco: {fileID: 0}
@@ -803,5 +804,5 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 2
   m_TargetDisplay: 0
