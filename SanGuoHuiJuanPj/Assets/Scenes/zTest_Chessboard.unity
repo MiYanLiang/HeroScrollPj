@@ -2024,7 +2024,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af29396c94881fb42887b672240c846e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectContentTran: {fileID: 0}
   effectsNameStr:
   - spellTextV
   - spellTextH
@@ -2615,59 +2614,27 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 6
+  - Id: 31
     Pos: 0
     Type: 0
-    Level: 10
-  - Id: 50
-    Pos: 1
-    Type: 0
-    Level: 10
-  - Id: 57
-    Pos: 2
-    Type: 0
-    Level: 10
-  - Id: 54
-    Pos: 3
-    Type: 0
-    Level: 10
-  - Id: 51
-    Pos: 4
-    Type: 0
-    Level: 10
-  - Id: 59
-    Pos: 5
-    Type: 0
-    Level: 10
+    Level: 5
   Player:
   - Id: 0
     Pos: 17
     Type: 522
     Level: 8
-  - Id: 7
+  - Id: 139
+    Pos: 2
+    Type: 0
+    Level: 1
+  - Id: 311
     Pos: 0
     Type: 0
     Level: 1
   - Id: 43
-    Pos: 1
-    Type: 0
-    Level: 2
-  - Id: 45
-    Pos: 2
-    Type: 0
-    Level: 2
-  - Id: 56
     Pos: 3
     Type: 0
-    Level: 2
-  - Id: 41
-    Pos: 4
-    Type: 0
-    Level: 2
-  - Id: 45
-    Pos: 5
-    Type: 0
-    Level: 2
+    Level: 1
 --- !u!4 &413234022
 Transform:
   m_ObjectHideFlags: 0
@@ -2680,7 +2647,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &413234023
 MonoBehaviour:
@@ -7849,7 +7816,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1144099189
 MonoBehaviour:
@@ -10826,157 +10793,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   posIndex: -1
---- !u!1 &1668858788
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1668858790}
-  - component: {fileID: 1668858789}
-  - component: {fileID: 1668858791}
-  m_Layer: 0
-  m_Name: FightManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1668858789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1668858788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 585e3fe5903ef564aa8915ca23dd49bc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  chessboard: {fileID: 0}
-  playerCardPosPre: {fileID: 887454211461284744, guid: 4578447d7d0b13d4fb97c009466b4d45,
-    type: 3}
-  fightCardPre: {fileID: 3837682696904457857, guid: 2a061a0d2c35b83449c9660ace974f69,
-    type: 3}
-  heroNumText: {fileID: 0}
-  homeCardObj: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
-    type: 3}
-  stateIconPre: {fileID: 4110233446094183496, guid: 249c2c1a62b238946ae31a692f8d20b1,
-    type: 3}
-  enemyCardsPos:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  playerCardsPos:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  floDisY: 0
-  oneDisY: 0
-  gridLayoutGroup: {fileID: 0}
-  battleIdIndex: 0
-  isNeedAutoHideInfo: 0
-  forward: 0.2
-  back: 0.3
-  wait: 0.4
-  go: 0.1
-  posFloat: 0
---- !u!4 &1668858790
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1668858788}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1668858791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1668858788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a85c0fa32980fda4f88c189b04c182da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  recordWinner: 0
-  isRoundBegin: 0
-  attackShakeTimeToGo: 0.534
-  attackShakeTimeToBack: 0.167
-  attackIntervalTime: 0.334
-  indexAttackType: 0
-  startFightBtn: {fileID: 0}
-  transferStation: {fileID: 0}
-  autoFightTog: {fileID: 0}
-  fightBackForShake: {fileID: 0}
-  doShakeIntensity: 30
-  audioSource: {fileID: 1882509704}
-  thunderCloudObj: {fileID: 0}
-  fullScreenEffectObjs:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  jBEffectShowPos:
-  - {fileID: 0}
-  - {fileID: 0}
-  roundTimeSlider: {fileID: 0}
-  yuanChengShakeTimeToGo: 0.234
-  yuanChengShakeTimeToBack: 0.234
-  yuanChengShakeTime: 0.2
-  towerFightTime0: 0.234
-  towerFightTime1: 0.467
-  fireUIObj: {fileID: 0}
-  boomUIObj: {fileID: 0}
-  gongKeUIObj: {fileID: 0}
 --- !u!1 &1668928867
 GameObject:
   m_ObjectHideFlags: 0
@@ -15444,5 +15260,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc9acca27c314ef42bd4b977827ba5d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CardBody: {fileID: 5728521841092895408}
-  Ui: {fileID: 1186401183671722616}

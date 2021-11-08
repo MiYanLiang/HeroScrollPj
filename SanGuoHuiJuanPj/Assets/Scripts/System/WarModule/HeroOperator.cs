@@ -242,7 +242,7 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 壮士
     /// </summary>
-    public class ZhuangShi : HeroOperator 
+    public class ZhuangShiOperator : HeroOperator 
     {
         protected override ChessboardOperator.Targeting TargetingMode => ChessboardOperator.Targeting.Lane;
     }
@@ -445,7 +445,7 @@ namespace Assets.System.WarModule
         private void UpdateChain()
         {
             var chainedList = GetChained();
-            var chainSprite = Chessboard.GetSpriteInChessPos(this)
+            var chainSprite = Chessboard.GetSpritesInChessPos(this)
                 .FirstOrDefault(s => s.GetKind() == PosSprite.Kinds.Chained);
             if (chainedList.Length > 1 && chainSprite == null)
             {
@@ -620,7 +620,7 @@ namespace Assets.System.WarModule
 
         public override void OnRoundStart()
         {
-            if (Chessboard.GetSpriteInChessPos(this).Any(s => s.GetKind() == PosSprite.Kinds.YellowBand)) return;
+            if (Chessboard.GetSpritesInChessPos(this).Any(s => s.GetKind() == PosSprite.Kinds.YellowBand)) return;
             var cluster = Chessboard.GetFriendly(this,
                 p => p.IsAliveHero &&
                      p.Operator != this &&

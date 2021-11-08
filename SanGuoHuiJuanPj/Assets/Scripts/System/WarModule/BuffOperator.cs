@@ -58,7 +58,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public virtual void OnElementConduct(ChessOperator op, CombatConduct conduct) { }
 
-        public virtual bool IsDodgeRateTrigger(ChessOperator op) => false;
+        public virtual bool IsDodgeRateTrigger => false;
         /// <summary>
         /// 配合<see cref="IsDodgeRateTrigger"/>产出闪避值
         /// </summary>
@@ -132,7 +132,8 @@ namespace Assets.System.WarModule
         public virtual int OnHealingConvert(int value) => value;
 
         public virtual bool IsSufferConductTrigger => false;
-        public virtual void OnSufferConduct(Activity.Intentions activityIntent, ChessOperator op, CombatConduct conduct)
+        public virtual void OnSufferConduct(Activity.Intentions activityIntention, ChessOperator op,
+            CombatConduct conduct, ActivityResult activityResult)
         {
         }
     }
@@ -159,6 +160,10 @@ namespace Assets.System.WarModule
         public StunnedBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
+
+        public override bool IsDodgeRateTrigger => true;
+        public override int OnAppendDodgeRate(ChessOperator op) => -999;
+
 
         public override bool IsElementTrigger => true;
         public override void OnElementConduct(ChessOperator op, CombatConduct conduct)
@@ -205,7 +210,8 @@ namespace Assets.System.WarModule
 
         public override bool IsSufferConductTrigger => true;
 
-        public override void OnSufferConduct(Activity.Intentions activityIntent, ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(Activity.Intentions activityIntention, ChessOperator op,
+            CombatConduct conduct, ActivityResult activityResult)
         {
             if (!IsBuffActive(op) || Damage.GetKind(conduct) != Damage.Kinds.Physical) return;
             conduct.Multiply(1.5f);
@@ -356,7 +362,7 @@ namespace Assets.System.WarModule
         }
     }
 
-    //19 缓冲盾
+    //19 抵消盾
     public class ExtendedShieldBuff : BuffOperator
     {
         public override CardState.Cons Buff => CardState.Cons.EaseShield;
@@ -365,11 +371,13 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsSufferConductTrigger => true;
-        public override void OnSufferConduct(Activity.Intentions activityIntent, ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(Activity.Intentions activityIntention, ChessOperator op,
+            CombatConduct conduct, ActivityResult activityResult)
         {
             if (!IsBuffActive(op)) return;
             var status = Chessboard.GetStatus(op);
             var balance = status.EaseShieldOffset(conduct.Total);
+            if (balance <= 0) activityResult.Result = (int)ActivityResult.Types.EaseShield;
             conduct.SetBasic(balance);
         }
     }
@@ -388,6 +396,7 @@ namespace Assets.System.WarModule
     //链环buff管理防守时分享伤害
     public class ChainedBuff : BuffOperator
     {
+        private static bool IsChaining { get; set; }
         public override CardState.Cons Buff => CardState.Cons.Chained;
 
         public ChainedBuff(ChessboardOperator chessboard) : base(chessboard)
@@ -396,24 +405,31 @@ namespace Assets.System.WarModule
 
         public override bool IsSufferConductTrigger => true;
 
-        public override void OnSufferConduct(Activity.Intentions activityIntent, ChessOperator op, CombatConduct conduct)
+        public override void OnSufferConduct(Activity.Intentions activityIntention, ChessOperator op,
+            CombatConduct conduct, ActivityResult activityResult)
         {
+
+            if (IsChaining) return;
+            var activityIntent = activityIntention;
             if (!IsBuffActive(op) ||
                 activityIntent == Activity.Intentions.Self ||
                 activityIntent == Activity.Intentions.Friendly) return;
+            IsChaining = true;
             var poses = Chessboard.GetChainedPos(op, ChainSprite.ChainedFilter).ToArray();
             var chainCount = poses.Count();
             if (chainCount == 0) return;
             conduct.Multiply(1f / chainCount);
-            var fixedDmg =
-                CombatConduct.InstanceElementDamage((int)Buff, (int)conduct.Total, CombatConduct.FixedDmg);
+            //var fixedDmg =  CombatConduct.InstanceElementDamage((int)Buff, (int)conduct.Total, CombatConduct.FixedDmg);
+            //if (fixedDmg.Total <= 0) return;
+            if (conduct.Total <= 0) return;
             foreach (var pos in poses)
             {
                 if (pos.Operator == op)
                     continue;
-                Chessboard.AppendOpActivity(op, pos, Activity.Intentions.Friendly, Helper.Singular(fixedDmg), actId: -1,
+                Chessboard.AppendOpActivity(op, pos, Activity.Intentions.Friendly, Helper.Singular(conduct), actId: -1,
                     skill: 2);
             }
+            IsChaining = false;
         }
     }
 }

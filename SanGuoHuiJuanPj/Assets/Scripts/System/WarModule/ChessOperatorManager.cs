@@ -248,7 +248,7 @@ namespace Assets.System.WarModule
 
                 case 42: case 43: case 242: op = new YiShiOperator(); break; //42  医师 //43  大医师
 
-                case 243: op = new ZhuangShi(); break;//壮士
+                case 243: op = new ZhuangShiOperator(); break;//壮士
 
                 case 244: op = new DuanNuOperator(); break;//短弩
             }

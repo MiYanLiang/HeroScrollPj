@@ -305,8 +305,8 @@ namespace Assets.System.WarModule
                 var status = GetStatus(o);
                 if (status.Pos != pos.Pos)
                     PosOperator(o, pos.Pos);
-                UpdateTerrain(pos);
             }
+            UpdateAllTerrains();
         }
 
         private void InstanceChessmanProcess(ChessOperator op)
@@ -704,6 +704,12 @@ namespace Assets.System.WarModule
                 ? CombatConduct.AddSprite(sprite.Host == PosSprite.HostType.Round ? sprite.Lasting : sprite.Value,
                     sprite.TypeId, sprite.InstanceId)
                 : CombatConduct.RemoveSprite(sprite.InstanceId, sprite.TypeId);
+
+            //如果移除但当前地块亦有相同类型的精灵，将改变删除->为空conduct指令
+            if (!isAdd && GetChessPos(sprite.IsChallenger, sprite.Pos).Terrain.Sprites
+                    .Any(s => s != sprite && s.TypeId == sprite.TypeId)) 
+                conduct.Multiply(0);
+
             var activity = InstanceActivity(sprite.IsChallenger, null, sprite.Pos, Activity.Intentions.Sprite,
                 Helper.Singular(conduct), 1, -1);
             var target = GetChessPos(sprite.IsChallenger, activity.To).Operator;
@@ -742,9 +748,11 @@ namespace Assets.System.WarModule
             Grid.GetScope(sprite.IsChallenger)[sprite.Pos].Terrain.RemoveSprite(sprite);
         }
 
-        private void UpdateTerrain(IChessPos pos)
+        private void UpdateAllTerrains()
         {
-            foreach (var sprite in pos.Terrain.Sprites.ToArray()) UpdateRemovable(sprite);
+            foreach (var pos in Grid.Challenger.Values.Concat(Grid.Opposite.Values)) 
+            foreach (var sprite in pos.Terrain.Sprites.ToArray())
+                UpdateRemovable(sprite);
         }
 
         #endregion
@@ -877,7 +885,7 @@ namespace Assets.System.WarModule
                     }
                 }
 
-                UpdateTerrain(GetChessPos(target));
+                //currentResult.Sprites = UpdateTerrain(GetChessPos(target));
             }
 
             if (activity.To >= 0 && currentResult.IsDeath)
@@ -995,7 +1003,7 @@ namespace Assets.System.WarModule
                         bo.OnElementConduct(op, conduct);
                 }
                 /***执行Activities***/
-                op.ProceedActivity(offender, activity, result.Type);
+                op.ProceedActivity(offender, activity, result);
             }
 
             result.Status = GetStatus(op);
@@ -1006,7 +1014,7 @@ namespace Assets.System.WarModule
         {
             if (op.CardType != GameCardType.Hero) return false;
             var rate = op.GetDodgeRate() + GetCondition(op, CardState.Cons.DodgeUp);
-            foreach (var bo in GetBuffOperator(o=>o.IsDodgeRateTrigger(op))) 
+            foreach (var bo in GetBuffOperator(o => o.IsDodgeRateTrigger))
                 rate += bo.OnAppendDodgeRate(op);
             rate = Math.Min(rate, HeroDodgeLimit);
             return IsRandomPass(rate);
@@ -1057,8 +1065,9 @@ namespace Assets.System.WarModule
         /// <param name="op"></param>
         /// <param name="activityIntent"></param>
         /// <param name="conduct"></param>
+        /// <param name="result"></param>
         /// <returns></returns>
-        public void OnCombatMiddlewareConduct(ChessOperator op, Activity.Intentions activityIntent, CombatConduct conduct)
+        public void OnCombatMiddlewareConduct(ChessOperator op, Activity.Intentions activityIntent, CombatConduct conduct,ActivityResult result)
         {
             float armor;
             var addOn = 0;
@@ -1077,7 +1086,7 @@ namespace Assets.System.WarModule
             conduct.Multiply(resisted);
             //伤害或护甲转化buff 例如：流血
             foreach (var bo in GetBuffOperator(b => b.IsSufferConductTrigger))
-                bo.OnSufferConduct(activityIntent, op, conduct);
+                bo.OnSufferConduct(activityIntent, op, conduct, result);
         }
 
         public bool OnMainProcessAvailable(ChessOperator op)
@@ -1172,11 +1181,7 @@ namespace Assets.System.WarModule
         public void PosOperator(ChessOperator op, int pos)
         {
             var oldPos = GetChessPos(op);
-            if (oldPos != null)
-            {
-                Grid.Remove(GetStatus(op).Pos, op.IsChallenger);
-                if (IsInit) UpdateTerrain(oldPos);
-            }
+            if (oldPos != null) Grid.Remove(GetStatus(op).Pos, op.IsChallenger);
             GetStatus(op).SetPos(pos);
             if (pos < 0) return;
             var replace = Grid.Replace(pos, op);
@@ -1186,7 +1191,7 @@ namespace Assets.System.WarModule
             var chessPos = GetChessPos(op);
             if (!IsInit) return;
             op.OnPostingTrigger(chessPos);
-            UpdateTerrain(chessPos);
+            UpdateAllTerrains();
         }
 
         public IChessPos GetChessPos(IChessOperator op) => Grid.GetChessPos(op, GetStatus(op).Pos);
@@ -1220,8 +1225,6 @@ namespace Assets.System.WarModule
             /// 任何英雄
             /// </summary>
             AnyHero,
-            LowHp,
-
         }
 
         public IChessPos GetTargetByMode(ChessOperator op,Targeting mode)
@@ -1295,8 +1298,8 @@ namespace Assets.System.WarModule
             Grid.GetChained(GetStatus(op).Pos, op.IsChallenger, chainedFilter);
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
 
-        public IEnumerable<PosSprite> GetSpriteInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
-        public IEnumerable<PosSprite> GetSpriteInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
+        public IEnumerable<PosSprite> GetSpritesInChessPos(int pos, bool isChallenger) => Grid.GetChessPos(pos, isChallenger).Terrain.Sprites;
+        public IEnumerable<PosSprite> GetSpritesInChessPos(ChessOperator op) => GetChessPos(op).Terrain.Sprites;
 
         #endregion
         protected abstract void OnPlayerResourcesActivity(Activity activity);

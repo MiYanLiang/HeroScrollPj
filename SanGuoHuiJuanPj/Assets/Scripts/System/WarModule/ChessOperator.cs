@@ -103,7 +103,7 @@ namespace Assets.System.WarModule
             if (activity.Intention == Activity.Intentions.ChessboardBuffing)
             {
                 foreach (var conduct in activity.Conducts)
-                    UpdateConduct(offender, activity.Intention, conduct);
+                    UpdateConduct(offender, activity.Intention, conduct, result);
                 result.Status = Chessboard.GetStatus(this);
                 return result;
             }
@@ -117,7 +117,7 @@ namespace Assets.System.WarModule
                     result.Result = activity.Intention == Activity.Intentions.Self
                         ? (int)ActivityResult.Types.Suicide
                         : (int)ActivityResult.Types.Kill;
-                    ProceedActivity(offender, activity, result.Type);
+                    ProceedActivity(offender, activity, result);
                     result.Status = Chessboard.GetStatus(this);
                     return result;
                 }
@@ -150,7 +150,7 @@ namespace Assets.System.WarModule
             if (result.Type == ActivityResult.Types.Assist || 
                 result.Type == ActivityResult.Types.Heal)
             {
-                ProceedActivity(offender, activity, result.Type);
+                ProceedActivity(offender, activity, result);
                 result.Status = Chessboard.GetStatus(this);
             }
             else
@@ -163,16 +163,16 @@ namespace Assets.System.WarModule
             return result;
         }
 
-        public void ProceedActivity(ChessOperator offender,Activity activity, ActivityResult.Types result)
+        public void ProceedActivity(ChessOperator offender,Activity activity, ActivityResult result)
         {
             var conducts = activity.Conducts;
-            if (result == ActivityResult.Types.Shield)
+            if (result.Type == ActivityResult.Types.Shield)
                 conducts = conducts.Where(c =>
                     !(c.Kind == CombatConduct.DamageKind && Damage.GetKind(c) == Damage.Kinds.Physical)).ToList();
             foreach (var conduct in conducts)
             {
                 if (Chessboard.GetStatus(this).IsDeath) break;
-                UpdateConduct(offender, activity.Intention, conduct);
+                UpdateConduct(offender, activity.Intention, conduct, result);
             }
         }
 
@@ -241,10 +241,10 @@ namespace Assets.System.WarModule
         /// 另外如果来自伤害死亡，将触发<see cref="OnDeadTrigger"/>
         /// </summary>
         /// <param name="offender"></param>
-        /// <param name="activityIntent"></param>
+        /// <param name="intention"></param>
         /// <param name="conduct"></param>
         /// <param name="chessboardInvocation"></param>
-        private void UpdateConduct(ChessOperator offender,Activity.Intentions activityIntent,CombatConduct conduct,bool chessboardInvocation = false)
+        private void UpdateConduct(ChessOperator offender,Activity.Intentions intention,CombatConduct conduct, ActivityResult result, bool chessboardInvocation = false)
         {
             var conductTotal = (int) conduct.Total;
             var status = Chessboard.GetStatus(this);
@@ -277,13 +277,17 @@ namespace Assets.System.WarModule
                     {
                         if (conduct.Element != CombatConduct.FixedDmg) //固定伤害
                         {
-                            Chessboard.OnCombatMiddlewareConduct(this, activityIntent, conduct);
+                            Chessboard.OnCombatMiddlewareConduct(this, intention, conduct, result);
                             if (conduct.Element == CombatConduct.MechanicalDmg && Style.ArmedType < 0)
                                 conduct.Multiply(2);
 
                             //自身(武将技)伤害转化
                             OnMilitaryDamageConvert(conduct);
                         }
+
+                        //如果破抵消盾，将视为承受
+                        if (conduct.Total > 0 && result.Type == ActivityResult.Types.EaseShield)
+                            result.Result = (int)ActivityResult.Types.Suffer;
 
                         SubtractHp((int)conduct.Total);
                         if (IsAlive) OnAfterSubtractHp(conduct);

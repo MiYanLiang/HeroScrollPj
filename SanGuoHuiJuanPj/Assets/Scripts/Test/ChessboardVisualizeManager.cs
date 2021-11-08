@@ -593,8 +593,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     if (tweenCard != null)
                         card.ChessmanStyle.NumberEffect(result.Value, card, tweenCard.DmgType);
                     card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                    //var cPos = Chessboard.GetChessPos(card);
+                    //if (cPos == null) return;
+                    //SpriteUpdateByResult(cPos, result.Value);
                 });
-
+                
                 mainTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(section, result.Value);
             }
@@ -629,13 +632,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = TryGetCardMap(result.Key);
-                var tc = tweenCards.FirstOrDefault(c => c.Id == card.InstanceId);
+                var tc = tweenCards.FirstOrDefault();
                 counterE.AddListener(() =>
                 {
                     card.ChessmanStyle.ResultEffectTween(result.Value, card);
                     if (tc != null)
                         card.ChessmanStyle.NumberEffect(result.Value, card, tc.DmgType);
                     card.ChessmanStyle.UpdateStatus(result.Value.Status, card);
+                    //var cPos = Chessboard.GetChessPos(card);
+                    //if (cPos == null) return;
+                    //SpriteUpdateByResult(cPos, result.Value);
                 });
                 counterTween.Join(card.ChessmanStyle.ResultAnimation(result.Value, card));
                 SetResultAudio(counterAudio, result.Value);
@@ -751,49 +757,64 @@ public class ChessboardVisualizeManager : MonoBehaviour
         catch (Exception e)
         {
 #if UNITY_EDITOR
-            Debug.LogError($"找不到棋格[{activity.To}]IsChallenger[{activity.IsChallenger>0}]: {activity}");
+            Debug.LogError($"找不到棋格[{activity.To}]IsChallenger[{activity.IsChallenger > 0}]: {activity}");
 #endif
         }
+
         foreach (var conduct in activity.Conducts.Where(c => c.Kind == CombatConduct.SpriteKind))
+            SpriteUpdate(chessPos, conduct.Element, conduct.Total >= 0);
+    }
+
+    //void SpriteUpdateByResult(ChessPos chessPos, ActivityResult result)
+    //{
+    //    var sprites = Sprites.Where(s => s.Pos == chessPos.Pos).ToList();
+    //    foreach (var spriteType in result.Sprites)
+    //    {
+    //        var sprite = sprites.FirstOrDefault(s => s.SpriteType == spriteType);
+    //        SpriteUpdate(chessPos, spriteType, sprite == null || !sprite.IsSpriteDisplay);
+    //        if (sprite != null) sprites.Remove(sprite);
+    //    }
+    //    foreach (var spriteObj in sprites) SpriteUpdate(chessPos, spriteObj.SpriteType, false);
+    //}
+
+
+    private void SpriteUpdate(ChessPos chessPos, int spriteType, bool isAdd)
+    {
+        var buffId = Effect.GetFloorBuffId(PosSprite.GetKind(spriteType));
+        if (buffId == -1) return;
+
+        var sp = Sprites.FirstOrDefault(s =>
+            s.SpriteType == spriteType && s.Pos == chessPos.Pos);
+        if (isAdd)
         {
-            var buffId = Effect.GetFloorBuffId(PosSprite.GetKind(conduct.Element));
-            if (buffId == -1) continue;
-            var sp = Sprites.FirstOrDefault(s =>
-                s.SpriteType == conduct.Element && s.Pos == chessPos.Pos && s.SpriteId == conduct.Kind);
-            if (conduct.Total >= 0)
+            if (sp == null)
             {
-                if (sp == null)
+                sp = new SpriteObj
                 {
-                    sp = new SpriteObj
-                    {
-                        SpriteType = conduct.Element,
-                        SpriteId = conduct.Kind,
-                        Pos = chessPos.Pos
-                    };
-                    Sprites.Add(sp);
-                }
-
-                //统帅业火特别处理爆炸演示
-                if (sp.SpriteType == (int)PosSprite.Kinds.YeHuo)
-                {
-                    if (sp.Obj != null)
-                        EffectsPoolingControl.instance.RecycleEffect(sp.Obj);
-                    sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
-                }
-                else
-                {
-                    if (sp.Obj == null)
-                        sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
-                }
-
-                continue;
+                    SpriteType = spriteType,
+                    Pos = chessPos.Pos
+                };
+                Sprites.Add(sp);
             }
 
-            if (sp == null) continue;
-            RemoveSpriteObj(sp);
+            //统帅业火特别重新演示爆炸
+            if (sp.SpriteType == (int)PosSprite.Kinds.YeHuo)
+            {
+                if (sp.IsSpriteDisplay)
+                    EffectsPoolingControl.instance.RecycleEffect(sp.Obj);
+                sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
+            }
+            else
+            {
+                if (!sp.IsSpriteDisplay)
+                    sp.Obj = EffectsPoolingControl.instance.GetFloorBuff(buffId, chessPos.transform);
+            }
+
+            return;
         }
-        //var targetPos = Chessboard.GetChessPos(activity.To, activity.IsChallenger == 0);
-        //targetPos.transform
+
+        if (sp == null) return;
+        RemoveSpriteObj(sp);
     }
 
     private void RemoveSpriteObj(SpriteObj sp)
@@ -851,10 +872,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private class SpriteObj
     {
-        public int SpriteId;
         public int SpriteType;
         public int Pos;
         public EffectStateUi Obj;
+        public bool IsSpriteDisplay => Obj != null;
     }
 
     private class TweenCard
