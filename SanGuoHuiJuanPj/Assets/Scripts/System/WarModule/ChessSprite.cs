@@ -67,6 +67,7 @@ namespace Assets.System.WarModule
         }
 
         public static Kinds GetKind(int typeId) => (Kinds)typeId;
+        public static Kinds GetKind(CombatConduct conduct) => (Kinds)conduct.Element;
 
         /// <summary>
         /// 类型

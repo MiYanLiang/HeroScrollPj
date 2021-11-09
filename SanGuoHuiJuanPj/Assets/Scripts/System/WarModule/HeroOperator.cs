@@ -552,13 +552,15 @@ namespace Assets.System.WarModule
                                                           IsSameType(p.Operator)).ToArray();
             var combat = InstanceGenericDamage();
 
-            Chessboard.InstanceSprite<ShadySprite>(Chessboard.GetChessPos(this), 1, 1, -1);
-
-            foreach (var langQi in langQiList)
+            var buffRate = CountRate(combat, PerformRate(), CriticalRate, RouseRate);
+            if(Chessboard.IsRandomPass(buffRate))
             {
-                OnPerformActivity(langQi, Activity.Intentions.Friendly, 0, 1,
-                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous,
-                        rate: CountRate(combat, PerformRate(), CriticalRate, RouseRate)));
+                Chessboard.InstanceSprite<ShadySprite>(Chessboard.GetChessPos(this), 1, 1, -1);
+                foreach (var langQi in langQiList)
+                {
+                    OnPerformActivity(langQi, Activity.Intentions.Friendly, actId: 0, skill: 1,
+                        CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous));
+                }
             }
 
             var target = Chessboard.GetLaneTarget(this);
@@ -566,7 +568,7 @@ namespace Assets.System.WarModule
             OnPerformActivity(target, Activity.Intentions.Offensive, 0, howl > 0 ? 2 : 0, combat);
             for (int i = 0; i < howl; i++)
             {
-                if (target.IsPostedAlive || IsAlive)
+                if (target.IsPostedAlive && IsAlive)
                     OnPerformActivity(target, Activity.Intentions.Offensive, i + 1, 2, combat);
             }
         }

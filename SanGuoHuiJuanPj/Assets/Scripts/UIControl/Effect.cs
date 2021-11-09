@@ -2584,7 +2584,7 @@ public static class Effect
     /// 棋盘音效
     /// </summary>
     /// <returns></returns>
-    public static int GetChessboardAudioId(ChessboardEvent arg)
+    public static int GetChessboardAudioId(ChessboardEvent arg,PosSprite.Kinds spriteKind = default)
     {
         switch (arg)
         {
@@ -2596,12 +2596,42 @@ public static class Effect
             case ChessboardEvent.RoundStart:
                 return 99;
             case ChessboardEvent.Shady:
-                return 43;
             case ChessboardEvent.Dark:
-                return 42;
+                switch (spriteKind)
+                {
+                    case PosSprite.Kinds.Thunder:
+                        switch (arg)
+                        {
+                            case ChessboardEvent.Shady: return 42;
+                            case ChessboardEvent.Dark: return 43;
+                        }
+                        break;
+                    case PosSprite.Kinds.Unknown:
+                    case PosSprite.Kinds.YeHuo:
+                    case PosSprite.Kinds.FireFlame:
+                    case PosSprite.Kinds.CastSprite:
+                    case PosSprite.Kinds.Earthquake:
+                    case PosSprite.Kinds.Catapult:
+                    case PosSprite.Kinds.Arrow:
+                    case PosSprite.Kinds.RollingStone:
+                    case PosSprite.Kinds.RollingWood:
+                    case PosSprite.Kinds.Shady:
+                    case PosSprite.Kinds.YellowBand:
+                    case PosSprite.Kinds.Chained:
+                    case PosSprite.Kinds.Forge:
+                    case PosSprite.Kinds.Strength:
+                    case PosSprite.Kinds.Armor:
+                    case PosSprite.Kinds.Dodge:
+                    case PosSprite.Kinds.Critical:
+                    case PosSprite.Kinds.Rouse:
+                        return -1;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(spriteKind), spriteKind, null);
+                }break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, null);
         }
+        return -1;
     }
     /// <summary>
     /// 羁绊音效
@@ -2639,6 +2669,7 @@ public static class Effect
     public static bool IsShadyChessboardElement(PosSprite.Kinds kind)
     {
         //注意，暗度是根据技能标记skill = 1小,2大
+        //返回 -1 = 没阴天效果。0 = 仅天暗效果， >0 天暗 + 音效Id
         switch (kind)
         {
             case PosSprite.Kinds.Thunder:
@@ -2661,7 +2692,6 @@ public static class Effect
             case PosSprite.Kinds.Dodge:
             case PosSprite.Kinds.Rouse:
                 return false;
-                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
