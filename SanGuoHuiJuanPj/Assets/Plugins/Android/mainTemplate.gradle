@@ -21,58 +21,13 @@ allprojects {
    }
 }
 
-// Android Resolver Repos Start
-([rootProject] + (rootProject.subprojects as List)).each { project ->
-    project.repositories {
-        def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
-        maven {
-            url "https://maven.google.com"
-        }
-        maven {
-            url "https://android-sdk.is.com/" // Assets/IronSource/Editor/IronSourceSDKDependencies.xml:9, Assets/IronSource/Editor/ISAdMobAdapterDependencies.xml:16, Assets/IronSource/Editor/ISAppLovinAdapterDependencies.xml:8, Assets/IronSource/Editor/ISVungleAdapterDependencies.xml:16
-        }
-        maven {
-            url "https://maven.google.com/" // Assets/IronSource/Editor/IronSourceSDKDependencies.xml:17, Assets/IronSource/Editor/IronSourceSDKDependencies.xml:25, Assets/IronSource/Editor/ISAdMobAdapterDependencies.xml:8, Assets/IronSource/Editor/ISAppLovinAdapterDependencies.xml:15
-        }
-        maven {
-            url "https://jitpack.io/" // Assets/IronSource/Editor/ISVungleAdapterDependencies.xml:8
-        }
-        mavenLocal()
-        jcenter()
-        mavenCentral()
-    }
-}
-// Android Resolver Repos End
 apply plugin: 'com.android.library'
 **APPLY_PLUGINS**
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-// Android Resolver Dependencies Start
-    implementation 'com.applovin:applovin-sdk:10.3.1' // Assets/IronSource/Editor/ISAppLovinAdapterDependencies.xml:15
-    implementation 'com.google.android.gms:play-services-ads:20.1.0' // Assets/IronSource/Editor/ISAdMobAdapterDependencies.xml:8
-    implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0' // Assets/IronSource/Editor/IronSourceSDKDependencies.xml:17
-    implementation 'com.google.android.gms:play-services-basement:17.2.1' // Assets/IronSource/Editor/IronSourceSDKDependencies.xml:25
-    implementation 'com.ironsource.adapters:admobadapter:4.3.20' // Assets/IronSource/Editor/ISAdMobAdapterDependencies.xml:16
-    implementation 'com.ironsource.adapters:applovinadapter:4.3.26' // Assets/IronSource/Editor/ISAppLovinAdapterDependencies.xml:8
-    implementation 'com.ironsource.adapters:vungleadapter:4.3.8' // Assets/IronSource/Editor/ISVungleAdapterDependencies.xml:16
-    implementation 'com.ironsource.sdk:mediationsdk:7.1.6' // Assets/IronSource/Editor/IronSourceSDKDependencies.xml:9
-    implementation 'com.vungle:publisher-sdk-android:6.9.1' // Assets/IronSource/Editor/ISVungleAdapterDependencies.xml:8
-// Android Resolver Dependencies End
 **DEPS**}
 
-// Android Resolver Exclusions Start
-android {
-  packagingOptions {
-      exclude ('/lib/arm64-v8a/*' + '*')
-      exclude ('/lib/armeabi/*' + '*')
-      exclude ('/lib/mips/*' + '*')
-      exclude ('/lib/mips64/*' + '*')
-      exclude ('/lib/x86/*' + '*')
-      exclude ('/lib/x86_64/*' + '*')
-  }
-}
-// Android Resolver Exclusions End
 android {
     compileSdkVersion **APIVERSION**
     buildToolsVersion '**BUILDTOOLS**'
