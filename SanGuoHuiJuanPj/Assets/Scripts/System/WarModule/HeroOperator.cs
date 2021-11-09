@@ -1518,9 +1518,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 28: return new[] { 1, 3 };
-                case 29: return new[] { 2, 5 };
-                case 204: return new[] { 3, 5 };
+                case 28: return new[] { 2, 5 };
+                case 29: return new[] { 3, 6 };
+                case 204: return new[] { 4, 7 };
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1579,9 +1579,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 214: return new[] { 1, 3 };
-                case 215: return new[] { 2, 5 };
-                case 216: return new[] { 3, 5 };
+                case 214: return new[] { 2, 5 };
+                case 215: return new[] { 3, 6 };
+                case 216: return new[] { 4, 7 };
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1633,7 +1633,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                var killingRate = IntelligentDifferCount(target.Operator, basicValue: 10, divRate: 10);
+                var killingRate = IntelligentDifferCount(target.Operator, basicValue: 5, divRate: 10);
                 if (target.IsAliveHero &&
                     Chessboard.IsRandomPass(killingRate))
                 {
@@ -1807,8 +1807,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 21: return 2f;
-                case 194: return 2.5f;
-                case 195: return 3f;
+                case 194: return 2f;
+                case 195: return 2.5f;
                 default: throw MilitaryNotValidError(this);
             }
         }
