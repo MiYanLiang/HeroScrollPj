@@ -265,8 +265,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 1: return 20;
-                case 66: return 25;
-                case 67: return 30;
+                case 66: return 30;
+                case 67: return 50;
             }
             throw MilitaryNotValidError(this);
         }
@@ -644,9 +644,9 @@ namespace Assets.System.WarModule
         {
             switch (Style .Military) 
             {
-                case 57:return 10;
-                case 96:return 20;
-                case 97:return 30;
+                case 57:return 20;
+                case 96:return 30;
+                case 97:return 50;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -684,7 +684,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private float[] PenetrateDecreases = new[] { 0.75f, 0.5f };
+        private float[] PenetrateDecreases = new[] { 0.8f, 0.6f };
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -749,9 +749,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 55: return 1.5f;
-                case 196: return 2f;
-                case 197: return 2.5f;
+                case 55: return 3f;
+                case 196: return 5f;
+                case 197: return 7f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -760,9 +760,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military) 
             {
-                case 55:return 50;
-                case 196:return 70;
-                case 197:return 90;
+                case 55:return 70;
+                case 196:return 80;
+                case 197:return 100;
                 default:throw MilitaryNotValidError(this);
             }
         }
@@ -770,9 +770,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 55: return 30;
-                case 196: return 50;
-                case 197: return 70;
+                case 55: return 50;
+                case 196: return 70;
+                case 197: return 90;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1697,7 +1697,7 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float IntelligentRate => 20f;
+        private float IntelligentRate => 30f;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -1806,9 +1806,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 21: return 1.5f;
-                case 194: return 2f;
-                case 195: return 2.5f;
+                case 21: return 2f;
+                case 194: return 2.5f;
+                case 195: return 3f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -2030,9 +2030,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 15:  return 40;
-                case 102: return 50;
-                case 103: return 60;
+                case 15:  return 50;
+                case 102: return 70;
+                case 103: return 90;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -2083,14 +2083,14 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 12: return 5;
-                case 114: return 10;
+                case 12: return 10;
+                case 114: return 15;
                 case 115: return 20;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        private const int RecursiveLimit = 20;//武魂：上限
+        private const int RecursiveLimit = 15;//武魂：上限
         private static int loopCount = 0;
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -2206,9 +2206,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 10: return 1f;//1f
-                case 85: return 1.5f;
-                case 86: return 2f;
+                case 10: return 1.5f;
+                case 85: return 2f;
+                case 86: return 3f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -2256,23 +2256,23 @@ namespace Assets.System.WarModule
                     switch (dmgType)
                     {
                         case Damage.Types.Critical: rate = 20; break;
-                        case Damage.Types.Rouse: rate = 30; break;
+                        case Damage.Types.Rouse: rate = 40; break;
                     }
                     break;
                 case 174:
                     if (major) return 50;
                     switch (dmgType)
                     {
-                        case Damage.Types.Critical: rate = 25; break;
-                        case Damage.Types.Rouse: rate = 40; break;
+                        case Damage.Types.Critical: rate = 30; break;
+                        case Damage.Types.Rouse: rate = 60; break;
                     }
                     break;
                 case 175:
                     if (major) return 70;
                     switch (dmgType)
                     {
-                        case Damage.Types.Critical: rate = 30; break;
-                        case Damage.Types.Rouse: rate = 50; break;
+                        case Damage.Types.Critical: rate = 50; break;
+                        case Damage.Types.Rouse: rate = 80; break;
                     }
                     break;
                 default: throw MilitaryNotValidError(this);
@@ -2341,8 +2341,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 7: return 1f;
-                case 76: return 1.5f;
-                case 77: return 2f;
+                case 76: return 1.25f;
+                case 77: return 1.5f;
                 default: throw MilitaryNotValidError(this);
             }
         }

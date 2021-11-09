@@ -85,7 +85,7 @@ namespace Assets.System.WarModule
     public class JianLouOperator : TowerOperator
     {
         private int Targets => 7;
-        private int DamageRate => 50;
+        private int DamageRate => 100;
         protected override void StartActions()
         {
             var chessPoses = Chessboard.GetRivals(this, _ => true)
