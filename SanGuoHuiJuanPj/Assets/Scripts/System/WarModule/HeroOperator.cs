@@ -553,6 +553,7 @@ namespace Assets.System.WarModule
             var combat = InstanceGenericDamage();
 
             Chessboard.InstanceSprite<ShadySprite>(Chessboard.GetChessPos(this), 1, 1, -1);
+
             foreach (var langQi in langQiList)
             {
                 OnPerformActivity(langQi, Activity.Intentions.Friendly, 0, 1,
@@ -564,7 +565,10 @@ namespace Assets.System.WarModule
             var howl = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             OnPerformActivity(target, Activity.Intentions.Offensive, 0, howl > 0 ? 2 : 0, combat);
             for (int i = 0; i < howl; i++)
-                OnPerformActivity(target, Activity.Intentions.Offensive, i + 1, 2, combat);
+            {
+                if (target.IsPostedAlive || IsAlive)
+                    OnPerformActivity(target, Activity.Intentions.Offensive, i + 1, 2, combat);
+            }
         }
 
         public override void OnRoundEnd()

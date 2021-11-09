@@ -10,7 +10,7 @@ namespace Assets.System.WarModule
     public class CombatStyle
     {
         public static int DamageFormula(int strength, int level) => (int)(strength * (1 + (level - 1) * 0.2f));
-        public static int IntelligentFormula(int intelligent, int level) => (int)(intelligent * (1 + (level - 1) * 0.1f));
+        //public static int IntelligentFormula(int intelligent, int level) => (int)(intelligent * (1 + (level - 1) * 0.1f));
         public static int HitPointFormula(int hitpoint, int level) => (int)(hitpoint * (1 + (level - 1) * 0.2f));
         public enum Types
         {
