@@ -5008,7 +5008,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af29396c94881fb42887b672240c846e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectContentTran: {fileID: 379474649}
   effectsNameStr:
   - dropBlood
   - GetGold
@@ -18981,10 +18980,10 @@ RectTransform:
   m_Father: {fileID: 1969917494}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 13.5, y: 0}
-  m_SizeDelta: {x: -223.6, y: 0}
+  m_AnchorMin: {x: 0.12987013, y: 0.3682056}
+  m_AnchorMax: {x: 0.8839433, y: 1.0853271}
+  m_AnchoredPosition: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 1, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1438547937
 MonoBehaviour:
@@ -18999,7 +18998,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.3679245, g: 0.1208508, b: 0, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -19017,7 +19016,7 @@ MonoBehaviour:
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1.2
+    m_LineSpacing: 1.5
   m_Text: "\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01\u4F60\u662F\u8C01"
 --- !u!222 &1438547938
 CanvasRenderer:
