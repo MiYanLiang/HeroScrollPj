@@ -51,13 +51,18 @@ namespace Assets.System.WarModule
                 case 2: return new WoLongFengChu(jb, this);
                 case 3: return new HuChiELai(jb, this);
                 case 4: return new WuZiLiangJiang(jb, this);
-                case 5: return new WeiWuMouShi(jb, this);
+                case 5: return new WeiWuQiMou(jb, this);
                 case 6: return new HuJuJiangDong(jb, this);
                 case 7: return new ShuiShiDuDu(jb, this);
                 case 8: return new TianZuoZhiHe(jb, this);
                 case 9: return new HeBeiSiTingZhu(jb, this);
                 case 10: return new JueShiWuShuang(jb, this);
-                case 11: return new HanMoSanXian(jb, this);
+                case 11: return new SiShiSanGong(jb, this);
+                case 12: return new ZhongYanNiEr(jb, this);
+                case 13: return new BaJianJIang(jb, this);
+                case 14: return new WeiZhenXiLiang(jb, this);
+                case 15: return new TanLangZhiXin(jb, this);
+                case 16: return new BuShiZhiGong(jb, this);
                 default: return null;
             }
         }
@@ -371,13 +376,6 @@ namespace Assets.System.WarModule
             StatusMap.Keys
                 .Where(o => o.IsAlive)
                 .ToList().ForEach(o => o.OnRoundStart());
-            //羁绊触发器
-            //玩家方
-            OnRoundStartJiBan(Grid.Challenger.Where(p => p.Value.IsPostedAlive)
-                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
-            //对手方
-            OnRoundStartJiBan(Grid.Opposite.Where(p => p.Value.IsPostedAlive)
-                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
             
             //每个回合开始先计算回合制精灵
             foreach (var sprite in ChessSprites.ToArray())
@@ -391,6 +389,14 @@ namespace Assets.System.WarModule
                 sprite.RoundStart(pos.Operator,this);
             }
 
+            //羁绊触发器
+            //玩家方
+            OnRoundStartJiBan(Grid.Challenger.Where(p => p.Value.IsPostedAlive)
+                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
+            //对手方
+            OnRoundStartJiBan(Grid.Opposite.Where(p => p.Value.IsPostedAlive)
+                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
+
             //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
@@ -399,8 +405,13 @@ namespace Assets.System.WarModule
 
         private void OnRoundStartJiBan(ChessOperator[] chessOperators)
         {
-            foreach (var jb in JiBan.Where(j => JiBanActivation(j, chessOperators)))
-                jb.OnRoundStart(chessOperators);
+            foreach (var jb in JiBan.Select(jb => 
+                             new { jb, list = jb.JiBanActivateList(chessOperators) })
+                         .Where(a => a.list != null))
+            {
+                RegJiBan(jb.jb,jb.list.Join(chessOperators,i=>i,o=>o.CardId,(_,c)=>c).ToArray());
+                jb.jb.OnRoundStart(chessOperators);
+            }
         }
 
         protected override ChessOperator GetOperator(int id) => ops.ContainsKey(id) ? ops[id] : null;

@@ -198,7 +198,7 @@ namespace Assets.System.WarModule
         public int GetSpeed(IChessOperator op)
         {
             var pos = GetChessPos(op).Pos;
-            var speed = op.Style.Speed;
+            var speed = GetOperatorBuffedSpeed(op);
             return speed - pos;
         }
 
@@ -230,7 +230,7 @@ namespace Assets.System.WarModule
 
             RoundState = ProcessCondition.RoundStart;
             RecursiveActionCount = 0;
-            ActivatedJiBan.Clear();
+            ActivatedJiBans.Clear();
             if(HasLogger)
             {
                 const string roundStartText = "开始回合[";
@@ -331,28 +331,19 @@ namespace Assets.System.WarModule
 
         protected abstract void InvokePreRoundTriggers();
 
-        protected bool JiBanActivation(BondOperator jb, ChessOperator[] list)
+        protected void RegJiBan(BondOperator jb, ChessOperator[] list)
         {
-            var map = new Dictionary<int, bool>();
-            foreach (var jId in jb.BondList)
-                map.Add(jId, list.Any(o => o.CardId == jId));
-            var isActivate = map.All(m => m.Value);
-            if(isActivate)
+            var op = list.First();
+            ActivatedJiBans.Add(new JiBanController
             {
-                var op = list.First();
-                ActivatedJiBan.Add(new JiBanController
-                {
-                    Operator = jb,
-                    IsChallenger = op.IsChallenger,
-                    Chessmen = list.Where(o=>o.CardType == GameCardType.Hero)
-                        .Join(map,o=>o.CardId,m=>m.Key,(o,_)=>o).ToList()
-                });
-                if (op.IsChallenger)
-                    GetActiveRound().ChallengerJiBans.Add(jb.BondId);
-                else
-                    GetActiveRound().OppositeJiBans.Add(jb.BondId);
-            }
-            return isActivate;
+                Operator = jb,
+                IsChallenger = op.IsChallenger,
+                Chessmen = list.ToList()
+            });
+            if (op.IsChallenger)
+                GetActiveRound().ChallengerJiBans.Add(jb.BondId);
+            else
+                GetActiveRound().OppositeJiBans.Add(jb.BondId);
         }
 
         /// <summary>
@@ -729,8 +720,8 @@ namespace Assets.System.WarModule
 
         public bool UpdateRemovable(PosSprite sprite)
         {
-            if (sprite.Host == PosSprite.HostType.Relation &&
-                (sprite.Lasting > 0 && GetOperator(sprite.Lasting).IsAlive)) return false;
+            if (sprite.Host == PosSprite.HostType.Relation && sprite.Lasting > 0 &&
+                GetOperator(sprite.Lasting).IsAlive) return false;
 
             if (sprite.Host == PosSprite.HostType.Round && sprite.Lasting > 0) return false;
 
@@ -946,10 +937,21 @@ namespace Assets.System.WarModule
 
         #region ChessboardConductPipeline
 
-        public int GetHeroBuffDamage(ChessOperator op)
+        public int GetHeroBuffedDamage(IChessOperator op)
         {
             var ratio = GetCondition(op, CardState.Cons.StrengthUp);
             return (int)(op.Style.Strength + op.Style.Strength * 0.01f * ratio);
+        }
+        public int GetHeroBuffedIntelligent(IChessOperator op)
+        {
+            var ratio = GetCondition(op, CardState.Cons.IntelligentUp);
+            return (int)(op.Style.Intelligent + op.Style.Intelligent * 0.01f * ratio);
+        }
+        public int GetOperatorBuffedSpeed(IChessOperator op)
+        {
+            if (op.Style.ArmedType < 0) return op.Style.Speed;
+            var ratio = GetCondition(op, CardState.Cons.SpeedUp);
+            return (int)(op.Style.Speed + op.Style.Speed * 0.01f * ratio);
         }
         /// <summary>
         /// 完全动态伤害=进攻方伤害转化(buff,羁绊)
@@ -959,12 +961,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public int GetCompleteDamageWithBond(ChessOperator op)
         {
-            var damage = GetHeroBuffDamage(op);
-            var bonds = ActivatedJiBan
-                .Where(j => j.IsChallenger == op.IsChallenger
-                            && j.Chessmen.Contains(op)).ToList();
+            var damage = GetHeroBuffedDamage(op);
+            var bonds = ActivatedJiBans.Where(j => j.IsChallenger == op.IsChallenger).ToList();
             if (bonds.Count > 0)
-                damage += bonds.Sum(b => b.Operator.OnDamageAddOn(b.Chessmen.ToArray(), op, damage));
+                damage += bonds.Sum(b => b.Operator.OnDamageAddOn(op));
             return damage;
         }
 
@@ -1304,7 +1304,7 @@ namespace Assets.System.WarModule
         #endregion
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 
-        private List<JiBanController> ActivatedJiBan { get; } = new List<JiBanController>();
+        private List<JiBanController> ActivatedJiBans { get; } = new List<JiBanController>();
         private class JiBanController
         {
             public bool IsChallenger;
