@@ -289,7 +289,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var gc in CardMap.ToList())
         {
             if (!round.PreRoundStats.TryGetValue(gc.Key, out var stat))
+            {
                 RemoveCard(gc.Key);
+                continue;
+            }
             var card = CardMap[gc.Key];
             card.ChessmanStyle.UpdateStatus(stat, card);
             list.Add(card);

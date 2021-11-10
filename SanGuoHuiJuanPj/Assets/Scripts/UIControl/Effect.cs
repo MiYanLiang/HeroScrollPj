@@ -1647,7 +1647,7 @@ public static class Effect
             // 迷雾
             case CardState.Cons.Forge: return -1;
             // 杀气
-            case CardState.Cons.Murderous:
+            case CardState.Cons.Murderous://将根据兵种分别用上不同的buff
                 XDebug.LogError($"[{con}]状态并不用于这里获取buff Id。",nameof(Effect));
                 return -1;
             // 连环
