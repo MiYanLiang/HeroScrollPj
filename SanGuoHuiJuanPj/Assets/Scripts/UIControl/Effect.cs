@@ -1516,83 +1516,59 @@ public static class Effect
         switch (con)
         {
             // 眩晕
-            case CardState.Cons.Stunned:
-                return 31;
+            case CardState.Cons.Stunned: return 31;
             // 护盾
-            case CardState.Cons.Shield:
-                return 02;
+            case CardState.Cons.Shield: return 02;
             // 无敌
-            case CardState.Cons.Invincible:
-                return 44;
+            case CardState.Cons.Invincible: return 44;
             // 流血
-            case CardState.Cons.Bleed:
-                return 41;
+            case CardState.Cons.Bleed: return 41;
             // 毒
-            case CardState.Cons.Poison:
-                return 09;
+            case CardState.Cons.Poison: return 09;
             // 灼烧
-            case CardState.Cons.Burn:
-                return 08;
+            case CardState.Cons.Burn: return 08;
             // 武魂
-            case CardState.Cons.BattleSoul:
-                return -1;
+            case CardState.Cons.BattleSoul: return -1;
             // 战意
-            case CardState.Cons.Stimulate:
-                return -1;
+            case CardState.Cons.Stimulate: return -1;
             // 禁锢
-            case CardState.Cons.Imprisoned:
-                return 32;
+            case CardState.Cons.Imprisoned: return 32;
             // 混乱
-            case CardState.Cons.Confuse:
-                return 34;
+            case CardState.Cons.Confuse: return 34;
             // 怯战
-            case CardState.Cons.Cowardly:
-                return 33;
+            case CardState.Cons.Cowardly: return 33;
             // 武力Up
-            case CardState.Cons.StrengthUp:
-                return 11;
+            case CardState.Cons.StrengthUp: return 11;
             // 闪避Up
-            case CardState.Cons.DodgeUp:
-                return 17;
+            case CardState.Cons.DodgeUp: return 17;
             // 暴击Up
-            case CardState.Cons.CriticalUp:
-                return 18;
+            case CardState.Cons.CriticalUp: return 18;
             // 会心Up
-            case CardState.Cons.RouseUp:
-                return 19;
+            case CardState.Cons.RouseUp: return 19;
             // 护甲Up
-            case CardState.Cons.ArmorUp:
-                return 14;
+            case CardState.Cons.ArmorUp: return 14;
             // 血战
-            case CardState.Cons.DeathFight:
-                return 45;
+            case CardState.Cons.DeathFight: return 45;
             // 卸甲
-            case CardState.Cons.Disarmed:
-                return 24;
+            case CardState.Cons.Disarmed: return 24;
             // 内助
-            case CardState.Cons.Neizhu:
-                return 06;
+            case CardState.Cons.Neizhu: return 06;
             //神助
-            case CardState.Cons.ShenZhu:
-                return 07;
+            case CardState.Cons.ShenZhu: return 07;
             // 缓冲、抵消盾
-            case CardState.Cons.EaseShield:
-                return -1;
+            case CardState.Cons.EaseShield: return -1;
             // 迷雾
-            case CardState.Cons.Forge:
-                return 50;
+            case CardState.Cons.Forge: return 50;
             // 杀气
-            case CardState.Cons.Murderous:
-                return 01;
+            case CardState.Cons.Murderous: return 01;
             // 连环
-            case CardState.Cons.Chained:
-                return 48;
+            case CardState.Cons.Chained: return 48;
             // 黄巾
-            case CardState.Cons.YellowBand:
-                return 47;
+            case CardState.Cons.YellowBand: return 47;
             //标记
-            case CardState.Cons.Mark:
-                return 52;
+            case CardState.Cons.Mark: return 52;
+            case CardState.Cons.SpeedUp:
+            case CardState.Cons.IntelligentUp: return 52;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
@@ -1621,84 +1597,61 @@ public static class Effect
         switch (con)
         {
             // 眩晕
-            case CardState.Cons.Stunned:
-                return 501;
+            case CardState.Cons.Stunned: return 501;
             // 护盾
-            case CardState.Cons.Shield:
-                return 508;
+            case CardState.Cons.Shield: return 508;
             // 无敌
-            case CardState.Cons.Invincible:
-                return 509;
+            case CardState.Cons.Invincible: return 509;
             // 流血
-            case CardState.Cons.Bleed:
-                return 526;
+            case CardState.Cons.Bleed: return 526;
             // 毒
-            case CardState.Cons.Poison:
-                return 504;
+            case CardState.Cons.Poison: return 504;
             // 灼烧
-            case CardState.Cons.Burn:
-                return 505;
+            case CardState.Cons.Burn: return 505;
             // 武魂
-            case CardState.Cons.BattleSoul:
-                return 517;
+            case CardState.Cons.BattleSoul: return 517;
             // 战意
-            case CardState.Cons.Stimulate:
-                return -1;
+            case CardState.Cons.Stimulate: return -1;
             // 禁锢
-            case CardState.Cons.Imprisoned:
-                return 521;
+            case CardState.Cons.Imprisoned: return 521;
             // 混乱
-            case CardState.Cons.Confuse:
-                return 50101;
+            case CardState.Cons.Confuse: return 50101;
             // 怯战
-            case CardState.Cons.Cowardly:
-                return 511;
+            case CardState.Cons.Cowardly: return 511;
             // 力量Up
-            case CardState.Cons.StrengthUp:
-                return -1;
+            case CardState.Cons.StrengthUp: return -1;
             // 闪避Up
-            case CardState.Cons.DodgeUp:
-                return -1;
+            case CardState.Cons.DodgeUp: return -1;
             // 暴击Up
-            case CardState.Cons.CriticalUp:
-                return -1;
+            case CardState.Cons.CriticalUp: return -1;
             // 会心Up
-            case CardState.Cons.RouseUp:
-                return -1;
+            case CardState.Cons.RouseUp: return -1;
             // 护甲Up
-            case CardState.Cons.ArmorUp:
-                return -1;
+            case CardState.Cons.ArmorUp: return -1;
             // 血战
-            case CardState.Cons.DeathFight:
-                return 510;
+            case CardState.Cons.DeathFight: return 510;
             // 卸甲
-            case CardState.Cons.Disarmed:
-                return 507;
+            case CardState.Cons.Disarmed: return 507;
             // 内助
-            case CardState.Cons.Neizhu:
-                return -1;
+            case CardState.Cons.Neizhu: return -1;
             //神助
-            case CardState.Cons.ShenZhu:
-                return -1;
+            case CardState.Cons.ShenZhu: return -1;
             // 缓冲、抵消盾
-            case CardState.Cons.EaseShield:
-                return 512;
+            case CardState.Cons.EaseShield: return 512;
             // 迷雾
-            case CardState.Cons.Forge://迷雾不应该是卡牌上的状态
-                return -1;
+            case CardState.Cons.Forge: return -1;
             // 杀气
             case CardState.Cons.Murderous:
                 XDebug.LogError($"[{con}]状态并不用于这里获取buff Id。",nameof(Effect));
                 return -1;
             // 连环
-            case CardState.Cons.Chained:
-                return 515;
+            case CardState.Cons.Chained: return 515;
             // 黄巾
-            case CardState.Cons.YellowBand:
-                return 529;
+            case CardState.Cons.YellowBand: return 529;
             //标记
-            case CardState.Cons.Mark:
-                return 525;
+            case CardState.Cons.Mark: return 525;
+            case CardState.Cons.SpeedUp:
+            case CardState.Cons.IntelligentUp: return -1;
             default:
                 return -1;//返回-1表示没有buff特效
         }
@@ -1783,6 +1736,8 @@ public static class Effect
             case CardState.Cons.YellowBand:
             //标记
             case CardState.Cons.Mark:
+            case CardState.Cons.SpeedUp:
+            case CardState.Cons.IntelligentUp:
             default: break;
         }
 
@@ -1828,7 +1783,7 @@ public static class Effect
             case PosSprite.Kinds.Critical:
             case PosSprite.Kinds.Rouse:
             case PosSprite.Kinds.Shady:
-            case PosSprite.Kinds.Unknown: return -1;
+            case PosSprite.Kinds.Generic: return -1;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
@@ -2491,7 +2446,7 @@ public static class Effect
             case PosSprite.Kinds.RollingStone:return 48;
             case PosSprite.Kinds.RollingWood:return 48;
 
-            case PosSprite.Kinds.Unknown: 
+            case PosSprite.Kinds.Generic: 
             case PosSprite.Kinds.CastSprite: 
             case PosSprite.Kinds.YellowBand: 
             case PosSprite.Kinds.Chained: 
@@ -2606,7 +2561,7 @@ public static class Effect
                             case ChessboardEvent.Dark: return 43;
                         }
                         break;
-                    case PosSprite.Kinds.Unknown:
+                    case PosSprite.Kinds.Generic:
                     case PosSprite.Kinds.YeHuo:
                     case PosSprite.Kinds.FireFlame:
                     case PosSprite.Kinds.CastSprite:
@@ -2675,7 +2630,7 @@ public static class Effect
             case PosSprite.Kinds.Thunder:
             case PosSprite.Kinds.Shady:
             case PosSprite.Kinds.Earthquake:return true;
-            case PosSprite.Kinds.Unknown:
+            case PosSprite.Kinds.Generic:
             case PosSprite.Kinds.YeHuo:
             case PosSprite.Kinds.FireFlame:
             case PosSprite.Kinds.CastSprite:

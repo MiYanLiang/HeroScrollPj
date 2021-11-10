@@ -14,7 +14,10 @@ namespace Assets.System.WarModule
     {
         public enum Kinds
         {
-            Unknown = -1,
+            /// <summary>
+            /// 通用,一般用于回合类提升武，智，速的一种精灵
+            /// </summary>
+            Generic = -1,
             /// <summary>
             /// 爆炸+火焰
             /// </summary>
@@ -141,7 +144,7 @@ namespace Assets.System.WarModule
         {
             switch (kind)
             {
-                case Kinds.Unknown: return (nameof(Kinds.Unknown));
+                case Kinds.Generic: return (nameof(Kinds.Generic));
                 case Kinds.YeHuo: return (nameof(Kinds.YeHuo));
                 case Kinds.FireFlame: return (nameof(Kinds.FireFlame));
                 case Kinds.Thunder: return (nameof(Kinds.Thunder));
@@ -192,6 +195,22 @@ namespace Assets.System.WarModule
     public abstract class RoundSprite : PosSprite
     {
         public override HostType Host { get; } = HostType.Round;
+    }
+
+    public class JiBanStrengthSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Generic;
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => buff == CardState.Cons.StrengthUp ? Value : 0;
+    }
+    public class JiBanSpeedSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Generic;
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => buff == CardState.Cons.SpeedUp ? Value : 0;
+    }
+    public class JiBanIntelligentSprite : RoundSprite
+    {
+        public override int TypeId { get; } = (int)Kinds.Generic;
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => buff == CardState.Cons.IntelligentUp ? Value : 0;
     }
     // 依赖型精灵
     public abstract class RelationSprite : PosSprite

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
+using JetBrains.Annotations;
 
 namespace Assets.System.WarModule
 {
@@ -167,6 +168,10 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected override int StateDamage() => Chessboard.GetCompleteDamageWithBond(this);
 
+        protected override int StateIntelligent() => Chessboard.GetHeroBuffedIntelligent(this);
+
+        protected override int StateSpeed() => Chessboard.GetOperatorBuffedSpeed(this);
+
         /// <summary>
         /// 会心加成
         /// </summary>
@@ -196,21 +201,13 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
         }
+
         /// <summary>
-        /// 智力差计算
+        /// 智力差
         /// </summary>
-        /// <param name="target">目标</param>
-        /// <param name="basicValue"></param>
-        /// <param name="divRate"></param>
         /// <returns></returns>
-        protected int IntelligentDifferCount(IChessOperator target, int basicValue, int divRate)
-        {
-            if (target.Style.ArmedType < 0)
-                throw new InvalidOperationException($"智力差计算必须是英雄类型! Target Armed = [{target.Style.ArmedType}]");
-            var diff = (Style.Intelligent - target.Style.Intelligent) / divRate;
-            diff += basicValue;
-            return Math.Max(0, diff);
-        }
+        protected int StateIntelligentDiff(IChessOperator op) =>
+            StateIntelligent() - Chessboard.GetHeroBuffedIntelligent(op);
 
         protected static MilitaryNotValid MilitaryNotValidError(HeroOperator op) =>
             new MilitaryNotValid(nameof(op.Style.Military), op.Style.Military.ToString());
@@ -846,7 +843,8 @@ namespace Assets.System.WarModule
                 var target = targets[i];
                 var damage = InstanceGenericDamage();
                 damage.Element = CombatConduct.WaterDmg;
-                var pushBackRate = CountRate(damage, IntelligentDifferCount(target.Operator, PushBackRate, 1), CriticalRate, RouseRate);
+                var intDif = Math.Max(0, StateIntelligentDiff(target.Operator));
+                var pushBackRate = CountRate(damage, intDif + PushBackRate, CriticalRate, RouseRate);
                 var backPos = Chessboard.BackPos(target);
                 var rePos = -1;
                 if (backPos != null &&
@@ -874,7 +872,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 5 + (Style.Intelligent - op.Style.Intelligent) / 5;
+        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 5;
 
         protected override CardState.Cons PerformState => CardState.Cons.Confuse;
     }
@@ -895,7 +893,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int BuffRate => 10 + Style.Intelligent / 5;
+        protected override int BuffRate => 10 + StateIntelligent() / 5;
         protected override CardState.Cons Buff => CardState.Cons.ShenZhu;
     }
 
@@ -915,7 +913,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual int BuffRate => 20 + Style.Intelligent / 5;
+        protected virtual int BuffRate => 20 + StateIntelligent() / 5;
         protected virtual int CriticalAddOn => 5;
         protected virtual int RouseAddOn => 10;
         protected virtual CardState.Cons Buff => CardState.Cons.Neizhu;
@@ -993,7 +991,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual int Healing() => StateDamage() * Style.Intelligent / 10;
+        protected virtual int Healing() => StateDamage() * StateIntelligent() / 10;
 
         protected virtual Func<IChessPos, bool> TargetFilter() =>
             p => p.IsAliveHero && Chessboard.GetStatus(p.Operator).HpRate < 1;
@@ -1101,7 +1099,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int Healing() => StateDamage() * Style.Intelligent / 10;
+        protected override int Healing() => StateDamage() * StateIntelligent() / 10;
 
         /// <summary>
         /// 获取目标的条件
@@ -1129,7 +1127,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int EaseShieldAddOn => StateDamage() * Style.Intelligent / 20;
+        private int EaseShieldAddOn => StateDamage() * StateIntelligent() / 20;
         private int CriticalRate => 50;
         private int RouseRate => 100;
         protected override void MilitaryPerforms(int skill = 1)
@@ -1194,7 +1192,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var rate = Style.Intelligent / 2;
+            var rate = StateIntelligent() / 2;
             var combat = InstanceGenericDamage();
             var deplete = 1;
             if (combat.IsCriticalDamage())
@@ -1259,7 +1257,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 10 + (Style.Intelligent - op.Style.Intelligent) / 5;
+        protected override int SkillRate(IChessOperator op) => 10 + (StateIntelligentDiff(op)) / 5;
 
         protected override CardState.Cons PerformState => CardState.Cons.Stunned;
     }
@@ -1280,7 +1278,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 15 + (Style.Intelligent - op.Style.Intelligent) / 5;
+        protected override int SkillRate(IChessOperator op) => 15 + (StateIntelligentDiff(op)) / 5;
         
 
         protected override CardState.Cons PerformState => CardState.Cons.Imprisoned;
@@ -1350,7 +1348,7 @@ namespace Assets.System.WarModule
             var damage = InstanceGenericDamage();
             damage.Multiply(DamageRate());
             damage.Element = CombatConduct.FireDmg;
-            damage.Rate = CountRate(damage, 10 + Style.Intelligent / 5, CriticalRate, RouseRate);
+            damage.Rate = CountRate(damage, 10 + StateIntelligent() / 5, CriticalRate, RouseRate);
             Chessboard.DelegateSpriteActivity<YeHuoSprite>(this, Chessboard.GetChessPos(!IsChallenger, 7),
                 Helper.Singular(damage), actId: 0, skill: 1, lasting: 2, value: FireBurningRate);
         }
@@ -1372,6 +1370,8 @@ namespace Assets.System.WarModule
             }
         }
 
+        private int PoisonBasicRate => 5;
+
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -1388,8 +1388,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-
-                damage.Rate = IntelligentDifferCount(target.Operator, 5, 5);
+                damage.Rate = PoisonBasicRate + (Math.Max(0, StateIntelligentDiff(target.Operator)) / 5);
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
             }
         }
@@ -1419,8 +1418,9 @@ namespace Assets.System.WarModule
         {
             var murderous = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             var conduct = InstanceGenericDamage();
-            conduct.Multiply(1f * Style.Intelligent / IntelligentDamageRate);
-            conduct.Rate = BasicElementRate + Style.Intelligent / ElementRate;
+            var intelligent = StateIntelligent();
+            conduct.Multiply(1f * intelligent / IntelligentDamageRate);
+            conduct.Rate = BasicElementRate + intelligent / ElementRate;
             conduct.Element = ConductElement;
             var addOn = 0;
             switch (Damage.GetType(conduct))
@@ -1616,6 +1616,7 @@ namespace Assets.System.WarModule
             }
         }
 
+        private int BasicKillRate => 5;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
@@ -1635,7 +1636,7 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                var killingRate = IntelligentDifferCount(target.Operator, basicValue: 5, divRate: 10);
+                var killingRate =  BasicKillRate + StateIntelligentDiff(target.Operator) / 10;
                 if (target.IsAliveHero &&
                     Chessboard.IsRandomPass(killingRate))
                 {
@@ -1709,7 +1710,7 @@ namespace Assets.System.WarModule
             {
                 var damage = InstanceGenericDamage();
                 damage.Element = CombatConduct.MechanicalDmg;
-                damage.Multiply(Style.Intelligent / IntelligentRate);
+                damage.Multiply(StateIntelligent() / IntelligentRate);
                 var target = targets.RandomPick();
                 OnPerformActivity(target, Activity.Intentions.Offensive, i, skill: 1, damage);
             }

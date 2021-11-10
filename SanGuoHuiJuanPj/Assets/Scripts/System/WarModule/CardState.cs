@@ -137,6 +137,14 @@ namespace Assets.System.WarModule
             /// 标记
             /// </summary>
             Mark = 26,
+            /// <summary>
+            /// 速度提升
+            /// </summary>
+            SpeedUp = 27,
+            /// <summary>
+            /// 智力提升
+            /// </summary>
+            IntelligentUp = 28
         }
     
         public CardState() => data = _consInts.ToDictionary(s => s, _ => 0);
@@ -246,6 +254,8 @@ namespace Assets.System.WarModule
         [JsonIgnore] public int Chained { get => data[24]; set => data[24] = value; }
         [JsonIgnore] public int Murderous { get => data[25]; set => data[25] = value; }
         [JsonIgnore] public int Mark { get => data[26]; set => data[26] = value; }
+        [JsonIgnore] public int SpeedUp { get => data[27]; set => data[27] = value; }
+        [JsonIgnore] public int IntelligentUp { get => data[28]; set => data[28] = value; }
 
         public int BattleSoul { get => data[7]; set => data[7] = value; }
         public const int EaseShieldMax = 1000;
@@ -254,84 +264,34 @@ namespace Assets.System.WarModule
         {
             switch (con)
             {
-                case Cons.Stunned:
-                    Stunned += MinZeroAlign(Stunned);
-                    break;
-                case Cons.Shield:
-                    Shield += MinZeroAlign(Shield);
-                    break;
-                case Cons.Invincible:
-                    Invincible += MinZeroAlign(Invincible);
-                    break;
-                case Cons.Bleed:
-                    Bleed += MinZeroAlign(Bleed);
-                    break;
-                case Cons.Poison:
-                    Poison += MinZeroAlign(Poison);
-                    break;
-                case Cons.Burn:
-                    Burn += MinZeroAlign(Burn);
-                    break;
-                case Cons.BattleSoul:
-                    BattleSoul += MinZeroAlign(BattleSoul);
-                    break;
-                case Cons.Imprisoned:
-                    Imprisoned += MinZeroAlign(Imprisoned);
-                    break;
-                case Cons.Cowardly:
-                    Cowardly += MinZeroAlign(Cowardly);
-                    break;
-                case Cons.StrengthUp:
-                    StrengthUp += MinZeroAlign(StrengthUp);
-                    break;
-                case Cons.DodgeUp:
-                    DodgeUp += MinZeroAlign(DodgeUp);
-                    break;
-                case Cons.CriticalUp:
-                    CriticalUp += MinZeroAlign(CriticalUp);
-                    break;
-                case Cons.RouseUp:
-                    RouseUp += MinZeroAlign(RouseUp);
-                    break;
-                case Cons.ArmorUp:
-                    FengHuoTaiAddOn += MinZeroAlign(DodgeUp);
-                    break;
-                case Cons.DeathFight:
-                    DeathFight += MinZeroAlign(DeathFight);
-                    break;
-                case Cons.Disarmed:
-                    Unarmed += MinZeroAlign(Unarmed);
-                    break;
-                case Cons.Neizhu:
-                    Neizhu += MinZeroAlign(Neizhu);
-                    break;
-                case Cons.ShenZhu:
-                    ShenZhu += MinZeroAlign(ShenZhu);
-                    break;
-                case Cons.EaseShield:
-                    ExtendedHp += MinZeroAlign(ExtendedHp);
-                    break;
-                case Cons.Forge:
-                    MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn);
-                    break;
-                case Cons.Stimulate:
-                    Stimulate += MinZeroAlign(Stimulate);
-                    break;
-                case Cons.Confuse:
-                    Confuse += MinZeroAlign(Confuse);
-                    break;
-                case Cons.YellowBand:
-                    YellowBand += MinZeroAlign(YellowBand);
-                    break;
-                case Cons.Chained:
-                    Chained += MinZeroAlign(Chained);
-                    break;
-                case Cons.Murderous:
-                    Murderous += MinZeroAlign(Murderous);
-                    break;
-                case Cons.Mark:
-                    Mark += MinZeroAlign(Mark);
-                    break;
+                case Cons.Stunned: Stunned += MinZeroAlign(Stunned); break;
+                case Cons.Shield: Shield += MinZeroAlign(Shield); break;
+                case Cons.Invincible: Invincible += MinZeroAlign(Invincible); break;
+                case Cons.Bleed: Bleed += MinZeroAlign(Bleed); break;
+                case Cons.Poison: Poison += MinZeroAlign(Poison); break;
+                case Cons.Burn: Burn += MinZeroAlign(Burn); break;
+                case Cons.BattleSoul: BattleSoul += MinZeroAlign(BattleSoul); break;
+                case Cons.Imprisoned: Imprisoned += MinZeroAlign(Imprisoned); break;
+                case Cons.Cowardly: Cowardly += MinZeroAlign(Cowardly); break;
+                case Cons.StrengthUp: StrengthUp += MinZeroAlign(StrengthUp); break;
+                case Cons.DodgeUp: DodgeUp += MinZeroAlign(DodgeUp); break;
+                case Cons.CriticalUp: CriticalUp += MinZeroAlign(CriticalUp); break;
+                case Cons.RouseUp: RouseUp += MinZeroAlign(RouseUp); break;
+                case Cons.ArmorUp: FengHuoTaiAddOn += MinZeroAlign(DodgeUp); break;
+                case Cons.DeathFight: DeathFight += MinZeroAlign(DeathFight); break;
+                case Cons.Disarmed: Unarmed += MinZeroAlign(Unarmed); break;
+                case Cons.Neizhu: Neizhu += MinZeroAlign(Neizhu); break;
+                case Cons.ShenZhu: ShenZhu += MinZeroAlign(ShenZhu); break;
+                case Cons.EaseShield: ExtendedHp += MinZeroAlign(ExtendedHp); break;
+                case Cons.Forge: MiWuZhenAddOn += MinZeroAlign(MiWuZhenAddOn); break;
+                case Cons.Stimulate: Stimulate += MinZeroAlign(Stimulate); break;
+                case Cons.Confuse: Confuse += MinZeroAlign(Confuse); break;
+                case Cons.YellowBand: YellowBand += MinZeroAlign(YellowBand); break;
+                case Cons.Chained: Chained += MinZeroAlign(Chained); break; 
+                case Cons.Murderous: Murderous += MinZeroAlign(Murderous); break; 
+                case Cons.Mark: Mark += MinZeroAlign(Mark); break;
+                case Cons.SpeedUp: SpeedUp += MinZeroAlign(SpeedUp);break;
+                case Cons.IntelligentUp: IntelligentUp += MinZeroAlign(IntelligentUp);break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }
@@ -344,84 +304,34 @@ namespace Assets.System.WarModule
         {
             switch (con)
             {
-                case Cons.Stunned:
-                    Stunned = 0;
-                    break;
-                case Cons.Shield:
-                    Shield = 0;
-                    break;
-                case Cons.Invincible:
-                    Invincible = 0;
-                    break;
-                case Cons.Bleed:
-                    Bleed = 0;
-                    break;
-                case Cons.Poison:
-                    Poison = 0;
-                    break;
-                case Cons.Burn:
-                    Burn = 0;
-                    break;
-                case Cons.BattleSoul:
-                    BattleSoul = 0;
-                    break;
-                case Cons.Imprisoned:
-                    Imprisoned = 0;
-                    break;
-                case Cons.Cowardly:
-                    Cowardly = 0;
-                    break;
-                case Cons.StrengthUp:
-                    StrengthUp = 0;
-                    break;
-                case Cons.DodgeUp:
-                    DodgeUp = 0;
-                    break;
-                case Cons.CriticalUp:
-                    CriticalUp = 0;
-                    break;
-                case Cons.RouseUp:
-                    RouseUp = 0;
-                    break;
-                case Cons.ArmorUp:
-                    FengHuoTaiAddOn = 0;
-                    break;
-                case Cons.DeathFight:
-                    DeathFight = 0;
-                    break;
-                case Cons.Disarmed:
-                    Unarmed = 0;
-                    break;
-                case Cons.Neizhu:
-                    Neizhu = 0;
-                    break;
-                case Cons.ShenZhu:
-                    ShenZhu = 0;
-                    break;
-                case Cons.EaseShield:
-                    ExtendedHp = 0;
-                    break;
-                case Cons.Forge:
-                    MiWuZhenAddOn = 0;
-                    break;
-                case Cons.Stimulate:
-                    Stimulate = 0;
-                    break;
-                case Cons.Confuse:
-                    Confuse = 0;
-                    break;
-                case Cons.YellowBand:
-                    YellowBand = 0;
-                    break;
-                case Cons.Chained:
-                    Chained = 0;
-                    break;
-                case Cons.Murderous:
-                    Murderous = 0;
-                    break;
-                case Cons.Mark:
-                    Mark = 0;
-                    break;
+                case Cons.Stunned: Stunned = 0; break;
+                case Cons.Shield: Shield = 0; break;
+                case Cons.Invincible: Invincible = 0; break;
+                case Cons.Bleed: Bleed = 0; break;
+                case Cons.Poison: Poison = 0; break;
+                case Cons.Burn: Burn = 0; break;
+                case Cons.BattleSoul: BattleSoul = 0; break;
+                case Cons.Imprisoned: Imprisoned = 0; break;
+                case Cons.Cowardly: Cowardly = 0; break;
+                case Cons.StrengthUp: StrengthUp = 0; break;
+                case Cons.DodgeUp: DodgeUp = 0; break;
+                case Cons.CriticalUp: CriticalUp = 0; break;
+                case Cons.RouseUp: RouseUp = 0; break;
+                case Cons.ArmorUp: FengHuoTaiAddOn = 0; break;
+                case Cons.DeathFight: DeathFight = 0; break;
+                case Cons.Disarmed: Unarmed = 0; break;
+                case Cons.Neizhu: Neizhu = 0; break;
+                case Cons.ShenZhu: ShenZhu = 0; break;
+                case Cons.EaseShield: ExtendedHp = 0; break;
+                case Cons.Forge: MiWuZhenAddOn = 0; break;
+                case Cons.Stimulate: Stimulate = 0; break;
+                case Cons.Confuse: Confuse = 0; break;
+                case Cons.YellowBand: YellowBand = 0; break;
+                case Cons.Chained: Chained = 0; break;
+                case Cons.Murderous: Murderous = 0; break;
+                case Cons.Mark: Mark = 0; break;
+                case Cons.SpeedUp:SpeedUp=0; break;
+                case Cons.IntelligentUp:IntelligentUp=0; break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(con), con, null);
             }

@@ -47,6 +47,8 @@ namespace Assets.System.WarModule
         public virtual bool IsIgnoreShieldUnit { get; set; }
 
         protected abstract int StateDamage();
+        protected abstract int StateIntelligent();
+        protected abstract int StateSpeed();
         public virtual void OnRoundStart() {}
 
         public virtual void OnRoundEnd() {}
@@ -356,7 +358,6 @@ namespace Assets.System.WarModule
         public virtual void OnSomebodyDie(ChessOperator death){}
 
         public virtual bool IsNotCounterAble(ChessOperator op) => false;
-
     }
 
     public abstract class CardOperator : ChessOperator
@@ -372,6 +373,8 @@ namespace Assets.System.WarModule
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
         protected override int StateDamage() => Style.Strength;
+        protected override int StateIntelligent() => Style.Intelligent;
+        protected override int StateSpeed() => Style.Speed;
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {
@@ -390,7 +393,7 @@ namespace Assets.System.WarModule
             var sideText = IsChallenger ? "玩家" : "对方";
             if (CardType == GameCardType.Base)
                 return $"{sideText} 老巢{CardId}({Level})";
-            return $"{sideText} {Name}({CardId})[等:{Level}|力:{StateDamage()}|速:{Style.Speed}|智:{Style.Intelligent}]";
+            return $"{sideText} {Name}({CardId})[等:{Level}|力:{StateDamage()}|速:{StateSpeed()}|智:{StateIntelligent()}]";
         }
     }
 }
