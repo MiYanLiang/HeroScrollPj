@@ -1539,6 +1539,10 @@ public static class Effect
             case CardState.Cons.Cowardly: return 33;
             // 武力Up
             case CardState.Cons.StrengthUp: return 11;
+            //速度提升
+            case CardState.Cons.SpeedUp: return 13;
+            //智力提升
+            case CardState.Cons.IntelligentUp: return 12;
             // 闪避Up
             case CardState.Cons.DodgeUp: return 17;
             // 暴击Up
@@ -1567,8 +1571,6 @@ public static class Effect
             case CardState.Cons.YellowBand: return 47;
             //标记
             case CardState.Cons.Mark: return 52;
-            case CardState.Cons.SpeedUp:
-            case CardState.Cons.IntelligentUp: return 52;
             default:
                 throw new ArgumentOutOfRangeException(nameof(con), con, null);
         }
@@ -1620,6 +1622,10 @@ public static class Effect
             case CardState.Cons.Cowardly: return 511;
             // 力量Up
             case CardState.Cons.StrengthUp: return -1;
+            //智力提升
+            case CardState.Cons.IntelligentUp: return -1;
+            //速度提升
+            case CardState.Cons.SpeedUp:return -1;
             // 闪避Up
             case CardState.Cons.DodgeUp: return -1;
             // 暴击Up
@@ -1650,8 +1656,6 @@ public static class Effect
             case CardState.Cons.YellowBand: return 529;
             //标记
             case CardState.Cons.Mark: return 525;
-            case CardState.Cons.SpeedUp:
-            case CardState.Cons.IntelligentUp: return -1;
             default:
                 return -1;//返回-1表示没有buff特效
         }
