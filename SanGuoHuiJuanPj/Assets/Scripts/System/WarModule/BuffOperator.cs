@@ -162,7 +162,7 @@ namespace Assets.System.WarModule
         }
 
         public override bool IsDodgeRateTrigger => true;
-        public override int OnAppendDodgeRate(ChessOperator op) => -999;
+        public override int OnAppendDodgeRate(ChessOperator op) => IsBuffActive(op) ? -999 : 0;
 
 
         public override bool IsElementTrigger => true;

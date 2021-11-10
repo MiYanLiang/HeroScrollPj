@@ -20,7 +20,7 @@ namespace Assets.System.WarModule
         /// <param name="gapValue"></param>
         /// <param name="hp"></param>
         /// <returns></returns>
-        public static int HpDepletedRatioWithGap(int hp, int maxHp, int basicValue, int gap, int gapValue)
+        private static int HpDepletedRatioWithGap(int hp, int maxHp, int basicValue, int gap, int gapValue)
         {
             var value = (int)((maxHp - hp) * 1f / maxHp * 100);
             var multiply = value / gap;
