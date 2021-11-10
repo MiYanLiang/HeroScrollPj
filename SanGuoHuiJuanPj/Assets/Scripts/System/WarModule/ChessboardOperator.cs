@@ -1280,20 +1280,24 @@ namespace Assets.System.WarModule
 
         public IChessPos GetMarked(ChessOperator op, Func<int, bool> militaryCondition)
         {
-            var scope = op.IsChallenger 
-                ? Grid.GetRivalScope(op) 
-                : Grid.GetRivalScope(!op.IsChallenger);
+            var scope = GetCondition(op, CardState.Cons.Confuse) > 0
+                ? Grid.GetRivalScope(!op.IsChallenger)
+                : Grid.GetRivalScope(op);
             return scope.Values.FirstOrDefault(p =>
                 p.Operator != null &&
                 militaryCondition(GetStatus(p.Operator).GetBuff(CardState.Cons.Mark)));
         }
 
         public IEnumerable<IChessPos> GetNeighbors(IChessPos pos, bool includeUnPost, int surround= 1) => Grid.GetNeighbors(pos, includeUnPost, surround);
+
         public IEnumerable<IChessPos> GetFriendly(ChessOperator op, Func<IChessPos, bool> condition = null)
         {
-            var scope = GetCondition(op,CardState.Cons.Confuse)>0 ? Grid.GetScope(!op.IsChallenger) : Grid.GetScope(op);
+            var scope = GetCondition(op, CardState.Cons.Confuse) > 0
+                ? Grid.GetScope(!op.IsChallenger)
+                : Grid.GetScope(op);
             return scope.Values.Where(condition == null ? p => p.IsPostedAlive : condition);
         }
+
         public IEnumerable<IChessPos> GetChainedPos(IChessOperator op, Func<IChessPos, bool> chainedFilter) =>
             Grid.GetChained(GetStatus(op).Pos, op.IsChallenger, chainedFilter);
         public IChessPos BackPos(IChessPos pos) => Grid.BackPos(pos);
