@@ -10,6 +10,8 @@ namespace Assets.System.WarModule
     public class CombatStyle
     {
         public static int DamageFormula(int strength, int level) => (int)(strength * (1 + (level - 1) * 0.2f));
+
+        public static int EffectFormula(int effect, int level, int effectUp) => effect + effectUp * level;
         //public static int IntelligentFormula(int intelligent, int level) => (int)(intelligent * (1 + (level - 1) * 0.1f));
         public static int HitPointFormula(int hitpoint, int level) => (int)(hitpoint * (1 + (level - 1) * 0.2f));
         public enum Types
@@ -66,6 +68,9 @@ namespace Assets.System.WarModule
         public int Strength { get; set; }
         public int Level { get; set; }
         public int Speed { get; set; }
+        /// <summary>
+        /// 智力，对于塔单位，它是效果值
+        /// </summary>
         public int Intelligent { get; set; }
         public int HitPoint { get; set; }
         public int Recovery { get; set; }

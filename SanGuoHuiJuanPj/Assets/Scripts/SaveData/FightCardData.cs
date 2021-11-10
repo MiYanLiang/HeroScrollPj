@@ -108,7 +108,7 @@ using UnityEngine;
                 force = tower.ForceId;
                 strength = tower.Strength;
                 speed = tower.Speed;
-                intelligent = 0;
+                intelligent = CombatStyle.EffectFormula(tower.Effect, level, tower.EffectUp);
                 military = tower.Id;
                 armedType = -2;
                 combatType = 1;
