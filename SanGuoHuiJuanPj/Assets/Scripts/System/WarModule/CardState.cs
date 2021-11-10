@@ -20,6 +20,14 @@ namespace Assets.System.WarModule
             Cons.Disarmed,
             Cons.Confuse
         };
+
+        public static Cons[] ControllingBuffs { get; } = new[]
+        {
+            Cons.Stunned,
+            Cons.Imprisoned,
+            Cons.Confuse,
+            Cons.Cowardly
+        };
         public static bool IsNegativeBuff(Cons con) => NegativeBuffs.Contains(con);
         private static int[] _consInts=Enum.GetValues(typeof(Cons)).Cast<int>().ToArray();
         public static Cons[] ConsArray { get; } = Enum.GetValues(typeof(Cons)).Cast<Cons>().ToArray();

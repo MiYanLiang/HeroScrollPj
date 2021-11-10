@@ -15,8 +15,8 @@ public class AdManager : AdControllerBase
     [Serializable]public enum Ads
     {
         Unity,
-        DoNew,
-        IronSource,
+        //DoNew,
+        //IronSource,
         //Admob,
         //MoPub,
     }
@@ -24,11 +24,11 @@ public class AdManager : AdControllerBase
     public AdAgentBase adAgent;
     private bool isInit;
     public AdAgentBase AdAgent => adAgent;
-    public DoNewAdController DoNewAdController { get; private set; }
+    //public DoNewAdController DoNewAdController { get; private set; }
     //public AdmobController AdmobController { get; private set; }
     public UnityAdController UnityAdController { get; private set; }
     //public MoPubController MoPubController { get; private set; }
-    public IronSourceController IronSourceController { get; private set; }
+    //public IronSourceController IronSourceController { get; private set; }
     public override AdAgentBase.States Status => AdAgentBase.States.Loaded;
     [Header("广告播放顺序")]public Ads[] Series;
     [Header("广告源比率")]
@@ -48,8 +48,8 @@ public class AdManager : AdControllerBase
                 _controllers = new Dictionary<Ads, (int, AdControllerBase)>
                 {
                     {Ads.Unity, (UnityRatio, UnityAdController)},
-                    {Ads.IronSource,(IronSourceRatio,IronSourceController)},
-                    {Ads.DoNew, (DoNewRatio, DoNewAdController)}
+                    //{Ads.IronSource,(IronSourceRatio,IronSourceController)},
+                    //{Ads.DoNew, (DoNewRatio, DoNewAdController)}
                     //{Ads.Admob, (AdmobRatio, AdmobController)},
                     //{Ads.MoPub, (MoPubRatio, MoPubController)},
                 };
@@ -70,10 +70,10 @@ public class AdManager : AdControllerBase
         if (isInit) throw XDebug.Throw<AdManager>("Duplicate init!");
         //if (AdAgentBase.instance != null) return;
         isInit = true;
-        DoNewAdController = gameObject.AddComponent<DoNewAdController>();
-        DoNewAdController.Init();
-        IronSourceController = gameObject.AddComponent<IronSourceController>();
-        IronSourceController.Init();
+        //DoNewAdController = gameObject.AddComponent<DoNewAdController>();
+        //DoNewAdController.Init();
+        //IronSourceController = gameObject.AddComponent<IronSourceController>();
+        //IronSourceController.Init();
         //AdmobController = gameObject.AddComponent<AdmobController>();
         //AdmobController.Init(AdmobRetryCallBack);
         UnityAdController = gameObject.AddComponent<UnityAdController>();
@@ -92,7 +92,7 @@ public class AdManager : AdControllerBase
     private IEnumerator NextSecondRequestCache()
     {
         yield return new WaitForSeconds(1);
-        ControllersAdResolve();
+        //ControllersAdResolve();
     }
 
     public override void RequestShow(UnityAction<bool, string> requestAction)
@@ -111,36 +111,36 @@ public class AdManager : AdControllerBase
                 controller = Queue.Dequeue();
                 count++;
                 if (count < 10) continue;//如果广告控制器未重复会一直找
-                DoNewAdController.RequestDirectShow(requestAction);
-                ControllersAdResolve();
+                //DoNewAdController.RequestDirectShow(requestAction);
+                //ControllersAdResolve();
                 //requestAction.Invoke(false, "无广告源!");//广告控制器重复了
                 return;
             } while (controller.Status != AdAgentBase.States.Loaded); //循环直到到下一个已准备的广告源
-            ControllersAdResolve();
+            //ControllersAdResolve();
         }
         //PlayerDataForGame.instance.ShowStringTips($"广告源:{Controllers.First(c=>c.Value.Item2 == controller).Key}");
         controller.RequestShow((success, msg) =>
         {
             requestAction(success, msg);
-            ControllersAdResolve();
+            //ControllersAdResolve();
         });
     }
 
     public override void RequestLoad(UnityAction<bool, string> loadingAction) => loadingAction(true, string.Empty);
 
-    private void ControllersAdResolve()
-    {
-        if (DoNewAdController.Status == AdAgentBase.States.Closed ||
-            DoNewAdController.Status == AdAgentBase.States.FailedToLoad ||
-            DoNewAdController.Status == AdAgentBase.States.None) DoNewAdController.RequestLoad(null);
-        // if(AdmobController.Status == AdAgentBase.States.Closed ||
-        //    AdmobController.Status == AdAgentBase.States.FailedToLoad ||
-        //    AdmobController.Status == AdAgentBase.States.None)
-        //     AdmobController.OnLoadAd(AdmobRetryCallBack);
-        // if(MoPubController.Status == AdAgentBase.States.Closed ||
-        //    MoPubController.Status == AdAgentBase.States.FailedToLoad ||
-        //    MoPubController.Status == AdAgentBase.States.None) MoPubController.RequestLoad(null);
-    }
+    //private void ControllersAdResolve()
+    //{
+    //    if (DoNewAdController.Status == AdAgentBase.States.Closed ||
+    //        DoNewAdController.Status == AdAgentBase.States.FailedToLoad ||
+    //        DoNewAdController.Status == AdAgentBase.States.None) DoNewAdController.RequestLoad(null);
+    //    // if(AdmobController.Status == AdAgentBase.States.Closed ||
+    //    //    AdmobController.Status == AdAgentBase.States.FailedToLoad ||
+    //    //    AdmobController.Status == AdAgentBase.States.None)
+    //    //     AdmobController.OnLoadAd(AdmobRetryCallBack);
+    //    // if(MoPubController.Status == AdAgentBase.States.Closed ||
+    //    //    MoPubController.Status == AdAgentBase.States.FailedToLoad ||
+    //    //    MoPubController.Status == AdAgentBase.States.None) MoPubController.RequestLoad(null);
+    //}
 }
 
 /// <summary>

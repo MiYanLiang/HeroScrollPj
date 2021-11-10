@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using Donews.mediation;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 public abstract class AdControllerBase : MonoBehaviour

@@ -57,17 +57,25 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private bool isShady = false;
 
     private List<WarGameCardUi> GarbageUi = new List<WarGameCardUi>();//UI垃圾收集器，千万别重用UI，如果没分开重写放置棋格上的方法，会造成演示UI引用混乱
-    private Tween ShadyTween(float alpha)
+
+    private Tween ShadyTween(Activity activity)
     {
-        if (alpha > 0)
+        var conduct = activity.Conducts.FirstOrDefault(c => Effect.IsShadyChessboardElement(PosSprite.GetKind(c)));
+        var darkLevel = activity.Skill == 1 ? Effect.ChessboardEvent.Shady : Effect.ChessboardEvent.Dark;
+        var audioId = Effect.GetChessboardAudioId(darkLevel, PosSprite.GetKind(conduct));
+        return ShadyTween(darkLevel == Effect.ChessboardEvent.Shady ? 0.6f : 0.8f, audioId);
+    }
+
+    private Tween ShadyTween(float alpha, int audioId)
+    {
+        if (alpha > 0 && audioId != -1)
         {
-            var audioId =
-                Effect.GetChessboardAudioId(alpha >= 0.8
-                    ? Effect.ChessboardEvent.Dark
-                    : Effect.ChessboardEvent.Shady);
+            //var audioId =
+            //    Effect.GetChessboardAudioId(alpha >= 0.8
+            //        ? Effect.ChessboardEvent.Dark
+            //        : Effect.ChessboardEvent.Shady);
             PlayAudio(audioId);
         }
-
         return ShadyImage.DOFade(alpha, 1f);
     }
 
@@ -496,14 +504,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var major = map.Value.Activities.Where(a => a.From >= 0).Select(a => TryGetCardMap(a.From))
                 .FirstOrDefault();
 
-            var shady = map.Value.Activities.FirstOrDefault(a =>
-                a.Intention == Activity.Intentions.Sprite &&
-                a.Conducts.Any(c => Effect.IsShadyChessboardElement(PosSprite.GetKind(c.Element)) && c.Total > 0));
+            var shady = map.Value.Activities
+                .FirstOrDefault(a => a.Intention == Activity.Intentions.Sprite
+                                     && a.Conducts.Any(c =>
+                                         Effect.IsShadyChessboardElement(PosSprite.GetKind(c)) && c.Total > 0));
 
             if (shady != null && shady.Skill > 0 && !isShady)
             {
                 isShady = true;
-                yield return ShadyTween(shady.Skill == 1 ? 0.6f : 0.8f).WaitForCompletion();
+                yield return ShadyTween(shady).WaitForCompletion();
             }
 
             var listTween = new List<TweenCard>();
@@ -655,7 +664,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         if (isShady)
         {
-            yield return ShadyTween(0).WaitForCompletion();
+            yield return ShadyTween(0, -1).WaitForCompletion();
             isShady = false;
         }
 
