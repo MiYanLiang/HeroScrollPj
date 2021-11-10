@@ -178,7 +178,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class FireWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 1, rate: DataTable.GetGameValue(12)));
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 2, rate: DataTable.GetGameValue(12)));
     }
     /// <summary>
     /// 毒泉
