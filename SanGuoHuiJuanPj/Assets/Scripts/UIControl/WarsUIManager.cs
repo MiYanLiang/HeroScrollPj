@@ -597,6 +597,8 @@ public class WarsUIManager : MonoBehaviour
             EffectsPoolingControl.instance.GetSparkEffect(
                 Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
         }
+
+        card.cardObj.SetSelected(card.Pos > -1 && !card.IsLock);
         OnPreChessboardFloorBuff(chessboardManager.IsFirstRound);
         UpdateHeroEnlistText();
     }
@@ -720,7 +722,6 @@ public class WarsUIManager : MonoBehaviour
                 continue;
             }
             var ui = card.cardObj; //GenerateCardUi(card);
-            //PlaceCard(card);
             var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Style.Recovery * 0.01f)),
                 card.Status.MaxHp);
             card.Status.SetHp(hp);

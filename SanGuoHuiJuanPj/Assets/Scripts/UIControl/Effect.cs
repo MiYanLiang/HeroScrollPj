@@ -2444,10 +2444,10 @@ public static class Effect
             case PosSprite.Kinds.YeHuo: return 38;
             case PosSprite.Kinds.FireFlame: return 37;
             case PosSprite.Kinds.Thunder:return 55;
-            case PosSprite.Kinds.Earthquake: return -1;
             case PosSprite.Kinds.Catapult:return 31;
             case PosSprite.Kinds.Arrow: return 26;
-            case PosSprite.Kinds.RollingStone:return 48;
+            case PosSprite.Kinds.Earthquake: 
+            case PosSprite.Kinds.RollingStone:
             case PosSprite.Kinds.RollingWood:return 48;
 
             case PosSprite.Kinds.Generic: 
@@ -2559,6 +2559,7 @@ public static class Effect
                 switch (spriteKind)
                 {
                     case PosSprite.Kinds.Thunder:
+                    case PosSprite.Kinds.Earthquake:
                         switch (arg)
                         {
                             case ChessboardEvent.Shady: return 42;
@@ -2569,7 +2570,6 @@ public static class Effect
                     case PosSprite.Kinds.YeHuo:
                     case PosSprite.Kinds.FireFlame:
                     case PosSprite.Kinds.CastSprite:
-                    case PosSprite.Kinds.Earthquake:
                     case PosSprite.Kinds.Catapult:
                     case PosSprite.Kinds.Arrow:
                     case PosSprite.Kinds.RollingStone:

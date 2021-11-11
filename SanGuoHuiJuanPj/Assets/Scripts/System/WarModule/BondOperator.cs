@@ -113,7 +113,7 @@ namespace Assets.System.WarModule
         /// <param name="rate"></param>
         /// <returns></returns>
         protected IList<CombatConduct> GetBuffIfInBondList(ChessOperator op, CardState.Cons buff, int rate) =>
-            !IsInBondList(op)
+            IsInBondList(op)
                 ? Helper.Singular(CombatConduct.InstanceBuff(BondId, buff, rate: rate))
                 : Array.Empty<CombatConduct>();
 
@@ -309,7 +309,9 @@ namespace Assets.System.WarModule
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
             if (rival.CardType != GameCardType.Hero) return null;
-            var buff = CardState.ControllingBuffs.RandomPick();
+            var buff = CardState.ControllingBuffs
+                .Select(s => new { s, random = Chessboard.Randomize(20) })
+                .OrderBy(s => s.random).First().s;
             return new ConductResult(
                 Helper.Singular(CombatConduct.InstanceBuff(ops.First().IsChallenger ? -1 : -2, buff, rate: BuffRate)));
         }

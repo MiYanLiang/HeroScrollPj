@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.System.WarModule;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -73,7 +74,11 @@ public class GameCardWarUiOperation : MonoBehaviour
         JbAnim.gameObject.SetActive(false);
     }
 
-    public virtual void UpdateHpUi(float hp) => Hp.fillAmount = 1f - hp;
+    public virtual void UpdateHpUi(float hp)
+    {
+        var targetValue = 1f - hp;
+        DOTween.To(() => Hp.fillAmount, x => Hp.fillAmount = x, targetValue, CardAnimator.instance.Misc.DropBloodSec);
+    }
 
     public void SetState(States state)
     {

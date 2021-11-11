@@ -539,7 +539,7 @@ public class UIManager : MonoBehaviour
 
         if (!isChipsEnough || !isYanBaoEnough || !ConsumeManager.instance.DeductYuanBao(nextLevel.YuanBaoConsume))
         {
-            PlayerDataForGame.instance.ShowStringTips(isYanBaoEnough
+            PlayerDataForGame.instance.ShowStringTips(!isYanBaoEnough
                 ? DataTable.GetStringText(36)
                 : DataTable.GetStringText(37));
             UIManager.instance.PlayOnClickMusic();

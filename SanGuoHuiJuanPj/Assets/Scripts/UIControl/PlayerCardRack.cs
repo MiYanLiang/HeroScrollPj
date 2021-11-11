@@ -118,13 +118,15 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     private void PlaceOnInvocation(ChessPos pos, FightCardData card)
     {
-        if (!WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, LastPos == -1))
+        var playerScope = WarsUIManager.instance.PlayerScope;
+        var isExchange = playerScope.Any(c => c.Pos == pos.Pos);
+        if (!WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, !isExchange))
         {
             ResetPos(card);
             return;
         }
 
-        var replaceCard = WarsUIManager.instance.PlayerScope.FirstOrDefault(c => c != card && c.Pos == pos.Pos);
+        var replaceCard = playerScope.FirstOrDefault(c => c != card && c.Pos == pos.Pos);
         if (replaceCard != null)
         {
             replaceCard.SetPos(-1);

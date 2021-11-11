@@ -430,5 +430,8 @@ public class CardAnimator : MonoBehaviour
         [Header("棋格渐变Alpha(度)")] [Range(0, 1)] public float ChessGridFading = 0.3f;
         [Header("(Buff)羁绊时长(秒)")] public float JBAnimLasting = 2f;
         [Header("金币掉落的文字颜色")]public Color TreasureChestTextColor = Color.yellow;
+        [Header("天暗度(小)")] [Range(0.3f, 1f)] public float Shady = 0.6f;
+        [Header("天暗度(大)")] [Range(0.3f, 1f)] public float Dark = 0.8f;
+        [Header("掉血(秒)")] [Range(0f, 3f)] public float DropBloodSec = 0.7f;
     }
 }

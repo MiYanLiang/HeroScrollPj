@@ -406,7 +406,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            if (GetChained().Any())
+            if (!GetChained().Any())
             {
                 base.MilitaryPerforms(0);
                 return;
@@ -1794,7 +1794,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1, damage,
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: 1, damage,
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1,
                     rate: CountRate(damage, StunningRate(), CriticalRate, RouseRate)));
         }
@@ -2392,13 +2392,15 @@ namespace Assets.System.WarModule
                 //不攻击的判断
                 if ((i > 0 && stat.HpRate >= 1) || //第二击开始，血量满了
                     stat.IsDeath) break;
+
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: i, skill: 1,
                     InstanceGenericDamage());//伤害活动
 
                 var lastDmg = result?.Status?.LastSuffers?.LastOrDefault();
                 if (result == null) return;
-                if (!target.IsAliveHero||
+                if (!target.IsAliveHero ||
                     result.Status == null ||
+                    result.Type != ActivityResult.Types.Suffer ||
                     !lastDmg.HasValue ||
                     lastDmg.Value <= 0 || //对手伤害=0
                     stat.Hp >= stat.MaxHp) //自身满血
@@ -2406,8 +2408,8 @@ namespace Assets.System.WarModule
 
                 OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: i, skill: 2,
                     CombatConduct.InstanceHeal(lastDmg.Value, InstanceId)); //吸血活动
-                if (result.Type != ActivityResult.Types.Suffer ||//对手反馈非承受
-                    result.IsDeath)
+
+                if (result.IsDeath)
                     break;
             }
         }

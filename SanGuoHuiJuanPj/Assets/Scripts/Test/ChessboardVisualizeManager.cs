@@ -63,7 +63,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         var conduct = activity.Conducts.FirstOrDefault(c => Effect.IsShadyChessboardElement(PosSprite.GetKind(c)));
         var darkLevel = activity.Skill == 1 ? Effect.ChessboardEvent.Shady : Effect.ChessboardEvent.Dark;
         var audioId = Effect.GetChessboardAudioId(darkLevel, PosSprite.GetKind(conduct));
-        return ShadyTween(darkLevel == Effect.ChessboardEvent.Shady ? 0.6f : 0.8f, audioId);
+        return ShadyTween(
+            darkLevel == Effect.ChessboardEvent.Shady
+                ? CardAnimator.instance.Misc.Shady
+                : CardAnimator.instance.Misc.Dark, audioId);
     }
 
     private Tween ShadyTween(float alpha, int audioId)
