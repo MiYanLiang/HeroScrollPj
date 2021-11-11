@@ -21695,6 +21695,9 @@ MonoBehaviour:
     ChessGridFading: 0.2
     JBAnimLasting: 2
     TreasureChestTextColor: {r: 0.90588236, g: 0.7490196, b: 0, a: 1}
+    Shady: 0.6
+    Dark: 0.8
+    DropBloodSec: 0.4
 --- !u!114 &1672411075
 MonoBehaviour:
   m_ObjectHideFlags: 0
