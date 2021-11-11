@@ -234,7 +234,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var process = round.Processes[i];
             if (process.CombatMaps.Any(c => c.Value.Activities.Any() || c.Value.CounterActs.Any()))
                 yield return ChessmanAnimation(process);
-            FilterDeathChessman();
+            yield return FilterDeathChessman();
         }
         //回合结束演示
         if(round.FinalAction.ChessProcesses.Count>0)
@@ -242,8 +242,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             foreach (var process in round.FinalAction.ChessProcesses)
                 yield return OnBasicChessProcess(process).Play().WaitForCompletion();
+            yield return FilterDeathChessman();
         }
-        FilterDeathChessman();
 
         var gridTween = DOTween.Sequence().Pause();
         foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
@@ -266,8 +266,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
         NewWar.StartButtonShow(true);
         OnRoundPause?.Invoke();
     }
-    private void FilterDeathChessman()
+    private IEnumerator FilterDeathChessman()
     {
+        yield return new WaitForSeconds(0.5f);
         //更新棋位和棋子状态(提取死亡棋子)
         foreach (var tmp in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {

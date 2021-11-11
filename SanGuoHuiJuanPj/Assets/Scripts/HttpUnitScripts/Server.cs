@@ -24,13 +24,13 @@ public static class Server
     public static string RESET_GAMEPLAY_API { get; private set; } 
 #else
     // todo: CDN正式服
-    //private static string ServerUrl { get; set; } = "https://HeroScrollPj.azureedge.net/api/";
+    private static string ServerUrl { get; set; } = "https://HeroScrollPj.azureedge.net/api/";
     // Todo: 正式服
     //private static string ServerUrl { get; set; } = "https://heroscrollpjapi1.azurewebsites.net/api/";
     //todo: CDN测试服
     //private static string ServerUrl { get; set; } = "https://heroscroll.azureedge.net/api/";
     // Todo: 测试服
-    private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
+    //private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
     //private static string ServerUrl { get; set; } = "http://localhost:7071/api/";
     public static string PLAYER_SAVE_DATA_UPLOAD_API { get; private set; } = "UploadSaveData";
     public static string INSTANCE_ID_API { get; private set; } = "GenerateUserId";

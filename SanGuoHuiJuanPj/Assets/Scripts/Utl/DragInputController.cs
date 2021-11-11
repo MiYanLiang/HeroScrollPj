@@ -12,10 +12,10 @@ public abstract class DragInputControlController<T> : MonoBehaviour, IDragInputC
     protected const string Mouse_Y = "Mouse Y";
 
     public abstract void StartDrag(BaseEventData eventData, T obj);
-
     public abstract void OnDrag(BaseEventData eventData, T obj);
-
     public abstract void EndDrag(BaseEventData eventData, T obj);
+    public virtual void PointerDown(BaseEventData data, T obj) { }
+    public virtual void PointerUp(BaseEventData data, T obj) { }
 
     protected List<RaycastResult> GetRayCastResults(PointerEventData pointer)
     {
@@ -33,4 +33,6 @@ public interface IDragInputControl<in T>
     void StartDrag(BaseEventData eventData, T obj);
     void OnDrag(BaseEventData eventData, T obj);
     void EndDrag(BaseEventData eventData, T obj);
+    void PointerDown(BaseEventData data, T obj);
+    void PointerUp(BaseEventData data, T obj);
 }

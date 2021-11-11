@@ -8,6 +8,11 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
 {
     private bool IsDragAble(FightCardData card) => !WarsUIManager.instance.isDragDisable && !card.IsLock;
     private ChessPos lastPos;
+
+    public override void PointerDown(BaseEventData data, FightCardData card) => WarsUIManager.instance.DisplayCardInfo(card, true);
+
+    public override void PointerUp(BaseEventData data, FightCardData card) => WarsUIManager.instance.DisplayCardInfo(card, true);
+
     public override void StartDrag(BaseEventData eventData, FightCardData card)
     {
         if(!IsDragAble(card))return;

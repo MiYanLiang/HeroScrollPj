@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
 /// 物件拖动信息的发射器，配合<see cref="IDragInputControl{T}"/>接口或者<see cref="DragInputControlController{T}"/>，发射给指定的控制器拖动指令来决定物件的操作和行为。
@@ -11,10 +12,13 @@ public abstract class DragObjectSender<T> : MonoBehaviour
     protected IDragInputControl<T> Controller { get; private set; }
     protected abstract T ThisObj { get; }
     public EventTrigger EventTrigger { get; private set; }
+
     public virtual void Init()
     {
-        if (EventTrigger)return;
+        if (EventTrigger) return;
         EventTrigger = gameObject.AddComponent<EventTrigger>();
+        EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.PointerDown, OnPointerDown));
+        EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.PointerUp, OnPointerUp));
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.BeginDrag, BeginDrag));
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.Drag, OnDrag));
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.EndDrag, EndDrag));
@@ -32,4 +36,6 @@ public abstract class DragObjectSender<T> : MonoBehaviour
     public virtual void BeginDrag(BaseEventData data) => Controller?.StartDrag(data, ThisObj);
     public virtual void OnDrag(BaseEventData data) => Controller?.OnDrag(data, ThisObj);
     public virtual void EndDrag(BaseEventData data) => Controller?.EndDrag(data, ThisObj);
+    public virtual void OnPointerDown(BaseEventData data) => Controller?.PointerDown(data, ThisObj);
+    public virtual void OnPointerUp(BaseEventData data) => Controller?.PointerUp(data, ThisObj);
 }
