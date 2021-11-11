@@ -976,7 +976,7 @@ namespace Assets.System.WarModule
     }
 
     /// <summary>
-    /// 42  医师 - 分发草药，治疗1个友方武将。
+    /// 42  医士 - 分发草药，治疗1个友方武将。
     /// </summary>
     public class YiShiOperator : HeroOperator
     {
@@ -991,7 +991,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual int Healing() => StateDamage() * StateIntelligent() / 10;
+        protected virtual int Healing() => StateDamage() * StateIntelligent() / 20;
 
         protected virtual Func<IChessPos, bool> TargetFilter() =>
             p => p.IsAliveHero && Chessboard.GetStatus(p.Operator).HpRate < 1;
@@ -1947,9 +1947,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 18: return 2;
-                case 106: return 3;
-                case 107: return 5;
+                case 18: return 3;
+                case 106: return 5;
+                case 107: return 7;
                 default: throw MilitaryNotValidError(this);
             }
         }
