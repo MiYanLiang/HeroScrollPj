@@ -101,11 +101,14 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
             return;
         }
 
-        var chessPos = GetRayCastResults(pointer).Select(r => r.gameObject)
-            .FirstOrDefault(o => o.CompareTag(GameSystem.CardPos))?.GetComponent<ChessPos>();
+        ChessPos chessPos = null;
+        var obj = GetRayCastResults(pointer).Select(r => r.gameObject)
+            .FirstOrDefault(o => o.CompareTag(GameSystem.CardPos));
+        if (obj != null)
+            chessPos = obj.GetComponent<ChessPos>();
         if (chessPos == null)
-            throw XDebug.Throw<DragInputControlController<FightCardData>>("找不到卡牌位置，请注意初始卡牌是否在正确的位置上！");
-        LastPos = chessPos.Pos;
+            LastPos = -1;
+        else LastPos = chessPos.Pos;
     }
 
     private void ResetPos(FightCardData card)

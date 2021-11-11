@@ -249,6 +249,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
         gridTween.Play();
 
+
         if (chess.IsGameOver)
         {
             OnGameSet.Invoke(chess.IsChallengerWin);

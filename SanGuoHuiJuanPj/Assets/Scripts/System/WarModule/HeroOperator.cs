@@ -1133,11 +1133,13 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetFriendly(this,
-                    p => p.IsAliveHero)
+                    p => p.IsAliveHero &&
+                         Chessboard.GetStatus(p.Operator)
+                             .GetBuff(CardState.Cons.EaseShield) < CardState.EaseShieldMax)
                 .OrderBy(p =>
                 {
                     var status = Chessboard.GetStatus(p.Operator);
-                    return (status.Hp + status.GetBuff(CardState.Cons.EaseShield)) /
+                    return (status.Hp) /
                            status.MaxHp;
                 })
                 .Take(Targets()).ToArray();
@@ -1333,9 +1335,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 32: return 0.6f;
-                case 33: return 0.8f;
-                case 209: return 1f;
+                case 32: return 1f;
+                case 33: return 1.2f;
+                case 209: return 1.5f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1407,7 +1409,6 @@ namespace Assets.System.WarModule
         protected abstract int BasicElementRate { get; }
         protected abstract int CriticalElementAddOn { get; }
         protected abstract int RouseElementAddOn { get; }
-        protected abstract int IntelligentDamageRate { get; }
         protected abstract PosSprite.Kinds SpriteKind { get; }
         protected abstract int ConductElement { get; }
         protected abstract int MurderousRate();
@@ -1419,7 +1420,6 @@ namespace Assets.System.WarModule
             var murderous = Chessboard.GetCondition(this, CardState.Cons.Murderous);
             var conduct = InstanceGenericDamage();
             var intelligent = StateIntelligent();
-            conduct.Multiply(1f * intelligent / IntelligentDamageRate);
             conduct.Rate = BasicElementRate + intelligent / ElementRate;
             conduct.Element = ConductElement;
             var addOn = 0;
@@ -1490,7 +1490,6 @@ namespace Assets.System.WarModule
         protected override int BasicElementRate => 5;
         protected override int CriticalElementAddOn => 2;
         protected override int RouseElementAddOn => 5;
-        protected override int IntelligentDamageRate => 30;
         protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Thunder;
         protected override int ConductElement => CombatConduct.ThunderDmg;
 
@@ -1550,7 +1549,6 @@ namespace Assets.System.WarModule
         protected override int BasicElementRate => 5;
         protected override int CriticalElementAddOn => 2;
         protected override int RouseElementAddOn => 5;
-        protected override int IntelligentDamageRate => 30;
 
         protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Earthquake;
         protected override int ConductElement => CombatConduct.EarthDmg;

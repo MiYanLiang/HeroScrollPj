@@ -695,10 +695,24 @@ public class WarsUIManager : MonoBehaviour
     private void OnResourceUpdate(bool isChallenger, int id, int value)
     {
         if (!isChallenger) return;
-        if (id == -1) TempGold += value;
+        if (id == -1)
+        {
+            TempGold += value;
+#if UNITY_EDITOR
+            XDebug.Log<WarsUIManager>($"获得金币[{value}]!");
+#endif
+        }
+
         if (id >= 0)
+        {
             for (int i = 0; i < value; i++)
+            {
                 TempChest.Add(id);
+#if UNITY_EDITOR
+                XDebug.Log<WarsUIManager>($"获得宝箱[{value}]!");
+#endif
+            }
+        }
     }
 
     private void FinalizeWar(bool isChallengerWin)
