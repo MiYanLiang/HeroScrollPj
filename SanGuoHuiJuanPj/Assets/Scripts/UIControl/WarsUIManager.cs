@@ -1290,34 +1290,16 @@ public class WarsUIManager : MonoBehaviour
             wUi.Init(fCard.Card);
             wUi.SetSize(Vector3.one);
             wUi.tag = GameSystem.PyCard;
-            GiveGameObjEventForHoldOn(wUi, fCard.GetInfo().About);
             wUi.DragComponent.Init(fCard);
             fCard.cardObj = wUi;
         }
     }
 
     //展示卡牌详细信息
-    private void ShowInfoOfCardOrArms(string text)
+    public void DisplayCardInfo(FightCardData card,bool isShow)
     {
-
-        aboutCardUi.InfoText.text = text;
-        aboutCardUi.gameObject.SetActive(true);
-
-        //StartCoroutine(ShowOrHideCardInfoWin());
-    }
-
-    //隐藏卡牌详细信息
-    private void HideInfoOfCardOrArms()
-    {
-        //isNeedAutoHideInfo = false;
-        aboutCardUi.gameObject.SetActive(false);
-    }
-
-    //卡牌附加按下抬起方法
-    public void GiveGameObjEventForHoldOn(WarGameCardUi obj, string str)
-    {
-        EventTriggerListener.Get(obj.gameObject).onDown += _ => ShowInfoOfCardOrArms(str);
-        EventTriggerListener.Get(obj.gameObject).onUp += _ => HideInfoOfCardOrArms();
+        if(isShow) aboutCardUi.InfoText.text = card.GetInfo().About;
+        aboutCardUi.gameObject.SetActive(isShow);
     }
 
     //初始化场景内容

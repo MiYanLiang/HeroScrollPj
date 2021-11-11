@@ -14,7 +14,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     public override void StartDrag(BaseEventData data, FightCardData card)
     {
-
+        WarsUIManager.instance.DisplayCardInfo(card, true);
         Vector2 deltaPosition = Vector2.zero;
 #if UNITY_EDITOR
         float delta_x = Input.GetAxis(Mouse_X);
@@ -43,8 +43,9 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
         OnStartDrag(pointer);
     }
 
-    public override void OnDrag(BaseEventData data, FightCardData obj)
+    public override void OnDrag(BaseEventData data, FightCardData card)
     {
+        WarsUIManager.instance.DisplayCardInfo(card, true);
         if (IsDragDelegated)
         {
             var eventData = data as PointerEventData;
@@ -53,7 +54,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
         }
         if (WarsUIManager.instance.isDragDisable) return;
 
-        obj.cardObj.transform.position = Input.mousePosition;
+        card.cardObj.transform.position = Input.mousePosition;
     }
 
     public override void EndDrag(BaseEventData eventData, FightCardData card)

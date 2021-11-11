@@ -400,11 +400,10 @@ namespace Assets.System.WarModule
         {
             if (con == CardState.Cons.Chained) return Value;
             if (!TieQiOperator.IsChainable(op)) return 0;
-            if (con != CardState.Cons.ArmorUp && 
-                con != CardState.Cons.StrengthUp) return 0;
+            if (con != CardState.Cons.ArmorUp && con != CardState.Cons.StrengthUp) return 0;
             var chainedList = Grid.GetChained(Pos, IsChallenger, ChainedFilter);
 
-            return Grid.GetChessPos(Pos,IsChallenger).Operator
+            return Grid.GetChessPos(Pos, IsChallenger).Operator
                 .OnSpritesValueConvert(chainedList.SelectMany(p => p.Terrain.Sprites).ToArray(), con);
         }
         public static Func<IChessPos, bool> ChainedFilter =>

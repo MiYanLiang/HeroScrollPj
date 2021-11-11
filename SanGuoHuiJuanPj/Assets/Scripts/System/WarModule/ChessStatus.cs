@@ -72,7 +72,7 @@ namespace Assets.System.WarModule
         public void OnHeal(int value, bool overLimit = false)
         {
             if (value < 0)
-                throw new InvalidOperationException($"补血数量不可以低于0");
+                throw new InvalidOperationException("补血数量不可以低于0");
             LastHeal = value;
             Hp += value;
             if (overLimit) return;
