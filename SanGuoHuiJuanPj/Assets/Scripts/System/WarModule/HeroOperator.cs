@@ -1333,9 +1333,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 32: return 0.6f;
-                case 33: return 0.8f;
-                case 209: return 1f;
+                case 32: return 1f;
+                case 33: return 1.2f;
+                case 209: return 1.5f;
                 default: throw MilitaryNotValidError(this);
             }
         }
