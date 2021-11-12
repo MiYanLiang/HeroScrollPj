@@ -10,10 +10,29 @@ using UnityEngine;
 public class DataTableTester : MonoBehaviour
 {
     public int WarId;
-    // Start is called before the first frame update
+
+    private static int[] YuanZhengIds { get; } = new[] { 121, 122, 123, 124, 125, 126, 127, 128, 129, 130 };
+    private static List<CheckpointTable> YZCheckpoints { get; set; }
+
     public void CheckWarId()
     {
-        var checkPoints = GetCheckPoints(WarId);
+        var isYuanZheng = YuanZhengIds.Any(w => w == WarId);
+
+        IEnumerable<CheckpointTable> checkPoints;
+        //暂时处理如果远征的话，所有远征战役的宝箱都合法
+        if (isYuanZheng)
+        {
+            if (YZCheckpoints == null)
+            {
+                var list = new List<CheckpointTable>();
+                foreach (var id in YuanZhengIds)
+                    list.AddRange(GetCheckPoints(id));
+                YZCheckpoints = list.Distinct().ToList();
+            }
+            checkPoints = YZCheckpoints;
+        }
+        else
+            checkPoints = GetCheckPoints(WarId);
 
         var battleEventIds = checkPoints.Where(c => c.BattleEventTableId > 0).Select(c => c.BattleEventTableId).Distinct().ToList();
         var beTable = DataTable.BattleEvent;
@@ -55,7 +74,7 @@ public class DataTableTester : MonoBehaviour
 
     IEnumerable<CheckpointTable> GetCheckPoints(int warId)
     {
-        var war = DataTable.War[WarId];
+        var war = DataTable.War[warId];
         var checkPoint = DataTable.Checkpoint[war.BeginPoint];
         var table = DataTable.Checkpoint;
         var list = new List<CheckpointTable> { checkPoint };

@@ -414,20 +414,21 @@ namespace Assets.System.WarModule
             if (!IsBuffActive(op) ||
                 activityIntent == Activity.Intentions.Self ||
                 activityIntent == Activity.Intentions.Friendly) return;
-            IsChaining = true;
             var poses = Chessboard.GetChainedPos(op, ChainSprite.ChainedFilter).ToArray();
             var chainCount = poses.Count();
             if (chainCount == 0) return;
+            IsChaining = true;
             conduct.Multiply(1f / chainCount);
-            //var fixedDmg =  CombatConduct.InstanceElementDamage((int)Buff, (int)conduct.Total, CombatConduct.FixedDmg);
-            //if (fixedDmg.Total <= 0) return;
-            if (conduct.Total <= 0) return;
-            foreach (var pos in poses)
+            if (conduct.Total > 0)
             {
-                if (pos.Operator == op)
-                    continue;
-                Chessboard.AppendOpActivity(op, pos, Activity.Intentions.Friendly, Helper.Singular(conduct), actId: -1,
-                    skill: 2);
+                foreach (var pos in poses)
+                {
+                    if (pos.Operator == op)
+                        continue;
+                    Chessboard.AppendOpActivity(op, pos, Activity.Intentions.Friendly, Helper.Singular(conduct),
+                        actId: -1,
+                        skill: 2);
+                }
             }
             IsChaining = false;
         }
