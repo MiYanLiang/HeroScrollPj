@@ -2605,13 +2605,18 @@ public static class Effect
             case JiBanSkillName.WeiWuMouShi:return 45;
             case JiBanSkillName.ShuiShiDuDu:return 13;
             case JiBanSkillName.HeBeiSiTingZhu:return 58;
+            case JiBanSkillName.BaJianJiang:return 58;
             case JiBanSkillName.TaoYuanJieYi:
             case JiBanSkillName.WoLongFengChu:
             case JiBanSkillName.HuChiELai:
             case JiBanSkillName.HuJuJiangDong:
             case JiBanSkillName.TianZuoZhiHe:
             case JiBanSkillName.JueShiWuShuang:
-            case JiBanSkillName.HanMoSanXian:
+            case JiBanSkillName.SiShiSanGong:
+            case JiBanSkillName.ZhongYanNiEr:
+            case JiBanSkillName.WeiZhenXiLiang:
+            case JiBanSkillName.TanLangZhiXin:
+            case JiBanSkillName.BuShiZhiGong:
                 return -1;
             default:
                 throw new ArgumentOutOfRangeException(nameof(jiBan), jiBan, null);
@@ -2746,7 +2751,27 @@ public enum JiBanSkillName
     /// </summary>
     JueShiWuShuang = 10,
     /// <summary>
-    /// 汉末三仙
+    /// 四世三公
     /// </summary>
-    HanMoSanXian = 11
+    SiShiSanGong = 11,
+    /// <summary>
+    /// 忠言逆耳
+    /// </summary>
+    ZhongYanNiEr=12,
+        /// <summary>
+        /// 八健将
+        /// </summary>
+    BaJianJiang=13,
+        /// <summary>
+        /// 威震西凉
+        /// </summary>
+    WeiZhenXiLiang=14,
+        /// <summary>
+        /// 贪狼之心
+        /// </summary>
+    TanLangZhiXin=15,
+        /// <summary>
+        /// 不世之功
+        /// </summary>
+    BuShiZhiGong=16
 }
