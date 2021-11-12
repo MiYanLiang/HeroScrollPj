@@ -196,8 +196,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuHuSHangJiang : BondOperator
     {
-        private int CowardlyRate => 30;
-        private int DamageRate => 30;
+        private int CowardlyRate => 35;
+        private int DamageRate => 35;
 
         public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
@@ -246,8 +246,8 @@ namespace Assets.System.WarModule
     public class HuChiELai : BondOperator
     {
         private int TroopId => 1; //魏
-        private int DamageRate => 50;
-        private int ShieldRate => 50;
+        private int DamageRate => 10;
+        private int ShieldRate => 100;
 
         public HuChiELai(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
@@ -269,7 +269,7 @@ namespace Assets.System.WarModule
     public class WuZiLiangJiang : BondOperator
     {
         private int DamageRate => 20;
-        private int ShieldRate => 50;
+        private int ShieldRate => 100;
 
         public WuZiLiangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
@@ -347,7 +347,7 @@ namespace Assets.System.WarModule
     {
         private int DamageRate => 20;
         private int DamageUpRate => 50;
-        private int PushBackRate => 50;
+        private int PushBackRate => 70;
         private int WarshipArmedType => 8; //战船系
 
         public ShuiShiDuDu(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
@@ -463,8 +463,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class SiShiSanGong : BondOperator
     {
-        private int DamageUpRate => 20;
-        private int ShenZhuRate => 100;
+        private int DamageUpRate => 10;
+        private int ShenZhuRate => 50;
         private int TroopId => 3;
 
         public SiShiSanGong(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
