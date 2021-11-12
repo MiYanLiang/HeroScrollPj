@@ -1139,8 +1139,7 @@ namespace Assets.System.WarModule
                 .OrderBy(p =>
                 {
                     var status = Chessboard.GetStatus(p.Operator);
-                    return (status.Hp) /
-                           status.MaxHp;
+                    return status.Hp / status.MaxHp;
                 })
                 .Take(Targets()).ToArray();
 
