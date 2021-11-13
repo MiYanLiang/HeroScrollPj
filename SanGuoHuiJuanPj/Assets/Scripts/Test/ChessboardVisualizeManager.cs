@@ -326,13 +326,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             Coroutine attackCoroutine = null;
             var rePosActs = new List<Activity>();
+            var callBackUpdate = DOTween.Sequence();
             if (process.Type == ChessProcess.Types.JiBan)
             {
                 var jb = DataTable.JiBan[process.Major];
                 foreach (var map in process.CombatMaps)
                 foreach (var activity in map.Value.Activities)
                 {
-                    UpdateTargetStatus(activity);
+                    callBackUpdate.AppendCallback(() => UpdateTargetStatus(activity));
                     if (activity.IsRePos)
                         rePosActs.Add(activity);
                 }
@@ -346,7 +347,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 }
             }
 
-            yield return OnBasicChessProcess(process).Append(RePosTween(rePosActs)).Play().WaitForCompletion();
+            callBackUpdate.Append(RePosTween(rePosActs));
+            yield return OnBasicChessProcess(process).Append(callBackUpdate).Play().WaitForCompletion();
             if (attackCoroutine != null)
                 //播放
                 yield return attackCoroutine;
