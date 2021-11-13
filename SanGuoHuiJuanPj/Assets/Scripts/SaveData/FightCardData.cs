@@ -99,8 +99,8 @@ using UnityEngine;
                 armedType = m.ArmedType;
                 combatType = m.CombatStyle;
                 element = m.Element;
-                hitpoint = hero.HitPoint;
-                break;
+                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, level);
+                    break;
             }
             case GameCardType.Tower:
             {
@@ -113,7 +113,7 @@ using UnityEngine;
                 armedType = -2;
                 combatType = 1;
                 element = 0;
-                hitpoint = tower.HitPoint;
+                hitpoint = CombatStyle.HitPointFormula(tower.HitPoint, level);
             }
                 break;
             case GameCardType.Trap:
@@ -127,7 +127,9 @@ using UnityEngine;
                 armedType = -3;
                 combatType = -1;
                 element = 0;
-                hitpoint = trap.HitPoint;
+                hitpoint = trap.Id == 11 || trap.Id == 12 //如果是宝箱不会随着等级提升
+                    ? trap.HitPoint
+                    : CombatStyle.HitPointFormula(trap.HitPoint, level);
             }
                 break;
             case GameCardType.Base:
@@ -149,7 +151,7 @@ using UnityEngine;
                 throw new ArgumentOutOfRangeException();
         }
 
-        hitpoint = CombatStyle.HitPointFormula(hitpoint, level);
+        
         Troop = force;
         Speed = speed;
         Damage = CombatStyle.DamageFormula(strength, level);
