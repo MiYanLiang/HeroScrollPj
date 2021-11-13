@@ -819,9 +819,9 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private int PushBackRate => 30;
-        private int CriticalRate => 5;
-        private int RouseRate => 10;
+        private int PushBackRate => 20;
+        private int CriticalRate => 10;
+        private int RouseRate => 20;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -843,8 +843,8 @@ namespace Assets.System.WarModule
                 var target = targets[i];
                 var damage = InstanceGenericDamage();
                 damage.Element = CombatConduct.WaterDmg;
-                var intDif = Math.Max(0, StateIntelligentDiff(target.Operator));
-                var pushBackRate = CountRate(damage, intDif + PushBackRate, CriticalRate, RouseRate);
+                var intDif = StateIntelligentDiff(target.Operator)/5;
+                var pushBackRate = Math.Max(0, CountRate(damage, intDif + PushBackRate, CriticalRate, RouseRate));
                 var backPos = Chessboard.BackPos(target);
                 var rePos = -1;
                 if (backPos != null &&
@@ -894,6 +894,8 @@ namespace Assets.System.WarModule
         }
 
         protected override int BuffRate => 10 + StateIntelligent() / 5;
+        protected override int CriticalAddOn => 10;
+        protected override int RouseAddOn => 20;
         protected override CardState.Cons Buff => CardState.Cons.ShenZhu;
     }
 
@@ -914,8 +916,8 @@ namespace Assets.System.WarModule
         }
 
         protected virtual int BuffRate => 20 + StateIntelligent() / 5;
-        protected virtual int CriticalAddOn => 5;
-        protected virtual int RouseAddOn => 10;
+        protected virtual int CriticalAddOn => 15;
+        protected virtual int RouseAddOn => 30;
         protected virtual CardState.Cons Buff => CardState.Cons.Neizhu;
 
         private CombatConduct BuffToFriendly(CombatConduct conduct) =>
@@ -1340,16 +1342,16 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private int CriticalRate => 5;
-        private int RouseRate => 10;
-        private int FireBurningRate => 20;
+        private int CriticalRate => 10;
+        private int RouseRate => 20;
+        private int FireBurningRate => 30;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
             var damage = InstanceGenericDamage();
             damage.Multiply(DamageRate());
             damage.Element = CombatConduct.FireDmg;
-            damage.Rate = CountRate(damage, 10 + StateIntelligent() / 5, CriticalRate, RouseRate);
+            damage.Rate = CountRate(damage, 20 + StateIntelligent() / 5, CriticalRate, RouseRate);
             Chessboard.DelegateSpriteActivity<YeHuoSprite>(this, Chessboard.GetChessPos(!IsChallenger, 7),
                 Helper.Singular(damage), actId: 0, skill: 1, lasting: 2, value: FireBurningRate);
         }
@@ -1371,7 +1373,9 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int PoisonBasicRate => 10;
+        private int BasicPoisonBasicRate => 10;
+        private int CriticalRate => 5;
+        private int RouseRate => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1389,7 +1393,9 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                damage.Rate = PoisonBasicRate + (Math.Max(0, StateIntelligentDiff(target.Operator)) / 5);
+                var BasicAddDif = BasicPoisonBasicRate + StateIntelligentDiff(target.Operator)/ 10;
+                var posionRate = Math.Max(0, CountRate(damage, BasicAddDif, CriticalRate, RouseRate));
+                damage.Rate = posionRate;
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
             }
         }
@@ -1487,7 +1493,7 @@ namespace Assets.System.WarModule
         protected override int RouseAddOn => 2;
         protected override int ElementRate => 10;
         protected override int BasicElementRate => 5;
-        protected override int CriticalElementAddOn => 2;
+        protected override int CriticalElementAddOn => 3;
         protected override int RouseElementAddOn => 5;
         protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Thunder;
         protected override int ConductElement => CombatConduct.ThunderDmg;
@@ -1546,7 +1552,7 @@ namespace Assets.System.WarModule
         protected override int RouseAddOn => 2;
         protected override int ElementRate => 10;
         protected override int BasicElementRate => 5;
-        protected override int CriticalElementAddOn => 2;
+        protected override int CriticalElementAddOn => 3;
         protected override int RouseElementAddOn => 5;
 
         protected override PosSprite.Kinds SpriteKind => PosSprite.Kinds.Earthquake;
@@ -1613,7 +1619,9 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int BasicKillRate => 5;
+        private int BasicKillRate => 3;
+        private int CriticalAddRate => 3;
+        private int RouseAddRate => 5;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
@@ -1633,7 +1641,8 @@ namespace Assets.System.WarModule
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
-                var killingRate =  BasicKillRate + StateIntelligentDiff(target.Operator) / 10;
+                var killingBasicAddDiffRate =  BasicKillRate + StateIntelligentDiff(target.Operator) / 10;
+                var killingRate = CountRate(baseDamage, killingBasicAddDiffRate, CriticalAddRate, RouseAddRate);
                 if (target.IsAliveHero &&
                     Chessboard.IsRandomPass(killingRate))
                 {
