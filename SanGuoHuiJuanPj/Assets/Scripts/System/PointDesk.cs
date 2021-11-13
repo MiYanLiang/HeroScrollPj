@@ -15,9 +15,17 @@ public class PointDesk : MonoBehaviour
 
     //信息物件
     public GameCardUi SelectedCard;
-    [SerializeField]Text Fullname;
-    [SerializeField]Text Attack;
-    [SerializeField]Text Hp;
+    //[SerializeField]Text Fullname;        //详情信息取消名字显示
+    [SerializeField] Text strength;
+    [SerializeField] Text hitpoint;
+    [SerializeField] Text intelligent;
+    [SerializeField] Text speed;
+    [SerializeField] Text dodgeRatio;
+    [SerializeField] Text armorResist;
+    [SerializeField] Text magicResist;
+    [SerializeField] Text criticalRatio;
+    [SerializeField] Text rougeRatio;
+
     [SerializeField]Text Info;
     [SerializeField]Button CardMergeBtn;
     [SerializeField]Image MergeImg;
@@ -47,9 +55,10 @@ public class PointDesk : MonoBehaviour
                 {
                     SelectedCard.gameObject,
                     EnlistText.gameObject,
-                    Fullname.gameObject,
-                    Attack.gameObject,
-                    Hp.gameObject,
+                    //详情信息取消名字显示
+                    //Fullname.gameObject,
+                    strength.gameObject,
+                    hitpoint.gameObject,
                     Info.gameObject,
                     CardMergeBtn.gameObject,
                     CardSellBtn.gameObject,
@@ -74,15 +83,16 @@ public class PointDesk : MonoBehaviour
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
         var info = card.GetInfo();
-        Fullname.text = info.Name;
-        Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
-        Attack.text = info.Type == GameCardType.Hero
+        //详情信息取消名字显示
+        //Fullname.text = info.Name;
+        //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
+        strength.text = info.Type == GameCardType.Hero
             ? card.level > 0
                 ?
                 string.Format(DataTable.GetStringText(32), info.GetDamage(card.Level))
                 : string.Empty
             : string.Empty;
-        Hp.text = info.Type == GameCardType.Hero
+        hitpoint.text = info.Type == GameCardType.Hero
             ? card.level > 0 ? string.Format(DataTable.GetStringText(33), info.GetHp(card.Level)) : string.Empty
             : string.Empty;
         Info.text = info.Intro;

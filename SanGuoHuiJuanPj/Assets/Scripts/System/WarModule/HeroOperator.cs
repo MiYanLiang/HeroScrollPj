@@ -748,7 +748,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 55: return 3f;
+                case 55: return 4f;
                 case 196: return 5f;
                 case 197: return 7f;
                 default: throw MilitaryNotValidError(this);
@@ -1342,7 +1342,7 @@ namespace Assets.System.WarModule
         }
         private int CriticalRate => 5;
         private int RouseRate => 10;
-        private int FireBurningRate => 10;
+        private int FireBurningRate => 20;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1371,7 +1371,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int PoisonBasicRate => 5;
+        private int PoisonBasicRate => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1850,7 +1850,7 @@ namespace Assets.System.WarModule
                 .OrderBy(p => p.random).Take(Targets()).ToArray();
             if (targets.Length == 0) return;
             var perform = InstanceGenericDamage();
-            perform.Multiply(0.5f);
+            perform.Multiply(0.6f);
             for (var i = 0; i < targets.Length; i++)
             {
                 var target = targets[i].chessPos;
@@ -1893,7 +1893,7 @@ namespace Assets.System.WarModule
                 .OrderBy(p => p.random).Take(Targets()).ToArray();
             if (targets.Length == 0) return;
             var perform = InstanceGenericDamage();
-            perform.Multiply(0.3f);
+            perform.Multiply(0.5f);
 
             for (var i = 0; i < targets.Length; i++)
             {
@@ -2207,9 +2207,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 10: return 1.5f;
-                case 85: return 2f;
-                case 86: return 3f;
+                case 10: return 2.5f;
+                case 85: return 3f;
+                case 86: return 4f;
                 default: throw MilitaryNotValidError(this);
             }
         }
