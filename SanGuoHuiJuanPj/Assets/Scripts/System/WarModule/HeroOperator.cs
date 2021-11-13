@@ -1426,34 +1426,36 @@ namespace Assets.System.WarModule
         protected override void MilitaryPerforms(int skill = 1)
         {
             var murderous = Chessboard.GetCondition(this, CardState.Cons.Murderous);
-            var conduct = InstanceGenericDamage();
-            var intelligent = StateIntelligent();
-            conduct.Rate = BasicElementRate + intelligent / ElementRate;
-            conduct.Element = ConductElement;
-            var addOn = 0;
-            switch (Damage.GetType(conduct))
-            {
-                case Damage.Types.General:
-                    break;
-                case Damage.Types.Critical:
-                    addOn = CriticalAddOn;
-                    conduct.Rate += CriticalElementAddOn;
-                    break;
-                case Damage.Types.Rouse:
-                    addOn = RouseAddOn;
-                    conduct.Rate += RouseElementAddOn;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
             var range = TargetRange();
             var isUlti = murderous >= Ultimate;//是不是大招
             var attackTimes = isUlti ? UltiAttackTimes() : 1;
             if (isUlti)
                 OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
                     CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Murderous, value: -Ultimate));
+
             for (var j = 0; j < attackTimes; j++)
             {
+                var conduct = InstanceGenericDamage();
+                var intelligent = StateIntelligent();
+                conduct.Rate = BasicElementRate + intelligent / ElementRate;
+                conduct.Element = ConductElement;
+                var addOn = 0;
+                switch (Damage.GetType(conduct))
+                {
+                    case Damage.Types.General:
+                        break;
+                    case Damage.Types.Critical:
+                        addOn = CriticalAddOn;
+                        conduct.Rate += CriticalElementAddOn;
+                        break;
+                    case Damage.Types.Rouse:
+                        addOn = RouseAddOn;
+                        conduct.Rate += RouseElementAddOn;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
                 var elements = Chessboard.Randomize(range[0], range[1]) + addOn;
                 var targetPoses = Chessboard.GetRivals(this, _ => true).Select(pos => new
                         { Obj = pos, Random = Chessboard.Randomize(4) }).OrderByDescending(c => c.Random).Take(elements)
