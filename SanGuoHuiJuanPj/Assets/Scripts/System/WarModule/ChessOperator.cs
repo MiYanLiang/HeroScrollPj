@@ -221,6 +221,11 @@ namespace Assets.System.WarModule
         {
             Chessboard.PosOperator(this, pos);
         }
+        /// <summary>
+        /// 被击退后触发
+        /// </summary>
+        /// <param name="pos"></param>
+        public virtual void OnRePos(int pos){}
 
         protected virtual void OnCounter(Activity activity, IChessOperator offender){}
 

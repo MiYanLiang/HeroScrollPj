@@ -389,11 +389,41 @@ namespace Assets.System.WarModule
             return 0;
         }
     }
-    //链环精灵管理伤害转化，分享伤害由buff管理
+    /// <summary>
+    /// 链环精灵管理精灵实例和伤害转化，分享伤害由buff<see cref="ChainedBuff"/>管理
+    /// </summary>
     public class ChainSprite : RelationSprite
     {
-        private const int ChainedId = (int)Kinds.Chained;
-        public override int TypeId => ChainedId;
+        public static IChessPos[] GetChained(ChessboardOperator chessboard, ChessOperator op,
+            Func<IChessOperator, bool> chainFunc) =>
+            chessboard.GetChainedPos(op, p => p.IsAliveHero && chainFunc(p.Operator)).ToArray();
+
+        public static void UpdateChain(ChessboardOperator chessboard, IChessPos[] chained)
+        {
+            foreach (var pos in chained)
+            {
+                //先清除不在本棋格的连环精灵
+                foreach (var remoteSprite in chessboard.ChessSprites.Where(s =>
+                             s.Lasting == pos.Operator.InstanceId &&
+                             s.GetKind() == ThisKind &&
+                             pos.IsChallenger == s.IsChallenger &&
+                             pos.Pos != s.Pos).ToList())
+                    RemoveSprite(chessboard, remoteSprite);
+
+                var localSprite = chessboard.GetSpritesInChessPos(pos.Pos, pos.IsChallenger)
+                    .FirstOrDefault(s => s.GetKind() == ThisKind && s.Lasting == pos.Operator.InstanceId);
+                if (localSprite == null)
+                    AddChain(pos.Operator);
+            }
+
+            void AddChain(IChessOperator op) => chessboard.InstanceSprite<ChainSprite>(chessboard.GetChessPos(op), lasting: op.InstanceId, value: 1, actId: -1);
+        }
+
+        public static void RemoveSprite(ChessboardOperator chessboard, PosSprite sprite) =>
+            chessboard.SpriteRemoveActivity(sprite, ChessProcess.Types.Chessman);
+
+        private const Kinds ThisKind = Kinds.Chained;
+        public override int TypeId { get; } = (int)ThisKind;
 
         protected override Func<IChessOperator, bool> OpCondition => op=> op.InstanceId == Lasting;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op)
@@ -406,8 +436,9 @@ namespace Assets.System.WarModule
             return Grid.GetChessPos(Pos, IsChallenger).Operator
                 .OnSpritesValueConvert(chainedList.SelectMany(p => p.Terrain.Sprites).ToArray(), con);
         }
+
         public static Func<IChessPos, bool> ChainedFilter =>
-            p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == ChainedId);
+            p => p.IsAliveHero && p.Terrain.Sprites.Any(s => s.TypeId == (int)ThisKind);
 
     }
 

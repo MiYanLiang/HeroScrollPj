@@ -1188,8 +1188,9 @@ namespace Assets.System.WarModule
                 throw new InvalidOperationException(
                     $"Pos({pos}) has [{replace.CardId}({replace.CardType})] exist!");
             var chessPos = GetChessPos(op);
-            if (!IsInit) return;
-            op.OnPostingTrigger(chessPos);
+            if (RoundState == ProcessCondition.PlaceActions)
+                op.OnPostingTrigger(chessPos);
+            else op.OnRePos(pos);
             UpdateAllTerrains();
         }
 
