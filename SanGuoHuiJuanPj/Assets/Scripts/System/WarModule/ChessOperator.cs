@@ -83,9 +83,17 @@ namespace Assets.System.WarModule
         {
             //处理行动
             var result = ProcessActivityResult(activity, offender);
-            if (result.Type == ActivityResult.Types.Suffer && activity.RePos >= 0)
+
+            if (activity.RePos >= 0 &&
+                !Chessboard.GetChessPos(IsChallenger, activity.RePos).IsPostedAlive &&
+                (result.Type == ActivityResult.Types.Suffer ||
+                 result.Type == ActivityResult.Types.EaseShield ||
+                 result.Type == ActivityResult.Types.Heal ||
+                 result.Type == ActivityResult.Types.Assist ||
+                 result.Type == ActivityResult.Types.Shield))
                 SetPos(activity.RePos);
             else activity.RePos = -1;
+
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
             if (offender != null &&
                 Chessboard.IsMajorTarget(this) &&
@@ -213,6 +221,11 @@ namespace Assets.System.WarModule
         {
             Chessboard.PosOperator(this, pos);
         }
+        /// <summary>
+        /// 被击退后触发
+        /// </summary>
+        /// <param name="pos"></param>
+        public virtual void OnRePos(int pos){}
 
         protected virtual void OnCounter(Activity activity, IChessOperator offender){}
 
@@ -245,6 +258,7 @@ namespace Assets.System.WarModule
         /// <param name="offender"></param>
         /// <param name="intention"></param>
         /// <param name="conduct"></param>
+        /// <param name="result"></param>
         /// <param name="chessboardInvocation"></param>
         private void UpdateConduct(ChessOperator offender,Activity.Intentions intention,CombatConduct conduct, ActivityResult result, bool chessboardInvocation = false)
         {

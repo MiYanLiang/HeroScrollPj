@@ -228,6 +228,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         
         //回合开始演示
         yield return OnRoundBeginAnimation(round.PreAction, jbs);
+        yield return FilterDeathChessman();
         //执行回合每一个棋子活动
         for (int i = 0; i < round.Processes.Count; i++)
         {
@@ -269,7 +270,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     }
     private IEnumerator FilterDeathChessman()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         //更新棋位和棋子状态(提取死亡棋子)
         foreach (var tmp in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
@@ -324,12 +325,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var process in action.ChessProcesses)
         {
             Coroutine attackCoroutine = null;
+            var rePosActs = new List<Activity>();
             if (process.Type == ChessProcess.Types.JiBan)
             {
                 var jb = DataTable.JiBan[process.Major];
                 foreach (var map in process.CombatMaps)
                 foreach (var activity in map.Value.Activities)
+                {
                     UpdateTargetStatus(activity);
+                    if (activity.IsRePos)
+                        rePosActs.Add(activity);
+                }
                 var isChallenger = process.Scope == 0;
                 PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
                 yield return JiBanManager.JiBanDisplay(jb.Id, isChallenger);
@@ -340,7 +346,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 }
             }
 
-            yield return OnBasicChessProcess(process).Play().WaitForCompletion();
+            yield return OnBasicChessProcess(process).Append(RePosTween(rePosActs)).Play().WaitForCompletion();
             if (attackCoroutine != null)
                 //播放
                 yield return attackCoroutine;
@@ -558,15 +564,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             });
 
             //***演示开始***
-            var rePosTween = DOTween.Sequence().Pause();
-            foreach (var activity in rePosActs)
-            {
-                var target = TryGetCardMap(activity.To);
-                //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
-                rePosTween.Join(CardAnimator.instance
-                    .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
-                    .OnComplete(() => Chessboard.PlaceCard(activity.RePos, target)));
-            }
+            var rePosTween = RePosTween(rePosActs).Pause();
 
             //施展方如果近战，前摇(后退，前冲)
             //如果有侵略行为才有动画
@@ -686,6 +684,28 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 .WaitForCompletion();
             Chessboard.PlaceCard(majorCard.PosIndex, majorCard);
         }
+    }
+
+    private Tween RePosTween(List<Activity> list)
+    {
+        var tween = DOTween.Sequence();
+        foreach (var activity in list)
+        {
+            var target = TryGetCardMap(activity.To);
+            //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
+            tween.Join(CardAnimator.instance
+                .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])
+                .OnComplete(() =>
+                {
+                    if (CardMap.Any(c =>
+                            c.Value.Pos == activity.RePos && c.Value.isPlayerCard == target.isPlayerCard &&
+                            c.Value != target))
+                        XDebug.LogError<ChessboardVisualizeManager>(
+                            $"目标单位棋格[{target.Pos}]移位[{activity.RePos}]异常！请检查是否该棋格上有其它单位。");
+                    Chessboard.PlaceCard(activity.RePos, target);
+                }));
+        }
+        return tween;
     }
 
     private void SetAudioSection(AudioSection section, Activity activity)

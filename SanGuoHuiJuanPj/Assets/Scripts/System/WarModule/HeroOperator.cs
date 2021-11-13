@@ -434,24 +434,26 @@ namespace Assets.System.WarModule
             return rate * Math.Min(sprites.Length, ChainMax);
         }
 
-        private IChessPos[] GetChained() => Chessboard
-            .GetChainedPos(this, p => p.IsAliveHero && IsChainable(p.Operator)).ToArray();
+        private IChessPos[] GetChained() => ChainSprite.GetChained(Chessboard, this, IsChainable).ToArray();
 
         public override void OnRoundStart() => UpdateChain();
+        public override void OnRePos(int pos) => UpdateChain();
 
         private void UpdateChain()
         {
             var chainedList = GetChained();
             var chainSprite = Chessboard.GetSpritesInChessPos(this)
-                .FirstOrDefault(s => s.GetKind() == PosSprite.Kinds.Chained);
-            if (chainedList.Length > 1 && chainSprite == null)
+                .FirstOrDefault(s => s.GetKind() == PosSprite.Kinds.Chained && s.Lasting == InstanceId);
+
+            if (chainSprite != null &&
+                chainedList.Length < 2)
             {
-                Chessboard.InstanceSprite<ChainSprite>(Chessboard.GetChessPos(this), InstanceId, value: 1, actId: -1);
+                ChainSprite.RemoveSprite(Chessboard, chainSprite);
                 return;
             }
 
-            if (chainSprite != null && chainedList.Length < 2)
-                Chessboard.SpriteRemoveActivity(chainSprite, ChessProcess.Types.Chessman);
+            if (chainedList.Length < 2 || chainSprite != null) return;
+            ChainSprite.UpdateChain(Chessboard, chainedList);
         }
 
         public override void OnSomebodyDie(ChessOperator death)
@@ -1398,6 +1400,7 @@ namespace Assets.System.WarModule
                 damage.Rate = posionRate;
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
             }
+            
         }
     }
 
