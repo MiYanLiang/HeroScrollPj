@@ -59,6 +59,13 @@ public class PointDesk : MonoBehaviour
                     //Fullname.gameObject,
                     strength.gameObject,
                     hitpoint.gameObject,
+                    intelligent.gameObject,
+                    speed.gameObject,
+                    dodgeRatio.gameObject,
+                    armorResist.gameObject,
+                    magicResist.gameObject,
+                    criticalRatio.gameObject,
+                    rougeRatio.gameObject,
                     Info.gameObject,
                     CardMergeBtn.gameObject,
                     CardSellBtn.gameObject,
@@ -95,6 +102,7 @@ public class PointDesk : MonoBehaviour
         hitpoint.text = info.Type == GameCardType.Hero
             ? card.level > 0 ? string.Format(DataTable.GetStringText(33), info.GetHp(card.Level)) : string.Empty
             : string.Empty;
+        //intelligent.text = info.Type == GameCardType.Hero
         Info.text = info.Intro;
         var isCardEnlistAble = card.IsEnlistAble();
         CardCapability.gameObject.SetActive(isCardEnlistAble);
