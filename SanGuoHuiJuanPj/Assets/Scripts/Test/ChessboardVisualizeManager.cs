@@ -15,20 +15,21 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public WarGameCardUi PrefabUi;
     public WarGameCardUi HomePrefab;
     public NewWarManager NewWar;
-    public Chessboard Chessboard;
-    public GameObject RouseEffectObj;
-    public Image ShadyImage;
-    [SerializeField] private JiBanAnimationManager JiBanManager;
+    private Chessboard Chessboard { get; set; }
+    private Animator RouseEffectObj => Chessboard.RouseAnim;
+    private Image ShadyImage => Chessboard.ShadyImage;
+    private JiBanAnimationManager JiBanManager { get; set; }
 
     [SerializeField] private AudioSource audioSource;
 
-    [SerializeField] private GameObject fireUIObj;
+    private Animator fireUIObj => Chessboard.WinFire;
 
-    [SerializeField] private GameObject boomUIObj;
-
-    [SerializeField] private GameObject gongKeUIObj;
-    [SerializeField] private Toggle autoRoundToggle;
-
+    private Animator boomUIObj => Chessboard.WinExplode;
+    private Animator gongKeUIObj => Chessboard.WinText;
+    private Toggle AutoRoundToggle => Chessboard == null ? null : Chessboard.AutoRoundToggle;
+    private float autoRoundTimer;
+    [SerializeField] private float AutoRoundSecs = 1.5f;
+    private Slider AutoRoundSlider => Chessboard.AutoRoundSlider;
     protected FightCardData TryGetCardMap(int id)
     {
 #if UNITY_EDITOR
@@ -82,11 +83,13 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return ShadyImage.DOFade(alpha, 1f);
     }
 
-    public void Init()
+    public void Init(Chessboard chessboard,JiBanAnimationManager jiBanAnimationManager)
     {
+        Chessboard = chessboard;
+        JiBanManager = jiBanAnimationManager;
         Chessboard.Init();
         JiBanManager.Init();
-        NewWar.Init();
+        NewWar.Init(chessboard);
         NewWar.StartButton.onClick.AddListener(InvokeRound);
     }
 
@@ -149,7 +152,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     private void RemoveUi(WarGameCardUi obj)
     {
-        obj.gameObject.SetActive(false);
+        obj.gameObject.gameObject.SetActive(false);
         obj.transform.SetParent(Chessboard.transform);
         GarbageUi.Add(obj);
     }
@@ -184,19 +187,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
             gongKeUIObj.transform.position = Chessboard.GetChessPos(7, false).transform.position;
         yield return new WaitForSeconds(0.5f);
         PlayAudio(91);
-        boomUIObj.SetActive(true);
+        boomUIObj.gameObject.SetActive(true);
         yield return new WaitForSeconds(1.5f);
-        boomUIObj.SetActive(false);
+        boomUIObj.gameObject.SetActive(false);
         //欢呼声
         PlayAudio(90);
 
         //火焰
-        fireUIObj.SetActive(true);
+        fireUIObj.gameObject.SetActive(true);
         yield return new WaitForSeconds(0.3f);
-        gongKeUIObj.SetActive(true);
+        gongKeUIObj.gameObject.SetActive(true);
         yield return new WaitForSeconds(0.7f);
-        fireUIObj.SetActive(false);
-        gongKeUIObj.SetActive(false);
+        fireUIObj.gameObject.SetActive(false);
+        gongKeUIObj.gameObject.SetActive(false);
         yield return new WaitForSeconds(0.1f);
 
         Time.timeScale = 1;
@@ -257,7 +260,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //ClearStates();
             if (chess.IsChallengerWin)
                 yield return ChallengerWinAnimation();
-            RouseEffectObj.gameObject.SetActive(false);
+            RouseEffectObj.gameObject.gameObject.SetActive(false);
             IsGameOver = true;
             IsBusy = false;
             yield break;
@@ -885,9 +888,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private Tween FullScreenRouse() =>
         DOTween.Sequence().AppendCallback(() =>
         {
-            if (RouseEffectObj.activeSelf)
-                RouseEffectObj.SetActive(false);
-            RouseEffectObj.SetActive(true);
+            if (RouseEffectObj.gameObject.activeSelf)
+                RouseEffectObj.gameObject.SetActive(false);
+            RouseEffectObj.gameObject.SetActive(true);
             PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
         }).AppendInterval(1.5f);
 
@@ -929,12 +932,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
     }
 
-    private float autoRoundTimer;
-    [SerializeField] private float AutoRoundSecs = 1.5f;
-    [SerializeField] private Slider AutoRoundSlider;
     private void Update()
     {
-        if (!IsGameOver && !IsBusy && !IsFirstRound && autoRoundToggle.isOn)
+        if (Chessboard == null) return;
+        if (!IsGameOver && !IsBusy && !IsFirstRound && AutoRoundToggle != null && AutoRoundToggle.isOn)
         {
             autoRoundTimer += Time.deltaTime;
             if (autoRoundTimer >= AutoRoundSecs)
