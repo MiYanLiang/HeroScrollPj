@@ -378,7 +378,6 @@ namespace Assets.System.WarModule
                 {
                     list.Add(id);
                 }
-
                 return list;
             }
         }
@@ -407,7 +406,7 @@ namespace Assets.System.WarModule
             //棋盘没用字典分类活动顺序，所以直接嵌入上一个活动actId-1
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill, rePos);
             activity.TargetStatus = GetFullCondition(target);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, -1);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, actId: -1);
             ProcessActivityResult(activity);
         }
 
@@ -419,7 +418,7 @@ namespace Assets.System.WarModule
             var activity = InstanceActivity(fromChallenger,null ,target.InstanceId, intent, conducts, skill: 0, rePos);
 
             activity.TargetStatus = GetFullCondition(target);
-            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, 0);
+            AddToCurrentProcess(ChessProcess.Types.Chessboard, fromChallenger ? -1 : -2, activity, actId: 0);
             ProcessActivityResult(activity);
         }
 

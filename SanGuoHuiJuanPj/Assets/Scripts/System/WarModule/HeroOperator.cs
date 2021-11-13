@@ -1392,6 +1392,7 @@ namespace Assets.System.WarModule
                 damage.Rate = PoisonBasicRate + (Math.Max(0, StateIntelligentDiff(target.Operator)) / 5);
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
             }
+            
         }
     }
 
