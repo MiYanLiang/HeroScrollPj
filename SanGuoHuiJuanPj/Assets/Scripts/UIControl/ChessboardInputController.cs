@@ -6,18 +6,20 @@ using UnityEngine.EventSystems;
 
 public class ChessboardInputController : DragInputControlController<FightCardData>
 {
-    private bool IsDragAble(FightCardData card) => !WarsUIManager.instance.isDragDisable && !card.IsLock;
+    private WarBoardUi WarBoardUi { get; set; }
+    public void Init(WarBoardUi warBoard) => WarBoardUi = warBoard;
+    private bool IsDragAble(FightCardData card) => !WarBoardUi.IsDragDisable && !card.IsLock;
     private ChessPos lastPos;
 
-    public override void PointerDown(BaseEventData data, FightCardData card) => WarsUIManager.instance.DisplayCardInfo(card, true);
+    public override void PointerDown(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
 
-    public override void PointerUp(BaseEventData data, FightCardData card) => WarsUIManager.instance.DisplayCardInfo(card, true);
+    public override void PointerUp(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
 
     public override void StartDrag(BaseEventData eventData, FightCardData card)
     {
         if(!IsDragAble(card))return;
         lastPos = GetChessPos(eventData as PointerEventData);
-        card.cardObj.transform.SetParent(WarsUIManager.instance.Chessboard.transform);
+        card.cardObj.transform.SetParent(WarBoardUi.Chessboard.transform);
     }
 
     public override void OnDrag(BaseEventData eventData, FightCardData card)
@@ -48,7 +50,7 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
             return;
         }
 
-        var cards = WarsUIManager.instance.PlayerScope.Where(c => c.Pos == pos.Pos).ToArray();
+        var cards = WarBoardUi.PlayerScope.Where(c => c.Pos == pos.Pos).ToArray();
         if (cards.Any(c => !c.Status.IsDeath && c.IsLock))
         {
             ResetPos(card);
@@ -58,7 +60,7 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
         var replaceCard = cards.FirstOrDefault(c => !c.Status.IsDeath);
         if (replaceCard == null)
         {
-            if (WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, lastPos == null))
+            if (WarBoardUi.IsPlayerAvailableToPlace(pos.Pos, lastPos == null))
             {
                 SetPos(pos, card);
                 return;
@@ -81,7 +83,7 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
     private void SetPos(ChessPos pos,FightCardData card)
     {
         card.SetPos(pos == null ? -1 : pos.Pos);
-        WarsUIManager.instance.PlaceCard(card);
+        WarBoardUi.PlaceCard(card);
     }
 
     private ChessPos GetChessPos(PointerEventData pointer)

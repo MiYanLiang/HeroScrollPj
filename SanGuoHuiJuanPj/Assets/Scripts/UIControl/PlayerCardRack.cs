@@ -11,11 +11,17 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
     [SerializeField] private Chessboard Chessboard;
     public int LastPos { get; private set; }
     private bool IsDragDelegated { get; set; }
+    private WarBoardUi WarBoardUi { get; set; }
 
-    public override void PointerDown(BaseEventData data, FightCardData card) => WarsUIManager.instance.DisplayCardInfo(card, true);
+    public void Init(WarBoardUi warBoardUi)
+    {
+        WarBoardUi = warBoardUi;
+    }
+
+    public override void PointerDown(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
 
     public override void PointerUp(BaseEventData data, FightCardData card) =>
-        WarsUIManager.instance.DisplayCardInfo(card, true);
+        WarBoardUi.DisplayCardInfo(card, true);
 
     public override void StartDrag(BaseEventData data, FightCardData card)
     {
@@ -38,7 +44,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
             ScrollRect.OnBeginDrag(pointer);
             return;
         }
-        if (WarsUIManager.instance.isDragDisable) return;
+        if (WarBoardUi.IsDragDisable) return;
 
         IsDragDelegated = false;
 
@@ -49,14 +55,14 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     public override void OnDrag(BaseEventData data, FightCardData card)
     {
-        WarsUIManager.instance.DisplayCardInfo(card, false);
+        WarBoardUi.DisplayCardInfo(card, false);
         if (IsDragDelegated)
         {
             var eventData = data as PointerEventData;
             ScrollRect.OnDrag(eventData);
             return;
         }
-        if (WarsUIManager.instance.isDragDisable) return;
+        if (WarBoardUi.IsDragDisable) return;
 
         card.cardObj.transform.position = Input.mousePosition;
     }
@@ -74,12 +80,12 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
             return;
         }
 
-        if (WarsUIManager.instance.isDragDisable)
+        if (WarBoardUi.IsDragDisable)
         {
             ResetPos(card);
             return;
         }
-        if (!WarsUIManager.instance.isDragDisable)
+        if (!WarBoardUi.IsDragDisable)
         {
             var pos = GetRayCastResults(pointer).FirstOrDefault(r => r.gameObject.CompareTag(GameSystem.CardPos))
                 .gameObject?.GetComponent<ChessPos>();
@@ -126,9 +132,9 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     private void PlaceOnInvocation(ChessPos pos, FightCardData card)
     {
-        var playerScope = WarsUIManager.instance.PlayerScope;
+        var playerScope = WarBoardUi.PlayerScope;
         var isExchange = playerScope.Any(c => c.Pos == pos.Pos);
-        if (!WarsUIManager.instance.IsPlayerAvailableToPlace(pos.Pos, !isExchange))
+        if (!WarBoardUi.IsPlayerAvailableToPlace(pos.Pos, !isExchange))
         {
             ResetPos(card);
             return;
@@ -138,9 +144,9 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
         if (replaceCard != null)
         {
             replaceCard.SetPos(-1);
-            WarsUIManager.instance.PlaceCard(replaceCard);
+            WarBoardUi.PlaceCard(replaceCard);
         }
         card.SetPos(pos.Pos);
-        WarsUIManager.instance.PlaceCard(card);
+        WarBoardUi.PlaceCard(card);
     }
 }

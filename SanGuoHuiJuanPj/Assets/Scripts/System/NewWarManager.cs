@@ -12,9 +12,9 @@ public class NewWarManager : MonoBehaviour, ILogger
     private const string ButtonTrigger = "isShow";
     #region UnityFields
 
-    public Button StartButton;
-    public ChessPos[] PlayerPoses;
-    public ChessPos[] EnemyPoses;
+    public Button StartButton { get; private set; }
+    public ChessPos[] PlayerPoses { get; set; }
+    public ChessPos[] EnemyPoses { get; set; }
     public ChessCard[] Enemy;
     public List<ChessCard> Player;
     #endregion
@@ -23,8 +23,11 @@ public class NewWarManager : MonoBehaviour, ILogger
     public ChessOperatorManager<FightCardData> ChessOperator;
     public Dictionary<int, FightCardData> CardData { get; } = new Dictionary<int, FightCardData>();
 
-    public void Init()
+    public void Init(Chessboard chessboard)
     {
+        StartButton = chessboard.StartButton;
+        PlayerPoses = chessboard.PlayerScope;
+        EnemyPoses = chessboard.EnemyScope;
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
     }
     /// <summary>

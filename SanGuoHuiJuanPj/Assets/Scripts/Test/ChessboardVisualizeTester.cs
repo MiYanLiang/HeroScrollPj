@@ -11,6 +11,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
     [SerializeField] private EffectsPoolingControl EffectsPooling;
     [SerializeField] private PlayerDataForGame PlayerData;
     [SerializeField] private GameResources gameResources;
+    [SerializeField] private WarBoardUi warBoard;
 
     void Start()
     {
@@ -20,7 +21,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         gameResources.Init();
         EffectsPooling.Init();
 
-        Init();
+        Init(warBoard.Chessboard,warBoard.JiBanManager);
         NewWar.NewGame();
         NewWar.ConfirmEnemy();
         NewWar.ConfirmPlayer();

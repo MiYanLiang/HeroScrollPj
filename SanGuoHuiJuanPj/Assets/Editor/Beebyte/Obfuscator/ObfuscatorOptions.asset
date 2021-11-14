@@ -28,7 +28,7 @@ MonoBehaviour:
   addFakeCode: 1
   minFalseMethodsPerClass: 10
   maxFalseMethodsPerClass: 150
-  unicodeStartInDecimal: 388
+  unicodeStartInDecimal: 426
   numberOfCharacters: 2
   createNameTranslationFile: 0
   nameTranslationFile: nameTranslation.txt
@@ -205,7 +205,7 @@ MonoBehaviour:
   includeProtectedFields: 1
   includeProtectedProperties: 0
   includeProtectedEvents: 0
-  enabled: 0
+  enabled: 1
   onlyObfuscatedSpecifiedNamespaces: 0
   skipNamespacesRecursively: 1
   obfuscateSpecifiedNamespacesRecursively: 1

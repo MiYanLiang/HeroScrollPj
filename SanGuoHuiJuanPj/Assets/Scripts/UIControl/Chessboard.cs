@@ -4,14 +4,24 @@ using System.Linq;
 using Assets.System.WarModule;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-using Image = UnityEngine.UI.Image;
 
 public class Chessboard : MonoBehaviour
 {
     public Image[] GridImages;
-    [SerializeField] private ChessPos[] PlayerScope;
-    [SerializeField] private ChessPos[] EnemyScope;
+    [SerializeField] private Button SpeedBtn;
+    [SerializeField] private Text SpeedText;
+    public Image Background;
+    public ChessPos[] PlayerScope;
+    public ChessPos[] EnemyScope;
+    public Button StartButton;
+    public Transform EffectTransform;
+    public Animator RouseAnim;
+    public Image ShadyImage;
+    public Animator WinFire;
+    public Animator WinExplode;
+    public Animator WinText;
+    public Toggle AutoRoundToggle;
+    public Slider AutoRoundSlider;
 
     public IReadOnlyDictionary<int, FightCardData> Data => data;
 
