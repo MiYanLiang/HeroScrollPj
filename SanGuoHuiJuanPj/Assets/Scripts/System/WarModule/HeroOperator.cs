@@ -2236,7 +2236,10 @@ namespace Assets.System.WarModule
             //当自爆的时候
             var damage = StateDamage() * DamageRate();
             var target = Chessboard.GetLaneTarget(this);
-            var array = Chessboard.GetRivals(this)
+            var array = Chessboard.GetRivals(this,
+                    p => p != target &&
+                         p.IsPostedAlive &&
+                         p.Operator.CardType == GameCardType.Base)
                 .ToArray();
 
             OnPerformActivity(target, Activity.Intentions.Inevitable, actId: 0, skill: 2,
