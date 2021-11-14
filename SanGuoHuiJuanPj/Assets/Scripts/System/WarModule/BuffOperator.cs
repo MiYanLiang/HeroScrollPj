@@ -222,6 +222,7 @@ namespace Assets.System.WarModule
     public class PoisonBuff : RoundEndDepleteSelfBuff
     {
         public override CardState.Cons Buff => CardState.Cons.Poison;
+        private int PoisonRate => 20;
         public PoisonBuff(ChessboardOperator chessboard) : base(chessboard)
         {
         }
@@ -240,7 +241,7 @@ namespace Assets.System.WarModule
         public override void RoundEnd(ChessOperator op)
         {
             if (!IsBuffActive(op)) return;
-            var damage = Chessboard.GetStatus(op).MaxHp * DataTable.GetGameValue(121) * 0.01f;
+            var damage = Chessboard.GetStatus(op).MaxHp * PoisonRate * 0.01f;
             SelfConduct(op, Activity.Intentions.Inevitable, CombatConduct.InstanceElementDamage((int)Buff, damage, CombatConduct.PoisonDmg));
             SelfConduct(op, Activity.Intentions.ChessboardBuffing, DepleteBuff());
         }

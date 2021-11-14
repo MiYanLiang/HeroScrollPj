@@ -15,6 +15,10 @@ namespace Assets.System.WarModule
         public const int HeroDodgeLimit = 75;
         public const int HeroArmorLimit = 100;
         public ChessGrid Grid { get; }
+        public abstract IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
+        public abstract IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
+        public abstract IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
+        public abstract IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
         private enum ProcessCondition
         {
             PlaceActions,
@@ -1110,27 +1114,6 @@ namespace Assets.System.WarModule
         #endregion
 
         #region Ratio Methods
-
-        /// <summary>
-        /// 从数据表调出触发率，并给出随机判断
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public bool RandomFromConfigTable(int id) => IsRandomPass(DataTable.GetGameValue(id));
-
-        /// <summary>
-        /// 调出数值的百分比转化成点数
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public float ConfigPercentage(int id) => ConfigValue(id) * 0.01f;
-        /// <summary>
-        /// 调出数值表的值
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public float ConfigValue(int id) => DataTable.GetGameValue(id);
-
         /// <summary>
         /// Randomize
         /// </summary>
@@ -1152,7 +1135,7 @@ namespace Assets.System.WarModule
         {
             var ratio = 0;
             if (op.CardType == GameCardType.Hero)
-                ratio += DataTable.Hero[op.CardId].RouseRatio;
+                ratio += HeroTable[op.CardId].RouseRatio;
             foreach (var bo in GetBuffOperator(b=>b.IsRouseRatioTrigger)) 
                 ratio += bo.OnRouseRatioAddOn(op);
             return IsRandomPass(ratio);
@@ -1162,7 +1145,7 @@ namespace Assets.System.WarModule
         {
             var ratio = 0;
             if (op.CardType == GameCardType.Hero)
-                ratio += DataTable.Hero[op.CardId].CriticalRatio;
+                ratio += HeroTable[op.CardId].CriticalRatio;
             foreach (var bo in GetBuffOperator(b => b.IsCriticalRatioTrigger))
                 ratio += bo.OnCriticalRatioAddOn(op);
             return IsRandomPass(ratio);
@@ -1309,6 +1292,7 @@ namespace Assets.System.WarModule
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 
         private List<JiBanController> ActivatedJiBans { get; } = new List<JiBanController>();
+
         private class JiBanController
         {
             public bool IsChallenger;

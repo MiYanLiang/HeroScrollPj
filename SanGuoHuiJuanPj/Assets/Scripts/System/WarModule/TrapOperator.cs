@@ -53,6 +53,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class JuMaOperator : ReflexiveTrapOperator
     {
+        private float DamageRate => 1.2f;
         /// <summary>
         /// 当基本反击条件已达到，所执行的反击方法
         /// </summary>
@@ -62,7 +63,7 @@ namespace Assets.System.WarModule
         protected override void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
             var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
-            var reflectDamage = conduct.Total * Chessboard.ConfigPercentage(8);
+            var reflectDamage = conduct.Total * DamageRate;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
                 Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: -1, skill: 1);
         }
@@ -154,45 +155,56 @@ namespace Assets.System.WarModule
     /// </summary>
     public class BaZhenTuOperator : ReflexiveTrapOperator
     {
+        private int StunnedRate => 60;
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Stunned, value: 1, rate: DataTable.GetGameValue(133)));
+            CardState.Cons.Stunned, value: 1, rate: StunnedRate));
     }
     /// <summary>
     /// 金锁阵
     /// </summary>
     public class JinSuoZhenOperator : ReflexiveTrapOperator
     {
+        private int ImprisonRate => 75;
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Imprisoned, value: 1, rate: DataTable.GetGameValue(10)));
+            CardState.Cons.Imprisoned, value: 1, rate: ImprisonRate));
     }
     /// <summary>
     /// 鬼兵阵
     /// </summary>
     public class GuiBingZhenOperator : ReflexiveTrapOperator
     {
+        private int CowardlyRate => 90;
+
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Cowardly, value: 1, rate: DataTable.GetGameValue(11)));
+            CardState.Cons.Cowardly, value: 1, rate: CowardlyRate));
     }
     /// <summary>
     /// 火墙
     /// </summary>
     public class FireWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 2, rate: DataTable.GetGameValue(12)));
+        private int FireRate => 90;
+
+        protected override CombatConduct[] CounterConducts =>
+            Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 2, rate: FireRate));
     }
     /// <summary>
     /// 毒泉
     /// </summary>
     public class PoisonSpringOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 1, rate: DataTable.GetGameValue(13)));
+        private int PoisonRate => 75;
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 1, rate: PoisonRate));
     }
     /// <summary>
     /// 刀墙
     /// </summary>
     public class BladeWallOperator : ReflexiveTrapOperator
     {
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, value: 1, rate: DataTable.GetGameValue(14)));
+        private int BleedRate => 75;
+
+        protected override CombatConduct[] CounterConducts =>
+            Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, value: 1, rate: BleedRate));
     }
     /// <summary>
     /// 金币宝箱

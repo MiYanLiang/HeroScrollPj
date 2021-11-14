@@ -15,9 +15,23 @@ namespace Assets.System.WarModule
         protected override List<PosSprite> Sprites { get; }
         protected override BondOperator[] JiBan { get; }
         private BuffOperator[] BuffOps { get; }
+        public override IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
+        public override IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
+        public override IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
+        public override IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
 
-        public ChessOperatorManager(ChessGrid grid, ILogger log = null) : base(grid, log)
+        public ChessOperatorManager(ChessGrid grid, 
+            IEnumerable<HeroTable> heroTable, 
+            IEnumerable<TowerTable> towerTable, 
+            IEnumerable<TrapTable> trapTable,
+            IEnumerable<JiBanTable> jiBanTable, 
+            ILogger log = null) : base(grid,
+            log)
         {
+            HeroTable = heroTable.ToDictionary(h => h.Id, h => h);
+            TowerTable = towerTable.ToDictionary(t => t.Id, t => t);
+            TrapTable = trapTable.ToDictionary(t => t.Id, t => t);
+            JiBanTable = jiBanTable.ToDictionary(j => j.Id, j => j);
             StatusMap = new Dictionary<ChessOperator, ChessStatus>();
             Sprites = new List<PosSprite>();
             BuffOps = new BuffOperator[]
@@ -31,16 +45,16 @@ namespace Assets.System.WarModule
                 new Imprisoned(this), // 8 禁锢
                 new CowardlyBuff(this), //9 怯战
                 new DisarmedBuff(this), //16 卸甲
-                new NeiZhuBuff(this),//17 内助
-                new ShenZhuBuff(this),//18 神助
+                new NeiZhuBuff(this), //17 内助
+                new ShenZhuBuff(this), //18 神助
                 new ExtendedShieldBuff(this), // 19 缓冲盾
-                new ConfuseBuff(this),//22 混乱
-                new ChainedBuff(this),//24 铁骑
+                new ConfuseBuff(this), //22 混乱
+                new ChainedBuff(this), //24 铁骑
             };
             JiBan = GetJiBan();
         }
 
-        private BondOperator[] GetJiBan() => DataTable.JiBan.Values.Where(j => j.IsOpen > 0).Select(GetBondOperator).Where(b=>b!=null).ToArray();
+        private BondOperator[] GetJiBan() => JiBanTable.Values.Where(j => j.IsOpen > 0).Select(GetBondOperator).Where(b=>b!=null).ToArray();
 
         private BondOperator GetBondOperator(JiBanTable jb)
         {
@@ -126,7 +140,7 @@ namespace Assets.System.WarModule
         private ChessOperator InstanceHero(TCard card)
         {
             HeroOperator op = null;
-            var military = DataTable.Hero[card.CardId].MilitaryUnitTableId;
+            var military = HeroTable[card.CardId].MilitaryUnitTableId;
             switch (military)
             {
                 default: op = new HeroOperator(); break; //0   武夫

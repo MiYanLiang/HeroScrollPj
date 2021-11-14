@@ -392,7 +392,7 @@ namespace Assets.System.WarModule
 
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {
-            Name = GameCardInfo.GetInfo(card).Name;
+            Name = chessboardOp.HeroTable[card.CardId].Name;
             InstanceId = card.InstanceId;
             chessman = card;
             combatStyle = card.GetStyle();

@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
-using JetBrains.Annotations;
 
 namespace Assets.System.WarModule
 {
@@ -42,7 +40,7 @@ namespace Assets.System.WarModule
         protected int Dodge { get; private set; }
         public override void Init(IChessman card, ChessboardOperator chessboardOp)
         {
-            var combatInfo = HeroCombatInfo.GetInfo(card.CardId);
+            var combatInfo = HeroCombatInfo.GetInfo(chessboardOp.HeroTable[card.CardId]);
             MagicResist = combatInfo.MagicResist;
             Armor = combatInfo.Armor;
             Dodge = combatInfo.DodgeRatio;
