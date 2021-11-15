@@ -155,9 +155,9 @@ using UnityEngine;
         Troop = force;
         Speed = speed;
         Damage = CombatStyle.DamageFormula(strength, level);
-        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
         StatesUi = new Dictionary<int, EffectStateUi>();
-        style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
+        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
+        Style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
             intelligent, info.GameSetRecovery, info.Rare);
     }
 
@@ -170,13 +170,12 @@ using UnityEngine;
     public int Level => level;
     public int Speed { get; }
     public int Troop { get; }
-    private CombatStyle style;
-    public CombatStyle Style => style;
+    public CombatStyle Style { get; set; }
     private int instanceId = -1;
     private ChessmanStyle chessmanStyle;
     private ChessStatus status;
 
-    public CombatStyle GetStyle() => style;
+    public CombatStyle GetStyle() => Style;
 
     public Dictionary<int, EffectStateUi> StatesUi { get; }
 

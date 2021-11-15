@@ -389,10 +389,28 @@ namespace Assets.System.WarModule
         protected override int StateDamage() => Style.Strength;
         protected override int StateIntelligent() => Style.Intelligent;
         protected override int StateSpeed() => Style.Speed;
-
+        private const string BaseText = "老巢";
         public virtual void Init(IChessman card, ChessboardOperator chessboardOp)
         {
-            Name = chessboardOp.HeroTable[card.CardId].Name;
+            switch (card.CardType)
+            {
+                case GameCardType.Hero:
+                    Name = chessboardOp.HeroTable[card.CardId].Name;
+                    break;
+                case GameCardType.Tower:
+                    Name = chessboardOp.TowerTable[card.CardId].Name;
+                    break;
+                case GameCardType.Trap:
+                    Name = chessboardOp.TrapTable[card.CardId].Name;
+                    break;
+                case GameCardType.Base:
+                    Name = BaseText;
+                    break;
+                case GameCardType.Soldier:
+                case GameCardType.Spell:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             InstanceId = card.InstanceId;
             chessman = card;
             combatStyle = card.GetStyle();

@@ -18,7 +18,9 @@ namespace Assets.System.WarModule
         public abstract IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
         public abstract IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
         public abstract IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
+        public abstract IReadOnlyDictionary<int, MilitaryTable> MilitaryTable { get; }
         public abstract IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
+
         private enum ProcessCondition
         {
             PlaceActions,
