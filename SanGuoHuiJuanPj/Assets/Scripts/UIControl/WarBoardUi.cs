@@ -307,7 +307,7 @@ public class WarBoardUi : MonoBehaviour
                 continue;
             }
             var ui = card.cardObj; //GenerateCardUi(card);
-            var hp = Math.Min((int)(card.Status.Hp + (card.Status.Hp * card.Style.Recovery * 0.01f)),
+            var hp = Math.Min((int)(card.Status.Hp + (card.Status.MaxHp * card.Style.Recovery * 0.01f)),
                 card.Status.MaxHp);
             card.Status.SetHp(hp);
             //上面把ui与卡分离了。所以更新UI的时候需要手动改血量值
