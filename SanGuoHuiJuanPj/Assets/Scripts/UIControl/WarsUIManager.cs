@@ -72,8 +72,6 @@ public class WarsUIManager : MonoBehaviour
 
     [SerializeField] AudioSource audioSource;
 
-    [SerializeField] Image chessboardBg;
-
     [SerializeField] Text levelIntroText; //关卡介绍文本
     [SerializeField] Text battleNameText; //战役名文本
     [SerializeField] Text battleScheduleText; //战役进度文本

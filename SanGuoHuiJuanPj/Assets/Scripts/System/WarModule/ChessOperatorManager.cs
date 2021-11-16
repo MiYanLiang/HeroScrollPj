@@ -15,9 +15,27 @@ namespace Assets.System.WarModule
         protected override List<PosSprite> Sprites { get; }
         protected override BondOperator[] JiBan { get; }
         private BuffOperator[] BuffOps { get; }
+        public override IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
+        public override IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
+        public override IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
+        public override IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
+        public override IReadOnlyDictionary<int,MilitaryTable> MilitaryTable { get; }
 
-        public ChessOperatorManager(ChessGrid grid, ILogger log = null) : base(grid, log)
+
+        public ChessOperatorManager(ChessGrid grid, 
+            IEnumerable<HeroTable> heroTable, 
+            IEnumerable<TowerTable> towerTable, 
+            IEnumerable<TrapTable> trapTable,
+            IEnumerable<MilitaryTable> militaryTable,
+            IEnumerable<JiBanTable> jiBanTable, 
+            ILogger log = null) : base(grid,
+            log)
         {
+            MilitaryTable = militaryTable.ToDictionary(m => m.Id, m => m);
+            HeroTable = heroTable.ToDictionary(h => h.Id, h => h);
+            TowerTable = towerTable.ToDictionary(t => t.Id, t => t);
+            TrapTable = trapTable.ToDictionary(t => t.Id, t => t);
+            JiBanTable = jiBanTable.ToDictionary(j => j.Id, j => j);
             StatusMap = new Dictionary<ChessOperator, ChessStatus>();
             Sprites = new List<PosSprite>();
             BuffOps = new BuffOperator[]
@@ -31,16 +49,16 @@ namespace Assets.System.WarModule
                 new Imprisoned(this), // 8 禁锢
                 new CowardlyBuff(this), //9 怯战
                 new DisarmedBuff(this), //16 卸甲
-                new NeiZhuBuff(this),//17 内助
-                new ShenZhuBuff(this),//18 神助
+                new NeiZhuBuff(this), //17 内助
+                new ShenZhuBuff(this), //18 神助
                 new ExtendedShieldBuff(this), // 19 缓冲盾
-                new ConfuseBuff(this),//22 混乱
-                new ChainedBuff(this),//24 铁骑
+                new ConfuseBuff(this), //22 混乱
+                new ChainedBuff(this), //24 铁骑
             };
             JiBan = GetJiBan();
         }
 
-        private BondOperator[] GetJiBan() => DataTable.JiBan.Values.Where(j => j.IsOpen > 0).Select(GetBondOperator).Where(b=>b!=null).ToArray();
+        private BondOperator[] GetJiBan() => JiBanTable.Values.Where(j => j.IsOpen > 0).Select(GetBondOperator).Where(b=>b!=null).ToArray();
 
         private BondOperator GetBondOperator(JiBanTable jb)
         {
@@ -126,7 +144,7 @@ namespace Assets.System.WarModule
         private ChessOperator InstanceHero(TCard card)
         {
             HeroOperator op = null;
-            var military = DataTable.Hero[card.CardId].MilitaryUnitTableId;
+            var military = HeroTable[card.CardId].MilitaryUnitTableId;
             switch (military)
             {
                 default: op = new HeroOperator(); break; //0   武夫
@@ -461,6 +479,97 @@ namespace Assets.System.WarModule
             }
         }
         #endregion
+
+        public CombatStyle GetCombatStyle(IChessman chessman)
+        {
+            var strength = 0;
+            var force = -1;
+            var speed = 0;
+            var intelligent = 0;
+            var military = -1;
+            var armedType = -4;
+            var combatType = -1;
+            var element = 0;
+            var hitpoint = 0;
+            var gameSetRecover = 0;
+            var rare = 1;
+            switch (chessman.CardType)
+            {
+                case GameCardType.Hero:
+                    {
+                        var hero = HeroTable[chessman.CardId];
+                        var m = MilitaryTable[hero.MilitaryUnitTableId];
+                        strength = hero.Strength;
+                        force = hero.ForceTableId;
+                        speed = hero.Speed;
+                        intelligent = hero.Intelligent;
+                        //CombatStyle.IntelligentFormula(hero.Intelligent, level);
+                        military = m.Id;
+                        armedType = m.ArmedType;
+                        combatType = m.CombatStyle;
+                        element = m.Element;
+                        hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level);
+                        gameSetRecover = hero.GameSetRecovery;
+                        rare = hero.Rarity;
+                        break;
+                    }
+                case GameCardType.Tower:
+                    {
+                        var tower = TowerTable[chessman.CardId];
+                        force = tower.ForceId;
+                        strength = tower.Strength;
+                        speed = tower.Speed;
+                        intelligent = CombatStyle.EffectFormula(tower.Effect, chessman.Level, tower.EffectUp);
+                        military = tower.Id;
+                        armedType = -2;
+                        combatType = 1;
+                        element = 0;
+                        hitpoint = CombatStyle.HitPointFormula(tower.HitPoint, chessman.Level);
+                        gameSetRecover = tower.GameSetRecovery;
+                        rare = tower.Rarity;
+                    }
+                    break;
+                case GameCardType.Trap:
+                    {
+                        var trap = TrapTable[chessman.CardId];
+                        strength = trap.Strength;
+                        force = trap.ForceId;
+                        speed = 0;
+                        intelligent = 0;
+                        military = trap.Id;
+                        armedType = -3;
+                        combatType = -1;
+                        element = 0;
+                        hitpoint = trap.Id == 11 || trap.Id == 12 //如果是宝箱不会随着等级提升
+                            ? trap.HitPoint
+                            : CombatStyle.HitPointFormula(trap.HitPoint, chessman.Level);
+                        gameSetRecover = trap.GameSetRecovery;
+                        rare = trap.Rarity;
+                    }
+                    break;
+                case GameCardType.Base:
+                    {
+                        strength = 0;
+                        force = 0;
+                        speed = 0;
+                        intelligent = 0;
+                        military = -1;
+                        armedType = -4;
+                        combatType = -1;
+                        element = 0;
+                        hitpoint = 1;//老巢血量不在这里初始化
+                    }
+                    break;
+                case GameCardType.Soldier:
+                case GameCardType.Spell:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var damage = CombatStyle.DamageFormula(strength, chessman.Level);
+            return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint, speed, force,
+                intelligent, gameSetRecover, rare);
+        }
     }
 
 }

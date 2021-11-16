@@ -1,12 +1,11 @@
 ﻿using CorrelateLib;
-using UnityEngine.EventSystems;
 
 /// <summary>
 /// 英雄战斗信息结构
 /// </summary>
 public class HeroCombatInfo
 {
-    public static HeroCombatInfo GetInfo(int heroId) => new HeroCombatInfo(DataTable.Hero[heroId]);
+    public static HeroCombatInfo GetInfo(HeroTable hero) => new HeroCombatInfo(hero);
     public int Strength { get; }
     public int Intelligent { get; }
     public int DodgeRatio { get; }

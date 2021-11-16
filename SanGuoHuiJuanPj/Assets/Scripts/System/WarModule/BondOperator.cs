@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
-using UnityEditor;
 
 namespace Assets.System.WarModule
 {

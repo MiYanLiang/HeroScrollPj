@@ -37,9 +37,10 @@ public class NewWarManager : MonoBehaviour, ILogger
     {
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
 #if UNITY_EDITOR
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, this);
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
+            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, this);
 #else
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid);
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values, DataTable.Trap.Values, DataTable.JiBan.Values);
 #endif
         CardData.Clear();
         StartButtonShow(true);
@@ -76,6 +77,7 @@ public class NewWarManager : MonoBehaviour, ILogger
     public void RegCard(FightCardData card)
     {
         ChessOperator.RegOperator(card);
+        card.Style = ChessOperator.GetCombatStyle(card);
         CardData.Add(card.InstanceId, card);
     }
     public void StartButtonShow(bool show)
