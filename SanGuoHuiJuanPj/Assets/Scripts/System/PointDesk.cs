@@ -102,7 +102,27 @@ public class PointDesk : MonoBehaviour
         hitpoint.text = info.Type == GameCardType.Hero
             ? card.level > 0 ? string.Format(DataTable.GetStringText(33), info.GetHp(card.Level)) : string.Empty
             : string.Empty;
-        //intelligent.text = info.Type == GameCardType.Hero
+        intelligent.text = info.Type==GameCardType.Hero
+            ?card.level>0 ? string.Format(DataTable.GetStringText(82), info.Intelligent.ToString()):string.Empty
+            :string.Empty;
+        speed.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(83), info.Speed.ToString()) : string.Empty
+            : string.Empty;
+        dodgeRatio.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(84), info.DodgeRatio.ToString()) : string.Empty
+            : string.Empty;
+        armorResist.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(85), info.ArmorResist.ToString()) : string.Empty
+            : string.Empty;
+        magicResist.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(86), info.MagicResist.ToString()) : string.Empty
+            : string.Empty;
+        criticalRatio.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(87), info.CriticalRatio.ToString()) : string.Empty
+            : string.Empty;
+        rougeRatio.text = info.Type == GameCardType.Hero
+            ? card.level > 0 ? string.Format(DataTable.GetStringText(88), info.RougeRatio.ToString()) : string.Empty
+            : string.Empty;
         Info.text = info.Intro;
         var isCardEnlistAble = card.IsEnlistAble();
         CardCapability.gameObject.SetActive(isCardEnlistAble);
