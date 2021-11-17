@@ -1623,8 +1623,8 @@ namespace Assets.System.WarModule
         }
 
         private int BasicKillRate => 3;
-        private int CriticalAddRate => 3;
-        private int RouseAddRate => 5;
+        private int CriticalAddRate => 2;
+        private int RouseAddRate => 4;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
