@@ -508,8 +508,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class BaJianJIang : BondOperator
     {
-        private int DamageUpRate => 30;
-        private int NeiZhuRate => 100;
+        private int DamageUpRate => 25;
+        private int NeiZhuRate => 80;
         private int QiBingId => 5;
 
         public BaJianJIang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
