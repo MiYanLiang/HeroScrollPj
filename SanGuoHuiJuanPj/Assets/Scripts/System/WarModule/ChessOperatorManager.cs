@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +19,7 @@ namespace Assets.System.WarModule
         public override IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
         public override IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
         public override IReadOnlyDictionary<int,MilitaryTable> MilitaryTable { get; }
-
+        public override IReadOnlyDictionary<int,BaseLevelTable> BaseLevelTable { get; }
 
         public ChessOperatorManager(ChessGrid grid, 
             IEnumerable<HeroTable> heroTable, 
@@ -28,9 +27,11 @@ namespace Assets.System.WarModule
             IEnumerable<TrapTable> trapTable,
             IEnumerable<MilitaryTable> militaryTable,
             IEnumerable<JiBanTable> jiBanTable, 
-            ILogger log = null) : base(grid,
+            IEnumerable<BaseLevelTable> baseLevelTable
+            , ILogger log = null) : base(grid,
             log)
         {
+            BaseLevelTable = baseLevelTable.ToDictionary(b => b.Level, b => b);
             MilitaryTable = militaryTable.ToDictionary(m => m.Id, m => m);
             HeroTable = heroTable.ToDictionary(h => h.Id, h => h);
             TowerTable = towerTable.ToDictionary(t => t.Id, t => t);
@@ -480,7 +481,12 @@ namespace Assets.System.WarModule
         }
         #endregion
 
-        public CombatStyle GetCombatStyle(IChessman chessman)
+        public static CombatStyle GetCombatStyle(IGameCard chessman,
+            IReadOnlyDictionary<int, HeroTable> heroTable,
+            IReadOnlyDictionary<int, TowerTable> towerTable,
+            IReadOnlyDictionary<int, TrapTable> trapTable,
+            IReadOnlyDictionary<int, MilitaryTable> militaryTable,
+            IReadOnlyDictionary<int, BaseLevelTable> baseLevelTable)
         {
             var strength = 0;
             var force = -1;
@@ -493,12 +499,12 @@ namespace Assets.System.WarModule
             var hitpoint = 0;
             var gameSetRecover = 0;
             var rare = 1;
-            switch (chessman.CardType)
+            switch ((GameCardType)chessman.Type)
             {
                 case GameCardType.Hero:
                     {
-                        var hero = HeroTable[chessman.CardId];
-                        var m = MilitaryTable[hero.MilitaryUnitTableId];
+                        var hero = heroTable[chessman.CardId];
+                        var m = militaryTable[hero.MilitaryUnitTableId];
                         strength = hero.Strength;
                         force = hero.ForceTableId;
                         speed = hero.Speed;
@@ -515,7 +521,7 @@ namespace Assets.System.WarModule
                     }
                 case GameCardType.Tower:
                     {
-                        var tower = TowerTable[chessman.CardId];
+                        var tower = towerTable[chessman.CardId];
                         force = tower.ForceId;
                         strength = tower.Strength;
                         speed = tower.Speed;
@@ -531,7 +537,7 @@ namespace Assets.System.WarModule
                     break;
                 case GameCardType.Trap:
                     {
-                        var trap = TrapTable[chessman.CardId];
+                        var trap = trapTable[chessman.CardId];
                         strength = trap.Strength;
                         force = trap.ForceId;
                         speed = 0;
@@ -557,7 +563,7 @@ namespace Assets.System.WarModule
                         armedType = -4;
                         combatType = -1;
                         element = 0;
-                        hitpoint = 1;//老巢血量不在这里初始化
+                        hitpoint = baseLevelTable[chessman.Level].BaseHp;
                     }
                     break;
                 case GameCardType.Soldier:
@@ -571,5 +577,4 @@ namespace Assets.System.WarModule
                 intelligent, gameSetRecover, rare);
         }
     }
-
 }

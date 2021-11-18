@@ -33,10 +33,10 @@ public class Chessboard : MonoBehaviour
 
     public void Init()
     {
-        grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
-        data = new Dictionary<int, FightCardData>();
         for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
+        grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
+        data = new Dictionary<int, FightCardData>();
     }
 
     public void ResetChessboard()

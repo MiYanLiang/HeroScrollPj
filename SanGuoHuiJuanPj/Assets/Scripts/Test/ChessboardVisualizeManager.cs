@@ -175,7 +175,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         PreAnimation().Play();
         yield return new WaitUntil(() => round != null);
-        StartCoroutine(AnimateRound(round, chess));
+        StartCoroutine(AnimateRound(round));
         IsFirstRound = false;
     }
 
@@ -214,8 +214,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return gridTween;
     }
     //演示回合
-    private IEnumerator AnimateRound(ChessRound round, ChessboardOperator chess)
+    public IEnumerator AnimateRound(ChessRound round)
     {
+        var chess = NewWar.ChessOperator;
         IsBusy = true;
 
 #if UNITY_EDITOR

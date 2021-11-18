@@ -51,16 +51,8 @@ namespace Assets.System.WarModule
         {
             _challenger = new Dictionary<int, IChessPos>();
             opposite = new Dictionary<int, IChessPos>();
-            for (var i = 0; i < player.Count; i++)
-            {
-                player[i].Init(i,true);
-                _challenger.Add(i, player[i]);
-            }
-            for (var i = 0; i < enemy.Count; i++)
-            {
-                enemy[i].Init(i,false);
-                opposite.Add(i, enemy[i]);
-            }
+            for (var i = 0; i < player.Count; i++) _challenger.Add(i, player[i]);
+            for (var i = 0; i < enemy.Count; i++) opposite.Add(i, enemy[i]);
         }
         public ChessGrid()
         {

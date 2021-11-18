@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CorrelateLib;
@@ -41,7 +42,7 @@ public static class Http
         try
         {
             var client = Server.InstanceClient();
-            return await client.PostAsync(url, new StringContent(content), token);
+            return await client.PostAsync(url, new StringContent(content, Encoding.UTF8, "application / json"), token);
         }
         catch (Exception)
         {

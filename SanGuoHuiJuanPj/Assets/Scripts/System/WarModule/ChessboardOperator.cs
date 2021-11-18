@@ -20,7 +20,7 @@ namespace Assets.System.WarModule
         public abstract IReadOnlyDictionary<int,TrapTable> TrapTable { get; }
         public abstract IReadOnlyDictionary<int, MilitaryTable> MilitaryTable { get; }
         public abstract IReadOnlyDictionary<int,JiBanTable> JiBanTable { get; }
-
+        public abstract IReadOnlyDictionary<int, BaseLevelTable> BaseLevelTable { get; }
         private enum ProcessCondition
         {
             PlaceActions,
@@ -327,6 +327,15 @@ namespace Assets.System.WarModule
                 .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).All(p => GetStatus(p.Operator).IsDeath);
             IsChallengerWin = Grid.Opposite.Values
                 .Where(p => p.Operator != null && p.Operator.CardType == GameCardType.Base).All(p => GetStatus(p.Operator).IsDeath);
+        }
+
+        public void Terminate(bool isChallengerWin)
+        {
+            if (IsGameOver)
+                throw new InvalidOperationException($"{nameof(Terminate)}():棋盘已经分出胜负！不允许中断！参数[{isChallengerWin}]");
+            if (isChallengerWin)
+                IsChallengerWin = true;
+            else IsOppositeWin = false;
         }
 
         #endregion
@@ -1294,6 +1303,7 @@ namespace Assets.System.WarModule
         protected abstract void OnPlayerResourcesActivity(Activity activity);
 
         private List<JiBanController> ActivatedJiBans { get; } = new List<JiBanController>();
+        
 
         private class JiBanController
         {
