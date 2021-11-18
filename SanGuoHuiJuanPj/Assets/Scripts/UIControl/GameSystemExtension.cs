@@ -166,24 +166,24 @@ public class GameCardInfo
                 var c = DataTable.Hero[id];
                 var military = DataTable.Military[c.MilitaryUnitTableId];
                 return new GameCardInfo(id, GameCardType.Hero, c.Name, military.Short, c.Intro, military.About,
-                    c.ImageId, c.Rarity, c.HitPoint, c.Strength, military.CombatStyle, military.Element, c.ForceTableId,
+                    c.ImageId, c.Rarity, c.HitPoint, c.Strength, c.Intelligent,c.Speed,c.DodgeRatio,c.ArmorResist,c.MagicResist,c.CriticalRatio,c.RouseRatio,military.CombatStyle, military.Element, c.ForceTableId,
                     c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Tower:
             {
                 var c = DataTable.Tower[id];
                 return new GameCardInfo(c.Id, GameCardType.Tower, c.Name, c.Short, c.Intro, c.About, c.ImageId,
-                    c.Rarity, c.HitPoint, c.Strength, combatType: 1, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
+                    c.Rarity, c.HitPoint, c.Strength,0,c.Speed, dodgeRatio: 0, armorResist: 0, magicResist: 0, criticalRatio: 0, rougeRatio: 0, combatType: 1, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Trap:
             {
                 var c = DataTable.Trap[id];
                 return new GameCardInfo(c.Id, GameCardType.Trap, c.Name, c.Short, c.Intro, c.About, c.ImageId, c.Rarity,
-                    c.HitPoint, c.Strength, combatType: 0, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
+                    c.HitPoint, c.Strength, intelligent: 0, speed: 0, dodgeRatio: 0, armorResist: 0, magicResist: 0, criticalRatio: 0, rougeRatio: 0, combatType: 0, element: 0, c.ForceId, c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Base:
                 return new GameCardInfo(id: 0, type: GameCardType.Base, name: string.Empty, @short: string.Empty, intro: string.Empty, about: string.Empty, imageId: 0,
-                    rare: 1, hitPoint: 0, strength: 0, combatType: -1, element: 0, forceId: -1, isProduce: false, gameSetRecovery: 0);
+                    rare: 1, hitPoint: 0, strength: 0, intelligent: 0, speed: 0, dodgeRatio: 0, armorResist: 0, magicResist: 0, criticalRatio: 0, rougeRatio: 0,combatType: -1, element: 0, forceId: -1, isProduce: false, gameSetRecovery: 0);
             case GameCardType.Soldier:
             case GameCardType.Spell:
             default:
@@ -228,9 +228,16 @@ public class GameCardInfo
     public int Element { get; }
     public int Strength { get; }
     public int HitPoint { get; }
+    public int Intelligent { get; }
+    public int Speed { get; }
+    public int DodgeRatio { get; }
+    public int ArmorResist { get; }
+    public int MagicResist { get; }
+    public int CriticalRatio { get; }
+    public int RougeRatio { get; }
 
     private GameCardInfo(int id, GameCardType type, string name, string @short, string intro, string about, int imageId,
-        int rare, int hitPoint, int strength, int combatType, int element, int forceId, bool isProduce, int gameSetRecovery)
+        int rare, int hitPoint, int strength, int intelligent,int speed,int dodgeRatio,int armorResist,int magicResist,int criticalRatio, int rougeRatio,int combatType, int element, int forceId, bool isProduce, int gameSetRecovery)
     {
         Id = id;
         Name = name;
@@ -246,6 +253,13 @@ public class GameCardInfo
         About = about;
         Strength = strength;
         HitPoint = hitPoint;
+        Intelligent = intelligent;
+        Speed = speed;
+        DodgeRatio = dodgeRatio;
+        ArmorResist = armorResist;
+        MagicResist = magicResist;
+        CriticalRatio = criticalRatio;
+        RougeRatio = rougeRatio;
         Type = type;
     }
     /// <summary>
