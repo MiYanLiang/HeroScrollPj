@@ -476,7 +476,7 @@ public static class Effect
             case 29:
             case 204://术士
                 if (skill == 3)
-                    return 528;
+                    return 159;
                 //switch (skill) 
                 //{
                 //    case 1://小技能
@@ -514,7 +514,7 @@ public static class Effect
             case 214:
             case 215:
             case 216://狂士
-                if (skill == 3) return 528;
+                if (skill == 3) return 159;
                 //switch (skill)
                 //{
                 //    case 1://小技能

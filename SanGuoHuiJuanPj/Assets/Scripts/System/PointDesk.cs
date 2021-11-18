@@ -213,7 +213,10 @@ public class PointDesk : MonoBehaviour
     //    listCard.GetChild(8).gameObject.SetActive(false);
     //    listCard.GetComponent<Button>().onClick.Invoke();
     //}
+
+
     public void SetForce(int forceId) => FlagUi.Set((ForceFlags) forceId);
+
 
     public class CardEvent : UnityEvent<GameCard> { }
 }
