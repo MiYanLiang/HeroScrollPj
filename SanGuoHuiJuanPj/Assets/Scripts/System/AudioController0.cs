@@ -113,8 +113,9 @@ public class AudioController0 : MonoBehaviour
     public void RandomPlayGuZhengAudio()
     {
         int rand = Random.Range(1, 8);
-        ChangeAudioClip(rand);
-        PlayAudioSource(0);
+        //ChangeAudioClip(rand);
+        ForcePlayAudio(rand);
+        //PlayAudioSource(0);
     }
 
     public void MusicSwitch(bool isPlayMusic)

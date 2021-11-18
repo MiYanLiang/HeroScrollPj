@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using UnityEngine;
@@ -10,21 +10,40 @@ public class Barrack : MonoBehaviour
 {
     public PointDesk PointDesk;
     public int SelectedForce;
+    public Image ChangeTroop;//切换军团按钮
+    public Text TroopName;
+    public Image TroopNameImage;
     public GameCardUi GameCardUiPrefab;
     public Transform InventoryContent;
     private List<GameCardUi> _cardPool = new List<GameCardUi>();
 
     public void Init(UnityAction<GameCard> onCardMerge,UnityAction<GameCard> onCardSell,UnityAction<GameCard> onCardEnlist)
     {
-        var flagBtn = PointDesk.FlagUi.gameObject.AddComponent<Button>();
+        var flagBtn = ChangeTroop.gameObject.AddComponent<Button>();
         flagBtn.onClick.AddListener(() =>
         {
             RefreshCardList(SelectedForce + 1);
+            RefreshTroopName(SelectedForce + 1);
+            AudioController0.instance.RandomPlayGuZhengAudio();//随机播放古筝声音
         });
         PointDesk.Init();
         PointDesk.OnMergeCard.AddListener(onCardMerge);
         PointDesk.OnCardSell.AddListener(onCardSell);
-        PointDesk.OnEnlistCall.AddListener(onCardEnlist);
+        PointDesk.OnEnlistCall.AddListener(onCardEnlist);//出战
+    }
+    private void RefreshTroopName(int troop)
+    {
+        string troopName="";
+        switch (troop) 
+        {
+            case 1:troopName = "刘";break;
+            case 2:troopName = "曹";break;
+            case 3:troopName = "孙";break;
+            case 4:troopName = "袁";break;
+            case 5:troopName = "吕";break;
+            case 6:troopName = "司马";break;
+        }
+        TroopName.text = troopName;
     }
 
     /// <summary> 
@@ -59,8 +78,9 @@ public class Barrack : MonoBehaviour
             selected = _cardPool.First(c => c.gameObject.activeSelf).Card;
         PointDesk.SelectCard(selected);
         HighlightSelected(selected);
+        //AudioController0.instance.RandomPlayGuZhengAudio();//随机播放古筝声音
         //AudioController0.instance.ChangeAudioClip(13); //播放随机音效 
-        UIManager.instance.PlayOnClickMusic();
+        //UIManager.instance.PlayOnClickMusic();
 
     }
 
@@ -87,6 +107,8 @@ public class Barrack : MonoBehaviour
         var state = card.level == 0 ? GameCardCityUiOperation.States.Disable :
             card.isFight > 0 ? GameCardCityUiOperation.States.Enlisted : GameCardCityUiOperation.States.None;
         ui.CityOperation.SetState(state);
+        //列表中取消碎片数量显示
+        ui.CityOperation.Chips.gameObject.SetActive(false);
         ui.CityOperation.OnclickAction.RemoveAllListeners();
         ui.CityOperation.OnclickAction.AddListener(() =>
         {
