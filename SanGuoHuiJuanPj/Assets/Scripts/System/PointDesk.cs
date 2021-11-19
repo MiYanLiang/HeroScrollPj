@@ -55,6 +55,7 @@ public class PointDesk : MonoBehaviour
     [SerializeField] CardInfoTagUi Military;
     [SerializeField] CardInfoTagUi Armed;
     [SerializeField] CardInfoTagUi CombatType;
+    [SerializeField] CardInfoTagUi Element;
     [SerializeField] CardInfoTagUi Major;
 
     public CardEvent OnMergeCard = new CardEvent();
@@ -140,12 +141,19 @@ public class PointDesk : MonoBehaviour
 
     private void UpdateInfoTags()
     {
+        var major = "主副将";
+        ResetTag(About, "故事");
+        ResetTag(Military, "兵种");
+        ResetTag(Armed, "系数");
+        ResetTag(About, "战斗");
+        ResetTag(Element, "元素");
+        ResetTag(Major, major);
         var card = SelectedCard;
         var about = string.Empty;
         var military = string.Empty;
         var armed = string.Empty;
         var combatType = string.Empty;
-        var major = "主副将";
+        var element = string.Empty;
         if (card.CardInfo.Type == GameCardType.Hero)
         {
             var c = DataTable.Hero[card.Card.id];
@@ -172,21 +180,56 @@ public class PointDesk : MonoBehaviour
             military = m.Title;
             combatType = m.CombatStyle == 1 ? "远程" : "近战";
             about = card.CardInfo.About;
+            SetOnClick(About, about);
+            SetOnClick(Military, military);
+            SetOnClick(Armed, armed);
+            SetOnClick(CombatType , combatType);
         }
         else
         {
             military = card.CardInfo.Name;
-            combatType = card.CardInfo.Type == GameCardType.Tower ? "塔" : "陷阱";
+            armed = combatType = card.CardInfo.Type == GameCardType.Tower ? "塔" : "陷阱";
             about = card.CardInfo.Intro;
+            SetOnClick(About, about);
+            SetOnClick(Military, military);
+            ResetTag(Armed, armed);
+            ResetTag(CombatType, combatType);
+        }
+        ResetTag(Element, ElementText(card.CardInfo.Element));
+
+
+
+        void ResetTag(CardInfoTagUi ui, string text)
+        {
+            ui.Button.onClick.RemoveAllListeners();
+            ui.Button.interactable = false;
+            ui.Text.text = text;
         }
 
-        UpdateText(About, about);
-        UpdateText(Military, military);
-        UpdateText(Armed, armed);
-        UpdateText(CombatType , combatType);
-        UpdateText(Major , major);
+        void SetOnClick(CardInfoTagUi ui,string text)
+        {
+            ui.Button.onClick.RemoveAllListeners();
+            ui.Button.interactable = true;
+            ui.Button.onClick.AddListener(() => Info.text = text);
+        }
 
-        void UpdateText(CardInfoTagUi ui,string text) => ui.Text.text = text;
+        string ElementText(int e)
+        {
+            switch (e)
+            {
+                case CombatConduct.PhysicalDmg: return "物理";
+                case CombatConduct.MechanicalDmg: return "器械";
+                case CombatConduct.FixedDmg: return "固伤";
+                case CombatConduct.BasicMagicDmg: return "法术";
+                case CombatConduct.WindDmg: return "风伤";
+                case CombatConduct.ThunderDmg: return "雷伤";
+                case CombatConduct.WaterDmg: return "水伤";
+                case CombatConduct.PoisonDmg: return "毒伤";
+                case CombatConduct.FireDmg: return "火伤";
+                case CombatConduct.EarthDmg: return "土伤";
+                default: return string.Empty;
+            }
+        }
     }
 
     private void UpdateSellingPrice(GameCard card)
