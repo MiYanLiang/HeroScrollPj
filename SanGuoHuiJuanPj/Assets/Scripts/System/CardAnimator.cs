@@ -159,7 +159,7 @@ public class CardAnimator : MonoBehaviour
         if (value == 0) return;
         NumberEffectTween(target, value.ToString(), color, dmgType);
     }
-    public void NumberEffectTween(FightCardData target, string value, Color color, Damage.Types dmgType)
+    public void NumberEffectTween(FightCardData target, string value, Color color, Damage.Types dmgType,bool scaleControl = true)
     {
         var effect =
             EffectsPoolingControl.instance.GetVTextEffect(Effect.DropBlood, Misc.VTextLasting,
@@ -167,20 +167,22 @@ public class CardAnimator : MonoBehaviour
         var text = effect.GetComponentInChildren<Text>();
         text.text = value;
         text.color = color;
-        switch (dmgType)
-        {
-            case Damage.Types.General:
-                effect.transform.DOScale(1, 0);
-                break;
-            case Damage.Types.Critical:
-                effect.transform.DOScale(Misc.CriticalTextEnlarge, 0);
-                break;
-            case Damage.Types.Rouse:
-                effect.transform.DOScale(Misc.RouseTextEnlarge, 0);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(dmgType), dmgType, null);
-        }
+        if (scaleControl)
+            switch (dmgType)
+            {
+                case Damage.Types.General:
+                    effect.transform.DOScale(1, 0);
+                    break;
+                case Damage.Types.Critical:
+                    effect.transform.DOScale(Misc.CriticalTextEnlarge, 0);
+                    break;
+                case Damage.Types.Rouse:
+                    effect.transform.DOScale(Misc.RouseTextEnlarge, 0);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dmgType), dmgType, null);
+            }
+        else effect.transform.DOScale(1, 0);
     }
 
     /// <summary>
@@ -377,23 +379,23 @@ public class CardAnimator : MonoBehaviour
     [Serializable]
     private class MeleeField
     {
-        [Header("前进(秒)")] public float Forward = 0.2f;
-        [Header("前摇停顿(秒)")]public float Stop = 0.15f;
-        [Header("蓄力(秒)")]public float Charge = 0.3f;
-        [Header("后退(秒)")] public float StepBack = 0.2f;
+        [Header("前进(秒)")] public float Forward = 0.15f;
+        [Header("前摇停顿(秒)")]public float Stop = 0.1f;
+        [Header("蓄力(秒)")]public float Charge = 0.15f;
+        [Header("后退(秒)")] public float StepBack = 0.15f;
         [Header("后退距离(格)")] public float StepBackDistance = 0.5f;
-        [Header("攻击(秒)")] public float Hit = 0.1f;
+        [Header("攻击(秒)")] public float Hit = 0.05f;
         [Header("归位(秒)")] public float Return = 0.15f;
     }
 
     [Serializable]
     private class RangeField
     {
-        [Header("前摇(秒)")] public float PreAct = 0.3f;
-        [Header("前摇放大(倍)")] public float PreActScale = 1.2f;
+        [Header("前摇(秒)")] public float PreAct = 0.15f;
+        [Header("前摇放大(倍)")] public float PreActScale = 1.1f;
         [Header("后座力(格)")] public float Recoil = 0.3f;
-        [Header("后座力时长(秒)")] public float RecoilSec = 0.05f;
-        [Header("站稳时长(秒)")] public float RecoverSec = 0.05f;
+        [Header("后座力时长(秒)")] public float RecoilSec = 0.1f;
+        [Header("站稳时长(秒)")] public float RecoverSec = 0.15f;
     }
 
     [Serializable]
@@ -408,30 +410,34 @@ public class CardAnimator : MonoBehaviour
     private class DodgeField
     {
         [Header("距离(格)")] public float Distance = 0.3f;
-        [Header("时长(秒)")]public float Duration = 0.2f;
+        [Header("时长(秒)")]public float Duration = 0.15f;
     }
 
     [Serializable]
     private class AssistField
     {
-        [Header("放大(倍)")] public float Enlarge = 1.1f;
-        [Header("时长(秒)")] public float EnlargeSec = 0.2f;
+        [Header("放大(倍)")] public float Enlarge = 1.05f;
+        [Header("时长(秒)")] public float EnlargeSec = 0.15f;
     }
 
     [Serializable]
     public class MiscField
     {
-        [Header("竖文字显示时长(秒)")] public float VTextLasting = 1.5f;
-        [Header("横文字显示时长(秒)")]public float HTextLasting = 1.5f;
-        [Header("暴击文字大小(倍)")] public float CriticalTextEnlarge = 1.5f;
+        [Header("竖文字显示时长(秒)")] public float VTextLasting = 2f;
+        [Header("横文字显示时长(秒)")]public float HTextLasting = 2f;
+        [Header("暴击文字大小(倍)")] public float CriticalTextEnlarge = 2f;
         [Header("会心文字大小(倍)")] public float RouseTextEnlarge = 2f;
-        [Header("击退执行(秒)")] public float RePos = 0.2f;
+        [Header("击退执行(秒)")] public float RePos = 0.3f;
         [Header("棋格显示/渐变时长(秒)")] public float ChessGridFadingSec = 3f;
-        [Header("棋格渐变Alpha(度)")] [Range(0, 1)] public float ChessGridFading = 0.3f;
+        [Header("棋格渐变Alpha(度)")] [Range(0, 1)] public float ChessGridFading = 0.1f;
         [Header("(Buff)羁绊时长(秒)")] public float JBAnimLasting = 2f;
         [Header("金币掉落的文字颜色")]public Color TreasureChestTextColor = Color.yellow;
         [Header("天暗度(小)")] [Range(0.3f, 1f)] public float Shady = 0.6f;
         [Header("天暗度(大)")] [Range(0.3f, 1f)] public float Dark = 0.8f;
-        [Header("掉血(秒)")] [Range(0f, 3f)] public float DropBloodSec = 0.7f;
+        [Header("掉血演示(秒)")] [Range(0f, 3f)] public float DropBloodSec = 0.3f;
+        [Header("点击开始后等待(秒)")] public float OnRoundStart = 0.5f;
+        [Header("每次攻击动作等待(秒)")] public float OnActivity = 0.5f;
+        [Header("每回合结束演示等待(秒)")] public float OnRoundEnd = 0.5f;
+        [Header("每回合(3次)更新卡牌状态(提取)等待(秒)")] public float OnFilterChessmen = 0.3f;
     }
 }

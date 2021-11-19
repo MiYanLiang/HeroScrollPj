@@ -132,7 +132,7 @@ public abstract class CardStyle : ChessmanStyle
         {
             CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Level}",
                 CardAnimator.instance.Misc.TreasureChestTextColor,
-                Damage.Types.Rouse);
+                Damage.Types.Rouse, false);
             return;
         }
         switch (result.Type)

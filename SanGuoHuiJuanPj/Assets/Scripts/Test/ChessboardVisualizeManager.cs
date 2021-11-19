@@ -172,7 +172,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         var chess = NewWar.ChessOperator;
         ChessRound round = null;
         round = chess.StartRound();
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundStart);
         PreAnimation().Play();
         yield return new WaitUntil(() => round != null);
         StartCoroutine(AnimateRound(round));
@@ -245,7 +245,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         //回合结束演示
         if(round.FinalAction.ChessProcesses.Count>0)
         {
-            yield return new WaitForSeconds(0.5f);
             foreach (var process in round.FinalAction.ChessProcesses)
                 yield return OnBasicChessProcess(process).Play().WaitForCompletion();
             yield return FilterDeathChessman();
@@ -268,14 +267,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
             yield break;
         }
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         IsBusy = false;
         NewWar.StartButtonShow(true);
         OnRoundPause?.Invoke();
     }
     private IEnumerator FilterDeathChessman()
     {
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnFilterChessmen);
         //更新棋位和棋子状态(提取死亡棋子)
         foreach (var tmp in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
@@ -686,7 +685,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
 
         var chessPos = Chessboard.GetChessPos(majorCard);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnActivity);
         if (!majorCard.Status.IsDeath)
             //后摇
         {
