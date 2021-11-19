@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
+using DG.Tweening;
 using MoreLinq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -54,11 +55,11 @@ public class JiBanAnimationManager : MonoBehaviour
     public IEnumerator JiBanDisplay(int jbId, bool isChallenger)
     {
         var con = GetController(isChallenger);
-        con.MainImage.sprite = GameResources.Instance.JiBanBg[jbId];
-        con.MainTitle.sprite = GameResources.Instance.JiBanHText[jbId];
+        var img = GameResources.Instance.JiBanBg[jbId];
+        var title = GameResources.Instance.JiBanHText[jbId];
         con.JiBanImageObj.transform.localPosition = Vector3.zero;
         con.JiBanImageObj.SetActive(true);
-        yield return new WaitForSeconds(CardAnimator.instance.Misc.JBAnimLasting);
+        yield return con.ImageFading(img, title).WaitForCompletion();
         con.JiBanImageObj.SetActive(false);
     }
     public IEnumerator JiBanOffensive(int jbId,bool isChallenger)
@@ -90,6 +91,21 @@ public class JiBanAnimationManager : MonoBehaviour
         public Transform AnimTransform;
         public Image MainImage;
         public Image MainTitle;
+        public Image MainDesk;
+
+        public Tween ImageFading(Sprite img,Sprite title)
+        {
+            var secs = CardAnimator.instance.Misc.JBAnimLasting / 2;
+            MainImage.sprite = img;
+            MainTitle.sprite = title;
+            MainImage.DOFade(0, 0);
+            MainTitle.DOFade(0, 0);
+            MainDesk.DOFade(0, 0);
+            return DOTween.Sequence().Join(MainDesk.DOFade(1, secs)).Join(MainTitle.DOFade(1, secs))
+                .Join(MainImage.DOFade(1, secs)).Append(
+                    DOTween.Sequence().Join(MainDesk.DOFade(0, secs)).Join(MainTitle.DOFade(0, secs))
+                        .Join(MainImage.DOFade(0, secs)));
+        }
     }
     /// <summary>
     /// 羁绊进攻动画演示

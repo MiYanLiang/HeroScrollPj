@@ -37,7 +37,7 @@ public class Chessboard : MonoBehaviour
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
         grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
         data = new Dictionary<int, FightCardData>();
-        SpeedBtn.onClick.AddListener(() => ChangeTimeScale(0, false));
+        SpeedBtn.onClick.AddListener(() => ChangeTimeScale(0, true));
     }
 
     public void ResetChessboard()
@@ -145,7 +145,8 @@ public class Chessboard : MonoBehaviour
         else warScale = scale;
 
         if (save) GamePref.SetPrefWarSpeed(warScale);
-        UpdateWarSpeed();
+        Time.timeScale = warScale;
+        SpeedText.text = Multiply + warScale;
     }
     private const string Multiply = "×";
     public void UpdateWarSpeed()
