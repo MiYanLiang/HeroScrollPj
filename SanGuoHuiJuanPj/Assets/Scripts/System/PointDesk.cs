@@ -345,7 +345,7 @@ public class PointDesk : MonoBehaviour
         SelectedCard.CityOperation.SetState(isEnlisted
             ? GameCardCityUiOperation.States.Enlisted
             : GameCardCityUiOperation.States.None);
-        AudioController0.instance.ChangeAudioClip(15);
+        AudioController0.instance.ChangeAudioClip(19);
         AudioController0.instance.PlayAudioSource(0);
         UpdateEnlist();
         OnEnlistCall.Invoke(SelectedCard.Card);
