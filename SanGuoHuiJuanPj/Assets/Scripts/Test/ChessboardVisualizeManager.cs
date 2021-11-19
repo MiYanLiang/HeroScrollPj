@@ -223,6 +223,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var stat in round.PreRoundStats)
         {
             var card = TryGetCardMap(stat.Key);
+            if (card == null) continue;
             if (card.HitPoint != stat.Value.Hp)
                 Debug.LogWarning($"卡牌[{card.GetInfo().Name}]({stat.Key})与记录的有误！客户端[{card.Status}] vs 数据[{stat}]");
         }
@@ -607,6 +608,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.ResultMapper)
             {
                 var card = TryGetCardMap(result.Key);
+                if (card == null) continue;//todo 会因为精灵销毁而找不到物件
+                
                 var tweenCard = listTween.FirstOrDefault();
                 mainEvent.AddListener(() =>
                 {
@@ -653,6 +656,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             foreach (var result in map.Value.CounterResultMapper)
             {
                 var card = TryGetCardMap(result.Key);
+                if (card == null) continue;
                 var tc = tweenCards.FirstOrDefault();
                 counterE.AddListener(() =>
                 {
@@ -698,6 +702,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var activity in list)
         {
             var target = TryGetCardMap(activity.To);
+            if (target == null) continue;
             //todo:注意这里的退一格并没有等待结果。所以理想状态是退一格的时间别设太长
             tween.Join(CardAnimator.instance
                 .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[activity.RePos])

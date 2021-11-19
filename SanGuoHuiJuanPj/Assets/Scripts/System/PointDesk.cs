@@ -247,8 +247,6 @@ public class PointDesk : MonoBehaviour
             ResetTag(Element, string.Empty);
         }
 
-
-
         void ResetTag(CardInfoTagUi ui, string text)
         {
             ui.Button.onClick.RemoveAllListeners();
@@ -264,8 +262,9 @@ public class PointDesk : MonoBehaviour
             {
                 if (TagSelectionPointer)
                 {
-                    TagSelectionPointer.SetActive(true);
+                    TagSelectionPointer.SetActive(false);
                     TagSelectionPointer.transform.SetParent(ui.transform);
+                    TagSelectionPointer.SetActive(true);
                 }
                 Info.text = text;
             });
