@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
@@ -10,17 +11,15 @@ public class Barrack : MonoBehaviour
 {
     public PointDesk PointDesk;
     public int SelectedForce;
-    public Image ChangeTroop;//切换军团按钮
+    public Button ChangeTroop;//切换军团按钮
     public Text TroopName;
-    public Image TroopNameImage;
     public GameCardUi GameCardUiPrefab;
     public Transform InventoryContent;
     private List<GameCardUi> _cardPool = new List<GameCardUi>();
 
     public void Init(UnityAction<GameCard> onCardMerge,UnityAction<GameCard> onCardSell,UnityAction<GameCard> onCardEnlist)
     {
-        var flagBtn = ChangeTroop.gameObject.AddComponent<Button>();
-        flagBtn.onClick.AddListener(() =>
+        ChangeTroop.onClick.AddListener(() =>
         {
             RefreshCardList(SelectedForce + 1);
             RefreshTroopName(SelectedForce + 1);
@@ -31,20 +30,7 @@ public class Barrack : MonoBehaviour
         PointDesk.OnCardSell.AddListener(onCardSell);
         PointDesk.OnEnlistCall.AddListener(onCardEnlist);//出战
     }
-    private void RefreshTroopName(int troop)
-    {
-        string troopName="";
-        switch (troop) 
-        {
-            case 1:troopName = "刘";break;
-            case 2:troopName = "曹";break;
-            case 3:troopName = "孙";break;
-            case 4:troopName = "袁";break;
-            case 5:troopName = "吕";break;
-            case 6:troopName = "司马";break;
-        }
-        TroopName.text = troopName;
-    }
+    private void RefreshTroopName(int troop) => TroopName.text = $"{(ForceFlags)troop}";
 
     /// <summary> 
     /// 创建并展示单位列表 
@@ -64,8 +50,6 @@ public class Barrack : MonoBehaviour
                 SelectedForce = 0;
             }
             else SelectedForce = forceId;
-
-            PointDesk.SetForce(SelectedForce);
         }
 
         PlayerDataForGame.instance.RefreshEnlisted(SelectedForce);

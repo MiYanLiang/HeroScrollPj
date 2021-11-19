@@ -18,15 +18,12 @@ public class WarBoardUi : MonoBehaviour
     [SerializeField] private Image Background;
     [SerializeField] private PlayerCardRack Rack;
     [SerializeField] private ChessboardInputController ChessboardInputControl;
-    [SerializeField] private Button speedBtn;
-    [SerializeField] private Text speedBtnText;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
     [SerializeField] private Text heroEnlistText; //武将上阵文本
     [SerializeField] AboutCardUi aboutCardUi; //阵上卡牌详情展示位
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }
     public bool IsDragDisable { get; private set; }
-    private const string Multiply = "×";
 
     private ObjectPool<WarGameCardUi> UiPool { get; set; }
 
@@ -42,7 +39,6 @@ public class WarBoardUi : MonoBehaviour
         {
             if (playerWin) OnChallengerWin();
         });
-        speedBtn.onClick.AddListener(() => ChangeTimeScale());
         UiPool = new ObjectPool<WarGameCardUi>(() => PrefabManager.NewWarGameCardUi(Rack.ScrollRect.content));
     }
 
@@ -78,7 +74,7 @@ public class WarBoardUi : MonoBehaviour
         SetPlayerBase(playerBase);
         SetEnemies(enemyBase, enemyCards);
         GeneratePlayerScopeChessman();
-        UpdateGameSpeed();
+        Chessboard.UpdateWarSpeed();
         OnPreChessboardFloorBuff(ChessboardManager.IsFirstRound);
         Chessboard.gameObject.SetActive(true);
         Background.gameObject.SetActive(true);
@@ -86,13 +82,6 @@ public class WarBoardUi : MonoBehaviour
 
     public void NewGame() => ChessboardManager.NewGame();
 
-    public void UpdateGameSpeed()
-    {
-        //调整游戏速度
-        var speed = GamePref.PrefWarSpeed;
-        Time.timeScale = speed;
-        speedBtnText.text = Multiply + speed;
-    }
     public void GeneratePlayerScopeChessman()
     {
         foreach (var card in PlayerScope.Where(p => p.IsLock))
@@ -126,22 +115,7 @@ public class WarBoardUi : MonoBehaviour
     }
 
     //改变游戏速度
-    public void ChangeTimeScale(int scale = 0, bool save = true)
-    {
-        var warScale = GamePref.PrefWarSpeed;
-        if (scale <= 0)
-        {
-            warScale *= 2;
-            if (warScale > 2)
-                warScale = 1;
-        }
-        else warScale = scale;
-        if (save) GamePref.SetPrefWarSpeed(warScale);
-        Time.timeScale = warScale;
-        speedBtnText.text = Multiply + warScale;
-    }
-
-
+    public void ChangeTimeScale(int scale = 0, bool save = true) => Chessboard.ChangeTimeScale(scale, save);
 
     private void ChessmanInit(FightCardData card)
     {

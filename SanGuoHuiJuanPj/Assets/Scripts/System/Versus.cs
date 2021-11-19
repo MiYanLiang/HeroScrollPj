@@ -54,7 +54,7 @@ public class Versus : MonoBehaviour
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);
         WarBoard.GeneratePlayerScopeChessman();
-        WarBoard.UpdateGameSpeed();
+        WarBoard.Chessboard.UpdateWarSpeed();
     }
 
     public void SetEnemyFormation(Dictionary<int, IGameCard> formation)

@@ -143,7 +143,7 @@ public class UIManager : MonoBehaviour
         InitializationPlayerInfo();
         expedition.Init();
         Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist);
-        Versus.Init();
+        //Versus.Init();
         InitChickenOpenTs();
         //chickenWindow.Init();
         InitBaYeFun();
