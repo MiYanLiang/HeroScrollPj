@@ -9,9 +9,9 @@ using UnityEngine;
 
 public enum ForceFlags
 {
-    蜀 = 0,
-    魏 = 1,
-    吴 = 2,
+    刘 = 0,
+    曹 = 1,
+    孙 = 2,
     袁 = 3,
     吕 = 4,
     司马 = 5,

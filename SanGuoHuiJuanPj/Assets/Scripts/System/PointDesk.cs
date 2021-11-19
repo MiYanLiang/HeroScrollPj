@@ -142,10 +142,10 @@ public class PointDesk : MonoBehaviour
     private void UpdateInfoTags()
     {
         var major = "主副将";
-        ResetTag(About, "故事");
+        ResetTag(About, "典故");
         ResetTag(Military, "兵种");
         ResetTag(Armed, "系数");
-        ResetTag(About, "战斗");
+        ResetTag(CombatType, "战斗");
         ResetTag(Element, "元素");
         ResetTag(Major, major);
         var card = SelectedCard;
@@ -153,49 +153,95 @@ public class PointDesk : MonoBehaviour
         var military = string.Empty;
         var armed = string.Empty;
         var combatType = string.Empty;
-        var element = string.Empty;
         if (card.CardInfo.Type == GameCardType.Hero)
         {
             var c = DataTable.Hero[card.Card.id];
             var m = DataTable.Military[c.MilitaryUnitTableId];
             switch (m.ArmedType)
             {
-                case 0  : armed ="普通系";break;
-                case 1  : armed ="护盾系";break;
-                case 2  : armed ="步兵系";break;
-                case 3  : armed ="长持系";break;
-                case 4  : armed ="短持系";break;
-                case 5  : armed ="骑兵系";break;
-                case 6  : armed ="器械系";break;
-                case 7  : armed ="弓弩系";break;
-                case 8  : armed ="战船系";break;
-                case 9  : armed ="蛮族系";break;
-                case 10 : armed ="统御系";break;
-                case 11 : armed ="干扰系";break;
-                case 12 : armed ="辅助系";break;
-                case 13 : armed ="投掷系";break;
-                case 14 : armed ="猛兽系";break;
-                case 15: armed = "召唤系";break;
+                case 0:
+                    armed = "普通系";
+                    break;
+                case 1:
+                    armed = "护盾系";
+                    break;
+                case 2:
+                    armed = "步兵系";
+                    break;
+                case 3:
+                    armed = "长持系";
+                    break;
+                case 4:
+                    armed = "短持系";
+                    break;
+                case 5:
+                    armed = "骑兵系";
+                    break;
+                case 6:
+                    armed = "器械系";
+                    break;
+                case 7:
+                    armed = "弓弩系";
+                    break;
+                case 8:
+                    armed = "战船系";
+                    break;
+                case 9:
+                    armed = "蛮族系";
+                    break;
+                case 10:
+                    armed = "统御系";
+                    break;
+                case 11:
+                    armed = "干扰系";
+                    break;
+                case 12:
+                    armed = "辅助系";
+                    break;
+                case 13:
+                    armed = "投掷系";
+                    break;
+                case 14:
+                    armed = "猛兽系";
+                    break;
+                case 15:
+                    armed = "召唤系";
+                    break;
             }
+
             military = m.Title;
-            combatType = m.CombatStyle == 1 ? "远程" : "近战";
-            about = card.CardInfo.About;
+            var combatText = string.Empty;
+            if (m.CombatStyle == 1)
+            {
+                combatType = "远程";
+                combatText = DataTable.GetStringText(92);
+            }
+            else
+            {
+                combatType = "近战";
+                combatText = DataTable.GetStringText(91);
+            }
+
+            about = card.CardInfo.Intro;
             SetOnClick(About, about);
-            SetOnClick(Military, military);
-            SetOnClick(Armed, armed);
-            SetOnClick(CombatType , combatType);
+            ResetTag(Military, military);
+            SetOnClick(Military, m.Detail);
+            ResetTag(Armed, armed);
+            ResetTag(CombatType, combatType);
+            SetOnClick(CombatType, combatText);
+            ResetTag(Element, ElementText(card.CardInfo.Element, false));
+            SetOnClick(Element, ElementText(card.CardInfo.Element, true));
         }
         else
         {
             military = card.CardInfo.Name;
-            armed = combatType = card.CardInfo.Type == GameCardType.Tower ? "塔" : "陷阱";
-            about = card.CardInfo.Intro;
-            SetOnClick(About, about);
-            SetOnClick(Military, military);
+            armed = card.CardInfo.Type == GameCardType.Tower ? "建筑" : "陷阱";
+            ResetTag(Military, military);
+            SetOnClick(Military, card.CardInfo.Intro);
             ResetTag(Armed, armed);
-            ResetTag(CombatType, combatType);
+            ResetTag(CombatType, string.Empty);
+            ResetTag(Element, string.Empty);
         }
-        ResetTag(Element, ElementText(card.CardInfo.Element));
 
 
 
@@ -213,20 +259,30 @@ public class PointDesk : MonoBehaviour
             ui.Button.onClick.AddListener(() => Info.text = text);
         }
 
-        string ElementText(int e)
+        string ElementText(int e,bool detail)
         {
             switch (e)
             {
-                case CombatConduct.PhysicalDmg: return "物理";
-                case CombatConduct.MechanicalDmg: return "器械";
-                case CombatConduct.FixedDmg: return "固伤";
-                case CombatConduct.BasicMagicDmg: return "法术";
-                case CombatConduct.WindDmg: return "风伤";
-                case CombatConduct.ThunderDmg: return "雷伤";
-                case CombatConduct.WaterDmg: return "水伤";
-                case CombatConduct.PoisonDmg: return "毒伤";
-                case CombatConduct.FireDmg: return "火伤";
-                case CombatConduct.EarthDmg: return "土伤";
+                case CombatConduct.FixedDmg: 
+                    return detail ? DataTable.GetStringText(103) : DataTable.GetStringText(93);
+                case CombatConduct.PhysicalDmg:
+                    return detail ? DataTable.GetStringText(104) : DataTable.GetStringText(94);
+                case CombatConduct.MechanicalDmg:
+                    return detail ? DataTable.GetStringText(105) : DataTable.GetStringText(95);
+                case CombatConduct.BasicMagicDmg:
+                    return detail ? DataTable.GetStringText(106) : DataTable.GetStringText(96);
+                case CombatConduct.WindDmg: 
+                    return detail ? DataTable.GetStringText(107) : DataTable.GetStringText(97);
+                case CombatConduct.ThunderDmg:
+                    return detail ? DataTable.GetStringText(108) : DataTable.GetStringText(98);
+                case CombatConduct.WaterDmg: 
+                    return detail ? DataTable.GetStringText(109) : DataTable.GetStringText(99);
+                case CombatConduct.PoisonDmg:
+                    return detail ? DataTable.GetStringText(110) : DataTable.GetStringText(100);
+                case CombatConduct.FireDmg: 
+                    return detail ? DataTable.GetStringText(111) : DataTable.GetStringText(101);
+                case CombatConduct.EarthDmg:
+                    return detail ? DataTable.GetStringText(112) : DataTable.GetStringText(102);
                 default: return string.Empty;
             }
         }

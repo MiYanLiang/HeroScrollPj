@@ -22,7 +22,6 @@ public class Barrack : MonoBehaviour
         ChangeTroop.onClick.AddListener(() =>
         {
             RefreshCardList(SelectedForce + 1);
-            RefreshTroopName(SelectedForce + 1);
             AudioController0.instance.RandomPlayGuZhengAudio();//随机播放古筝声音
         });
         PointDesk.Init();
@@ -62,6 +61,7 @@ public class Barrack : MonoBehaviour
             selected = _cardPool.First(c => c.gameObject.activeSelf).Card;
         PointDesk.SelectCard(selected);
         HighlightSelected(selected);
+        RefreshTroopName(SelectedForce);
         //AudioController0.instance.RandomPlayGuZhengAudio();//随机播放古筝声音
         //AudioController0.instance.ChangeAudioClip(13); //播放随机音效 
         //UIManager.instance.PlayOnClickMusic();
