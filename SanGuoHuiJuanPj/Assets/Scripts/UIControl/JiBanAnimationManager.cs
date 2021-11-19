@@ -13,16 +13,19 @@ public class JiBanAnimationManager : MonoBehaviour
     [SerializeField]private JiBanController Player;
     [SerializeField]private JiBanController Opposite;
     [SerializeField]private JiBanOffensiveField[] JiBanOffensiveFields;
-    public Dictionary<int, (int CardId, GameCardType CardType)[]> JiBanMap;
+    public List<KeyValuePair<int, (int CardId, GameCardType CardType)[]>> JiBanMap;
     public void Init()
     {
         Player.JiBanImageObj.SetActive(false);
         Opposite.JiBanImageObj.SetActive(false);
-        JiBanMap = new Dictionary<int, (int, GameCardType)[]>();
+        JiBanMap = new List<KeyValuePair<int, (int CardId, GameCardType CardType)[]>>();
         foreach (var itm in DataTable.JiBan.Where(j=>j.Value.IsOpen > 0))
         {
             var jiBan = itm.Value;
-            JiBanMap.Add(itm.Key, jiBan.Cards.Select(j => (j.CardId, (GameCardType)j.CardType)).ToArray());
+            JiBanMap.Add(new KeyValuePair<int, (int CardId, GameCardType CardType)[]>(itm.Key, jiBan.Cards.Select(j => (j.CardId, (GameCardType)j.CardType)).ToArray()));
+            var bossArray = jiBan.BossCards.Select(j => (j.CardId, (GameCardType)j.CardType)).ToArray();
+            if (bossArray.Any())
+                JiBanMap.Add(new KeyValuePair<int, (int CardId, GameCardType CardType)[]>(itm.Key, bossArray));
         }
     }
     /// <summary>
