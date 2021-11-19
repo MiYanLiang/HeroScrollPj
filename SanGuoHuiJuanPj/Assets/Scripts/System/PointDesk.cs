@@ -15,6 +15,8 @@ public class PointDesk : MonoBehaviour
 
     //信息物件
     public GameCardUi SelectedCard;
+
+    [SerializeField] GameObject TagSelectionPointer;
     //[SerializeField]Text Fullname;        //详情信息取消名字显示
     [SerializeField] Text strength;
     [SerializeField] Text hitpoint;
@@ -102,6 +104,8 @@ public class PointDesk : MonoBehaviour
         CardMergeBtn.onClick.AddListener(()=>OnMergeCard.Invoke(SelectedCard.Card));
         CardSellBtn.onClick.AddListener(()=>OnCardSell.Invoke(SelectedCard.Card));
         EnlistBtn.onClick.AddListener(EnlistSwitch);
+        if(TagSelectionPointer)
+            TagSelectionPointer.SetActive(false);
         //EnlistBtn.onClick.AddListener(()=>OnEnlistCall.Invoke(SelectedCard.Card));
     }
 
@@ -256,7 +260,15 @@ public class PointDesk : MonoBehaviour
         {
             ui.Button.onClick.RemoveAllListeners();
             ui.Button.interactable = true;
-            ui.Button.onClick.AddListener(() => Info.text = text);
+            ui.Button.onClick.AddListener(() =>
+            {
+                if (TagSelectionPointer)
+                {
+                    TagSelectionPointer.SetActive(true);
+                    TagSelectionPointer.transform.SetParent(ui.transform);
+                }
+                Info.text = text;
+            });
         }
 
         string ElementText(int e,bool detail)
