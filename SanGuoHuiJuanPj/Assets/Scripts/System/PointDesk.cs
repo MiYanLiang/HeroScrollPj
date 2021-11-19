@@ -264,6 +264,7 @@ public class PointDesk : MonoBehaviour
                 {
                     TagSelectionPointer.SetActive(false);
                     TagSelectionPointer.transform.SetParent(ui.transform);
+                    TagSelectionPointer.transform.localPosition = Vector3.zero;
                     TagSelectionPointer.SetActive(true);
                 }
                 Info.text = text;
