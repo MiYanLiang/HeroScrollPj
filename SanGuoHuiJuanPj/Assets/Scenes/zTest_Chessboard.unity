@@ -2583,10 +2583,22 @@ MonoBehaviour:
     Pos: 17
     Type: 522
     Level: 10
-  - Id: 31
+  - Id: 79
+    Pos: 11
+    Type: 0
+    Level: 1
+  - Id: 10
+    Pos: 12
+    Type: 0
+    Level: 1
+  - Id: 139
     Pos: 0
     Type: 0
-    Level: 5
+    Level: 1
+  - Id: 311
+    Pos: 2
+    Type: 0
+    Level: 1
   Player:
   - Id: 0
     Pos: 17
@@ -2600,9 +2612,17 @@ MonoBehaviour:
     Pos: 0
     Type: 0
     Level: 1
-  - Id: 43
+  - Id: 3
     Pos: 3
-    Type: 0
+    Type: 2
+    Level: 1
+  - Id: 3
+    Pos: 4
+    Type: 2
+    Level: 1
+  - Id: 3
+    Pos: 5
+    Type: 2
     Level: 1
 --- !u!4 &413234022
 Transform:
