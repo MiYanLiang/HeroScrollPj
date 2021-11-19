@@ -37,7 +37,6 @@ namespace Assets.System.WarModule
         bool IsPostedAlive { get; }
         bool IsAliveHero { get; }
         void RemoveOperator();
-        void Init(int pos, bool isCChallenger);
         void SetPos(IChessOperator op);
     }
 }

@@ -1,22 +1,20 @@
 ﻿using CorrelateLib;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Assets.System.WarModule;
-using UnityEngine;
-using Random = UnityEngine.Random;
+
 
 public static class GameSystemExtension
 {
+    public static readonly Random Random = new Random();
     public static T RandomPick<T>(this IEnumerable<T> data,[CallerMemberName]string method = null) where T : struct
     {
         var list = data.ToList();
         if (!list.Any())
             throw new InvalidOperationException($"{nameof(RandomPick)} of {method}(): Items is 0!");
-        var pick = Random.Range(0, list.Count);
+        var pick = Random.Next(0, list.Count);
         return list[pick];
     }
 
@@ -210,7 +208,7 @@ public class GameCardInfo
             default:
                 throw new ArgumentOutOfRangeException($"type = {type}, rare = {rare}", type, null);
         }
-        var pick = Random.Range(0, ids.Count);
+        var pick = GameSystemExtension.Random.Next(0, ids.Count);
         var id = ids[pick];
         return GetInfo(type, id);
     }

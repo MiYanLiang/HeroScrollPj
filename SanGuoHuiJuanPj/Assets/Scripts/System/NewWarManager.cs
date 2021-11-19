@@ -9,7 +9,7 @@ using UnityEngine.UI;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 public class NewWarManager : MonoBehaviour, ILogger
 {
-    private const string ButtonTrigger = "isShow";
+    public const string ButtonTrigger = "isShow";
     #region UnityFields
 
     public Button StartButton { get; private set; }
@@ -38,9 +38,10 @@ public class NewWarManager : MonoBehaviour, ILogger
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
 #if UNITY_EDITOR
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
-            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, this);
+            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values ,this);
 #else
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values, DataTable.Trap.Values, DataTable.JiBan.Values);
+        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
+            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values);
 #endif
         CardData.Clear();
         StartButtonShow(true);
@@ -77,7 +78,13 @@ public class NewWarManager : MonoBehaviour, ILogger
     public void RegCard(FightCardData card)
     {
         ChessOperator.RegOperator(card);
-        card.Style = ChessOperator.GetCombatStyle(card);
+        card.Style = ChessOperatorManager<FightCardData>.GetCombatStyle(
+            card.Card,
+            DataTable.Hero,
+            DataTable.Tower,
+            DataTable.Trap,
+            DataTable.Military,
+            DataTable.BaseLevel);
         CardData.Add(card.InstanceId, card);
     }
     public void StartButtonShow(bool show)

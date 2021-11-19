@@ -33,10 +33,11 @@ public class Chessboard : MonoBehaviour
 
     public void Init()
     {
-        grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
-        data = new Dictionary<int, FightCardData>();
         for (var i = 0; i < PlayerScope.Length; i++) PlayerScope[i].Init(i, true);
         for (var i = 0; i < EnemyScope.Length; i++) EnemyScope[i].Init(i, false);
+        grid = new ChessGrid(PlayerScope.Cast<IChessPos>().ToArray(), EnemyScope.Cast<IChessPos>().ToArray());
+        data = new Dictionary<int, FightCardData>();
+        SpeedBtn.onClick.AddListener(() => ChangeTimeScale(0, false));
     }
 
     public void ResetChessboard()
@@ -132,4 +133,26 @@ public class Chessboard : MonoBehaviour
         ? grid.GetNeighborIndexes(pos, round)
         : grid.GetNeighborIndexes(pos, round).Where(i => i != 17).ToArray();
 
+    public void ChangeTimeScale(int scale, bool save)
+    {
+        var warScale = GamePref.PrefWarSpeed;
+        if (scale <= 0)
+        {
+            warScale *= 2;
+            if (warScale > 2)
+                warScale = 1;
+        }
+        else warScale = scale;
+
+        if (save) GamePref.SetPrefWarSpeed(warScale);
+        UpdateWarSpeed();
+    }
+    private const string Multiply = "×";
+    public void UpdateWarSpeed()
+    {
+        //调整游戏速度
+        var speed = GamePref.PrefWarSpeed;
+        Time.timeScale = speed;
+        SpeedText.text = Multiply + speed;
+    }
 }

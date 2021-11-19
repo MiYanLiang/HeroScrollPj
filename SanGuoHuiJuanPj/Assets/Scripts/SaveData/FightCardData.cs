@@ -13,9 +13,7 @@ using UnityEngine;
     public static FightCardData PlayerBaseCard(int level, int cityLevel = 1)
     {
         var baseConfig = DataTable.BaseLevel[cityLevel];
-        var playerLvlCfg = DataTable.PlayerLevelConfig[level];
-        var hp = playerLvlCfg.BaseHpAddOn + baseConfig.BaseHp;
-        var baseCard = BaseCard(true, hp, cityLevel);
+        var baseCard = BaseCard(true, baseConfig.BaseHp, cityLevel);
         baseCard.level = level;
         return baseCard;
     }
@@ -27,7 +25,6 @@ using UnityEngine;
         baseCard.IsLock = true;
         baseCard.SetPos(17);
         baseCard.status = ChessStatus.Instance(hp, hp, 17, new Dictionary<int, int>(), new List<int>(), 0);
-        baseCard.ResetHp(hp);
         return baseCard;
     }
 
@@ -142,7 +139,7 @@ using UnityEngine;
                 armedType = -4;
                 combatType = -1;
                 element = 0;
-                hitpoint = DataTable.BaseLevel[level].BaseHp;//老巢血量不在这里初始化
+                hitpoint = DataTable.BaseLevel[level].BaseHp;
             }
                 break;
             case GameCardType.Soldier:

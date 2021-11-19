@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,15 +18,12 @@ public class WarBoardUi : MonoBehaviour
     [SerializeField] private Image Background;
     [SerializeField] private PlayerCardRack Rack;
     [SerializeField] private ChessboardInputController ChessboardInputControl;
-    [SerializeField] private Button speedBtn;
-    [SerializeField] private Text speedBtnText;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
     [SerializeField] private Text heroEnlistText; //武将上阵文本
     [SerializeField] AboutCardUi aboutCardUi; //阵上卡牌详情展示位
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }
     public bool IsDragDisable { get; private set; }
-    private const string Multiply = "×";
 
     private ObjectPool<WarGameCardUi> UiPool { get; set; }
 
@@ -40,7 +39,6 @@ public class WarBoardUi : MonoBehaviour
         {
             if (playerWin) OnChallengerWin();
         });
-        speedBtn.onClick.AddListener(() => ChangeTimeScale());
         UiPool = new ObjectPool<WarGameCardUi>(() => PrefabManager.NewWarGameCardUi(Rack.ScrollRect.content));
     }
 
@@ -72,25 +70,34 @@ public class WarBoardUi : MonoBehaviour
 
     public void StartNewGame(FightCardData enemyBase, FightCardData playerBase, List<ChessCard> enemyCards)
     {
-        if (playerBaseObj != null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
-        ChessboardManager.NewGame();
+        NewGame();
+        SetPlayerBase(playerBase);
         SetEnemies(enemyBase, enemyCards);
-        ChessboardManager.SetPlayerBase(playerBase);
-        ChessboardManager.InstanceChessman(playerBase);
-        foreach (var card in PlayerScope.Where(p => p.IsLock))
-            ChessmanInit(card);
-        playerBaseObj = playerBase.cardObj;
-        //调整游戏速度
-        var speed = GamePref.PrefWarSpeed;
-        Time.timeScale = speed;
-        speedBtnText.text = Multiply + speed;
-
+        GeneratePlayerScopeChessman();
+        Chessboard.UpdateWarSpeed();
         OnPreChessboardFloorBuff(ChessboardManager.IsFirstRound);
         Chessboard.gameObject.SetActive(true);
         Background.gameObject.SetActive(true);
     }
 
-    private void SetEnemies(FightCardData enemyBase, List<ChessCard> enemyCards)
+    public void NewGame() => ChessboardManager.NewGame();
+
+    public void GeneratePlayerScopeChessman()
+    {
+        foreach (var card in PlayerScope.Where(p => p.IsLock))
+            ChessmanInit(card);
+    }
+
+    public void SetPlayerBase(FightCardData playerBase)
+    {
+        playerBase.isPlayerCard = true;
+        if (playerBaseObj != null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
+        ChessboardManager.SetPlayerBase(playerBase);
+        ChessboardManager.InstanceChessman(playerBase);
+        playerBaseObj = playerBase.cardObj;
+    }
+
+    public void SetEnemies(FightCardData enemyBase, List<ChessCard> enemyCards)
     {
         if (enemyBaseObj != null && enemyBaseObj.gameObject) Destroy(enemyBaseObj.gameObject);
         foreach (var card in ChessboardManager.SetEnemyChess(enemyBase, enemyCards.ToArray()))
@@ -108,22 +115,7 @@ public class WarBoardUi : MonoBehaviour
     }
 
     //改变游戏速度
-    public void ChangeTimeScale(int scale = 0, bool save = true)
-    {
-        var warScale = GamePref.PrefWarSpeed;
-        if (scale <= 0)
-        {
-            warScale *= 2;
-            if (warScale > 2)
-                warScale = 1;
-        }
-        else warScale = scale;
-        if (save) GamePref.SetPrefWarSpeed(warScale);
-        Time.timeScale = warScale;
-        speedBtnText.text = Multiply + warScale;
-    }
-
-
+    public void ChangeTimeScale(int scale = 0, bool save = true) => Chessboard.ChangeTimeScale(scale, save);
 
     private void ChessmanInit(FightCardData card)
     {
@@ -335,4 +327,15 @@ public class WarBoardUi : MonoBehaviour
     }
 
     public void ChangeChessboardBg(Sprite sprite) => Chessboard.Background.sprite = sprite;
+
+    public void PlayResult(List<ChessRound> rounds)
+    {
+        StartCoroutine(AnimRounds(rounds));
+    }
+
+    private IEnumerator AnimRounds(List<ChessRound> rounds)
+    {
+        foreach (var round in rounds)
+            yield return ChessboardManager.AnimateRound(round);
+    }
 }

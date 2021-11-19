@@ -346,6 +346,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GridImages: []
+  SpeedBtn: {fileID: 766519278}
+  SpeedText: {fileID: 1555437150}
+  Background: {fileID: 1590913313}
   PlayerScope:
   - {fileID: 530060056}
   - {fileID: 433932461}
@@ -388,6 +391,15 @@ MonoBehaviour:
   - {fileID: 157847070}
   - {fileID: 1275822320}
   - {fileID: 395646769}
+  StartButton: {fileID: 1949415711}
+  EffectTransform: {fileID: 889945158}
+  RouseAnim: {fileID: 1595980193}
+  ShadyImage: {fileID: 1127929223}
+  WinFire: {fileID: 2121863759}
+  WinExplode: {fileID: 2079806568}
+  WinText: {fileID: 1572735540}
+  AutoRoundToggle: {fileID: 1774295168}
+  AutoRoundSlider: {fileID: 1154277588}
 --- !u!1 &49069121
 GameObject:
   m_ObjectHideFlags: 0
@@ -2566,49 +2578,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c51cddced990be4cb070da249ce04f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartButton: {fileID: 1949415711}
-  PlayerPoses:
-  - {fileID: 530060056}
-  - {fileID: 433932461}
-  - {fileID: 1614738734}
-  - {fileID: 543692832}
-  - {fileID: 1625255976}
-  - {fileID: 547644283}
-  - {fileID: 1198140468}
-  - {fileID: 1823133585}
-  - {fileID: 1308411016}
-  - {fileID: 401831638}
-  - {fileID: 1298580722}
-  - {fileID: 863118396}
-  - {fileID: 67487693}
-  - {fileID: 1649579064}
-  - {fileID: 1779142618}
-  - {fileID: 1530343595}
-  - {fileID: 420174419}
-  - {fileID: 507196684}
-  - {fileID: 456461882}
-  - {fileID: 1457421734}
-  EnemyPoses:
-  - {fileID: 1770812429}
-  - {fileID: 1665697459}
-  - {fileID: 1659147336}
-  - {fileID: 1200466935}
-  - {fileID: 1894230592}
-  - {fileID: 1333701858}
-  - {fileID: 386028915}
-  - {fileID: 1045054249}
-  - {fileID: 751406131}
-  - {fileID: 708244334}
-  - {fileID: 799077032}
-  - {fileID: 1597790637}
-  - {fileID: 638160214}
-  - {fileID: 496187178}
-  - {fileID: 1464542385}
-  - {fileID: 1577212150}
-  - {fileID: 657378007}
-  - {fileID: 157847070}
-  - {fileID: 1275822320}
-  - {fileID: 395646769}
   Enemy:
   - Id: 0
     Pos: 17
@@ -2665,20 +2634,13 @@ MonoBehaviour:
   HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
     type: 3}
   NewWar: {fileID: 413234021}
-  Chessboard: {fileID: 45128538}
-  RouseEffectObj: {fileID: 1595980192}
-  ShadyImage: {fileID: 1127929223}
-  JiBanManager: {fileID: 413234025}
   audioSource: {fileID: 1882509704}
-  fireUIObj: {fileID: 2121863758}
-  boomUIObj: {fileID: 2079806567}
-  gongKeUIObj: {fileID: 1572735539}
-  autoRoundToggle: {fileID: 1774295168}
   AutoRoundSecs: 1.5
-  AutoRoundSlider: {fileID: 1154277588}
   DataTable: {fileID: 1144099187}
   EffectsPooling: {fileID: 379474648}
   PlayerData: {fileID: 1144099189}
+  chessboard: {fileID: 45128538}
+  jbAnimationManager: {fileID: 413234025}
 --- !u!114 &413234024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2725,6 +2687,9 @@ MonoBehaviour:
     ChessGridFading: 0.3
     JBAnimLasting: 2
     TreasureChestTextColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    Shady: 0.6
+    Dark: 0.8
+    DropBloodSec: 0.7
 --- !u!114 &413234025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9945,9 +9910,9 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1572735537}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1572735539 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4273484616449920085, guid: 7becf505dda504c44bbd3b7fb79c51ab,
+--- !u!95 &1572735540 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4273484616449920087, guid: 7becf505dda504c44bbd3b7fb79c51ab,
     type: 3}
   m_PrefabInstance: {fileID: 1572735537}
   m_PrefabAsset: {fileID: 0}
@@ -10253,9 +10218,9 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1595980190}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1595980192 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5429570208087187318, guid: 7a7ed7d8e083a66448bc858d3c07e745,
+--- !u!95 &1595980193 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5429570208087187316, guid: 7a7ed7d8e083a66448bc858d3c07e745,
     type: 3}
   m_PrefabInstance: {fileID: 1595980190}
   m_PrefabAsset: {fileID: 0}
@@ -13517,9 +13482,9 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2079806565}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2079806567 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7299465673126536360, guid: 082e65d9d349f804dbdb44c2ca3f0e7e,
+--- !u!95 &2079806568 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7299465673126536366, guid: 082e65d9d349f804dbdb44c2ca3f0e7e,
     type: 3}
   m_PrefabInstance: {fileID: 2079806565}
   m_PrefabAsset: {fileID: 0}
@@ -13683,9 +13648,9 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2121863756}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2121863758 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6935696096548536380, guid: 36e38ac5ed1b5a34ea39a1627863f931,
+--- !u!95 &2121863759 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6935696096548536386, guid: 36e38ac5ed1b5a34ea39a1627863f931,
     type: 3}
   m_PrefabInstance: {fileID: 2121863756}
   m_PrefabAsset: {fileID: 0}

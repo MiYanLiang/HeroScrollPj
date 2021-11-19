@@ -50,6 +50,7 @@ public class UIManager : MonoBehaviour
     public Expedition expedition;//战役 
     public TaoYuan taoYuan;//桃园 
     public Barrack Barrack;//主营
+    public Versus Versus;//对决
 
     //[SerializeField]
     //Transform rewardsParent;    //奖品父级 
@@ -142,6 +143,7 @@ public class UIManager : MonoBehaviour
         InitializationPlayerInfo();
         expedition.Init();
         Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist);
+        //Versus.Init();
         InitChickenOpenTs();
         //chickenWindow.Init();
         InitBaYeFun();

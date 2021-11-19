@@ -74,8 +74,11 @@ public class WarDataMocker : MonoBehaviour
         PlayerDataForGame.instance.fightTrapId = cards.ContainsKey(3) ? cards[3] : new List<int>();
         if(cityLevel==0)
             XDebug.LogError<WarDataMocker>("城池等级为0，请设置初始城池等级");
-        WarsUIManager.instance.cityLevel = cityLevel;
-        WarsUIManager.instance.Init();
+        if(WarsUIManager.instance)
+        {
+            WarsUIManager.instance.cityLevel = cityLevel;
+            WarsUIManager.instance.Init();
+        }
     }
     [Serializable]
     public class MyCard

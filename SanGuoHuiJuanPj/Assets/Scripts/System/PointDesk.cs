@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
@@ -10,11 +11,12 @@ using UnityEngine.UI;
 //点将台
 public class PointDesk : MonoBehaviour
 {
-    public ForceFlagUI FlagUi;
     public Text EnlistText;//出战数
 
     //信息物件
     public GameCardUi SelectedCard;
+
+    [SerializeField] GameObject TagSelectionPointer;
     //[SerializeField]Text Fullname;        //详情信息取消名字显示
     [SerializeField] Text strength;
     [SerializeField] Text hitpoint;
@@ -39,6 +41,25 @@ public class PointDesk : MonoBehaviour
 
     [SerializeField]Text EnlistBtnLabel;
     [SerializeField]GameObject UpLevelEffect; //升星特效 
+
+    [SerializeField]TextImageUi PowerUi;
+    [SerializeField]TextImageUi StrUi;
+    [SerializeField]TextImageUi HpUi;
+    [SerializeField]TextImageUi IntUi;
+    [SerializeField]TextImageUi SpeedUi;
+    [SerializeField]TextImageUi DodgeUi;
+    [SerializeField]TextImageUi ArmorUi;
+    [SerializeField]TextImageUi MagicUi;
+    [SerializeField]TextImageUi CriUi;
+    [SerializeField]TextImageUi RouUi;
+
+    [SerializeField] CardInfoTagUi About;
+    [SerializeField] CardInfoTagUi Military;
+    [SerializeField] CardInfoTagUi Armed;
+    [SerializeField] CardInfoTagUi CombatType;
+    [SerializeField] CardInfoTagUi Element;
+    [SerializeField] CardInfoTagUi Major;
+
     public CardEvent OnMergeCard = new CardEvent();
     public CardEvent OnCardSell = new CardEvent();
     public CardEvent OnEnlistCall = new CardEvent();
@@ -76,13 +97,31 @@ public class PointDesk : MonoBehaviour
             return _infoObjs;
         }
     }
+    
 
     public void Init()
     {
         CardMergeBtn.onClick.AddListener(()=>OnMergeCard.Invoke(SelectedCard.Card));
         CardSellBtn.onClick.AddListener(()=>OnCardSell.Invoke(SelectedCard.Card));
         EnlistBtn.onClick.AddListener(EnlistSwitch);
+        if(TagSelectionPointer)
+            TagSelectionPointer.SetActive(false);
         //EnlistBtn.onClick.AddListener(()=>OnEnlistCall.Invoke(SelectedCard.Card));
+    }
+
+    private void UpdateAttributes()
+    {
+        var c = SelectedCard;
+        PowerUi.Set(c.Card.Power(), null);
+        StrUi.Set(c.CardInfo.Strength, null);
+        HpUi.Set(c.CardInfo.HitPoint, null);
+        IntUi.Set(c.CardInfo.Intelligent, null);
+        SpeedUi.Set(c.CardInfo.Speed, null);
+        DodgeUi.Set(c.CardInfo.DodgeRatio, null);
+        ArmorUi.Set(c.CardInfo.ArmorResist, null);
+        MagicUi.Set(c.CardInfo.MagicResist, null);
+        CriUi.Set(c.CardInfo.CriticalRatio, null);
+        RouUi.Set(c.CardInfo.RougeRatio, null);
     }
 
     public void SelectCard(GameCard card)
@@ -93,36 +132,6 @@ public class PointDesk : MonoBehaviour
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
-        strength.text = info.Type == GameCardType.Hero
-            ? card.level > 0
-                ?
-                string.Format(DataTable.GetStringText(32), info.GetDamage(card.Level))
-                : string.Empty
-            : string.Empty;
-        hitpoint.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(33), info.GetHp(card.Level)) : string.Empty
-            : string.Empty;
-        intelligent.text = info.Type==GameCardType.Hero
-            ?card.level>0 ? string.Format(DataTable.GetStringText(82), info.Intelligent.ToString()):string.Empty
-            :string.Empty;
-        speed.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(83), info.Speed.ToString()) : string.Empty
-            : string.Empty;
-        dodgeRatio.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(84), info.DodgeRatio.ToString()) : string.Empty
-            : string.Empty;
-        armorResist.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(85), info.ArmorResist.ToString()) : string.Empty
-            : string.Empty;
-        magicResist.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(86), info.MagicResist.ToString()) : string.Empty
-            : string.Empty;
-        criticalRatio.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(87), info.CriticalRatio.ToString()) : string.Empty
-            : string.Empty;
-        rougeRatio.text = info.Type == GameCardType.Hero
-            ? card.level > 0 ? string.Format(DataTable.GetStringText(88), info.RougeRatio.ToString()) : string.Empty
-            : string.Empty;
         Info.text = info.Intro;
         var isCardEnlistAble = card.IsEnlistAble();
         CardCapability.gameObject.SetActive(isCardEnlistAble);
@@ -130,6 +139,165 @@ public class PointDesk : MonoBehaviour
         UpdateMergeInfo(card);
         UpdateSellingPrice(card);
         UpdateEnlist();
+        UpdateAttributes();
+        UpdateInfoTags();
+    }
+
+    private void UpdateInfoTags()
+    {
+        var major = "主副将";
+        ResetTag(About, "典故");
+        ResetTag(Military, "兵种");
+        ResetTag(Armed, "系数");
+        ResetTag(CombatType, "战斗");
+        ResetTag(Element, "元素");
+        ResetTag(Major, major);
+        var card = SelectedCard;
+        var about = string.Empty;
+        var military = string.Empty;
+        var armed = string.Empty;
+        var combatType = string.Empty;
+        if (card.CardInfo.Type == GameCardType.Hero)
+        {
+            var c = DataTable.Hero[card.Card.id];
+            var m = DataTable.Military[c.MilitaryUnitTableId];
+            switch (m.ArmedType)
+            {
+                case 0:
+                    armed = "普通系";
+                    break;
+                case 1:
+                    armed = "护盾系";
+                    break;
+                case 2:
+                    armed = "步兵系";
+                    break;
+                case 3:
+                    armed = "长持系";
+                    break;
+                case 4:
+                    armed = "短持系";
+                    break;
+                case 5:
+                    armed = "骑兵系";
+                    break;
+                case 6:
+                    armed = "器械系";
+                    break;
+                case 7:
+                    armed = "弓弩系";
+                    break;
+                case 8:
+                    armed = "战船系";
+                    break;
+                case 9:
+                    armed = "蛮族系";
+                    break;
+                case 10:
+                    armed = "统御系";
+                    break;
+                case 11:
+                    armed = "干扰系";
+                    break;
+                case 12:
+                    armed = "辅助系";
+                    break;
+                case 13:
+                    armed = "投掷系";
+                    break;
+                case 14:
+                    armed = "猛兽系";
+                    break;
+                case 15:
+                    armed = "召唤系";
+                    break;
+            }
+
+            military = m.Title;
+            var combatText = string.Empty;
+            if (m.CombatStyle == 1)
+            {
+                combatType = "远程";
+                combatText = DataTable.GetStringText(92);
+            }
+            else
+            {
+                combatType = "近战";
+                combatText = DataTable.GetStringText(91);
+            }
+
+            about = card.CardInfo.Intro;
+            SetOnClick(About, about);
+            ResetTag(Military, military);
+            SetOnClick(Military, m.Detail);
+            ResetTag(Armed, armed);
+            ResetTag(CombatType, combatType);
+            SetOnClick(CombatType, combatText);
+            ResetTag(Element, ElementText(card.CardInfo.Element, false));
+            SetOnClick(Element, ElementText(card.CardInfo.Element, true));
+        }
+        else
+        {
+            military = card.CardInfo.Name;
+            armed = card.CardInfo.Type == GameCardType.Tower ? "建筑" : "陷阱";
+            ResetTag(Military, military);
+            SetOnClick(Military, card.CardInfo.Intro);
+            ResetTag(Armed, armed);
+            ResetTag(CombatType, string.Empty);
+            ResetTag(Element, string.Empty);
+        }
+
+
+
+        void ResetTag(CardInfoTagUi ui, string text)
+        {
+            ui.Button.onClick.RemoveAllListeners();
+            ui.Button.interactable = false;
+            ui.Text.text = text;
+        }
+
+        void SetOnClick(CardInfoTagUi ui,string text)
+        {
+            ui.Button.onClick.RemoveAllListeners();
+            ui.Button.interactable = true;
+            ui.Button.onClick.AddListener(() =>
+            {
+                if (TagSelectionPointer)
+                {
+                    TagSelectionPointer.SetActive(true);
+                    TagSelectionPointer.transform.SetParent(ui.transform);
+                }
+                Info.text = text;
+            });
+        }
+
+        string ElementText(int e,bool detail)
+        {
+            switch (e)
+            {
+                case CombatConduct.FixedDmg: 
+                    return detail ? DataTable.GetStringText(103) : DataTable.GetStringText(93);
+                case CombatConduct.PhysicalDmg:
+                    return detail ? DataTable.GetStringText(104) : DataTable.GetStringText(94);
+                case CombatConduct.MechanicalDmg:
+                    return detail ? DataTable.GetStringText(105) : DataTable.GetStringText(95);
+                case CombatConduct.BasicMagicDmg:
+                    return detail ? DataTable.GetStringText(106) : DataTable.GetStringText(96);
+                case CombatConduct.WindDmg: 
+                    return detail ? DataTable.GetStringText(107) : DataTable.GetStringText(97);
+                case CombatConduct.ThunderDmg:
+                    return detail ? DataTable.GetStringText(108) : DataTable.GetStringText(98);
+                case CombatConduct.WaterDmg: 
+                    return detail ? DataTable.GetStringText(109) : DataTable.GetStringText(99);
+                case CombatConduct.PoisonDmg:
+                    return detail ? DataTable.GetStringText(110) : DataTable.GetStringText(100);
+                case CombatConduct.FireDmg: 
+                    return detail ? DataTable.GetStringText(111) : DataTable.GetStringText(101);
+                case CombatConduct.EarthDmg:
+                    return detail ? DataTable.GetStringText(112) : DataTable.GetStringText(102);
+                default: return string.Empty;
+            }
+        }
     }
 
     private void UpdateSellingPrice(GameCard card)
@@ -190,33 +358,6 @@ public class PointDesk : MonoBehaviour
         EnlistText.text =
             $"{PlayerDataForGame.instance.TotalCardsEnlisted}/{DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].CardLimit}";
     }
-
-    ////升级卡牌后更新显示 
-    //private void UpdateLevelCardUi()
-    //{
-    //    //Debug.Log("selectCardData.Level: " + selectCardData.Level); 
-    //    Transform listCard = lastSelectImg.transform.parent;
-    //    if (SelectedCard.Card.level < DataTable.CardLevel.Keys.Max())
-    //    {
-    //        var consume = DataTable.CardLevel[SelectedCard.Card.level + 1].ChipsConsume;
-    //        listCard.GetChild(2).GetComponent<Text>().text = SelectedCard.Card.chips + "/" + consume;
-    //        listCard.GetChild(2).GetComponent<Text>().color =
-    //            selectCardData.chips >= consume ? ColorDataStatic.deep_green : Color.white;
-    //    }
-    //    else
-    //    {
-    //        listCard.GetChild(2).GetComponent<Text>().text = "";
-    //    }
-    //    listCard.GetChild(4).GetComponent<Image>().enabled = true;
-    //    //设置星级展示 
-    //    listCard.GetChild(4).GetComponent<Image>().sprite = GameResources.GradeImg[selectCardData.level];
-    //    listCard.GetChild(8).gameObject.SetActive(false);
-    //    listCard.GetComponent<Button>().onClick.Invoke();
-    //}
-
-
-    public void SetForce(int forceId) => FlagUi.Set((ForceFlags) forceId);
-
 
     public class CardEvent : UnityEvent<GameCard> { }
 }
