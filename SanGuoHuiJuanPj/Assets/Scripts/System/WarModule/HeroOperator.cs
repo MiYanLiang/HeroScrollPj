@@ -1138,12 +1138,8 @@ namespace Assets.System.WarModule
                     p => p.IsAliveHero &&
                          Chessboard.GetStatus(p.Operator)
                              .GetBuff(CardState.Cons.EaseShield) < CardState.EaseShieldMax)
-                .OrderBy(p =>
-                {
-                    var status = Chessboard.GetStatus(p.Operator);
-                    return status.Hp / status.MaxHp;
-                })
-                .Take(Targets()).ToArray();
+                .Select(p => new { Chessboard.GetStatus(p.Operator).HpRate, p })
+                .OrderBy(o => o.HpRate).Take(Targets()).Select(o => o.p).ToArray();
 
             if (!targets.Any())
             {

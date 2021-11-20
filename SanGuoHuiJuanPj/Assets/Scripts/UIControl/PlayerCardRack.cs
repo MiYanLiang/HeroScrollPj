@@ -119,6 +119,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
 
     private void ResetPos(FightCardData card)
     {
+        if (card == null) return;
         var ui = card.cardObj.transform;
         if (LastPos == -1)
         {
