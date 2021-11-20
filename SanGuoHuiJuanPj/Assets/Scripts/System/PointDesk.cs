@@ -112,11 +112,27 @@ public class PointDesk : MonoBehaviour
     private void UpdateAttributes()
     {
         var c = SelectedCard;
+        switch (c.CardInfo.Type)
+        {
+            case GameCardType.Hero:
+                break;
+            case GameCardType.Tower:
+                //
+                break;
+            case GameCardType.Trap:
+                break;
+            case GameCardType.Soldier:
+            case GameCardType.Spell:
+            case GameCardType.Base:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
         PowerUi.Set(c.Card.Power(), null);
-        StrUi.Set(c.CardInfo.Strength, null);
-        HpUi.Set(c.CardInfo.HitPoint, null);
+
+        StrUi.Set(c.CardInfo.Strength, null);//塔,陷阱
+        HpUi.Set(c.CardInfo.HitPoint, null);//塔,陷阱
         IntUi.Set(c.CardInfo.Intelligent, null);
-        SpeedUi.Set(c.CardInfo.Speed, null);
+        SpeedUi.Set(c.CardInfo.Speed, null);//塔
         DodgeUi.Set(c.CardInfo.DodgeRatio, null);
         ArmorUi.Set(c.CardInfo.ArmorResist, null);
         MagicUi.Set(c.CardInfo.MagicResist, null);
@@ -141,6 +157,7 @@ public class PointDesk : MonoBehaviour
         UpdateEnlist();
         UpdateAttributes();
         UpdateInfoTags();
+        TagSelectionPointer.gameObject.SetActive(false);
     }
 
     private void UpdateInfoTags()

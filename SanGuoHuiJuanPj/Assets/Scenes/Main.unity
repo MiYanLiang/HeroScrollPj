@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -14322,11 +14322,13 @@ MonoBehaviour:
     AnimTransform: {fileID: 1397107352}
     MainImage: {fileID: 623382834}
     MainTitle: {fileID: 663895939}
+    MainDesk: {fileID: 0}
   Opposite:
     JiBanImageObj: {fileID: 254947616}
     AnimTransform: {fileID: 1088700849}
     MainImage: {fileID: 1776340409}
     MainTitle: {fileID: 1655938944}
+    MainDesk: {fileID: 0}
   JiBanOffensiveFields:
   - JiBanId: 1
     IsOffensive: 1
@@ -44233,7 +44235,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0.48278105}
-  m_AnchoredPosition: {x: 0, y: -136.99994}
+  m_AnchoredPosition: {x: 0, y: -136.99991}
   m_SizeDelta: {x: 1080, y: -273}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1082312976
@@ -81378,7 +81380,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u6B66\u529B\uFF1A"
+  m_Text: "\u5A01\u529B\uFF1A"
 --- !u!222 &1753896982
 CanvasRenderer:
   m_ObjectHideFlags: 0

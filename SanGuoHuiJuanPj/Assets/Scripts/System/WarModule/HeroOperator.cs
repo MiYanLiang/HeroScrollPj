@@ -2232,8 +2232,7 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetLaneTarget(this);
             var array = Chessboard.GetRivals(this,
                     p => p != target &&
-                         p.IsPostedAlive &&
-                         p.Operator.CardType == GameCardType.Base)
+                         p.IsAliveHero)
                 .ToArray();
 
             OnPerformActivity(target, Activity.Intentions.Inevitable, actId: 0, skill: 2,
