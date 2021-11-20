@@ -27,6 +27,7 @@ public class PointDesk : MonoBehaviour
     [SerializeField] Text magicResist;
     [SerializeField] Text criticalRatio;
     [SerializeField] Text rougeRatio;
+    [SerializeField] ScrollRect attScrollRect;
 
     [SerializeField]Text Info;
     [SerializeField]Button CardMergeBtn;
@@ -111,33 +112,37 @@ public class PointDesk : MonoBehaviour
 
     private void UpdateAttributes()
     {
-        var c = SelectedCard;
-        switch (c.CardInfo.Type)
-        {
-            case GameCardType.Hero:
-                break;
-            case GameCardType.Tower:
-                //
-                break;
-            case GameCardType.Trap:
-                break;
-            case GameCardType.Soldier:
-            case GameCardType.Spell:
-            case GameCardType.Base:
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-        PowerUi.Set(c.Card.Power(), null);
+        StrUi.Off();
+        HpUi.Off();
+        IntUi.Off();
+        SpeedUi.Off();
+        DodgeUi.Off();
+        ArmorUi.Off();
+        MagicUi.Off();
+        CriUi.Off();
+        RouUi.Off();
 
-        StrUi.Set(c.CardInfo.Strength, null);//塔,陷阱
-        HpUi.Set(c.CardInfo.HitPoint, null);//塔,陷阱
-        IntUi.Set(c.CardInfo.Intelligent, null);
-        SpeedUi.Set(c.CardInfo.Speed, null);//塔
-        DodgeUi.Set(c.CardInfo.DodgeRatio, null);
-        ArmorUi.Set(c.CardInfo.ArmorResist, null);
-        MagicUi.Set(c.CardInfo.MagicResist, null);
-        CriUi.Set(c.CardInfo.CriticalRatio, null);
-        RouUi.Set(c.CardInfo.RougeRatio, null);
+        var c = SelectedCard;
+        var contentRect = 60 * 4;
+        PowerUi.Set(c.Card.Power(), null);
+        StrUi.Set(c.CardInfo.GetStrength(c.Card.Level), null);
+        HpUi.Set(c.CardInfo.GetHp(c.Card.Level), null);
+        if (c.CardInfo.Type != GameCardType.Trap) 
+            SpeedUi.Set(c.CardInfo.Speed, null);
+
+        if (c.CardInfo.Type == GameCardType.Hero)
+        {
+            IntUi.Set(c.CardInfo.Intelligent, null);
+            DodgeUi.Set(c.CardInfo.DodgeRatio, null);
+            ArmorUi.Set(c.CardInfo.ArmorResist, null);
+            MagicUi.Set(c.CardInfo.MagicResist, null);
+            CriUi.Set(c.CardInfo.CriticalRatio, null);
+            RouUi.Set(c.CardInfo.RougeRatio, null);
+            contentRect = 60 * 10;
+        }
+
+        var size = attScrollRect.content.sizeDelta;
+        attScrollRect.content.sizeDelta = new Vector2(size.x, contentRect);
     }
 
     public void SelectCard(GameCard card)
