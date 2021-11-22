@@ -85,10 +85,6 @@ public class GameCardWarUiOperation : MonoBehaviour
         foreach (var obj in StateObjs) obj.Value.SetActive(obj.Key == state);
     }
 
-    public void AddCondition(Image prefab)
-    {
-        ConditionList.Add(Instantiate(prefab, StateContent));
-    }
 
     public void ClearCondition()
     {
