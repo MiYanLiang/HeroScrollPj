@@ -16,8 +16,9 @@ public class JiBanAnimationManager : MonoBehaviour
     public List<KeyValuePair<int, (int CardId, GameCardType CardType)[]>> JiBanMap;
     public void Init()
     {
-        Player.JiBanImageObj.SetActive(false);
-        Opposite.JiBanImageObj.SetActive(false);
+        Player.Reset();
+        Opposite.Reset();
+
         JiBanMap = new List<KeyValuePair<int, (int CardId, GameCardType CardType)[]>>();
         foreach (var itm in DataTable.JiBan.Where(j=>j.Value.IsOpen > 0))
         {
@@ -104,10 +105,25 @@ public class JiBanAnimationManager : MonoBehaviour
             MainImage.DOFade(0, 0);
             MainTitle.DOFade(0, 0);
             MainDesk.DOFade(0, 0);
+            ImgDisplay(true);
             return DOTween.Sequence().Join(MainDesk.DOFade(1, secs)).Join(MainTitle.DOFade(1, secs))
                 .Join(MainImage.DOFade(1, secs)).Append(
                     DOTween.Sequence().Join(MainDesk.DOFade(0, secs)).Join(MainTitle.DOFade(0, secs))
                         .Join(MainImage.DOFade(0, secs)));
+
+        }
+
+        public void ImgDisplay(bool display)
+        {
+            MainImage.gameObject.SetActive(display);
+            MainTitle.gameObject.SetActive(display);
+            MainDesk .gameObject.SetActive(display);
+        }
+
+        public void Reset()
+        {
+            JiBanImageObj.SetActive(false);
+            ImgDisplay(false);
         }
     }
     /// <summary>

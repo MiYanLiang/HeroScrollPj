@@ -27,7 +27,6 @@ public class PointDesk : MonoBehaviour
     [SerializeField] Text magicResist;
     [SerializeField] Text criticalRatio;
     [SerializeField] Text rougeRatio;
-    [SerializeField] ScrollRect attScrollRect;
 
     [SerializeField]Text Info;
     [SerializeField]Button CardMergeBtn;
@@ -123,7 +122,6 @@ public class PointDesk : MonoBehaviour
         RouUi.Off();
 
         var c = SelectedCard;
-        var contentRect = 60 * 4;
         PowerUi.Set(c.Card.Power(), null);
         StrUi.Set(c.CardInfo.GetStrength(c.Card.Level), null);
         HpUi.Set(c.CardInfo.GetHp(c.Card.Level), null);
@@ -138,11 +136,7 @@ public class PointDesk : MonoBehaviour
             MagicUi.Set(c.CardInfo.MagicResist, null);
             CriUi.Set(c.CardInfo.CriticalRatio, null);
             RouUi.Set(c.CardInfo.RougeRatio, null);
-            contentRect = 60 * 10;
         }
-
-        var size = attScrollRect.content.sizeDelta;
-        attScrollRect.content.sizeDelta = new Vector2(size.x, contentRect);
     }
 
     public void SelectCard(GameCard card)
