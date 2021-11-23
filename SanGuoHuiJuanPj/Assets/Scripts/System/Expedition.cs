@@ -46,7 +46,7 @@ public class Expedition : MonoBehaviour
         lastAvailableStageIndex = 0;
         var warModes = DataTable.GameMode.Values.Where(m => m.WarList != null).ToList();
         //新手-困难关卡入口初始化
-        for (int i = 0; i < difficultyButtons.Length; i++)
+        for (var i = 0; i < difficultyButtons.Length; i++)
         {
             var uiBtn = difficultyButtons[i];
             uiBtn.gameObject.SetActive(i < warModes.Count);
@@ -174,7 +174,8 @@ public class Expedition : MonoBehaviour
 
     private void InitWarListUi(int warId)
     {
-        var checkPoints = DataTable.War[warId].CheckPoints;
+        var war = DataTable.War[warId];
+        var checkPoints = war.CheckPoints;
         var warStageUi = Instantiate(warStageBtnPrefab, warStageScrollRect.content);
         var campaign = PlayerDataForGame.instance.warsData.warUnlockSaveData.FirstOrDefault(w => w.warId == warId);
         stages.Add(warStageUi);
@@ -185,7 +186,8 @@ public class Expedition : MonoBehaviour
             , () => { OnClickChangeWarsFun(warId); UIManager.instance.PlayOnClickMusic(); });
         if (campaign == null) return;
         if (campaign.isTakeReward) return;
-        if(campaign.unLockCount < checkPoints)return;
+        if (campaign.unLockCount < checkPoints) return;
+        if (war.AchievementCardProduce == null && war.AchievementReward == null) return;
         warStageUi.SetChest(() =>
         {
             GetWarAchievementRewards(warId);

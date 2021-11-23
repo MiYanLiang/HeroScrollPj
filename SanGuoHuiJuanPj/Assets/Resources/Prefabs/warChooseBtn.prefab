@@ -109,6 +109,7 @@ MonoBehaviour:
   title: {fileID: 2763977830391736489}
   boxButton: {fileID: 8848997787248888061}
   unlockImage: {fileID: 3868754519935325191}
+  boundWarId: 0
 --- !u!1 &1592833129684379406
 GameObject:
   m_ObjectHideFlags: 0
