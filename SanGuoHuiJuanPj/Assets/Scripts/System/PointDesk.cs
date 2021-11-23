@@ -106,7 +106,6 @@ public class PointDesk : MonoBehaviour
         EnlistBtn.onClick.AddListener(EnlistSwitch);
         if(TagSelectionPointer)
             TagSelectionPointer.SetActive(false);
-        //EnlistBtn.onClick.AddListener(()=>OnEnlistCall.Invoke(SelectedCard.Card));
     }
 
     private void UpdateAttributes()
@@ -348,22 +347,11 @@ public class PointDesk : MonoBehaviour
     /// <summary> 
     /// 出战或回城设置方法 
     /// </summary> 
-    public void EnlistSwitch()
+    private void EnlistSwitch()
     {
-        var lastCondition = SelectedCard.Card.isFight > 0;
-        var isSuccess = PlayerDataForGame.instance.EnlistCard(SelectedCard.Card, !lastCondition);
-        var isEnlisted = SelectedCard.Card.isFight > 0;
-        if (!isSuccess)
-        {
-            UIManager.instance.PlayOnClickMusic();
-            return;
-        }
-        SelectedCard.CityOperation.SetState(isEnlisted
-            ? GameCardCityUiOperation.States.Enlisted
-            : GameCardCityUiOperation.States.None);
-        AudioController0.instance.ChangeAudioClip(19);
-        AudioController0.instance.PlayAudioSource(0);
-        UpdateEnlist();
+        SelectedCard.Card.isFight++;
+        if (SelectedCard.Card.isFight > 1)
+            SelectedCard.Card.isFight = 0;
         OnEnlistCall.Invoke(SelectedCard.Card);
     }
 
