@@ -30,17 +30,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private float autoRoundTimer;
     [SerializeField] private float AutoRoundSecs = 1.5f;
     private Slider AutoRoundSlider => Chessboard.AutoRoundSlider;
-    protected FightCardData TryGetCardMap(int id)
-    {
-#if UNITY_EDITOR
-
-        if (!CardMap.ContainsKey(id))
-            XDebug.LogError<ChessboardVisualizeTester>($"找不到卡牌id[{id}],检查卡牌是否已经被销毁。");
-        return CardMap[id];
-#else
-        return CardMap.ContainsKey(id) ? CardMap[id] : null;
-#endif
-    }
+    protected FightCardData TryGetCardMap(int id) => CardMap.ContainsKey(id) ? CardMap[id] : null;
 
     protected Dictionary<int, FightCardData> CardMap { get; set; } = new Dictionary<int, FightCardData>();
 

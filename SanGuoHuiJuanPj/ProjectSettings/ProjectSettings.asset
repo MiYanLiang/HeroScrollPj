@@ -127,7 +127,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 2.52
+  bundleVersion: 2.53
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -173,7 +173,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.MoTa.LegendOfHero
   buildNumber: {}
-  AndroidBundleVersionCode: 88
+  AndroidBundleVersionCode: 89
   AndroidMinSdkVersion: 21
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 0
@@ -776,7 +776,7 @@ PlayerSettings:
     Collab: 0
     ErrorHub: 0
     Hub: 0
-    UNet: 1
+    UNet: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -789,10 +789,10 @@ PlayerSettings:
     m_VersionCode: 1
     m_VersionName: 
   apiCompatibilityLevel: 6
-  cloudProjectId: 
+  cloudProjectId: 0b6c0625-86b0-4988-b266-13363187de28
   framebufferDepthMemorylessMode: 0
-  projectName: 
-  organizationId: 
+  projectName: HeroScrollPj
+  organizationId: icefoxz
   cloudEnabled: 0
   enableNativePlatformBackendsForNewInputSystem: 0
   disableOldInputManagerSupport: 0

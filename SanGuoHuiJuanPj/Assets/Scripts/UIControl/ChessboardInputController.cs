@@ -95,6 +95,7 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
 
     private void ResetPos(FightCardData card)
     {
+        if (card == null) return;
         if (card.Pos >= 0) card.cardObj.transform.SetParent(lastPos.transform);
 
         card.cardObj.transform.localPosition = Vector3.zero;

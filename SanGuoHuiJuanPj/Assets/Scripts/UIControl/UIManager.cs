@@ -147,7 +147,6 @@ public class UIManager : MonoBehaviour
         InitChickenOpenTs();
         //chickenWindow.Init();
         InitBaYeFun();
-        PlayerDataForGame.instance.ClearGarbageStationObj();
 
         OnStartMainScene();
         PlayerDataForGame.instance.selectedWarId = -1;
@@ -728,7 +727,6 @@ public class UIManager : MonoBehaviour
         {
             Barrack.RefreshCardList();
             taoYuan.CloseAllChests();
-            PlayerDataForGame.instance.ClearGarbageStationObj();
         });
     }
 

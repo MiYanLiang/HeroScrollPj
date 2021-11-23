@@ -211,7 +211,6 @@ namespace Assets.System.WarModule
             return GetScope(isChallenger).Join(series, p => p.Key, s => s, (p, _) => p.Value).FirstOrDefault(condition);
         }
 
-        //public IChessPos GetChessPos(IChessOperator chessman) => GetChessPos(chessman.Pos, chessman.IsPlayer);
         public IChessPos[] GetAttackPath(bool isChallenger, int pos) => GetScope(isChallenger)
             .Join(AttackPath[pos % 5], d => d.Key, i => i, (d, _) => d.Value).ToArray();
 

@@ -106,22 +106,36 @@ public class PointDesk : MonoBehaviour
         EnlistBtn.onClick.AddListener(EnlistSwitch);
         if(TagSelectionPointer)
             TagSelectionPointer.SetActive(false);
-        //EnlistBtn.onClick.AddListener(()=>OnEnlistCall.Invoke(SelectedCard.Card));
     }
 
     private void UpdateAttributes()
     {
+        StrUi.Off();
+        HpUi.Off();
+        IntUi.Off();
+        SpeedUi.Off();
+        DodgeUi.Off();
+        ArmorUi.Off();
+        MagicUi.Off();
+        CriUi.Off();
+        RouUi.Off();
+
         var c = SelectedCard;
         PowerUi.Set(c.Card.Power(), null);
-        StrUi.Set(c.CardInfo.Strength, null);
-        HpUi.Set(c.CardInfo.HitPoint, null);
-        IntUi.Set(c.CardInfo.Intelligent, null);
-        SpeedUi.Set(c.CardInfo.Speed, null);
-        DodgeUi.Set(c.CardInfo.DodgeRatio, null);
-        ArmorUi.Set(c.CardInfo.ArmorResist, null);
-        MagicUi.Set(c.CardInfo.MagicResist, null);
-        CriUi.Set(c.CardInfo.CriticalRatio, null);
-        RouUi.Set(c.CardInfo.RougeRatio, null);
+        StrUi.Set(c.CardInfo.GetStrength(c.Card.Level), null);
+        HpUi.Set(c.CardInfo.GetHp(c.Card.Level), null);
+        if (c.CardInfo.Type != GameCardType.Trap) 
+            SpeedUi.Set(c.CardInfo.Speed, null);
+
+        if (c.CardInfo.Type == GameCardType.Hero)
+        {
+            IntUi.Set(c.CardInfo.Intelligent, null);
+            DodgeUi.Set(c.CardInfo.DodgeRatio, null);
+            ArmorUi.Set(c.CardInfo.ArmorResist, null);
+            MagicUi.Set(c.CardInfo.MagicResist, null);
+            CriUi.Set(c.CardInfo.CriticalRatio, null);
+            RouUi.Set(c.CardInfo.RougeRatio, null);
+        }
     }
 
     public void SelectCard(GameCard card)
@@ -141,6 +155,7 @@ public class PointDesk : MonoBehaviour
         UpdateEnlist();
         UpdateAttributes();
         UpdateInfoTags();
+        TagSelectionPointer.gameObject.SetActive(false);
     }
 
     private void UpdateInfoTags()
@@ -332,22 +347,11 @@ public class PointDesk : MonoBehaviour
     /// <summary> 
     /// 出战或回城设置方法 
     /// </summary> 
-    public void EnlistSwitch()
+    private void EnlistSwitch()
     {
-        var lastCondition = SelectedCard.Card.isFight > 0;
-        var isSuccess = PlayerDataForGame.instance.EnlistCard(SelectedCard.Card, !lastCondition);
-        var isEnlisted = SelectedCard.Card.isFight > 0;
-        if (!isSuccess)
-        {
-            UIManager.instance.PlayOnClickMusic();
-            return;
-        }
-        SelectedCard.CityOperation.SetState(isEnlisted
-            ? GameCardCityUiOperation.States.Enlisted
-            : GameCardCityUiOperation.States.None);
-        AudioController0.instance.ChangeAudioClip(19);
-        AudioController0.instance.PlayAudioSource(0);
-        UpdateEnlist();
+        SelectedCard.Card.isFight++;
+        if (SelectedCard.Card.isFight > 1)
+            SelectedCard.Card.isFight = 0;
         OnEnlistCall.Invoke(SelectedCard.Card);
     }
 

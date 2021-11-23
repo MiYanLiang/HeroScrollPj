@@ -46,7 +46,7 @@ public class Expedition : MonoBehaviour
         lastAvailableStageIndex = 0;
         var warModes = DataTable.GameMode.Values.Where(m => m.WarList != null).ToList();
         //新手-困难关卡入口初始化
-        for (int i = 0; i < difficultyButtons.Length; i++)
+        for (var i = 0; i < difficultyButtons.Length; i++)
         {
             var uiBtn = difficultyButtons[i];
             uiBtn.gameObject.SetActive(i < warModes.Count);
@@ -174,7 +174,8 @@ public class Expedition : MonoBehaviour
 
     private void InitWarListUi(int warId)
     {
-        var checkPoints = DataTable.War[warId].CheckPoints;
+        var war = DataTable.War[warId];
+        var checkPoints = war.CheckPoints;
         var warStageUi = Instantiate(warStageBtnPrefab, warStageScrollRect.content);
         var campaign = PlayerDataForGame.instance.warsData.warUnlockSaveData.FirstOrDefault(w => w.warId == warId);
         stages.Add(warStageUi);
@@ -184,16 +185,15 @@ public class Expedition : MonoBehaviour
                                 + "/" + checkPoints
             , () => { OnClickChangeWarsFun(warId); UIManager.instance.PlayOnClickMusic(); });
         if (campaign == null) return;
-        var isUnlock = campaign.unLockCount >= checkPoints;
-        if (!campaign.isTakeReward && isUnlock)
+        if (campaign.isTakeReward) return;
+        if (campaign.unLockCount < checkPoints) return;
+        if (war.AchievementCardProduce == null && war.AchievementReward == null) return;
+        warStageUi.SetChest(() =>
         {
-            warStageUi.SetChest(() =>
-            {
-                GetWarAchievementRewards(warId);
-                warStageUi.boxButton.onClick.RemoveAllListeners();
-                warStageUi.boxButton.gameObject.SetActive(false);
-            });
-        }
+            GetWarAchievementRewards(warId);
+            warStageUi.boxButton.onClick.RemoveAllListeners();
+            warStageUi.boxButton.gameObject.SetActive(false);
+        });
     }
 
     private void OnSelectDifficultyUiScale(int index)

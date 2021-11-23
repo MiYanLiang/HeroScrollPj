@@ -201,12 +201,7 @@ namespace Assets.System.WarModule
                 status.LastSuffers.ToList(), status.LastHeal, status.LastEaseShieldDamage);
         }
 
-        public int GetSpeed(IChessOperator op)
-        {
-            var pos = GetChessPos(op).Pos;
-            var speed = GetOperatorBuffedSpeed(op);
-            return speed - pos;
-        }
+        public int GetSpeed(IChessOperator op) => GetOperatorBuffedSpeed(op);
 
         #endregion
         /********************************【Round】**************************************/
