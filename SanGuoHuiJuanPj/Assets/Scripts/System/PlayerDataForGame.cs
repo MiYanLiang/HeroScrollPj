@@ -152,7 +152,6 @@ public class PlayerDataForGame : MonoBehaviour
         isNeedSaveData = false;
         isHadNewSaveData = false;
 
-        garbageStationObjs = new List<GameObject>();
         StartCoroutine(InitFade());
     }
 
@@ -274,30 +273,6 @@ public class PlayerDataForGame : MonoBehaviour
         return true;
     }
 
-    ///////////////////////////////////游戏垃圾回收////////////////////////////////////////////// 
-
-    //游戏内GameObject垃圾池 
-    public static List<GameObject> garbageStationObjs;
-
-    /// <summary> 
-    /// 清空GameObject垃圾池 
-    /// </summary> 
-    public void ClearGarbageStationObj()
-    {
-        for (int i = garbageStationObjs.Count - 1; i >= 0; i--)
-        {
-            if (garbageStationObjs[i] != null)
-            {
-                Destroy(garbageStationObjs[i]);
-            }
-        }
-#if UNITY_EDITOR
-
-        XDebug.Log<PlayerDataForGame>($"清除垃圾池,物件={garbageStationObjs.Count}");
-        garbageStationObjs.Clear();
-#endif
-
-    }
 
     [SerializeField]
     GameObject textTipsObj;     //文本提示obj  
