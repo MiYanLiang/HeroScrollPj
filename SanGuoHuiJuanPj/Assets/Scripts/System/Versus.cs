@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,10 +24,20 @@ public class Versus : MonoBehaviour
 
     public void PlayResult(TestServerSimpleApi.GameResult data, TestStageUi.SimpleFormation enemyFormation)
     {
+        const int basePos = 17;
         var enemies = new List<GameCard>();
         var challengers = new List<GameCard>();
         FightCardData enemyBase,playerBase;
-        //WarBoard.StartNewGame();todo 
+        //var eBase = enemyFormation.Formation[basePos];
+        //enemyFormation.Formation.Remove(basePos);
+        //var eb = DataTable.BaseLevel[eBase.Level];
+        //enemyBase = FightCardData.BaseCard(false, eb.BaseHp, eBase.Level);
+        //WarBoard.NewGame();
+        //WarBoard.SetEnemiesIncludeUis(enemyBase,
+        //    enemyFormation.Formation.Select(c => new ChessCard
+        //            { Id = c.Value.CardId, Level = c.Value.Level, Type = (GameCardType)c.Value.Type, Pos = c.Key })
+        //        .ToList());
+        //WarBoard.StartNewGame();
         WarBoard.PlayResult(data.Rounds);
 
         foreach (var (pos, id, isChallenger) in data.Chessmen)
@@ -53,7 +64,6 @@ public class Versus : MonoBehaviour
         var card = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, CityLevel));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);
-        WarBoard.GeneratePlayerScopeChessman();
         WarBoard.Chessboard.UpdateWarSpeed();
     }
 
@@ -71,7 +81,7 @@ public class Versus : MonoBehaviour
             list.Add(InstanceCard(card, pos));
         }
 
-        WarBoard.SetEnemies(enemyBase, list);
+        WarBoard.SetEnemiesIncludeUis(enemyBase, list);
 
         ChessCard InstanceCard(IGameCard c, int p) => ChessCard.Instance(c.CardId, c.Type, c.Level, p);
     }

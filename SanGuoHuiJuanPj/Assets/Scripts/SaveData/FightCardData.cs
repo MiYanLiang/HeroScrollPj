@@ -8,7 +8,7 @@ using CorrelateLib;
 using Newtonsoft.Json;
 using UnityEngine;
 
-[Serializable]public class FightCardData : IChessman
+public class FightCardData : IChessman
 {
     public static FightCardData PlayerBaseCard(int level, int cityLevel = 1)
     {
@@ -167,10 +167,30 @@ using UnityEngine;
     public int Level => level;
     public int Speed { get; }
     public int Troop { get; }
-    public CombatStyle Style { get; set; }
+
+    public CombatStyle Style
+    {
+        get
+        {
+            if (_style == null)
+            {
+                _style = ChessOperatorManager<FightCardData>.GetCombatStyle(
+                    Card,
+                    DataTable.Hero,
+                    DataTable.Tower,
+                    DataTable.Trap,
+                    DataTable.Military,
+                    DataTable.BaseLevel);
+            }
+            return _style;
+        }
+        set => _style = value;
+    }
+
     private int instanceId = -1;
     private ChessmanStyle chessmanStyle;
     private ChessStatus status;
+    private CombatStyle _style;
 
     public CombatStyle GetStyle() => Style;
 

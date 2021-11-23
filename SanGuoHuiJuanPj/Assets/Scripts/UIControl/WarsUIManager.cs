@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -29,7 +30,7 @@ public class WarsUIManager : MonoBehaviour
     [SerializeField] SanXuanWindowUi SanXuanWindow;
     [SerializeField] WarQuizWindowUi QuizWindow; //答题
     [SerializeField] GenericWarWindow GenericWindow;
-
+    
     public WarMiniWindowUI gameOverWindow; //战役结束ui
     public Dictionary<int, GameStage> StagesMap { get; } = new Dictionary<int, GameStage>();
     [SerializeField] float percentReturnHp; //回春回血百分比
@@ -134,7 +135,7 @@ public class WarsUIManager : MonoBehaviour
         StartCoroutine(Initialize());
         if (!EffectsPoolingControl.instance.IsInit) EffectsPoolingControl.instance.Init();
         WarBoard.Init();
-        chessboardManager.OnGameSet.AddListener(playerWin =>
+        WarBoard.OnGameSet.AddListener(playerWin =>
         {
             if (!playerWin)
             {
@@ -1340,7 +1341,6 @@ public class WarsUIManager : MonoBehaviour
         }
     }
 }
-
 public class GameStage
 {
     public CheckpointTable Checkpoint { get; set; }

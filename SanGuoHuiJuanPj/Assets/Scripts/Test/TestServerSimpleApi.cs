@@ -109,7 +109,7 @@ public class TestServerSimpleApi : MonoBehaviour
         if (isBusy) return;
         isBusy = true;
         Versus.SetEnemyFormation(selectedFormation.Formation.ToDictionary(c => c.Key, c => c.Value as IGameCard));
-        StartButton.GetComponent<Animator>().SetBool(NewWarManager.ButtonTrigger, false);
+        StartButton.GetComponent<Animator>().SetBool(ChessboardVisualizeManager.ButtonTrigger, false);
         StartButton.onClick.RemoveAllListeners();
         var f = selectedFormation;
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new ChallengeSet.Card(c.Card));

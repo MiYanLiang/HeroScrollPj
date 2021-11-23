@@ -2710,6 +2710,10 @@ MonoBehaviour:
     Shady: 0.6
     Dark: 0.8
     DropBloodSec: 0.7
+    OnRoundStart: 0.5
+    OnActivity: 0.5
+    OnRoundEnd: 0.5
+    OnFilterChessmen: 0.3
 --- !u!114 &413234025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2727,11 +2731,13 @@ MonoBehaviour:
     AnimTransform: {fileID: 2038536250}
     MainImage: {fileID: 945086399}
     MainTitle: {fileID: 67001130}
+    MainDesk: {fileID: 979972553}
   Opposite:
     JiBanImageObj: {fileID: 1199740093}
     AnimTransform: {fileID: 493409273}
     MainImage: {fileID: 445892246}
     MainTitle: {fileID: 771591663}
+    MainDesk: {fileID: 268157207}
   JiBanOffensiveFields:
   - JiBanId: 1
     IsOffensive: 1
@@ -6628,7 +6634,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &968867911
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8031,7 +8037,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1199740094
 RectTransform:
   m_ObjectHideFlags: 0

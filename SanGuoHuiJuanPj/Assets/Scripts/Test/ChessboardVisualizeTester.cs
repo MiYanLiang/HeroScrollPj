@@ -13,7 +13,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
     [SerializeField] private GameResources gameResources;
     [SerializeField] private Chessboard chessboard;
     [SerializeField] private JiBanAnimationManager jbAnimationManager;
-
+    [SerializeField] private NewWarManager NewWar;
 
     void Start()
     {
@@ -24,6 +24,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         EffectsPooling.Init();
 
         Init(chessboard, jbAnimationManager);
+        NewWar.Init(chessboard);
         NewWar.NewGame();
         NewWar.ConfirmEnemy();
         NewWar.ConfirmPlayer();
@@ -40,7 +41,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
 
     private void GenerateChessmanFromList()
     {
-        foreach (var card in NewWar.CardData.Values) InstanceChessman(card);
+        foreach (var card in _cardData.Values) InstanceChessman(card);
     }
 
 }
