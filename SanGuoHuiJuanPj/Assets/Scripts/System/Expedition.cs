@@ -184,16 +184,14 @@ public class Expedition : MonoBehaviour
                                 + "/" + checkPoints
             , () => { OnClickChangeWarsFun(warId); UIManager.instance.PlayOnClickMusic(); });
         if (campaign == null) return;
-        var isUnlock = campaign.unLockCount >= checkPoints;
-        if (!campaign.isTakeReward && isUnlock)
+        if (campaign.isTakeReward) return;
+        if(campaign.unLockCount < checkPoints)return;
+        warStageUi.SetChest(() =>
         {
-            warStageUi.SetChest(() =>
-            {
-                GetWarAchievementRewards(warId);
-                warStageUi.boxButton.onClick.RemoveAllListeners();
-                warStageUi.boxButton.gameObject.SetActive(false);
-            });
-        }
+            GetWarAchievementRewards(warId);
+            warStageUi.boxButton.onClick.RemoveAllListeners();
+            warStageUi.boxButton.gameObject.SetActive(false);
+        });
     }
 
     private void OnSelectDifficultyUiScale(int index)

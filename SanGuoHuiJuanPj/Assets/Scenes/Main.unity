@@ -3451,12 +3451,12 @@ MonoBehaviour:
   MagicUi: {fileID: 1789135760}
   CriUi: {fileID: 506510839}
   RouUi: {fileID: 788350361}
-  About: {fileID: 1709856158}
-  Military: {fileID: 1076915758}
-  Armed: {fileID: 648395924}
-  CombatType: {fileID: 722162297}
-  Element: {fileID: 749365281}
-  Major: {fileID: 1656953868}
+  About: {fileID: 749365281}
+  Military: {fileID: 1656953868}
+  Armed: {fileID: 1709856158}
+  CombatType: {fileID: 648395924}
+  Element: {fileID: 722162297}
+  Major: {fileID: 749365281}
 --- !u!222 &99189479
 CanvasRenderer:
   m_ObjectHideFlags: 0
