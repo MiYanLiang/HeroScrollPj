@@ -89,7 +89,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         _cardData.Clear();
         Chessboard.ResetChessboard();
-        StartButtonAnim(true);
     }
 
     public void SetPlayerCard(FightCardData playerBase)
@@ -123,24 +122,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
         obj.gameObject.gameObject.SetActive(false);
         obj.transform.SetParent(Chessboard.transform);
         GarbageUi.Add(obj);
-    }
-
-    private IEnumerator Round(ChessRound chessRound)
-    {
-        PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
-        StartButtonAnim(false);
-        ChessboardPreAnimation().Play();
-        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundStart);
-        StartCoroutine(AnimateRound(chessRound));
-    }
-
-    public const string ButtonTrigger = "isShow";
-
-    public void StartButtonAnim(bool show)
-    {
-        var startButton = Chessboard.StartButton;
-        startButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
-        startButton.interactable = show;
     }
 
     public IEnumerator ChallengerWinAnimation()
@@ -180,6 +161,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
     //演示回合
     public IEnumerator AnimateRound(ChessRound round)
     {
+        PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
+        ChessboardPreAnimation().Play();
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundStart);
+
 #if UNITY_EDITOR
         foreach (var stat in round.PreRoundStats)
         {

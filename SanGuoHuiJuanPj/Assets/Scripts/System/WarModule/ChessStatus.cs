@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NotImplementedException = System.NotImplementedException;
 
 namespace Assets.System.WarModule
 {
@@ -19,9 +18,9 @@ namespace Assets.System.WarModule
             ps.LastEaseShieldDamage);
         
 
-        public int Hp { get; private set; }
-        public int Pos { get; private set; }
-        public int MaxHp { get; private set; }
+        public int Hp { get; set; }
+        public int Pos { get; set; }
+        public int MaxHp { get; set; }
 
         //[JsonIgnore] 
         public bool IsDeath => Hp <= 0;

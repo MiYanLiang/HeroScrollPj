@@ -273,6 +273,8 @@ public class FightCardData : IChessman
     }
 
     public GameCardInfo GetInfo() => Card.GetInfo();
+
+    public void SetInstanceId(int insId) => instanceId = insId;
 }
 
 [Serializable]

@@ -22,40 +22,21 @@ public class Versus : MonoBehaviour
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
     }
 
-    public void PlayResult(TestServerSimpleApi.GameResult data, TestStageUi.SimpleFormation enemyFormation)
+    public void PlayResult(TestServerSimpleApi.GameResult data)
     {
         const int basePos = 17;
-        var enemies = new List<GameCard>();
-        var challengers = new List<GameCard>();
-        FightCardData enemyBase,playerBase;
-        //var eBase = enemyFormation.Formation[basePos];
-        //enemyFormation.Formation.Remove(basePos);
-        //var eb = DataTable.BaseLevel[eBase.Level];
-        //enemyBase = FightCardData.BaseCard(false, eb.BaseHp, eBase.Level);
-        //WarBoard.NewGame();
-        //WarBoard.SetEnemiesIncludeUis(enemyBase,
-        //    enemyFormation.Formation.Select(c => new ChessCard
-        //            { Id = c.Value.CardId, Level = c.Value.Level, Type = (GameCardType)c.Value.Type, Pos = c.Key })
-        //        .ToList());
-        //WarBoard.StartNewGame();
-        WarBoard.PlayResult(data.Rounds);
-
-        foreach (var (pos, id, isChallenger) in data.Chessmen)
+        
+        WarBoard.NewGame();
+        foreach (var op in data.Chessmen)
         {
-            if (pos == 17)
-            {
-                if (!isChallenger)
-                {
-                    enemyBase = FightCardData.BaseCard(false,
-                        DataTable.BaseLevel[enemyFormation.Formation[17].Level].BaseHp,
-                        enemyFormation.Formation[17].Level);
-                    
-                }
-                else
-                    playerBase = FightCardData.PlayerBaseCard(CityLevel);
-                continue;
-            }
+            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
+            card.SetPos(op.Pos);
+            card.SetInstanceId(op.InstanceId);
+            card.isPlayerCard = op.IsChallenger;
+            ChessboardManager.InstanceChessman(card);
         }
+
+        WarBoard.PlayResult(data.Rounds);
     }
 
     public void StartNewGame()

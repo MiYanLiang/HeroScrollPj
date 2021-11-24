@@ -34,7 +34,7 @@ public class WarBoardUi : MonoBehaviour
     private float autoRoundTimer;
     [SerializeField] private float AutoRoundSecs = 1.5f;
     private Slider AutoRoundSlider => Chessboard.AutoRoundSlider;
-
+    public event UnityAction OnRoundPause;
     private ObjectPool<WarGameCardUi> UiPool { get; set; }
 
     public void Init()
@@ -42,8 +42,7 @@ public class WarBoardUi : MonoBehaviour
         Rack.Init(this);
         ChessboardInputControl.Init(this);
         ChessboardManager.Init(Chessboard, JiBanManager);
-        ChessboardManager.OnRoundBegin += OnRoundStart;
-        ChessboardManager.OnRoundPause += () => IsDragDisable = false;
+        OnRoundPause += () => IsDragDisable = false;
         ChessboardManager.OnCardRemove.AddListener(OnCardRemove);
         OnGameSet.AddListener(playerWin =>
         {
@@ -97,7 +96,13 @@ public class WarBoardUi : MonoBehaviour
     /// <summary>
     /// 新棋局
     /// </summary>
-    public void NewGame() => ChessboardManager.NewGame();
+    public void NewGame()
+    {
+        ChessboardManager.NewGame();
+        NewWarManager.NewGame();
+        StartButtonAnim(true, Chessboard.StartButton);
+    }
+
     /// <summary>
     /// 生成玩家卡牌UI
     /// </summary>
@@ -114,9 +119,10 @@ public class WarBoardUi : MonoBehaviour
     public void SetPlayerBase(FightCardData playerBase)
     {
         playerBase.isPlayerCard = true;
-        if (playerBaseObj != null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
+        if (playerBaseObj != null && playerBaseObj.gameObject) 
+            Destroy(playerBaseObj.gameObject);
         NewWarManager.RegCard(playerBase);
-        NewWarManager.ConfirmPlayer();
+        NewWarManager.ConfirmInstancePlayers();
         ChessboardManager.SetPlayerCard(playerBase);
         playerBaseObj = playerBase.cardObj;
     }
@@ -127,11 +133,19 @@ public class WarBoardUi : MonoBehaviour
     /// <param name="enemyCards"></param>
     public void SetEnemiesIncludeUis(FightCardData enemyBase, List<ChessCard> enemyCards)
     {
-        if (enemyBaseObj != null && enemyBaseObj.gameObject) Destroy(enemyBaseObj.gameObject);
-        NewWarManager.RegCard(enemyBase);
+        if (enemyBaseObj != null && enemyBaseObj.gameObject) 
+            Destroy(enemyBaseObj.gameObject);
+        enemyCards.Add(new ChessCard
+        {
+            Id = -1,
+            Level = enemyBase.Level,
+            Pos = 17,
+            Type = GameCardType.Base
+        });
         NewWarManager.Enemy = enemyCards.ToArray();
-        foreach (var card in NewWarManager.ConfirmEnemy()) ChessboardManager.InstanceChessman(card);
-        enemyBaseObj = enemyBase.cardObj;
+        var confirmedEnemies = NewWarManager.ConfirmInstanceEnemies();
+        foreach (var card in confirmedEnemies) ChessboardManager.InstanceChessman(card);
+        enemyBaseObj = confirmedEnemies.First(c=>c.Pos == 17).cardObj;
     }
 
     public void CloseChessboard()
@@ -154,12 +168,13 @@ public class WarBoardUi : MonoBehaviour
         card.UpdateHpUi();
         ui.DragComponent.Init(card);
     }
-    private void OnRoundStart()
+    public void OnLocalRoundStart()
     {
         IsDragDisable = true;
         autoRoundTimer = 0;
         if (IsBusy) return;
         IsBusy = true;
+        StartButtonAnim(false, Chessboard.StartButton);
         //移除地块精灵
         foreach (var pos in PresetMap.Keys.ToArray())
             RemovePreFloorBuff(pos);
@@ -171,10 +186,10 @@ public class WarBoardUi : MonoBehaviour
         }
         IsFirstRound = false;
         var round = NewWarManager.ChessOperator.StartRound();
-        StartCoroutine(PlayRound(round));
+        StartCoroutine(PlayRound(round,true));
     }
 
-    private IEnumerator PlayRound(ChessRound round)
+    private IEnumerator PlayRound(ChessRound round,bool invokeRoundPauseTrigger)
     {
         yield return ChessboardManager.AnimateRound(round);
         var chess = NewWarManager.ChessOperator;
@@ -191,9 +206,21 @@ public class WarBoardUi : MonoBehaviour
 
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         IsBusy = false;
-        StartButtonAnim(true);
-        OnRoundPause?.Invoke();
+        if(invokeRoundPauseTrigger)
+        {
+            StartButtonAnim(true, Chessboard.StartButton);
+            OnRoundPause?.Invoke();
+        }
     }
+
+    public const string ButtonTrigger = "isShow";
+
+    public static void StartButtonAnim(bool show,Button startButton)
+    {
+        startButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
+        startButton.interactable = show;
+    }
+
 
     #region 棋子暂存区与棋盘区
 
@@ -406,7 +433,7 @@ public class WarBoardUi : MonoBehaviour
             autoRoundTimer += Time.deltaTime;
             if (autoRoundTimer >= AutoRoundSecs)
             {
-                InvokeRound();
+                OnLocalRoundStart();
             }
             if (AutoRoundSlider)
                 AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;

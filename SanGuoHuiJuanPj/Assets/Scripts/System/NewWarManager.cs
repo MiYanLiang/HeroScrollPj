@@ -61,18 +61,15 @@ public class NewWarManager : MonoBehaviour, ILogger
     /// 棋盘3部曲 3b. 读取Player列表的卡牌信息
     /// (如果不用列表可以一个一个玩家注册)<see cref="RegCard"/>
     /// </summary>
-    public void ConfirmPlayer() => RegChessmanList(Player.ToArray(), true);
+    public List<FightCardData> ConfirmInstancePlayers() => RegChessmanList(Player.ToArray(), true);
 
     /// <summary>
     /// 棋盘3部曲 2.
     /// 读取enemy列表的卡牌信息
     /// </summary>
-    public List<FightCardData> ConfirmEnemy() => RegChessmanList(Enemy, false);
+    public List<FightCardData> ConfirmInstanceEnemies() => RegChessmanList(Enemy, false);
 
-    public void RegCard(FightCardData card)
-    {
-        ChessOperator.RegOperator(card);
-    }
+    public void RegCard(FightCardData card) => ChessOperator.RegOperator(card);
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {

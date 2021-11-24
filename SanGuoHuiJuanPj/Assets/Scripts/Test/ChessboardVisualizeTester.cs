@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Assets.System.WarModule;
 using CorrelateLib;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -26,17 +28,25 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         Init(chessboard, jbAnimationManager);
         NewWar.Init(chessboard);
         NewWar.NewGame();
-        NewWar.ConfirmEnemy();
-        NewWar.ConfirmPlayer();
+        var enemies = NewWar.ConfirmInstanceEnemies();
+        var players = NewWar.ConfirmInstancePlayers();
+        _cardData = enemies.Concat(players).ToDictionary(c => c.InstanceId, c => c);
+        
         GenerateChessmanFromList();
-        //var playerBase = NewWar.Player.FirstOrDefault(c => c.Type == GameCardType.Base);
-        //if (playerBase == null) Debug.LogError("玩家老巢未设置。");
-        //var pBase = FightCardData.PlayerBaseCard(playerBase.Level);
-        //var enemyBase = NewWar.Enemy.FirstOrDefault(c => c.Type == GameCardType.Base);
-        //if (enemyBase == null) Debug.LogError("敌方老巢未设置。");
-        //var eBase = FightCardData.PlayerBaseCard(enemyBase.Level);
-        //SetPlayerChess(pBase, NewWar.Player);
-        //SetEnemyChess(eBase, NewWar.Enemy);
+        chessboard.StartButton.onClick.AddListener(RoundStart);
+    }
+
+    public void RoundStart()
+    {
+        WarBoardUi.StartButtonAnim(false, chessboard.StartButton);
+        var round = NewWar.ChessOperator.StartRound();
+        StartCoroutine(TestRoundAnim(round));
+    }
+
+    private IEnumerator TestRoundAnim(ChessRound chessRound)
+    {
+        yield return AnimateRound(chessRound);
+        WarBoardUi.StartButtonAnim(true, chessboard.StartButton);
     }
 
     private void GenerateChessmanFromList()

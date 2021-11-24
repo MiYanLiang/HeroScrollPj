@@ -109,7 +109,7 @@ public class TestServerSimpleApi : MonoBehaviour
         if (isBusy) return;
         isBusy = true;
         Versus.SetEnemyFormation(selectedFormation.Formation.ToDictionary(c => c.Key, c => c.Value as IGameCard));
-        StartButton.GetComponent<Animator>().SetBool(ChessboardVisualizeManager.ButtonTrigger, false);
+        StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         StartButton.onClick.RemoveAllListeners();
         var f = selectedFormation;
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new ChallengeSet.Card(c.Card));
@@ -131,7 +131,7 @@ public class TestServerSimpleApi : MonoBehaviour
             return;
         var json = await response.Content.ReadAsStringAsync();
         var data = Json.Deserialize<GameResult>(json);
-        Versus.PlayResult(data, selectedFormation);
+        Versus.PlayResult(data);
     }
 
     private class ChallengeSet
@@ -160,12 +160,27 @@ public class TestServerSimpleApi : MonoBehaviour
             }
         }
     }
-
     public class GameResult
     {
-        public List<(int, int, bool)> Chessmen { get; set; }
+        public List<Operator> Chessmen { get; set; }
         public List<ChessRound> Rounds { get; set; }
         public bool IsChallengerWin { get; set; }
+
+        public class Operator:IOperatorInfo
+        {
+            public int InstanceId { get; set; }
+            public int Pos { get; set; }
+            public bool IsChallenger { get; set; }
+            public Card Card { get; set; }
+            IGameCard IOperatorInfo.Card => Card;
+        }
+        public class Card :IGameCard
+        {
+            public int CardId { get; set; }
+            public int Level { get; set; }
+            public int Chips { get; set; }
+            public int Type { get; set; }
+        }
     }
 
 }

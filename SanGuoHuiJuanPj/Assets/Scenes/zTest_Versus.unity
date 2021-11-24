@@ -3624,7 +3624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -10046,8 +10046,10 @@ MonoBehaviour:
   Rack: {fileID: 510772238}
   ChessboardInputControl: {fileID: 1712065648}
   ChessboardManager: {fileID: 1940795990}
+  NewWarManager: {fileID: 1940795989}
   heroEnlistText: {fileID: 1511754625}
   aboutCardUi: {fileID: 1309043817}
+  AutoRoundSecs: 1.5
 --- !u!1 &1146356372
 GameObject:
   m_ObjectHideFlags: 0
@@ -12765,7 +12767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -17292,9 +17294,7 @@ MonoBehaviour:
     type: 3}
   HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
     type: 3}
-  NewWar: {fileID: 1940795989}
   audioSource: {fileID: 1671827780}
-  AutoRoundSecs: 60
 --- !u!114 &1940795991
 MonoBehaviour:
   m_ObjectHideFlags: 0

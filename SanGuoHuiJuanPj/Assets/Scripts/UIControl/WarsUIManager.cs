@@ -145,7 +145,10 @@ public class WarsUIManager : MonoBehaviour
             StartCoroutine(OnPlayerWin());
         });
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
+        WarBoard.OnRoundPause += () => waitForRoundStart = true;
+        WarBoard.Chessboard.StartButton.onClick.AddListener(OnRoundStartClick);
     }
+
 
     IEnumerator Initialize()
     {
@@ -574,6 +577,15 @@ public class WarsUIManager : MonoBehaviour
         }
 
         WarBoard.StartNewGame(enemyBase, playerBase, enemyCards);
+        waitForRoundStart = true;
+    }
+
+    private bool waitForRoundStart;
+    private void OnRoundStartClick()
+    {
+        if(!waitForRoundStart)return;
+        waitForRoundStart = false;
+        WarBoard.OnLocalRoundStart();
     }
 
 
@@ -665,61 +677,12 @@ public class WarsUIManager : MonoBehaviour
         });
     }
 
-    //父关卡通路子关卡
-    private void TheWayToTheChildPoint(Transform parentPoint, List<Transform> childPoints)
-    {
-        pointWays.SetActive(true);
-
-        List<GameObject> wayObjsList = new List<GameObject>();
-
-        for (int i = 0; i < pointWays.transform.childCount; i++)
-        {
-            GameObject obj = pointWays.transform.GetChild(i).gameObject;
-            wayObjsList.Add(obj);
-            if (obj.activeSelf)
-                obj.SetActive(false);
-        }
-
-        for (int i = 0; i < childPoints.Count; i++)
-        {
-            if (childPoints[i] != null)
-            {
-                wayObjsList[i].transform.position = parentPoint.position;
-                wayObjsList[i].transform.DOPause();
-                wayObjsList[i].SetActive(true);
-
-                Vector3[] points = GetVector3Points(parentPoint.position, childPoints[i].position);
-
-                wayObjsList[i].transform.DOPath(points, waySpeedFlo).SetEase(Ease.Unset);
-            }
-        }
-    }
-
     [SerializeField] float waySpeedFlo; //通路时长
 
     [SerializeField] float randomChaZhi; //随机插值
 
     [SerializeField] int pointNums; //中途点数
 
-    //返回两点之间的随机路径点
-    private Vector3[] GetVector3Points(Vector3 point0, Vector3 point1)
-    {
-        Vector3[] wayPoints = new Vector3[pointNums];
-        float floX = (point1.x - point0.x) /
-                     wayPoints.Length; // + Random.Range(-randomInterpolation, randomInterpolation);
-        float floY = (point1.y - point0.y) / wayPoints.Length;
-        for (int i = 0; i < wayPoints.Length - 1; i++)
-        {
-            Vector3 vec = new Vector3();
-            vec.x = point0.x + floX * (i + 1) + Random.Range(-randomChaZhi, randomChaZhi);
-            vec.y = point0.y + floY * (i + 1);
-            vec.z = point0.z;
-            wayPoints[i] = vec;
-        }
-
-        wayPoints[wayPoints.Length - 1] = point1;
-        return wayPoints;
-    }
 
     //展示关卡前进的云朵动画
     private void ShowClouds()
@@ -858,41 +821,6 @@ public class WarsUIManager : MonoBehaviour
         }
     }
 
-    // 匹配稀有度的颜色
-    private Color GetNameColor(int rarity)
-    {
-        Color color = new Color();
-        switch (rarity)
-        {
-            case 1:
-                color = ColorDataStatic.name_gray;
-                break;
-            case 2:
-                color = ColorDataStatic.name_green;
-                break;
-            case 3:
-                color = ColorDataStatic.name_blue;
-                break;
-            case 4:
-                color = ColorDataStatic.name_purple;
-                break;
-            case 5:
-                color = ColorDataStatic.name_orange;
-                break;
-            case 6:
-                color = ColorDataStatic.name_red;
-                break;
-            case 7:
-                color = ColorDataStatic.name_black;
-                break;
-            default:
-                color = ColorDataStatic.name_gray;
-                break;
-        }
-
-        return color;
-    }
-
     //展示三选单位个体信息
     private void OnClickToShowShopInfo(int btnIndex, string text)
     {
@@ -906,14 +834,6 @@ public class WarsUIManager : MonoBehaviour
         }
 
         sanXuan.ShowInfo(text);
-        //if (!shopInfoObj.activeSelf)
-        //{
-        //    infoText.text = "";
-        //    Image infoImg = shopInfoObj.GetComponentInChildren<Image>();
-        //    infoImg.color = new Color(1f, 1f, 1f, 0f);
-        //    shopInfoObj.SetActive(true);
-        //    infoImg.DOFade(1, 0.2f);
-        //}
     }
 
     //奇遇或商店界面初始化
