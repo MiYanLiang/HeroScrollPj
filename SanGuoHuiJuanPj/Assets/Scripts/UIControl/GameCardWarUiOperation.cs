@@ -107,6 +107,7 @@ public class GameCardWarUiOperation : MonoBehaviour
         var iconId = Effect.GetStateIconId(con);
         if (iconId == -1) return;
         if (CardStates.ContainsKey(iconId)) return;
+        if (PrefabIco == null || StateContent == null) return;
         var icon = Instantiate(PrefabIco, StateContent);
         icon.sprite = GameResources.Instance.Icon[iconId];
         icon.gameObject.SetActive(true);
