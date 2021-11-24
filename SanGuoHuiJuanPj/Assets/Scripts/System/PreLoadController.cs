@@ -13,7 +13,7 @@ public class PreLoadController : MonoBehaviour
     public SplashImage[] SplashImages;
     //public Image DisplayImage;
     public Image FadeImage;
-    public GameSystem GameSystemPrefab;
+    public GameSystem GameSystem;
     public GameObject CoroutineObj;
     void Start()
     {
@@ -31,7 +31,7 @@ public class PreLoadController : MonoBehaviour
         //ao.allowSceneActivation = false;
 
         var co1 = CoroutineObj.AddComponent<CoObj>();
-        co1.Set(GameSystemInit);
+        co1.Set(GameSystem.Init);
         co1.StartAction();
         yield return new WaitForSeconds(0.1f);
         foreach (var sp in spList)
@@ -48,18 +48,6 @@ public class PreLoadController : MonoBehaviour
         //ao.allowSceneActivation = true;
         //SceneManager.UnloadSceneAsync(0);
         SceneManager.LoadScene((int) GameSystem.GameScene.StartScene);
-    }
-
-    private async void GameSystemInit()
-    {
-        var gs = await InstantiateGameSystem();
-        gs.Init();
-    }
-
-    private Task<GameSystem> InstantiateGameSystem()
-    {
-        var gs = Instantiate(GameSystemPrefab);
-        return Task.FromResult(gs);
     }
 }
 
