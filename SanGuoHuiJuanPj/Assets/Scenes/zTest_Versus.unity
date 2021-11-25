@@ -3624,7 +3624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -9995,11 +9995,13 @@ MonoBehaviour:
     AnimTransform: {fileID: 657728867}
     MainImage: {fileID: 984227687}
     MainTitle: {fileID: 974569249}
+    MainDesk: {fileID: 663895939}
   Opposite:
     JiBanImageObj: {fileID: 1776340407}
     AnimTransform: {fileID: 254947617}
     MainImage: {fileID: 637588203}
     MainTitle: {fileID: 1397107353}
+    MainDesk: {fileID: 1655938944}
   JiBanOffensiveFields:
   - JiBanId: 1
     IsOffensive: 1
@@ -10043,11 +10045,11 @@ MonoBehaviour:
   Background: {fileID: 1939783184}
   Rack: {fileID: 510772238}
   ChessboardInputControl: {fileID: 1712065648}
-  speedBtn: {fileID: 987116839}
-  speedBtnText: {fileID: 1150298741}
   ChessboardManager: {fileID: 1940795990}
+  NewWarManager: {fileID: 1940795989}
   heroEnlistText: {fileID: 1511754625}
   aboutCardUi: {fileID: 1309043817}
+  AutoRoundSecs: 1.5
 --- !u!1 &1146356372
 GameObject:
   m_ObjectHideFlags: 0
@@ -12765,7 +12767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -15564,8 +15566,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f3227de2188b1147af0f34edaa2f4b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ServerGetListApi: http://localhost:5000/api/Warboard/SimpleBoard
-  ServerChallengeApi: https://localhost:5001/api/Warboard/Challenge
+  ServerGetListApi: https://herostatetest.azurewebsites.net/api/Warboard/SimpleBoard
+  ServerChallengeApi: https://herostatetest.azurewebsites.net/api/Warboard/Challenge
   RequestApiButton: {fileID: 1701989712}
   ScrollView: {fileID: 1350848249}
   Prefab: {fileID: 222050390}
@@ -16806,6 +16808,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 795173590726214330, guid: ffa13d7f877fc3f40a3ea3fcfe30f08c,
+        type: 3}
+      propertyPath: warGameCardUi
+      value: 
+      objectReference: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
+        type: 3}
     - target: {fileID: 7322335858056159361, guid: ffa13d7f877fc3f40a3ea3fcfe30f08c,
         type: 3}
       propertyPath: m_RootOrder
@@ -17292,9 +17300,7 @@ MonoBehaviour:
     type: 3}
   HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
     type: 3}
-  NewWar: {fileID: 1940795989}
   audioSource: {fileID: 1671827780}
-  AutoRoundSecs: 60
 --- !u!114 &1940795991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17344,6 +17350,10 @@ MonoBehaviour:
     Shady: 0.6
     Dark: 0.8
     DropBloodSec: 0.4
+    OnRoundStart: 0.5
+    OnActivity: 0.5
+    OnRoundEnd: 0.5
+    OnFilterChessmen: 0.3
 --- !u!4 &1940795992
 Transform:
   m_ObjectHideFlags: 0

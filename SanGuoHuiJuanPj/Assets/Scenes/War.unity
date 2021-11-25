@@ -943,8 +943,10 @@ MonoBehaviour:
   Rack: {fileID: 1107092455}
   ChessboardInputControl: {fileID: 1646824995}
   ChessboardManager: {fileID: 1672411071}
+  NewWarManager: {fileID: 1672411072}
   heroEnlistText: {fileID: 1295582105}
   aboutCardUi: {fileID: 425508068}
+  AutoRoundSecs: 1.5
 --- !u!114 &63362838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27721,9 +27723,7 @@ MonoBehaviour:
     type: 3}
   HomePrefab: {fileID: 5540341847820749036, guid: 8cce996eb7aabe34ea89a3272e3906a5,
     type: 3}
-  NewWar: {fileID: 1672411072}
   audioSource: {fileID: 1882509704}
-  AutoRoundSecs: 2.5
 --- !u!114 &1672411072
 MonoBehaviour:
   m_ObjectHideFlags: 0

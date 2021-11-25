@@ -576,5 +576,40 @@ namespace Assets.System.WarModule
             return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint, speed, force,
                 intelligent, gameSetRecover, rare);
         }
+
+        public IEnumerable<IOperatorInfo> GetOperators() =>
+            ops.Select(o => new OperatorInfo(o.Value.CardId, (int)o.Value.CardType, o.Value.Level, o.Key,
+                GetStatus(o.Value).Pos, o.Value.IsChallenger));
+
+        private class OperatorInfo : IOperatorInfo
+        {
+            public int InstanceId { get; }
+            public int Pos { get; }
+            public bool IsChallenger { get; }
+            public IGameCard Card { get; }
+
+            public OperatorInfo(int cardId, int cardType, int level, int instanceId, int pos, bool isChallenger)
+            {
+                Card = new GameCard(cardId, cardType, level);
+                InstanceId = instanceId;
+                Pos = pos;
+                IsChallenger = isChallenger;
+            }
+            private class GameCard : IGameCard
+            {
+                public int CardId { get; }
+                public int Level { get; set; }
+                public int Chips { get; set; }
+                public int Type { get; }
+
+                public GameCard(int cardId, int type, int level)
+                {
+                    CardId = cardId;
+                    Level = level;
+                    Type = type;
+                    Chips = 0;
+                }
+            }
+        }
     }
 }

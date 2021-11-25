@@ -17242,7 +17242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCardUi: {fileID: 3122890704471373157, guid: 46e11a93c6a42e6429b404fba5836adf,
     type: 3}
-  warGameCardUi: {fileID: 824321453738017661, guid: d67d29869bed7aa4fb28530f98831218,
+  warGameCardUi: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
     type: 3}
 --- !u!114 &7322335858056159362
 MonoBehaviour:

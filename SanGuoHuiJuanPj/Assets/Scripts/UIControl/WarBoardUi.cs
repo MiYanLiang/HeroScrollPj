@@ -5,6 +5,7 @@ using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class WarBoardUi : MonoBehaviour
@@ -19,12 +20,21 @@ public class WarBoardUi : MonoBehaviour
     [SerializeField] private PlayerCardRack Rack;
     [SerializeField] private ChessboardInputController ChessboardInputControl;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
+    [SerializeField] private NewWarManager NewWarManager;
     [SerializeField] private Text heroEnlistText; //武将上阵文本
     [SerializeField] AboutCardUi aboutCardUi; //阵上卡牌详情展示位
+    public UnityEvent<bool> OnGameSet = new GameSetEvent();
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }
     public bool IsDragDisable { get; private set; }
-
+    public bool IsBusy { get; private set; }
+    public bool IsGameOver { get; private set; }
+    public bool IsFirstRound { get; private set; }
+    private Toggle AutoRoundToggle => Chessboard == null ? null : Chessboard.AutoRoundToggle;
+    private float autoRoundTimer;
+    [SerializeField] private float AutoRoundSecs = 1.5f;
+    private Slider AutoRoundSlider => Chessboard.AutoRoundSlider;
+    public event UnityAction OnRoundPause;
     private ObjectPool<WarGameCardUi> UiPool { get; set; }
 
     public void Init()
@@ -32,13 +42,13 @@ public class WarBoardUi : MonoBehaviour
         Rack.Init(this);
         ChessboardInputControl.Init(this);
         ChessboardManager.Init(Chessboard, JiBanManager);
-        ChessboardManager.OnRoundBegin += OnRoundStart;
-        ChessboardManager.OnRoundPause += () => IsDragDisable = false;
+        OnRoundPause += () => IsDragDisable = false;
         ChessboardManager.OnCardRemove.AddListener(OnCardRemove);
-        ChessboardManager.OnGameSet.AddListener(playerWin =>
+        OnGameSet.AddListener(playerWin =>
         {
             if (playerWin) OnChallengerWin();
         });
+        NewWarManager.Init(Chessboard);
         UiPool = new ObjectPool<WarGameCardUi>(() => PrefabManager.NewWarGameCardUi(Rack.ScrollRect.content));
     }
 
@@ -70,39 +80,77 @@ public class WarBoardUi : MonoBehaviour
 
     public void StartNewGame(FightCardData enemyBase, FightCardData playerBase, List<ChessCard> enemyCards)
     {
+        IsFirstRound = true;
+        IsGameOver = false;
+        if (AutoRoundSlider) AutoRoundSlider.value = 0;
         NewGame();
         SetPlayerBase(playerBase);
-        SetEnemies(enemyBase, enemyCards);
-        GeneratePlayerScopeChessman();
+        SetEnemiesIncludeUis(enemyBase, enemyCards);
+        GeneratePlayerScopeChessman(false);
         Chessboard.UpdateWarSpeed();
-        OnPreChessboardFloorBuff(ChessboardManager.IsFirstRound);
+        RefreshPresetFloorBuffs(IsFirstRound);
         Chessboard.gameObject.SetActive(true);
         Background.gameObject.SetActive(true);
+
     }
-
-    public void NewGame() => ChessboardManager.NewGame();
-
-    public void GeneratePlayerScopeChessman()
+    /// <summary>
+    /// 新棋局
+    /// </summary>
+    public void NewGame(bool showStartBtn = true)
     {
-        foreach (var card in PlayerScope.Where(p => p.IsLock))
-            ChessmanInit(card);
+        if (PlayerScope.Any())
+        {
+            foreach (var card in PlayerScope) RecycleCardUi(card);
+            PlayerScope.Clear();
+        }
+        ChessboardManager.NewGame();
+        NewWarManager.NewGame();
+        if(showStartBtn) StartButtonAnim(true, Chessboard.StartButton);
     }
 
+    /// <summary>
+    /// 生成玩家卡牌UI
+    /// </summary>
+    public void GeneratePlayerScopeChessman(bool includeUnlock)
+    {
+        var scope = includeUnlock ? PlayerScope : PlayerScope.Where(p => p.IsLock);
+        foreach (var card in scope)
+            PlayerChessmanInit(card);
+    }
+    /// <summary>
+    /// 设置玩家老巢
+    /// </summary>
+    /// <param name="playerBase"></param>
     public void SetPlayerBase(FightCardData playerBase)
     {
         playerBase.isPlayerCard = true;
-        if (playerBaseObj != null && playerBaseObj.gameObject) Destroy(playerBaseObj.gameObject);
-        ChessboardManager.SetPlayerBase(playerBase);
-        ChessboardManager.InstanceChessman(playerBase);
+        if (playerBaseObj != null && playerBaseObj.gameObject) 
+            Destroy(playerBaseObj.gameObject);
+        NewWarManager.RegCard(playerBase);
+        NewWarManager.ConfirmInstancePlayers();
+        ChessboardManager.SetPlayerCard(playerBase);
         playerBaseObj = playerBase.cardObj;
     }
-
-    public void SetEnemies(FightCardData enemyBase, List<ChessCard> enemyCards)
+    /// <summary>
+    /// 设置对手阵容,包括UI
+    /// </summary>
+    /// <param name="enemyBase"></param>
+    /// <param name="enemyCards"></param>
+    public void SetEnemiesIncludeUis(FightCardData enemyBase, List<ChessCard> enemyCards)
     {
-        if (enemyBaseObj != null && enemyBaseObj.gameObject) Destroy(enemyBaseObj.gameObject);
-        foreach (var card in ChessboardManager.SetEnemyChess(enemyBase, enemyCards.ToArray()))
-            ChessboardManager.InstanceChessman(card);
-        enemyBaseObj = enemyBase.cardObj;
+        if (enemyBaseObj != null && enemyBaseObj.gameObject) 
+            Destroy(enemyBaseObj.gameObject);
+        enemyCards.Add(new ChessCard
+        {
+            Id = -1,
+            Level = enemyBase.Level,
+            Pos = 17,
+            Type = GameCardType.Base
+        });
+        NewWarManager.Enemy = enemyCards.ToArray();
+        var confirmedEnemies = NewWarManager.ConfirmInstanceEnemies();
+        foreach (var card in confirmedEnemies) ChessboardManager.InstanceChessman(card);
+        enemyBaseObj = confirmedEnemies.First(c=>c.Pos == 17).cardObj;
     }
 
     public void CloseChessboard()
@@ -117,29 +165,68 @@ public class WarBoardUi : MonoBehaviour
     //改变游戏速度
     public void ChangeTimeScale(int scale = 0, bool save = true) => Chessboard.ChangeTimeScale(scale, save);
 
-    private void ChessmanInit(FightCardData card)
+    private void PlayerChessmanInit(FightCardData card)
     {
-        ChessboardManager.SetPlayerChess(card);
-        ChessboardManager.InstanceChessman(card);
+        NewWarManager.RegCard(card);
+        ChessboardManager.SetPlayerCard(card);
         var ui = card.cardObj;
         card.UpdateHpUi();
         ui.DragComponent.Init(card);
     }
-    private bool OnRoundStart()
+    public void OnLocalRoundStart()
     {
         IsDragDisable = true;
+        autoRoundTimer = 0;
+        if (IsBusy) return;
+        IsBusy = true;
+        StartButtonAnim(false, Chessboard.StartButton);
         //移除地块精灵
         foreach (var pos in PresetMap.Keys.ToArray())
             RemovePreFloorBuff(pos);
         foreach (var card in PlayerScope.Where(c => !c.IsLock))
         {
             RecycleCardUi(card);
-            ChessmanInit(card);
+            PlayerChessmanInit(card);
             card.IsLock = true;
         }
-
-        return true;
+        IsFirstRound = false;
+        var round = NewWarManager.ChessOperator.StartRound();
+        StartCoroutine(PlayRound(round,true));
     }
+
+    private IEnumerator PlayRound(ChessRound round,bool invokeRoundPauseTrigger)
+    {
+        yield return ChessboardManager.AnimateRound(round);
+        var chess = NewWarManager.ChessOperator;
+        if (chess.IsGameOver)
+        {
+            OnGameSet.Invoke(chess.IsChallengerWin);
+            //ClearStates();
+            if (chess.IsChallengerWin)
+                yield return ChessboardManager.ChallengerWinAnimation();
+            IsGameOver = true;
+            IsBusy = false;
+            yield break;
+        }
+
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
+        IsBusy = false;
+        if(invokeRoundPauseTrigger)
+        {
+            StartButtonAnim(true, Chessboard.StartButton);
+            OnRoundPause?.Invoke();
+        }
+    }
+
+    public const string ButtonTrigger = "isShow";
+
+    public static void StartButtonAnim(bool show,Button startButton)
+    {
+        startButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
+        startButton.interactable = show;
+    }
+
+
     #region 棋子暂存区与棋盘区
 
     /**
@@ -154,8 +241,7 @@ public class WarBoardUi : MonoBehaviour
         if (!remCard.IsPlayer ||
             remCard.CardType == GameCardType.Base) return;//老巢不提取棋子
         var card = PlayerScope.FirstOrDefault(f => f == remCard);
-        if (card == null)
-            throw new InvalidOperationException($"找不到战败的卡牌，Id = {remCard.InstanceId}");
+        if (card == null) return;
         PlayerScope.Remove(card);
         UpdateHeroEnlistText();
     }
@@ -197,7 +283,7 @@ public class WarBoardUi : MonoBehaviour
         }
 
         card.cardObj.SetSelected(card.Pos > -1 && !card.IsLock);
-        OnPreChessboardFloorBuff(ChessboardManager.IsFirstRound);
+        RefreshPresetFloorBuffs(IsFirstRound);
         UpdateHeroEnlistText();
     }
 
@@ -214,7 +300,11 @@ public class WarBoardUi : MonoBehaviour
     private Dictionary<ChessPos, (FightCardData, List<Effect.PresetSprite>)> PresetMap { get; } =
         new Dictionary<ChessPos, (FightCardData, List<Effect.PresetSprite>)>();
 
-    private void OnPreChessboardFloorBuff(bool includeLocked)
+    /// <summary>
+    /// 更新预设特效
+    /// </summary>
+    /// <param name="includeLocked"></param>
+    private void RefreshPresetFloorBuffs(bool includeLocked)
     {
         var cards = ChessboardManager.CardData.Values.Concat(PlayerScope)
             .Where(c => IncludeLock(c.IsLock, includeLocked)).ToArray();
@@ -338,4 +428,20 @@ public class WarBoardUi : MonoBehaviour
         foreach (var round in rounds)
             yield return ChessboardManager.AnimateRound(round);
     }
+
+    private void Update()
+    {
+        if (Chessboard == null) return;
+        if (!IsGameOver && !IsBusy && !IsFirstRound && AutoRoundToggle != null && AutoRoundToggle.isOn)
+        {
+            autoRoundTimer += Time.deltaTime;
+            if (autoRoundTimer >= AutoRoundSecs)
+            {
+                OnLocalRoundStart();
+            }
+            if (AutoRoundSlider)
+                AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
+        }
+    }
 }
+public class GameSetEvent : UnityEvent<bool> { }
