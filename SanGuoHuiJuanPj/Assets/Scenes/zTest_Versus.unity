@@ -15566,8 +15566,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f3227de2188b1147af0f34edaa2f4b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ServerGetListApi: http://localhost:5000/api/Warboard/SimpleBoard
-  ServerChallengeApi: https://localhost:5001/api/Warboard/Challenge
+  ServerGetListApi: https://herostatetest.azurewebsites.net/api/Warboard/SimpleBoard
+  ServerChallengeApi: https://herostatetest.azurewebsites.net/api/Warboard/Challenge
   RequestApiButton: {fileID: 1701989712}
   ScrollView: {fileID: 1350848249}
   Prefab: {fileID: 222050390}
@@ -16808,6 +16808,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 795173590726214330, guid: ffa13d7f877fc3f40a3ea3fcfe30f08c,
+        type: 3}
+      propertyPath: warGameCardUi
+      value: 
+      objectReference: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
+        type: 3}
     - target: {fileID: 7322335858056159361, guid: ffa13d7f877fc3f40a3ea3fcfe30f08c,
         type: 3}
       propertyPath: m_RootOrder

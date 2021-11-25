@@ -96,11 +96,16 @@ public class WarBoardUi : MonoBehaviour
     /// <summary>
     /// 新棋局
     /// </summary>
-    public void NewGame()
+    public void NewGame(bool showStartBtn = true)
     {
+        if (PlayerScope.Any())
+        {
+            foreach (var card in PlayerScope) RecycleCardUi(card);
+            PlayerScope.Clear();
+        }
         ChessboardManager.NewGame();
         NewWarManager.NewGame();
-        StartButtonAnim(true, Chessboard.StartButton);
+        if(showStartBtn) StartButtonAnim(true, Chessboard.StartButton);
     }
 
     /// <summary>
@@ -236,8 +241,7 @@ public class WarBoardUi : MonoBehaviour
         if (!remCard.IsPlayer ||
             remCard.CardType == GameCardType.Base) return;//老巢不提取棋子
         var card = PlayerScope.FirstOrDefault(f => f == remCard);
-        if (card == null)
-            throw new InvalidOperationException($"找不到战败的卡牌，Id = {remCard.InstanceId}");
+        if (card == null) return;
         PlayerScope.Remove(card);
         UpdateHeroEnlistText();
     }

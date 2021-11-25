@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,8 +26,8 @@ public class Versus : MonoBehaviour
     public void PlayResult(TestServerSimpleApi.GameResult data)
     {
         const int basePos = 17;
-        
-        WarBoard.NewGame();
+        Infoboard.transform.DOLocalMoveY(1440, 2);
+        WarBoard.NewGame(false);
         foreach (var op in data.Chessmen)
         {
             var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
