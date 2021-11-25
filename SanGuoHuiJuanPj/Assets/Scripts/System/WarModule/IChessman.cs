@@ -39,4 +39,16 @@ namespace Assets.System.WarModule
         void RemoveOperator();
         void SetPos(IChessOperator op);
     }
+
+    /// <summary>
+    /// 棋子最低生成信息
+    /// </summary>
+    public interface IOperatorInfo
+    {
+        int InstanceId { get; }
+        int Pos { get; }
+        bool IsChallenger { get; }
+        IGameCard Card { get; }
+    }
+
 }

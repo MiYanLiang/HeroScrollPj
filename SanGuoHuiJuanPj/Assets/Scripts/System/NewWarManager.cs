@@ -9,10 +9,8 @@ using UnityEngine.UI;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 public class NewWarManager : MonoBehaviour, ILogger
 {
-    public const string ButtonTrigger = "isShow";
     #region UnityFields
 
-    public Button StartButton { get; private set; }
     public ChessPos[] PlayerPoses { get; set; }
     public ChessPos[] EnemyPoses { get; set; }
     public ChessCard[] Enemy;
@@ -21,11 +19,9 @@ public class NewWarManager : MonoBehaviour, ILogger
 
     public ChessGrid Grid;
     public ChessOperatorManager<FightCardData> ChessOperator;
-    public Dictionary<int, FightCardData> CardData { get; } = new Dictionary<int, FightCardData>();
 
     public void Init(Chessboard chessboard)
     {
-        StartButton = chessboard.StartButton;
         PlayerPoses = chessboard.PlayerScope;
         EnemyPoses = chessboard.EnemyScope;
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
@@ -43,8 +39,6 @@ public class NewWarManager : MonoBehaviour, ILogger
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
             DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values);
 #endif
-        CardData.Clear();
-        StartButtonShow(true);
     }
 
     private List<FightCardData> RegChessmanList(ChessCard[] list, bool isChallenger)
@@ -67,31 +61,15 @@ public class NewWarManager : MonoBehaviour, ILogger
     /// 棋盘3部曲 3b. 读取Player列表的卡牌信息
     /// (如果不用列表可以一个一个玩家注册)<see cref="RegCard"/>
     /// </summary>
-    public void ConfirmPlayer() => RegChessmanList(Player.ToArray(), true);
+    public List<FightCardData> ConfirmInstancePlayers() => RegChessmanList(Player.ToArray(), true);
 
     /// <summary>
     /// 棋盘3部曲 2.
     /// 读取enemy列表的卡牌信息
     /// </summary>
-    public List<FightCardData> ConfirmEnemy() => RegChessmanList(Enemy, false);
+    public List<FightCardData> ConfirmInstanceEnemies() => RegChessmanList(Enemy, false);
 
-    public void RegCard(FightCardData card)
-    {
-        ChessOperator.RegOperator(card);
-        card.Style = ChessOperatorManager<FightCardData>.GetCombatStyle(
-            card.Card,
-            DataTable.Hero,
-            DataTable.Tower,
-            DataTable.Trap,
-            DataTable.Military,
-            DataTable.BaseLevel);
-        CardData.Add(card.InstanceId, card);
-    }
-    public void StartButtonShow(bool show)
-    {
-        StartButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
-        StartButton.interactable = show;
-    }
+    public void RegCard(FightCardData card) => ChessOperator.RegOperator(card);
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
