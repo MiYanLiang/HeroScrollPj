@@ -993,7 +993,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual int Healing() => StateDamage() * StateIntelligent() / 20;
+        protected virtual int Healing() => StateDamage() * StateIntelligent() / 25;
 
         protected virtual Func<IChessPos, bool> TargetFilter() =>
             p => p.IsAliveHero && Chessboard.GetStatus(p.Operator).HpRate < 1;
@@ -1101,7 +1101,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int Healing() => StateDamage() * StateIntelligent() / 10;
+        protected override int Healing() => StateDamage() * StateIntelligent() / 15;
 
         /// <summary>
         /// 获取目标的条件
