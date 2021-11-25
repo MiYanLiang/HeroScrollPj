@@ -23,7 +23,7 @@ public class TestServerSimpleApi : MonoBehaviour
     [SerializeField]private Chessboard chessboard;
     private Button StartButton { get; set; }
     private TestStageUi.SimpleFormation selectedFormation { get; set; }
-    void Start()
+    public void InitTest()
     {
         RequestApiButton.onClick.AddListener(RequestServerList);
         StartCoroutine(StartInit());
