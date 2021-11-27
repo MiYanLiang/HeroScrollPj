@@ -417,8 +417,8 @@ public static class Effect
 
             case 181:
             case 182:
-            case 183://元戎弩
-                value = 025;break;
+            case 183://飞弩
+                value = 024;break;
 
             case 20:
             case 52:
@@ -1114,7 +1114,7 @@ public static class Effect
 
             case 181:
             case 182:
-            case 183://元戎弩
+            case 183://飞弩
                 return 250;
 
             case 20:
@@ -2178,7 +2178,7 @@ public static class Effect
 
             case 181:
             case 182:
-            case 183://元戎弩
+            case 183://飞弩
                 audioId = 25; break;
 
             case 20:

@@ -1940,6 +1940,39 @@ namespace Assets.System.WarModule
             }
         }
     }
+    /// <summary>
+    /// 飞弩
+    /// </summary>
+    public class FeiNuOprater : HeroOperator 
+    {
+        private int Combo()
+        {
+            switch (Style.Military)
+            {
+                case 181: return 3;
+                case 182: return 5;
+                case 183: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int ComboRate => 40;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var damage = InstanceGenericDamage();
+            damage.Multiply(ComboRate * 0.01f);
+            for (int i = 0; i < Combo(); i++)
+            {
+                var target = Chessboard.GetRivals(this, p => p.IsPostedAlive)
+                    .Select(p => new { p, random = Chessboard.Randomize(5) })
+                    .OrderBy(o => o.random).FirstOrDefault();
+
+                OnPerformActivity(target.p, Activity.Intentions.Offensive,
+                    actId: i, skill: 1, damage);
+            }
+        }
+    }
 
     /// <summary>
     /// 18  大斧 - 挥动大斧，攻击时，可破除敌方护盾。受击目标血量越低，造成的伤害越高。
