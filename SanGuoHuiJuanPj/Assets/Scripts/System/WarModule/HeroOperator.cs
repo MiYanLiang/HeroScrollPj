@@ -371,15 +371,15 @@ namespace Assets.System.WarModule
                 default: return false;
             }
         }
-        private const int ChainMax = 10;
+        private const int ChainMax = 8;
 
         private int ArmorRate()
         {
             switch (Style.Military)
             {
-                case 58: return 5;
-                case 152:return 7;
-                case 153:return 10;
+                case 58: return 3;
+                case 152:return 5;
+                case 153:return 7;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -389,8 +389,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 58: return 5;
-                case 152: return 10;
-                case 153: return 15;
+                case 152: return 7;
+                case 153: return 10;
                 default: throw MilitaryNotValidError(this);
             }
         }
