@@ -42,6 +42,7 @@ public class PointDesk : MonoBehaviour
     [SerializeField]Text EnlistBtnLabel;
     [SerializeField]GameObject UpLevelEffect; //升星特效 
 
+    [Header("为武将把威力->改写成武力的文字控件")][SerializeField]Text WuLiText;
     [SerializeField]TextImageUi PowerUi;
     [SerializeField]TextImageUi StrUi;
     [SerializeField]TextImageUi HpUi;
@@ -172,7 +173,10 @@ public class PointDesk : MonoBehaviour
         var military = string.Empty;
         var armed = string.Empty;
         var combatType = string.Empty;
-        if (card.CardInfo.Type == GameCardType.Hero)
+
+        var isHero = card.CardInfo.Type == GameCardType.Hero;
+        WuLiText.text = isHero ? "武力：" : "威力：";
+        if (isHero)
         {
             var c = DataTable.Hero[card.Card.id];
             var m = DataTable.Military[c.MilitaryUnitTableId];
