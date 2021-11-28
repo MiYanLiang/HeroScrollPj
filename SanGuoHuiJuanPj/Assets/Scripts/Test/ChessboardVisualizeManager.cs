@@ -85,7 +85,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var card in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
             CardMap.Remove(card.Key);
-            Destroy(card.Value.cardObj.gameObject);
+            var uiObj = card.Value.cardObj;
+            if (uiObj) Destroy(card.Value.cardObj.gameObject);
         }
         _cardData.Clear();
         Chessboard.ResetChessboard();

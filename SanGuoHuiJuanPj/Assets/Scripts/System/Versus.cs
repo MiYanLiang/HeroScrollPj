@@ -25,7 +25,6 @@ public class Versus : MonoBehaviour
 
     public void PlayResult(TestServerSimpleApi.GameResult data)
     {
-        const int basePos = 17;
         Infoboard.transform.DOLocalMoveY(1440, 2);
         WarBoard.NewGame(false);
         foreach (var op in data.Chessmen)
@@ -42,7 +41,7 @@ public class Versus : MonoBehaviour
 
     public void StartNewGame()
     {
-        WarBoard.NewGame();
+        WarBoard.NewGame(true);
         var card = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, CityLevel));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);

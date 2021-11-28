@@ -83,7 +83,7 @@ public class WarBoardUi : MonoBehaviour
         IsFirstRound = true;
         IsGameOver = false;
         if (AutoRoundSlider) AutoRoundSlider.value = 0;
-        NewGame();
+        ResetGame(true);
         SetPlayerBase(playerBase);
         SetEnemiesIncludeUis(enemyBase, enemyCards);
         GeneratePlayerScopeChessman(false);
@@ -96,13 +96,18 @@ public class WarBoardUi : MonoBehaviour
     /// <summary>
     /// 新棋局
     /// </summary>
-    public void NewGame(bool showStartBtn = true)
+    public void NewGame(bool showStartBtn)
     {
         if (PlayerScope.Any())
         {
             foreach (var card in PlayerScope) RecycleCardUi(card);
             PlayerScope.Clear();
         }
+        ResetGame(showStartBtn);
+    }
+
+    private void ResetGame(bool showStartBtn)
+    {
         ChessboardManager.NewGame();
         NewWarManager.NewGame();
         if(showStartBtn) StartButtonAnim(true, Chessboard.StartButton);
