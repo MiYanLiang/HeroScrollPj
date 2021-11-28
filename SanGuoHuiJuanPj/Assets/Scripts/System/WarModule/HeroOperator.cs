@@ -371,15 +371,15 @@ namespace Assets.System.WarModule
                 default: return false;
             }
         }
-        private const int ChainMax = 10;
+        private const int ChainMax = 8;
 
         private int ArmorRate()
         {
             switch (Style.Military)
             {
-                case 58: return 5;
-                case 152:return 7;
-                case 153:return 10;
+                case 58: return 3;
+                case 152:return 5;
+                case 153:return 7;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -389,8 +389,8 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 58: return 5;
-                case 152: return 10;
-                case 153: return 15;
+                case 152: return 7;
+                case 153: return 10;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1937,6 +1937,39 @@ namespace Assets.System.WarModule
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive,
                     i, 1, InstanceGenericDamage());
                 if (result == null || result.IsDeath) return;
+            }
+        }
+    }
+    /// <summary>
+    /// 飞弩
+    /// </summary>
+    public class FeiNuOprater : HeroOperator 
+    {
+        private int Combo()
+        {
+            switch (Style.Military)
+            {
+                case 181: return 3;
+                case 182: return 5;
+                case 183: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int ComboRate => 40;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var damage = InstanceGenericDamage();
+            damage.Multiply(ComboRate * 0.01f);
+            for (int i = 0; i < Combo(); i++)
+            {
+                var target = Chessboard.GetRivals(this, p => p.IsPostedAlive)
+                    .Select(p => new { p, random = Chessboard.Randomize(5) })
+                    .OrderBy(o => o.random).FirstOrDefault();
+
+                OnPerformActivity(target.p, Activity.Intentions.Offensive,
+                    actId: i, skill: 1, damage);
             }
         }
     }

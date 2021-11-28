@@ -234,6 +234,8 @@ namespace Assets.System.WarModule
 
                 case 19: case 51: case 180: op = new LianNuOperator(); break; //19  连弩  //51  强弩
 
+                case 181: case 182: case 183: op = new FeiNuOprater(); break;//飞弩
+
                 case 20: case 52: case 184: op = new DaGongOperator(); break; //20  弓兵 //52  大弓
 
                 case 185: case 186: case 187: op = new HuoGongOperator(); break;//火弓
