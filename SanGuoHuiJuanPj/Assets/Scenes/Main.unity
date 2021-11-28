@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3560,6 +3560,7 @@ MonoBehaviour:
   CardCapabilityTxt: {fileID: 439226634}
   EnlistBtnLabel: {fileID: 1035391404}
   UpLevelEffect: {fileID: 7497657524685179594}
+  WuLiText: {fileID: 1753896981}
   PowerUi: {fileID: 1791833299}
   StrUi: {fileID: 1753896983}
   HpUi: {fileID: 2031950501}
