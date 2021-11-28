@@ -62,7 +62,8 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         protected override void InstanceReflection(IEnumerable<CombatConduct> conducts, IChessOperator offender)
         {
-            var conduct = conducts.First(c => c.Kind == CombatConduct.DamageKind);
+            var conduct = conducts.FirstOrDefault(c => c.Kind == CombatConduct.DamageKind);
+            if (conduct == null) return;
             var reflectDamage = conduct.Total * DamageRate;
             Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable,
                 Helper.Singular(InstanceMechanicalDamage(reflectDamage)), actId: -1, skill: 1);
