@@ -1967,7 +1967,7 @@ namespace Assets.System.WarModule
                 var target = Chessboard.GetRivals(this, p => p.IsPostedAlive)
                     .Select(p => new { p, random = Chessboard.Randomize(5) })
                     .OrderBy(o => o.random).FirstOrDefault();
-
+                if (target == null || target.p == null) continue;
                 OnPerformActivity(target.p, Activity.Intentions.Offensive,
                     actId: i, skill: 1, damage);
             }
