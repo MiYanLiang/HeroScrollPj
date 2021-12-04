@@ -117,7 +117,7 @@ public class JiBanAnimationManager : MonoBehaviour
         {
             MainImage.gameObject.SetActive(display);
             MainTitle.gameObject.SetActive(display);
-            MainDesk .gameObject.SetActive(display);
+            MainDesk.gameObject.SetActive(display);
         }
 
         public void Reset()

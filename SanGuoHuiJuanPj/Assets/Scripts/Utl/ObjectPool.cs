@@ -34,6 +34,7 @@ public class ObjectPool<TObj> where TObj : IPoolObject
 
     public virtual void Recycle(TObj obj)
     {
+        if (obj == null) return;
         OnRecycle?.Invoke(obj);
         obj.ObjReset();
         Pool[obj] = false;
