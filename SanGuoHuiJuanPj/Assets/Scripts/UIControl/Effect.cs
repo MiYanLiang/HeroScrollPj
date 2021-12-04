@@ -229,7 +229,7 @@ public static class Effect
 
             case 116:
             case 117:
-            case 118://白毦
+            case 118://龙飞卫
                 value = 069;break;
 
             case 119:
@@ -432,12 +432,12 @@ public static class Effect
 
             case 188:
             case 189:
-            case 190://重弩
+            case 190://重弩车
                 value = 01502;break;
 
             case 191:
             case 192:
-            case 193://无当
+            case 193://狼弓
                 value = 023;break;
 
             case 21:
@@ -656,7 +656,7 @@ public static class Effect
         switch (trapId)
         {
             case 0://拒马
-                return 006;
+                return 00601;
             case 1://地雷
                 return 064;
             case 9://滚石
@@ -718,8 +718,10 @@ public static class Effect
     {
         switch (effectId)
         {
-            case 006:
-            case 015:
+            case 006://刺盾
+            case 00601://拒马
+            case 015://长枪
+            case 01502://重弩车
                 return true;
             default: return false;
         }
@@ -1129,12 +1131,12 @@ public static class Effect
 
             case 188:
             case 189:
-            case 190://重弩
+            case 190://重弩车
                 return 252;
 
             case 191:
             case 192:
-            case 193://无当
+            case 193://狼弓
                 return 253;
 
             case 21:
@@ -2193,12 +2195,12 @@ public static class Effect
 
             case 188:
             case 189:
-            case 190://重弩
+            case 190://重弩车
                 audioId = 25; break;
 
             case 191:
             case 192:
-            case 193://无当
+            case 193://狼弓
                 audioId = 26; break;
 
             case 21:

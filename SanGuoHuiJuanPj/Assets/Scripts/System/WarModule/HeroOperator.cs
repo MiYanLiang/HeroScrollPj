@@ -1885,7 +1885,7 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military) 
             {
-                case 185:return 30;
+                case 185:return 50;
                 case 186:return 50;
                 case 187:return 70;
                 default:throw MilitaryNotValidError(this);
@@ -1907,6 +1907,99 @@ namespace Assets.System.WarModule
                 var target = targets[i].chessPos;
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, perform,
                     CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(perform, BurnRate(), CriticalAddOn, RouseAddOn)));
+            }
+        }
+    }
+    /// <summary>
+    /// 狼弓
+    /// </summary>
+    public class LangGongOperator : HeroOperator
+    {
+        private int Targets()
+        {
+            switch (Style.Military)
+            {
+                case 191: return 3;
+                case 192: return 5;
+                case 193: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int PosionRate()
+        {
+            switch (Style.Military)
+            {
+                case 191: return 30;
+                case 192: return 30;
+                case 193: return 50;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        private int CriticalAddOn => 5;
+        private int RouseAddOn => 15;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this).Select(p => new { chessPos = p, random = Chessboard.Randomize(5) })
+                .OrderBy(p => p.random).Take(Targets()).ToArray();
+            if (targets.Length == 0) return;
+            var perform = InstanceGenericDamage();
+            perform.Multiply(0.5f);
+
+            for (var i = 0; i < targets.Length; i++)
+            {
+                var target = targets[i].chessPos;
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, perform,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, rate: CountRate(perform, PosionRate(), CriticalAddOn, RouseAddOn)));
+            }
+        }
+    }
+    /// <summary>
+    /// 重弩车
+    /// </summary>
+    public class ZhongNuCheOperator : HeroOperator 
+    {
+        private int PenetrateUnits(Damage.Types types)
+        {
+            switch (types)
+            {
+                case Damage.Types.General: return 1;
+                case Damage.Types.Critical: return 2;
+                case Damage.Types.Rouse: return 3;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private float[] PenetrateDecreases ()
+        {
+            switch (Style.Military) 
+            {
+                case 188:return new[]{ 0.5f, 0.3f, 0.2f };
+                case 189: return new[] { 0.6f, 0.4f, 0.3f }; 
+                case 190: return new[] { 0.7f, 0.5f, 0.4f }; 
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            var damage = InstanceGenericDamage();
+            damage.Element = CombatConduct.MechanicalDmg;
+
+            var damageType = Damage.GetType(damage);
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, damage);
+
+            var targetsNum = PenetrateUnits(damageType);
+            for (var i = 1; i < targetsNum + 1; i++)
+            {
+                var backPos = Chessboard.BackPos(target);
+                target = backPos;
+                if (target == null) break;
+                if (target.Operator == null) continue;
+                OnPerformActivity(target, Activity.Intentions.Attach, actId: 0, skill: -1,
+                    damage.Clone(PenetrateDecreases()[i - 1]));
             }
         }
     }
