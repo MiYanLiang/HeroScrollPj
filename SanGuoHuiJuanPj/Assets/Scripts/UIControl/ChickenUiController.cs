@@ -22,7 +22,7 @@ public class ChickenUiController : MonoBehaviour
 
     private void StartUi(int[] timeRange)
     {
-        chickenUiParent.SetActive(true);
+        chickenUiParent?.SetActive(true);
         StartChickenTimeCountdown(timeRange);
     }
 
@@ -66,6 +66,7 @@ public class ChickenUiController : MonoBehaviour
 
     private void OnDestroy()
     {
-        trigger.OnRoasterChickenTrigger -= StartUi;
+        if (trigger != null)
+            trigger.OnRoasterChickenTrigger -= StartUi;
     }
 }
