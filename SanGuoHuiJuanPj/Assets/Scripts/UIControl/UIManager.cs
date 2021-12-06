@@ -747,6 +747,8 @@ public class UIManager : MonoBehaviour
         }
         zhuChengInterFaces[index].SetActive(true);
         particlesForInterface[index].SetActive(true);
+        bayeErrorPanel.gameObject.SetActive(false);
+        bayeBelowLevelPanel.gameObject.SetActive(false);
         //暂时未开启的页面 
         waitWhileImpress.gameObject.SetActive(
             index == 3 //对决 
