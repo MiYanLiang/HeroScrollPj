@@ -226,15 +226,15 @@ public class LoginUiController : MonoBehaviour
     {
         var response = await Http.PostAsync(Server.REQUEST_USERNAME_API,
             Json.Serialize(Server.GetUserInfo(null, null)));
-        var uJson = await response.Content.ReadAsStringAsync();
-        var isSuccess = response.IsSuccessStatusCode;
 
+        var isSuccess = response.IsSuccessStatusCode;
         if (!isSuccess && response.StatusCode != HttpStatusCode.Unauthorized)
         {
             OnLoginPageErrorDisplay((int)response.StatusCode);
             return;
         }
 
+        var uJson = await response.Content.ReadAsStringAsync();
         var user = Json.Deserialize<UserInfo>(uJson);
         UnityMainThread.thread.RunNextFrame(() =>
         {
