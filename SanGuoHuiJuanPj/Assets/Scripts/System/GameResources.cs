@@ -20,7 +20,18 @@ public enum ForceFlags
 
 public class GameResources
 {
-    public static GameResources Instance { get; private set; }
+    public static GameResources Instance
+    {
+        get
+        {
+            if (_instance != null)
+                return _instance;
+            _instance = new GameResources();
+            _instance.Init();
+            return _instance;
+        }
+    }
+
     private const string HeroImagesPath = "Image/Cards/Hero/";
     private const string ClassImagesPath = "Image/classImage/";
     private const string FuZhuImagesPath = "Image/Cards/FuZhu/";
@@ -101,11 +112,11 @@ public class GameResources
     private IReadOnlyDictionary<int, Sprite> iconMap;
     private IReadOnlyDictionary<int, GameObject> sparkMap;
     private IReadOnlyDictionary<int, GameObject> teamSparkMap;
+    private static GameResources _instance;
 
     public void Init(bool forceReload = false)
     {
         if (isInit && !forceReload) return;
-        Instance = this;
         var heroSprites = Resources.LoadAll<Sprite>(HeroImagesPath).ToList();
         var heroIdImgMap = heroSprites
             .Select(sprite => new { imageId = int.Parse(sprite.name), sprite })

@@ -208,7 +208,7 @@ public class WarBoardUi : MonoBehaviour
             OnGameSet.Invoke(chess.IsChallengerWin);
             //ClearStates();
             if (chess.IsChallengerWin)
-                yield return ChessboardManager.ChallengerWinAnimation();
+                yield return ChallengerWinAnimation();
             IsGameOver = true;
             IsBusy = false;
             yield break;
@@ -222,6 +222,8 @@ public class WarBoardUi : MonoBehaviour
             OnRoundPause?.Invoke();
         }
     }
+
+    public IEnumerator ChallengerWinAnimation() => ChessboardManager.ChallengerWinAnimation();
 
     public const string ButtonTrigger = "isShow";
 
@@ -423,12 +425,7 @@ public class WarBoardUi : MonoBehaviour
 
     public void ChangeChessboardBg(Sprite sprite) => Chessboard.Background.sprite = sprite;
 
-    public void PlayResult(List<ChessRound> rounds)
-    {
-        StartCoroutine(AnimRounds(rounds));
-    }
-
-    private IEnumerator AnimRounds(List<ChessRound> rounds)
+    public IEnumerator AnimRounds(List<ChessRound> rounds)
     {
         foreach (var round in rounds)
             yield return ChessboardManager.AnimateRound(round);

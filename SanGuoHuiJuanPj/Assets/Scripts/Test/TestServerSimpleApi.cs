@@ -25,7 +25,7 @@ public class TestServerSimpleApi : MonoBehaviour
     private TestStageUi.SimpleFormation selectedFormation { get; set; }
     public void InitTest()
     {
-        RequestApiButton.onClick.AddListener(RequestServerList);
+        RequestApiButton.onClick.AddListener(RequestTestServerList);
         StartCoroutine(StartInit());
     }
 
@@ -36,48 +36,17 @@ public class TestServerSimpleApi : MonoBehaviour
         yield return new WaitForSeconds(1f);
         Versus.Init();
         Versus.StartNewGame();
-        InitCardToRack();
     }
 
-    //初始化卡牌列表
-    private void InitCardToRack()
-    {
-        var forceId = PlayerDataForGame.instance.CurrentWarForceId;
-#if UNITY_EDITOR
-        if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
-        {
-            PlayerDataForGame.instance.fightHeroId.Select(id => new GameCard().Instance(GameCardType.Hero, id, 1))
-                .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
-                    new GameCard().Instance(GameCardType.Tower, id, 1)))
-                .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
-                    new GameCard().Instance(GameCardType.Trap, id, 1)))
-                .ToList().ForEach(WarBoard.CreateCardToRack);
-            return;
-        }
-#endif
-        PlayerDataForGame.instance.fightHeroId.Clear();
-        PlayerDataForGame.instance.fightTowerId.Clear();
-        PlayerDataForGame.instance.fightTrapId.Clear();
-
-        var hstData = PlayerDataForGame.instance.hstData;
-        //临时记录武将存档信息
-        hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
-        hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
-        hstData.trapSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
-    }
-
-    private async void RequestServerList()
+    private async void RequestTestServerList()
     {
         var respond = await Http.GetAsync(ServerGetListApi);
         var json = await respond.Content.ReadAsStringAsync();
         var list = Json.DeserializeList<TestStageUi.SimpleFormation>(json);
-        UpdateList(list);
+        UpdateTestStateList(list);
     }
 
-    private void UpdateList(List<TestStageUi.SimpleFormation> list)
+    private void UpdateTestStateList(List<TestStageUi.SimpleFormation> list)
     {
         if(Stages.Any())
             foreach (var stage in Stages)
@@ -130,8 +99,8 @@ public class TestServerSimpleApi : MonoBehaviour
         if (!response.IsSuccessStatusCode)
             return;
         var json = await response.Content.ReadAsStringAsync();
-        var data = Json.Deserialize<GameResult>(json);
-        Versus.PlayResult(data);
+        var result = Json.Deserialize<Versus.WarResult>(json);
+        Versus.PlayResult(result);
     }
 
     private class ChallengeSet
@@ -158,28 +127,6 @@ public class TestServerSimpleApi : MonoBehaviour
                 Chips = c.Chips;
                 Type = c.Type;
             }
-        }
-    }
-    public class GameResult
-    {
-        public List<Operator> Chessmen { get; set; }
-        public List<ChessRound> Rounds { get; set; }
-        public bool IsChallengerWin { get; set; }
-
-        public class Operator:IOperatorInfo
-        {
-            public int InstanceId { get; set; }
-            public int Pos { get; set; }
-            public bool IsChallenger { get; set; }
-            public Card Card { get; set; }
-            IGameCard IOperatorInfo.Card => Card;
-        }
-        public class Card :IGameCard
-        {
-            public int CardId { get; set; }
-            public int Level { get; set; }
-            public int Chips { get; set; }
-            public int Type { get; set; }
         }
     }
 

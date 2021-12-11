@@ -55,7 +55,7 @@ public class WarDataMocker : MonoBehaviour
         {
             forceId = (int) force;
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
-                .Where(c => hfMap[c.id] == forceId && c.level > 0 && c.chips > 0 && c.isFight > 0) //过滤选中势力，并符合出战条件
+                .Where(c => hfMap[c.id] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
                 .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new {type, ids}) //把卡牌再根据卡牌类型分类组合
                 .ToDictionary(c => c.type, c => c.ids.ToList()); //根据卡牌类型写入字典
         }
