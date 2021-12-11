@@ -40,7 +40,9 @@ public class Versus : MonoBehaviour
         ControllerInit();
     }
 
+#if UNITY_EDITOR
     void Start() => Init();
+#endif
 
     public void ControllerInit()
     {
