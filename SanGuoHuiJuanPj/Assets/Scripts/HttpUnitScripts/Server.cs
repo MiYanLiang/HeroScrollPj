@@ -48,7 +48,7 @@ public static class Server
     {
         return new HttpClient()
         {
-            //BaseAddress = new Uri(ServerUrl)
+            BaseAddress = new Uri(ServerUrl)
         };
     }
 
