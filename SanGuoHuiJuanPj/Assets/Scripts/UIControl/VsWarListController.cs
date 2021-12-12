@@ -25,7 +25,9 @@ public class VsWarListController : MonoBehaviour
     {
         foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
         _vsWarUiList.Clear();
+#if UNITY_EDITOR
         Versus.GetWars(OnRefreshWarList);
+#endif
 
         void OnRefreshWarList(string data)
         {
