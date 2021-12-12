@@ -25,7 +25,7 @@ public class VsWarListController : MonoBehaviour
     {
         foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
         _vsWarUiList.Clear();
-        Http.Get($"{Versus.Api}/{Versus.GetWarsV1}" , OnRefreshWarList, Versus.GetWarsV1);
+        Versus.GetWars(OnRefreshWarList);
 
         void OnRefreshWarList(string data)
         {

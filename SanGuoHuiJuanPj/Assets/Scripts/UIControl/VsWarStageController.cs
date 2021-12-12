@@ -48,8 +48,7 @@ public class VsWarStageController : MonoBehaviour
     {
         WarId = warId;
         gameObject.SetActive(true);
-        Http.Get($"{Versus.Api}/{Versus.WarStageInfoApi}?id={warId}&charId={Versus.TestCharId}", OnApiAction, Versus.WarStageInfoApi);
-
+        Versus.WarStageInfo(warId, OnApiAction);
 
         void OnApiAction(string obj)
         {
@@ -74,8 +73,10 @@ public class VsWarStageController : MonoBehaviour
                 SpCheckPoints.Add(new SpCheckpoint(cpPointId, cpIndex, cpTitle, cpEventType, cpMaxCards, cpMaxRounds,
                     cpFormationCount));
             }
-
             UpdatePage(hostName, warIdentity, SpCheckPoints);
+            var challenge = bag.Get<ChallengeDto>(4);
+            if (challenge == null) return;
+            UpdateStageProgress(challenge);
         }
     }
 
@@ -88,7 +89,6 @@ public class VsWarStageController : MonoBehaviour
             CpList.Clear();
         }
 
-        if (warIdentity != SpWarIdentity.Anonymous) RequestChallenge();
         switch (warIdentity)
         {
             case SpWarIdentity.Anonymous:
@@ -132,40 +132,49 @@ public class VsWarStageController : MonoBehaviour
 
     private void RequestChallenge()
     {
-        Http.Post($"{Versus.Api}/{Versus.StartChallengeV1}?charId={Versus.TestCharId}&warId={WarId}", string.Empty,
-            OnChallengeRespond, Versus.StartChallengeV1);
+        Versus.StartChallenge(WarId, OnChallengeRespond);
 
         void OnChallengeRespond(string databag)
         {
             var cha = DataBag.Deserialize<ChallengeDto>(databag);
             if (cha == null) throw new NotImplementedException();
             UpdatePage(Host, SpWarIdentity.Challenger, SpCheckPoints);
-            var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
-            var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
-                .Select(c => c.Value).FirstOrDefault();
-            cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
-            {
-                var (ui, isPass) = o;
-                ui.SetProgress(isPass);
-                if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
-                else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
-                var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
-                ui.AttackButton.gameObject.SetActive(isChallengePoint);
-                if (!isChallengePoint) return;
-                ui.SetDock(true);
-            });
+            UpdateStageProgress(cha);
         }
     }
 
-    private void OnReportAction(int id)
+    private void UpdateStageProgress(ChallengeDto cha)
     {
-        throw new NotImplementedException();
+        var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
+        var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
+            .Select(c => c.Value).FirstOrDefault();
+        cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
+        {
+            var (ui, isPass) = o;
+            ui.SetProgress(isPass);
+            if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
+            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
+            var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
+            ui.AttackButton.gameObject.SetActive(isChallengePoint);
+            if (!isChallengePoint) return;
+            ui.SetDock(true);
+        });
     }
+
+    private void OnReportAction(int pointId)
+    {
+        Versus.GetCheckPointWarResult(WarId,pointId,OnCallBackResult);
+
+        void OnCallBackResult(string bag)
+        {
+            var result = DataBag.Deserialize<Versus.WarResult>(bag);
+        }
+    }
+
 
     private void OnAttackCheckpointAction(int checkpointId)
     {
-        Http.Get($"{Versus.Api}/{Versus.GetCheckpointFormationV1}?warId={WarId}&charId={Versus.TestCharId}&pointId={checkpointId}", 
-            CallBackAction, Versus.GetCheckpointFormationV1);
+        Versus.GetCheckpointFormation(WarId, checkpointId, CallBackAction);
 
         void CallBackAction(string data)
         {

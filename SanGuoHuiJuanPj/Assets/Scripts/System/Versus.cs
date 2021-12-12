@@ -12,14 +12,33 @@ using UnityEngine.UI;
 //对决页面
 public class Versus : MonoBehaviour
 {
+#if UNITY_EDITOR
     public static string Api = "https://localhost:5001/api/spwar";
-
-    public const int TestCharId = 55;
+    
+    public const int TestCharId = -1;
     public const string SubmitFormationV1 = "SubmitFormationV1";
+    public static void PostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
+        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
+            SubmitFormationV1);
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
+    public static void GetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
+        Http.Get($"{Api}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
+            callBackAction, GetCheckpointFormationV1);
     public const string StartChallengeV1 = "StartChallengeV1";
+    public static void StartChallenge(int warId, Action<string> onChallengeRespond) =>
+        Http.Post($"{Api}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
+            onChallengeRespond, StartChallengeV1);
     public const string WarStageInfoApi = "GetWarInfoV1";
+    public static void WarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{Api}/{WarStageInfoApi}?id={warId}&charId={TestCharId}", onApiAction, WarStageInfoApi);
     public const string GetWarsV1 = "GetWarsV1";
+    public static void GetWars(Action<string> onRefreshWarList) => Http.Get($"{Api}/{GetWarsV1}", onRefreshWarList, GetWarsV1);
+    public const string CheckPointWarResultV1 = "CheckPointResultV1";
+
+    public static void GetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
+        Http.Get($"{Api}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
+            CheckPointWarResultV1);
+
+#endif
 
     [SerializeField] private WarBoardUi WarBoard;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
@@ -68,8 +87,7 @@ public class Versus : MonoBehaviour
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         var json = Json.Serialize(challengerFormation);
-        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", json, OnCallBack,
-            SubmitFormationV1);
+        PostSubmitFormation(warId, pointId, json, OnCallBack);
 
         void OnCallBack(string data)
         {
