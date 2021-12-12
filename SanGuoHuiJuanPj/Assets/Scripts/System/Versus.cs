@@ -12,15 +12,38 @@ using UnityEngine.UI;
 //对决页面
 public class Versus : MonoBehaviour
 {
+#if UNITY_EDITOR
     public static string Api = "https://localhost:5001/api/spwar";
+    
+    public const int TestCharId = -2;
 
-    public const int TestCharId = 55;
-    public const string SubmitFormationV1 = "SubmitFormationV1";
-    public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
-    public const string StartChallengeV1 = "StartChallengeV1";
-    public const string WarStageInfoApi = "GetWarInfoV1";
     public const string GetWarsV1 = "GetWarsV1";
+    public static void GetWars(Action<string> onRefreshWarList) => Http.Get($"{Api}/{GetWarsV1}", onRefreshWarList, GetWarsV1);
+    
+    public const string GetWarInfoApi = "GetWarInfoV1";
+    public static void WarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
+    public const string StartChallengeV1 = "StartChallengeV1";
+    public static void StartChallenge(int warIsd, Action<string> onChallengeRespond) =>
+        Http.Post($"{Api}/{StartChallengeV1}?charId={TestCharId}&warIsd={warIsd}", string.Empty,
+            onChallengeRespond, StartChallengeV1);
+
+    public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
+    public static void GetCheckpointFormation(int warIsd, int checkpointId, Action<string> callBackAction) =>
+        Http.Get($"{Api}/{GetCheckpointFormationV1}?warIsd={warIsd}&charId={TestCharId}&pointId={checkpointId}",
+            callBackAction, GetCheckpointFormationV1);
+
+    public const string SubmitFormationV1 = "SubmitFormationV1";
+    public static void PostSubmitFormation(int warIsd,int pointId,string content,Action<string> onCallBack) =>
+        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warIsd={warIsd}&pointId={pointId}", content, onCallBack,
+            SubmitFormationV1);
+
+    public const string CheckPointWarResultV1 = "CheckPointResultV1";
+    public static void GetCheckPointWarResult(int warIsd, int pointId, Action<string> callbackAction) =>
+        Http.Get($"{Api}/{CheckPointWarResultV1}?warIsd={warIsd}&pointId={pointId}&charId={TestCharId}", callbackAction,
+            CheckPointWarResultV1);
+
+#endif
     [SerializeField] private WarBoardUi WarBoard;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
     [SerializeField] private Image Infoboard;
@@ -47,10 +70,10 @@ public class Versus : MonoBehaviour
     public void ControllerInit()
     {
         warListController.Init(OnSelectedWar);
-        warStageController.Init(OnWarListDisplay, OnReadyWarboard);
+        warStageController.Init(this, OnWarListDisplay, OnReadyWarboard);
     }
 
-    private void OnReadyWarboard(int warId, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
+    private void OnReadyWarboard(int warIsd, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
     {
         StartNewGame();
         SetEnemyFormation(formation);
@@ -59,26 +82,28 @@ public class Versus : MonoBehaviour
         WarBoard.MaxCards = maxCards;
         WarBoard.gameObject.SetActive(true);
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() => OnSubmitFormation(warId, pointId));
+        WarBoard.Chessboard.StartButton.onClick.AddListener(() => OnSubmitFormation(warIsd, pointId));
 
     }
 
-    private void OnSubmitFormation(int warId, int pointId)
+    private void OnSubmitFormation(int warIsd, int pointId)
     {
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         var json = Json.Serialize(challengerFormation);
-        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", json, OnCallBack,
-            SubmitFormationV1);
+#if UNITY_EDITOR
+        PostSubmitFormation(warIsd, pointId, json, OnCallBack);
+#endif
 
         void OnCallBack(string data)
         {
             var bag = DataBag.DeserializeBag(data);
             if (bag == null)
                 throw new NotImplementedException();
-            var isChallengerWin = bag.Get<bool>(0);
-            var rounds = bag.Get<List<ChessRound>>(1);
-            var chessmen = bag.Get<List<WarResult.Operator>>(2);
+            var warId = bag.Get<int>(0);
+            var isChallengerWin = bag.Get<bool>(1);
+            var rounds = bag.Get<List<ChessRound>>(2);
+            var chessmen = bag.Get<List<WarResult.Operator>>(3);
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
             OnSelectedWar(warId);
         }
@@ -144,9 +169,32 @@ public class Versus : MonoBehaviour
         StartCoroutine(ChessAnimation(data));
     }
 
+    public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds, List<IOperatorInfo> ops)
+    {
+        var result = new WarResult(isChallengerWin, ops, rounds);
+        WarBoard.NewGame(true);
+        foreach (var op in result.Chessmen)
+        {
+            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
+            card.SetPos(op.Pos);
+            card.SetInstanceId(op.InstanceId);
+            card.isPlayerCard = op.IsChallenger;
+            ChessboardManager.InstanceChessman(card);
+        }
+        WarBoard.gameObject.SetActive(true);
+        WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
+        WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
+        {
+            WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
+            PlayResult(result);
+        });
+    }
+
     private IEnumerator ChessAnimation(WarResult result)
     {
+        Time.timeScale = GamePref.PrefWarSpeed;
         yield return WarBoard.AnimRounds(result.Rounds);
+        Time.timeScale = 1f;
         if (result.IsChallengerWin)
             yield return WarBoard.ChallengerWinAnimation();
         _versusWindow.Open(result.IsChallengerWin, () => WarBoard.gameObject.SetActive(false));

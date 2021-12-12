@@ -28,15 +28,17 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private UnityEvent onStartChallengeEvent;
 
     private int WarId { get; set; } = -1;
+    public int WarIsd { get; set; }
     private string Host { get; set; }
     private List<CheckpointUi> CpList { get; } = new List<CheckpointUi>();
     private List<SpCheckpoint> SpCheckPoints { get; set; }
     private ObjectPool<CheckpointUi> Pool { get; set; }
     //(warId , pointId)
     private UnityAction<int, int, int, Dictionary<int, IGameCard>> OnAttackCity { get; set; }
-
-    public void Init(UnityAction backAction,UnityAction<int, int , int , Dictionary<int, IGameCard>> onAttackCityAction)
+    private Versus Vs { get; set; }
+    public void Init(Versus versus,UnityAction backAction,UnityAction<int, int , int , Dictionary<int, IGameCard>> onAttackCityAction)
     {
+        Vs = versus;
         OnAttackCity = onAttackCityAction;
         gameObject.SetActive(false);
         Pool = new ObjectPool<CheckpointUi>(() => Instantiate(CheckpointUiPrefab, MapScrollRect.content));
@@ -48,8 +50,9 @@ public class VsWarStageController : MonoBehaviour
     {
         WarId = warId;
         gameObject.SetActive(true);
-        Http.Get($"{Versus.Api}/{Versus.WarStageInfoApi}?id={warId}&charId={Versus.TestCharId}", OnApiAction, Versus.WarStageInfoApi);
-
+#if UNITY_EDITOR
+        Versus.WarStageInfo(warId, OnApiAction);
+#endif
 
         void OnApiAction(string obj)
         {
@@ -74,8 +77,11 @@ public class VsWarStageController : MonoBehaviour
                 SpCheckPoints.Add(new SpCheckpoint(cpPointId, cpIndex, cpTitle, cpEventType, cpMaxCards, cpMaxRounds,
                     cpFormationCount));
             }
-
             UpdatePage(hostName, warIdentity, SpCheckPoints);
+            var challenge = bag.Get<ChallengeDto>(4);
+            WarIsd = bag.Get<int>(5);
+            if (challenge == null) return;
+            UpdateStageProgress(challenge);
         }
     }
 
@@ -88,7 +94,6 @@ public class VsWarStageController : MonoBehaviour
             CpList.Clear();
         }
 
-        if (warIdentity != SpWarIdentity.Anonymous) RequestChallenge();
         switch (warIdentity)
         {
             case SpWarIdentity.Anonymous:
@@ -132,47 +137,67 @@ public class VsWarStageController : MonoBehaviour
 
     private void RequestChallenge()
     {
-        Http.Post($"{Versus.Api}/{Versus.StartChallengeV1}?charId={Versus.TestCharId}&warId={WarId}", string.Empty,
-            OnChallengeRespond, Versus.StartChallengeV1);
+#if UNITY_EDITOR
+        Versus.StartChallenge(WarIsd, OnChallengeRespond);
+#endif
 
         void OnChallengeRespond(string databag)
         {
             var cha = DataBag.Deserialize<ChallengeDto>(databag);
             if (cha == null) throw new NotImplementedException();
             UpdatePage(Host, SpWarIdentity.Challenger, SpCheckPoints);
-            var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
-            var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
-                .Select(c => c.Value).FirstOrDefault();
-            cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
-            {
-                var (ui, isPass) = o;
-                ui.SetProgress(isPass);
-                if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
-                else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
-                var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
-                ui.AttackButton.gameObject.SetActive(isChallengePoint);
-                if (!isChallengePoint) return;
-                ui.SetDock(true);
-            });
+            UpdateStageProgress(cha);
         }
     }
 
-    private void OnReportAction(int id)
+    private void UpdateStageProgress(ChallengeDto cha)
     {
-        throw new NotImplementedException();
+        var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
+        var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
+            .Select(c => c.Value).FirstOrDefault();
+        cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
+        {
+            var (ui, isPass) = o;
+            ui.SetProgress(isPass);
+            if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
+            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
+            var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
+            ui.AttackButton.gameObject.SetActive(isChallengePoint);
+            if (!isChallengePoint) return;
+            ui.SetDock(true);
+        });
     }
+
+    private void OnReportAction(int pointId)
+    {
+#if UNITY_EDITOR
+        Versus.GetCheckPointWarResult(WarIsd, pointId, OnCallBackResult);
+#endif
+
+        void OnCallBackResult(string data)
+        {
+            var bag = DataBag.DeserializeBag(data);
+            if (bag == null) throw new NotImplementedException();
+            var isChallengerWin = bag.Get<bool>(0);
+            var rounds = bag.Get<List<ChessRound>>(1);
+            var ops = bag.Get<List<Versus.WarResult.Operator>>(2).Cast<IOperatorInfo>().ToList();
+            Vs.ReadyWarboard(isChallengerWin, rounds, ops);
+        }
+    }
+
 
     private void OnAttackCheckpointAction(int checkpointId)
     {
-        Http.Get($"{Versus.Api}/{Versus.GetCheckpointFormationV1}?warId={WarId}&charId={Versus.TestCharId}&pointId={checkpointId}", 
-            CallBackAction, Versus.GetCheckpointFormationV1);
+#if UNITY_EDITOR
+        Versus.GetCheckpointFormation(WarIsd, checkpointId, CallBackAction);
+#endif
 
         void CallBackAction(string data)
         {
             var bag = DataBag.DeserializeBag(data);
             var formation = bag.Get<Dictionary<int, Versus.Card>>(0);
             var cp = SpCheckPoints.Single(c => c.PointId == checkpointId);
-            OnAttackCity?.Invoke(WarId, cp.PointId, cp.MaxCards,
+            OnAttackCity?.Invoke(WarIsd, cp.PointId, cp.MaxCards,
                 formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value));
         }
     }

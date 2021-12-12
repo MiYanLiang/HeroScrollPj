@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CorrelateLib;
+using UnityEngine.Networking;
 
 public static class Http
 {
@@ -50,35 +51,31 @@ public static class Http
         return response.IsSuccess() ? Json.Deserialize<T>(await response.Content.ReadAsStringAsync()) : null;
     }
 
-    public static async Task<HttpResponseMessage> GetAsync(string url,CancellationToken token = default)
-    {
-        try
-        {
-            var client = Server.InstanceClient();
-            return await client.GetAsync(url, token);
-        }
-        catch (Exception)
-        {
-            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
-        }
-
-    }
-
+    public static async Task<HttpResponseMessage> GetAsync(string url, CancellationToken token = default) =>
+        await SendAsync(HttpMethod.Get, url, string.Empty, token);
     public static async Task<T> PostAsync<T>(string url, string content) where T : class
     {
         var response = await PostAsync(url, content);
         return response.IsSuccess() ? Json.Deserialize<T>(await response.Content.ReadAsStringAsync()) : null;
     }
 
-    public static async Task<HttpResponseMessage> PostAsync(string url, string content, CancellationToken token = default)
+    public static async Task<HttpResponseMessage> PostAsync(string url, string content,
+        CancellationToken token = default) => await SendAsync(HttpMethod.Post, url, content, token);
+    public static async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string content, CancellationToken token = default)
     {
         try
         {
             var client = Server.InstanceClient();
-            return await client.PostAsync(url, new StringContent(content, Encoding.UTF8, "application / json"), token);
+            var request = new HttpRequestMessage(method, url);
+            if(HttpMethod.Get != method)
+                request.Content = new StringContent(content, Encoding.UTF8, "application / json");
+            return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         }
-        catch (Exception)
+        catch (Exception e)
         {
+#if UNITY_EDITOR
+            throw;
+#endif
             return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
         }
     }

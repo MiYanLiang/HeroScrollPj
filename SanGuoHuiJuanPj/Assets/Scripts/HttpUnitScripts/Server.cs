@@ -44,7 +44,14 @@ public static class Server
 #endif
 
     private static bool isInitialized;
-    public static HttpClient InstanceClient() => new HttpClient() {BaseAddress = new Uri(ServerUrl)};
+    public static HttpClient InstanceClient()
+    {
+        return new HttpClient()
+        {
+            BaseAddress = new Uri(ServerUrl)
+        };
+    }
+
     public static void Initialize(ServerFields fields)
     {
         if (isInitialized) return;
