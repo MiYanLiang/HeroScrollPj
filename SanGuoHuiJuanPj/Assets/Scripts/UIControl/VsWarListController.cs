@@ -11,9 +11,9 @@ public class VsWarListController : MonoBehaviour
     [SerializeField] private ScrollRect listView;
     [SerializeField] private VsWarUi UiPrefab;
     private List<VsWarUi> _vsWarUiList = new List<VsWarUi>();
-    private UnityAction<int> OnSelectAction { get; set; }
+    private UnityAction<int,int> OnSelectAction { get; set; }
 
-    public void Init(UnityAction<int> onSelectAction)
+    public void Init(UnityAction<int,int> onSelectAction)
     {
         gameObject.SetActive(true);
         OnSelectAction = onSelectAction;
@@ -37,25 +37,53 @@ public class VsWarListController : MonoBehaviour
             {
                 var warId = int.Parse(obj[0]);
                 var hostName = obj[1];
-                GenerateUi(warId, hostName);
+                var warIsd = int.Parse(obj[2]);
+                var warIdentity = int.Parse(obj[3]);
+                var expired = long.Parse(obj[4]);
+                GenerateUi(warId, warIsd, hostName, (Versus.SpWarIdentity)warIdentity,expired);
             }
         }
     }
 
-    public void GenerateUi(int warId, string hostName)
+    private void GenerateUi(int warId, int warIsd, string hostName, Versus.SpWarIdentity identity, long expired)
     {
-        var ui = Instantiate(UiPrefab,listView.content);
+        var ui = Instantiate(UiPrefab, listView.content);
+
+        ui.ChallengerDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Challenger);
+        ui.HostDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Host);
+        ui.LoseDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevHost);
+        ui.InfoUi.gameObject.SetActive(identity != Versus.SpWarIdentity.Anonymous);
+
+        ui.ExpiredTime = expired;
         ui.HostName.text = hostName;
         ui.gameObject.SetActive(true);
-        ui.InfoUi.gameObject.SetActive(false);
         ui.Id = warId;
         ui.ClickButton.onClick.RemoveAllListeners();
-        ui.ClickButton.onClick.AddListener(() => OnSelectAction?.Invoke(warId));
+        ui.ClickButton.onClick.AddListener(() => OnSelectAction?.Invoke(warId, warIsd));
         /*
          * 1.btn click binding
          * 2.ui update
          */
         _vsWarUiList.Add(ui);
+    }
+
+    public void Display(bool isShow) => gameObject.SetActive(isShow);
+
+    public void UpdateChallengeTimer()
+    {
+        var now = SysTime.UnixNow;
+        _vsWarUiList.ForEach(u =>
+        {
+            var milliSecs = u.ExpiredTime - now;
+            if (milliSecs >= 0)
+            {
+                var ts = TimeSpan.FromMilliseconds(milliSecs);
+                u.TimeCount.text = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}";
+                return;
+            }
+
+            u.TimeCount.text = string.Empty;
+        });
     }
 
     private class ChallengeDto : DataBag
@@ -75,8 +103,4 @@ public class VsWarListController : MonoBehaviour
         public Dictionary<int, bool> StageProgress { get; set; }
     }
 
-    public void Display(bool isShow)
-    {
-        gameObject.SetActive(isShow);
-    }
 }

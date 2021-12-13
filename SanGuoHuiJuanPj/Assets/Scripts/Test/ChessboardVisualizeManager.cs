@@ -441,7 +441,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 map.Value.Activities.FirstOrDefault(a =>
                     a.Intention == Activity.Intentions.Offensive || 
                     a.Intention == Activity.Intentions.Inevitable);
-            if (offensiveActivity != null && offensiveActivity.From == majorCard.InstanceId &&
+            if (offensiveActivity != null && 
+                majorCard != null &&
+                offensiveActivity.From == majorCard.InstanceId &&
                 majorCard.Style.Type == CombatStyle.Types.Melee)
             {
                 var target = TryGetCardMap(offensiveActivity.To);

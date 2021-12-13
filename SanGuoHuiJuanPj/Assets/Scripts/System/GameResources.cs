@@ -24,7 +24,7 @@ public class GameResources
     {
         get
         {
-            if (_instance != null)
+            if (_instance != null && _instance.isInit)
                 return _instance;
             _instance = new GameResources();
             _instance.Init();

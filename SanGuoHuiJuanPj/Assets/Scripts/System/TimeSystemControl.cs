@@ -146,43 +146,6 @@ public class TimeSystemControl : MonoBehaviour
         isFInGame = false;
     }
 
-    //尝试刷新主城体力商店状态
-    //private void UpdateChickenShoping()
-    //{
-    //    //在主界面的话
-    //    if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene || !UIManager.instance.IsInit) return;
-    //    UIManager.instance.InitOpenChickenTime(true);
-    //}
-
-    //时间显示格式
-    //public string TimeDisplayText(int seconds)
-    //{
-    //    string str = string.Empty;
-    //    if (seconds <= 0)
-    //    {
-    //        str = "";
-    //    }
-    //    else
-    //    {
-    //        if (seconds < 3600)
-    //        {
-    //            str = seconds / 60 + "分" + seconds % 60 + "秒";
-    //        }
-    //        else
-    //        {
-    //            if (seconds < 86400)
-    //            {
-    //                str = seconds / 3600 + "时" + (seconds % 3600) / 60 + "分";
-    //            }
-    //            else
-    //            {
-    //                str = seconds / 86400 + "天" + (seconds % 86400) / 3600 + "时";
-    //            }
-    //        }
-    //    }
-    //    return str;
-    //}
-
     public string TimeDisplayInChineseText(long from, long to) => TimeDisplayInChineseText(SysTime.TimeSpanFromUnixTicks(to - @from));
 
     public string TimeDisplayInChineseText(TimeSpan timeSpan = default)

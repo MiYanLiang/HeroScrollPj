@@ -12,16 +12,27 @@ using UnityEngine.UI;
 //对决页面
 public class Versus : MonoBehaviour
 {
+    public enum SpWarIdentity
+    {
+        Anonymous = 0,//一般人
+        Challenger = 1,//挑战者
+        Host = 2,//关主
+        PrevHost = 3,//上个关主
+        PrevChallenger = 4//过期关卡的挑战者
+    }
+
 #if UNITY_EDITOR
     public static string Api = "https://localhost:5001/api/spwar";
     
-    public const int TestCharId = -2;
+    public const int TestCharId = -3;
 
     public const string GetWarsV1 = "GetWarsV1";
-    public static void GetWars(Action<string> onRefreshWarList) => Http.Get($"{Api}/{GetWarsV1}", onRefreshWarList, GetWarsV1);
+
+    public static void GetWars(Action<string> onRefreshWarList) =>
+        Http.Get($"{Api}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
     
     public const string GetWarInfoApi = "GetWarInfoV1";
-    public static void WarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
+    public static void WarStageInfo(int warIsd, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warIsd={warIsd}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
     public static void StartChallenge(int warIsd, Action<string> onChallengeRespond) =>
@@ -43,14 +54,23 @@ public class Versus : MonoBehaviour
         Http.Get($"{Api}/{CheckPointWarResultV1}?warIsd={warIsd}&pointId={pointId}&charId={TestCharId}", callbackAction,
             CheckPointWarResultV1);
 
+    public const string CancelChallengeV1 = "CancelChallengeV1";
+    public static void PostCancelChallenge(int warId, Action<string> callbackAction) =>
+        Http.Post($"{Api}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
+            CancelChallengeV1);
+
 #endif
     [SerializeField] private WarBoardUi WarBoard;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
     [SerializeField] private Image Infoboard;
     [SerializeField] private int MaxCards;
-    [SerializeField] private VsWarListController warListController;
     [SerializeField] private VsWarStageController warStageController;
     [SerializeField] private VersusWindow _versusWindow;
+    public VsWarListController warListController;
+    /// <summary>
+    /// key = warId
+    /// </summary>
+    private Dictionary<int,UnityAction<long>> challengeTimer = new Dictionary<int, UnityAction<long>>();
     public int CityLevel = 1;
 
     public void Init()
@@ -64,13 +84,16 @@ public class Versus : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    void Start() => Init();
+    void Start()
+    {
+        Init();
+    }
 #endif
 
-    public void ControllerInit()
+    private void ControllerInit()
     {
         warListController.Init(OnSelectedWar);
-        warStageController.Init(this, OnWarListDisplay, OnReadyWarboard);
+        warStageController.Init(this, OnReadyWarboard);
     }
 
     private void OnReadyWarboard(int warIsd, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
@@ -105,20 +128,22 @@ public class Versus : MonoBehaviour
             var rounds = bag.Get<List<ChessRound>>(2);
             var chessmen = bag.Get<List<WarResult.Operator>>(3);
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
-            OnSelectedWar(warId);
+            OnSelectedWar(warId, warIsd);
         }
     }
 
-    private void OnWarListDisplay()
+    public void DisplayWarlistPage(bool refresh)
     {
+        if (refresh)
+            warListController.GetWarList();
         warListController.Display(true);
         warStageController.Display(false);
     }
 
-    private void OnSelectedWar(int warId)
+    private void OnSelectedWar(int warId,int warIsd)
     {
         warListController.Display(false);
-        warStageController.Set(warId);
+        warStageController.Set(warId,warIsd);
     }
 
     #region PlayerVersus
@@ -127,15 +152,13 @@ public class Versus : MonoBehaviour
     private void InitCardToRack()
     {
         var forceId = PlayerDataForGame.instance.CurrentWarForceId;
+        var hstData = PlayerDataForGame.instance.hstData;
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
-            PlayerDataForGame.instance.fightHeroId.Select(id => new GameCard().Instance(GameCardType.Hero, id, 1))
-                .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
-                    new GameCard().Instance(GameCardType.Tower, id, 1)))
-                .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
-                    new GameCard().Instance(GameCardType.Trap, id, 1)))
-                .ToList().ForEach(WarBoard.CreateCardToRack);
+            hstData.heroSaveData.ForEach(WarBoard.CreateCardToRack);
+            hstData.towerSaveData.ForEach(WarBoard.CreateCardToRack);
+            hstData.trapSaveData.ForEach(WarBoard.CreateCardToRack);
             return;
         }
 #endif
@@ -143,7 +166,6 @@ public class Versus : MonoBehaviour
         PlayerDataForGame.instance.fightTowerId.Clear();
         PlayerDataForGame.instance.fightTrapId.Clear();
 
-        var hstData = PlayerDataForGame.instance.hstData;
         //临时记录武将存档信息
         hstData.heroSaveData.Enlist(forceId).ToList()
             .ForEach(WarBoard.CreateCardToRack);
@@ -229,6 +251,34 @@ public class Versus : MonoBehaviour
     }
 
     #endregion
+
+    private float lastDelta;
+    void Update()
+    {
+        lastDelta += Time.deltaTime;
+        if (lastDelta < 1) return;
+        lastDelta = Time.deltaTime;
+        foreach (var action in challengeTimer) action.Value.Invoke(SysTime.UnixNow);
+        warListController.UpdateChallengeTimer();
+    }
+
+    public void RemoveChallengeTimer(int warId)
+    {
+        if (!challengeTimer.ContainsKey(warId))return;
+        challengeTimer.Remove(warId);
+    }
+    public void RegChallengeTimer(int warId,long expiredTime ,UnityAction<TimeSpan> updateAction)
+    {
+        if (challengeTimer.ContainsKey(warId))
+            challengeTimer.Remove(warId);
+        challengeTimer.Add(warId, now => ExpiredUpdate(warId, now, expiredTime, updateAction));
+    }
+    private void ExpiredUpdate(int warId, long now, long expired, UnityAction<TimeSpan> updateAction)
+    {
+        var timeSpan = TimeSpan.FromMilliseconds(expired - now);
+        updateAction(timeSpan);
+    }
+
 
     public class Card : IGameCard
     {
