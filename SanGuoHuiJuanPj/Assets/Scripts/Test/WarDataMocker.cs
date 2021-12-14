@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Assets.Editor;
+using CorrelateLib;
 using DG.Tweening;
 using UnityEngine;
 
@@ -47,39 +48,46 @@ public class WarDataMocker : MonoBehaviour
         {
             var id = card.Id;
             var origin = card.ForceTableId;
-            return new {id, origin};
+            return new { id, origin };
         }).ToDictionary(c => c.id, c => c.origin);
         Dictionary<int, List<int>> cards;
-        var forceId = -2;//客制化阵容
-        if (!isCustomCard)
+        var forceId = -2; //客制化阵容
+        if (isCustomCard)
         {
-            forceId = (int) force;
+            PlayerDataForGame.instance.hstData.heroSaveData = ConvertCard(heroes,0);
+            PlayerDataForGame.instance.hstData.towerSaveData = ConvertCard(towers,(int)GameCardType.Tower);
+            PlayerDataForGame.instance.hstData.trapSaveData = ConvertCard(traps,(int)GameCardType.Trap);
+
+            List<GameCard> ConvertCard(IList<MyCard> list,int ti) =>
+                list.Select(c => new GameCard { id = c.CardId, level = c.Level, typeIndex = ti }).ToList();
+
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
-                .Where(c => hfMap[c.id] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
-                .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new {type, ids}) //把卡牌再根据卡牌类型分类组合
+                .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
                 .ToDictionary(c => c.type, c => c.ids.ToList()); //根据卡牌类型写入字典
         }
         else
         {
-            cards = heroes.Select(c => new GameCard {id = c.CardId, level = c.Level, typeIndex = 0})
-                .Concat(towers.Select(t => new GameCard {id = t.CardId, level = t.Level, typeIndex = 2}))
-                .Concat(traps.Select(t => new GameCard {id = t.CardId, level = t.Level, typeIndex = 3}))
-                .GroupBy(c => c.typeIndex, c => c.id, (type, cIds) => new {type, cIds})
-                .ToDictionary(c => c.type, c => c.cIds.ToList());
+            forceId = (int)force;
+            cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
+                .Where(c => hfMap[c.id] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
+                .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
+                .ToDictionary(c => c.type, c => c.ids.ToList()); //根据卡牌类型写入字典
         }
+
         PlayerDataForGame.instance.WarForceMap[PlayerDataForGame.WarTypes.Expedition] = forceId;
 
         PlayerDataForGame.instance.fightHeroId = cards.ContainsKey(0) ? cards[0] : new List<int>();
         PlayerDataForGame.instance.fightTowerId = cards.ContainsKey(2) ? cards[2] : new List<int>();
         PlayerDataForGame.instance.fightTrapId = cards.ContainsKey(3) ? cards[3] : new List<int>();
-        if(cityLevel==0)
+        if (cityLevel == 0)
             XDebug.LogError<WarDataMocker>("城池等级为0，请设置初始城池等级");
-        if(WarsUIManager.instance)
+        if (WarsUIManager.instance)
         {
             WarsUIManager.instance.cityLevel = cityLevel;
             WarsUIManager.instance.Init();
         }
     }
+
     [Serializable]
     public class MyCard
     {
