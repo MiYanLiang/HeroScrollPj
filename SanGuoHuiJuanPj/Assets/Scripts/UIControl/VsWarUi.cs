@@ -9,6 +9,7 @@ public class VsWarUi : MonoBehaviour
     public Image Flag;
     public Text TimeCount;
     public Text HostName;
+    public Text MilitaryPower;
     public Button ClickButton;
     public GameObject HostDisplay;
     public GameObject LoseDisplay;

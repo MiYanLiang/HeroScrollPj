@@ -21,9 +21,15 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private UnityEvent onStartChallengeEvent;
     [SerializeField] private GameObject TimerObj;
     [SerializeField] private Text CountdownText;
+    [SerializeField] private Image OppAvatar;
+    [SerializeField] private Text OppMilitaryPowerText;
+    [SerializeField] private Text OppNameText;
+    [SerializeField] private Sprite[] genderSprites;
     private int WarId { get; set; } = -1;
     public int WarIsd { get; private set; }
-    private string Host { get; set; }
+    public int OppGender { get; private set; }
+    public int OppMilitaryPower { get; private set; }
+    private string HostName { get; set; }
     private List<CheckpointUi> CpList { get; } = new List<CheckpointUi>();
     private List<SpCheckpoint> SpCheckPoints { get; set; }
     private ObjectPool<CheckpointUi> Pool { get; set; }
@@ -60,7 +66,7 @@ public class VsWarStageController : MonoBehaviour
                 return;
             }
             var id = bag.Get<int>(0);
-            var hostName = bag.Get<string>(1);
+            var host= bag.Get<List<object>>(1);
             var warIdentity = (Versus.SpWarIdentity)bag.Get<int>(2);
             var data = bag.Get<List<List<string>>>(3); //3 warIdentity
             SpCheckPoints = new List<SpCheckpoint>();
@@ -78,7 +84,7 @@ public class VsWarStageController : MonoBehaviour
                 SpCheckPoints.Add(new SpCheckpoint(cpPointId, cpIndex, cpTitle, cpEventType, cpMaxCards, cpMaxRounds,
                     cpFormationCount));
             }
-            UpdatePage(hostName, warIdentity, SpCheckPoints);
+            UpdatePage(host[0].ToString(),int.Parse(host[1].ToString()), int.Parse(host[2].ToString()), warIdentity, SpCheckPoints);
             var challenge = bag.Get<ChallengeDto>(4);
             WarIsd = bag.Get<int>(5);
             if (challenge == null) return;
@@ -86,15 +92,16 @@ public class VsWarStageController : MonoBehaviour
         }
     }
 
-    private void UpdatePage(string hostName, Versus.SpWarIdentity warIdentity,IList<SpCheckpoint> cps)
+    private void UpdatePage(string hostName,int gender,int militaryPower, Versus.SpWarIdentity warIdentity,IList<SpCheckpoint> cps)
     {
-        Host = hostName;
+        HostName = hostName;
         if (CpList.Any())
         {
             CpList.ForEach(c => Pool.Recycle(c));
             CpList.Clear();
         }
 
+        SetOppInfo(gender, militaryPower);
         SetCancelButton(warIdentity);
         switch (warIdentity)
         {
@@ -124,6 +131,15 @@ public class VsWarStageController : MonoBehaviour
                 CpList.Add(ui);
             }
         }
+    }
+
+    private void SetOppInfo(int gender, int militaryPower)
+    {
+        OppGender = gender;
+        OppMilitaryPower = militaryPower;
+        OppAvatar.sprite = genderSprites[gender];
+        OppMilitaryPowerText.text = militaryPower.ToString();
+        OppNameText.text = HostName;
     }
 
     private void SetCancelButton(Versus.SpWarIdentity warIdentity)
@@ -164,7 +180,7 @@ public class VsWarStageController : MonoBehaviour
         {
             var cha = DataBag.Deserialize<ChallengeDto>(databag);
             if (cha == null) throw new NotImplementedException();
-            UpdatePage(Host, Versus.SpWarIdentity.Challenger, SpCheckPoints);
+            UpdatePage(HostName, OppGender, OppMilitaryPower, Versus.SpWarIdentity.Challenger, SpCheckPoints);
             UpdateStageProgress(cha);
             Vs.warListController.GetWarList();
         }

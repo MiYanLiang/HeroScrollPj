@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -32,20 +33,20 @@ public class VsWarListController : MonoBehaviour
         void OnRefreshWarList(string data)
         {
             var bag = DataBag.DeserializeBag(data);
-            var list = bag.Get<List<List<string>>>(0);
+            var list = bag.Get<List<List<object>>>(0);
             foreach (var obj in list)
             {
-                var warId = int.Parse(obj[0]);
-                var hostName = obj[1];
-                var warIsd = int.Parse(obj[2]);
-                var warIdentity = int.Parse(obj[3]);
-                var expired = long.Parse(obj[4]);
-                GenerateUi(warId, warIsd, hostName, (Versus.SpWarIdentity)warIdentity,expired);
+                var warId = int.Parse(obj[0].ToString());
+                var host = DataBag.Parse<List<object>>(obj[1]);
+                var warIsd = int.Parse(obj[2].ToString());
+                var warIdentity = int.Parse(obj[3].ToString());
+                var expired = long.Parse(obj[4].ToString());
+                GenerateUi(warId, warIsd, host, (Versus.SpWarIdentity)warIdentity,expired);
             }
         }
     }
 
-    private void GenerateUi(int warId, int warIsd, string hostName, Versus.SpWarIdentity identity, long expired)
+    private void GenerateUi(int warId, int warIsd, List<object> host, Versus.SpWarIdentity identity, long expired)
     {
         var ui = Instantiate(UiPrefab, listView.content);
 
@@ -55,7 +56,8 @@ public class VsWarListController : MonoBehaviour
         ui.InfoUi.gameObject.SetActive(identity != Versus.SpWarIdentity.Anonymous);
 
         ui.ExpiredTime = expired;
-        ui.HostName.text = hostName;
+        ui.HostName.text = host[0].ToString();
+        ui.MilitaryPower.text = host[2].ToString();
         ui.gameObject.SetActive(true);
         ui.Id = warId;
         ui.ClickButton.onClick.RemoveAllListeners();
