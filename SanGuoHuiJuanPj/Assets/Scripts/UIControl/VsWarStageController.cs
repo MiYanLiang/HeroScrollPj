@@ -36,7 +36,6 @@ public class VsWarStageController : MonoBehaviour
     //(warId , pointId)
     private UnityAction<int, int, int, Dictionary<int, IGameCard>> OnAttackCity { get; set; }
     private Versus Vs { get; set; }
-    private long ChallengeExpiredTime { get; set; }
     public void Init(Versus versus,UnityAction<int, int , int , Dictionary<int, IGameCard>> onAttackCityAction)
     {
         Vs = versus;
@@ -65,7 +64,7 @@ public class VsWarStageController : MonoBehaviour
                 Vs.DisplayWarlistPage(true);
                 return;
             }
-            var id = bag.Get<int>(0);
+            WarId = bag.Get<int>(0);//warId
             var host= bag.Get<List<object>>(1);
             var warIdentity = (Versus.SpWarIdentity)bag.Get<int>(2);
             var data = bag.Get<List<List<string>>>(3); //3 warIdentity
@@ -88,7 +87,7 @@ public class VsWarStageController : MonoBehaviour
             var challenge = bag.Get<ChallengeDto>(4);
             WarIsd = bag.Get<int>(5);
             if (challenge == null) return;
-            UpdateStageProgress(challenge);
+            UpdateStageProgress(warIdentity,challenge);
         }
     }
 
@@ -132,6 +131,41 @@ public class VsWarStageController : MonoBehaviour
             }
         }
     }
+
+    private void UpdateStageProgress(Versus.SpWarIdentity spIdentity, ChallengeDto cha)
+    {
+        if (spIdentity == Versus.SpWarIdentity.Challenger)
+        {
+            Vs.RegChallengeTimer(WarId, cha.ExpiredTime, ts =>
+            {
+                if (cha.WarId != WarId) return;
+                if (ts.TotalSeconds > 0)
+                {
+                    UpdateCountdownText(ts);
+                    return;
+                }
+
+                OnRequestCancel();
+            });
+            TimerObj.gameObject.SetActive(true);
+            UpdateCountdownText(TimeSpan.FromMilliseconds(cha.ExpiredTime - SysTime.UnixNow));
+        }
+        var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
+        var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
+            .Select(c => c.Value).FirstOrDefault();
+        cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
+        {
+            var (ui, isPass) = o;
+            ui.SetProgress(isPass);
+            if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
+            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
+            var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
+            ui.AttackButton.gameObject.SetActive(isChallengePoint);
+            if (!isChallengePoint) return;
+            ui.SetDock(true);
+        });
+    }
+
 
     private void SetOppInfo(int gender, int militaryPower)
     {
@@ -181,40 +215,9 @@ public class VsWarStageController : MonoBehaviour
             var cha = DataBag.Deserialize<ChallengeDto>(databag);
             if (cha == null) throw new NotImplementedException();
             UpdatePage(HostName, OppGender, OppMilitaryPower, Versus.SpWarIdentity.Challenger, SpCheckPoints);
-            UpdateStageProgress(cha);
+            UpdateStageProgress(Versus.SpWarIdentity.Challenger, cha);
             Vs.warListController.GetWarList();
         }
-    }
-
-    private void UpdateStageProgress(ChallengeDto cha)
-    {
-        Vs.RegChallengeTimer(WarId, cha.ExpiredTime, ts =>
-        {
-            if (ts.TotalSeconds > 0)
-            {
-                UpdateCountdownText(ts);
-                return;
-            }
-
-            OnRequestCancel();
-        });
-        ChallengeExpiredTime = cha.ExpiredTime;
-        TimerObj.gameObject.SetActive(true);
-        UpdateCountdownText(TimeSpan.FromMilliseconds(cha.ExpiredTime - SysTime.UnixNow));
-        var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
-        var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
-            .Select(c => c.Value).FirstOrDefault();
-        cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
-        {
-            var (ui, isPass) = o;
-            ui.SetProgress(isPass);
-            if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
-            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
-            var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
-            ui.AttackButton.gameObject.SetActive(isChallengePoint);
-            if (!isChallengePoint) return;
-            ui.SetDock(true);
-        });
     }
 
     private void UpdateCountdownText(TimeSpan timeSpan) => CountdownText.text = $"{(int)timeSpan.TotalMinutes}:{timeSpan.Seconds:00}";
@@ -284,6 +287,7 @@ public class VsWarStageController : MonoBehaviour
     private class ChallengeDto : DataBag
     {
         public int WarId { get; set; }
+        public int WarIsd { get; set; }
         public int CharacterId { get; set; }
         public string HostName { get; set; }
         public long StartTime { get; set; }
