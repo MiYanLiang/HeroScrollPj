@@ -24,7 +24,7 @@ public class Versus : MonoBehaviour
 #if UNITY_EDITOR
     public static string Api = "https://localhost:5001/api/spwar";
     
-    public const int TestCharId = -3;
+    public const int TestCharId = -2;
 
     public const string GetWarsV1 = "GetWarsV1";
 
@@ -32,26 +32,26 @@ public class Versus : MonoBehaviour
         Http.Get($"{Api}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
     
     public const string GetWarInfoApi = "GetWarInfoV1";
-    public static void WarStageInfo(int warIsd, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warIsd={warIsd}&charId={TestCharId}", onApiAction, GetWarInfoApi);
+    public static void WarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
-    public static void StartChallenge(int warIsd, Action<string> onChallengeRespond) =>
-        Http.Post($"{Api}/{StartChallengeV1}?charId={TestCharId}&warIsd={warIsd}", string.Empty,
+    public static void StartChallenge(int warId, Action<string> onChallengeRespond) =>
+        Http.Post($"{Api}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
-    public static void GetCheckpointFormation(int warIsd, int checkpointId, Action<string> callBackAction) =>
-        Http.Get($"{Api}/{GetCheckpointFormationV1}?warIsd={warIsd}&charId={TestCharId}&pointId={checkpointId}",
+    public static void GetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
+        Http.Get($"{Api}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
             callBackAction, GetCheckpointFormationV1);
 
     public const string SubmitFormationV1 = "SubmitFormationV1";
-    public static void PostSubmitFormation(int warIsd,int pointId,string content,Action<string> onCallBack) =>
-        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warIsd={warIsd}&pointId={pointId}", content, onCallBack,
+    public static void PostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
+        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
             SubmitFormationV1);
 
     public const string CheckPointWarResultV1 = "CheckPointResultV1";
-    public static void GetCheckPointWarResult(int warIsd, int pointId, Action<string> callbackAction) =>
-        Http.Get($"{Api}/{CheckPointWarResultV1}?warIsd={warIsd}&pointId={pointId}&charId={TestCharId}", callbackAction,
+    public static void GetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
+        Http.Get($"{Api}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
             CheckPointWarResultV1);
 
     public const string CancelChallengeV1 = "CancelChallengeV1";
@@ -96,7 +96,7 @@ public class Versus : MonoBehaviour
         warStageController.Init(this, OnReadyWarboard);
     }
 
-    private void OnReadyWarboard(int warIsd, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
+    private void OnReadyWarboard(int warId, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
     {
         StartNewGame();
         SetEnemyFormation(formation);
@@ -105,30 +105,34 @@ public class Versus : MonoBehaviour
         WarBoard.MaxCards = maxCards;
         WarBoard.gameObject.SetActive(true);
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() => OnSubmitFormation(warIsd, pointId));
+        WarBoard.Chessboard.StartButton.onClick.AddListener(() => OnSubmitFormation(warId, pointId));
 
     }
 
-    private void OnSubmitFormation(int warIsd, int pointId)
+    private void OnSubmitFormation(int warId, int pointId)
     {
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         var json = Json.Serialize(challengerFormation);
 #if UNITY_EDITOR
-        PostSubmitFormation(warIsd, pointId, json, OnCallBack);
+        PostSubmitFormation(warId, pointId, json, OnCallBack);
 #endif
 
         void OnCallBack(string data)
         {
             var bag = DataBag.DeserializeBag(data);
             if (bag == null)
-                throw new NotImplementedException();
-            var warId = bag.Get<int>(0);
+            {
+                ShowHints(data);
+                return;
+            }
+            var id = bag.Get<int>(0);
             var isChallengerWin = bag.Get<bool>(1);
             var rounds = bag.Get<List<ChessRound>>(2);
             var chessmen = bag.Get<List<WarResult.Operator>>(3);
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
-            OnSelectedWar(warId, warIsd);
+            warListController.GetWarList();
+            OnSelectedWar(id);
         }
     }
 
@@ -140,10 +144,10 @@ public class Versus : MonoBehaviour
         warStageController.Display(false);
     }
 
-    private void OnSelectedWar(int warId,int warIsd)
+    private void OnSelectedWar(int warId)
     {
         warListController.Display(false);
-        warStageController.Set(warId,warIsd);
+        warStageController.Set(warId);
     }
 
     #region PlayerVersus
@@ -191,7 +195,8 @@ public class Versus : MonoBehaviour
         StartCoroutine(ChessAnimation(data));
     }
 
-    public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds, List<IOperatorInfo> ops)
+    public void ReadyWarboard(SpWarIdentity spWarIdentity, bool isChallengerWin, List<ChessRound> rounds,
+        List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
         WarBoard.NewGame(true);
@@ -383,4 +388,6 @@ public class Versus : MonoBehaviour
 
         public void Close() => Window.gameObject.SetActive(false);
     }
+
+    public static void ShowHints(string text) => PlayerDataForGame.instance.ShowStringTips(text);
 }

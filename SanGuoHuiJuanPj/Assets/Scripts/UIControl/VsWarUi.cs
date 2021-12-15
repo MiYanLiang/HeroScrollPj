@@ -14,5 +14,6 @@ public class VsWarUi : MonoBehaviour
     public GameObject HostDisplay;
     public GameObject LoseDisplay;
     public GameObject ChallengerDisplay;
+    public GameObject PrevChallenger;
     public long ExpiredTime { get; set; }
 }

@@ -8,6 +8,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
 {
     public Image CheckPointPanel;
     public Image PassImage;
+    public Image LoseImage;
     public Button SelectButton;
     public Button AttackButton;
     public Button ReportButton;
@@ -38,6 +39,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
         Occupier.Set(charSprite);
         SetSelected(false);
         SetProgress(false);
+        SetLose(false);
         SetDock(false);
         gameObject.SetActive(true);
         Display(true);
@@ -68,6 +70,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
         Display(false);
         SetDock(false);
         SetProgress(false); 
+        SetLose(false);
         gameObject.SetActive(false);
         CheckPointPanel.gameObject.SetActive(false);
         SetButton(SelectButton, null);
@@ -78,6 +81,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
     
     public void SetDock(bool display) => Dock.gameObject.SetActive(display);
     public void SetProgress(bool isPass) => PassImage.gameObject.SetActive(isPass);
+    public void SetLose(bool isLose) => LoseImage.gameObject.SetActive(isLose);
 
     public void SetSelected(bool isSelected) => SelectedObj.gameObject.SetActive(isSelected);
 
