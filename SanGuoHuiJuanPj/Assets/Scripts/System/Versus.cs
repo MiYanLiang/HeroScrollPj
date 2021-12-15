@@ -86,8 +86,9 @@ public class Versus : MonoBehaviour
 #if UNITY_EDITOR
     void Start()
     {
-        Init();
-    }
+        DataTable.instance.Init();
+        Init(); 
+    } 
 #endif
 
     private void ControllerInit()
