@@ -188,11 +188,16 @@ public class VsWarStageController : MonoBehaviour
         CancelButton.onClick.AddListener(OnRequestCancel);
 
     }
-    private void OnRequestCancel() => Versus.PostCancelChallenge(WarId, _ =>
+    private void OnRequestCancel()
     {
-        Vs.DisplayWarlistPage(true);
-        Vs.RemoveChallengeTimer(WarId);
-    });
+#if UNITY_EDITOR
+        Versus.PostCancelChallenge(WarId, _ =>
+        {
+            Vs.DisplayWarlistPage(true);
+            Vs.RemoveChallengeTimer(WarId);
+        });
+#endif
+    }
 
 
     public void OnSelectedUi(int pointId) => CpList.ForEach(c => c.SetSelected(c.PointId == pointId));
