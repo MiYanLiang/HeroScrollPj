@@ -972,8 +972,17 @@ namespace Assets.System.WarModule
             var conduct = InstanceGenericDamage();
             var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 2, conduct);
             if (IsHit(result))
+            {
+                //如果对目标造成卸甲，将再次进行一次攻击
+                //这一段不理想的代码
+                var disarmedRate = CountRate(conduct, DisarmedRate(), CriticalAddOn, RouseAddOn);
+                if (Chessboard.IsRandomPass(disarmedRate))
+                { 
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1,
-                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Disarmed, value: 1, rate: CountRate(conduct, DisarmedRate(),CriticalAddOn,RouseAddOn)));
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Disarmed, value: 1, rate: 100));
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 1, 2, InstanceGenericDamage());
+                }
+            }
         }
     }
 
@@ -2053,10 +2062,10 @@ namespace Assets.System.WarModule
 
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var damage = InstanceGenericDamage();
-            damage.Multiply(ComboRate * 0.01f);
             for (int i = 0; i < Combo(); i++)
             {
+                var damage = InstanceGenericDamage();
+                damage.Multiply(ComboRate * 0.01f);
                 var target = Chessboard.GetRivals(this, p => p.IsPostedAlive)
                     .Select(p => new { p, random = Chessboard.Randomize(5) })
                     .OrderBy(o => o.random).FirstOrDefault();
