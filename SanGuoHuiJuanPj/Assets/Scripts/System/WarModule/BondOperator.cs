@@ -195,7 +195,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuHuSHangJiang : BondOperator
     {
-        private int CowardlyRate => 35;
+        private int CowardlyRate => 20;
         private int DamageRate => 35;
 
         public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
