@@ -321,14 +321,14 @@ namespace Assets.System.WarModule
             switch (Style.Military)
             {
                 case 16: return 25;
-                case 142: return 30;
-                case 143: return 40;
+                case 142: return 35;
+                case 143: return 50;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        private int RouseAddOn => 50;
         private int CriticalAddOn => 30;
+        private int RouseAddOn => 50;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -351,6 +351,71 @@ namespace Assets.System.WarModule
                 combo = Chessboard.IsRandomPass(comboRate);
                 actId++;
             } while (combo);
+        }
+
+    }
+    /// <summary>
+    /// 枪骑
+    /// </summary>
+    public class QiangQiOperator : HeroOperator
+    {
+        protected virtual int ComboRatio()
+        {
+            switch (Style.Military)
+            {
+                case 160: return 15;
+                case 161: return 20;
+                case 162: return 35;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        protected virtual float PenetrateDecreases() 
+        {
+            switch (Style.Military) 
+            {
+                case 160: return 0.5f;
+                case 161: return 0.7f;
+                case 162: return 0.9f;
+                default: throw MilitaryNotValidError(this);
+            }
+        } 
+        private int CriticalAddOn => 20;
+        private int RouseAddOn => 30;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            if (target == null) return;
+            bool combo = true;
+            var actId = 0;
+            do
+            {
+                int comboRate = ComboRatio();
+                var hit = InstanceGenericDamage();
+                var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId, 1, hit);
+
+                Penetrate(target,hit);
+
+                if (result == null) break;
+                if (!target.IsAliveHero) break;//目标死亡
+                if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
+                if (hit.IsRouseDamage())
+                    comboRate += RouseAddOn;
+                if (hit.IsCriticalDamage())
+                    comboRate += CriticalAddOn;
+                combo = Chessboard.IsRandomPass(comboRate);
+                actId++;
+            } while (combo);
+
+            void Penetrate(IChessPos p,CombatConduct c) 
+            {
+                var backPos = Chessboard.BackPos(p);
+                if (backPos==null||backPos.Operator == null) { }
+                else 
+                {
+                    OnPerformActivity(backPos, Activity.Intentions.Offensive, actId, -1, c.Clone(PenetrateDecreases()));             
+                }
+            }
         }
 
     }
@@ -1714,7 +1779,7 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float IntelligentRate => 30f;
+        private float IntelligentRate => 40f;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
@@ -2097,9 +2162,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 18: return 5;
-                case 106: return 10;
-                case 107: return 15;
+                case 18: return 10;
+                case 106: return 15;
+                case 107: return 20;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -2130,7 +2195,57 @@ namespace Assets.System.WarModule
             OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, Helper.Singular(InstanceGenericDamage()));
         }
     }
+    public class FuQiOperator : HeroOperator
+    {
+        public override bool IsIgnoreShieldUnit => true;
 
+        private int BreakShields()
+        {
+            switch (Style.Military)
+            {
+                case 163: return 3;
+                case 164: return 5;
+                case 165: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        private int DamageRate()
+        {
+            switch (Style.Military)
+            {
+                case 163: return 10;
+                case 164: return 15;
+                case 165: return 20;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            if (target.IsAliveHero)
+            {
+                var targetStatus = Chessboard.GetStatus(target.Operator);
+                var targetShields = Chessboard.GetCondition(target.Operator, CardState.Cons.Shield);
+                var shieldBalance = targetShields - BreakShields();
+                var dmgGapValue = StateDamage() * DamageRate() * 0.01; //每10%掉血增加数
+                var additionDamage = HpDepletedRatioWithGap(targetStatus, 0, 10, (int)dmgGapValue);
+                var performDamage = InstanceGenericDamage(additionDamage);
+                var combat = new List<CombatConduct>();
+                if (shieldBalance > 0)
+                {
+                    combat.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, -BreakShields()));
+                }
+                else
+                {
+                    combat.Add(performDamage);
+                    combat.Add(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, -targetShields));
+                }
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, combat.ToArray());
+                return;
+            }
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, Helper.Singular(InstanceGenericDamage()));
+        }
+    }
     /// <summary>
     /// 17  大刀 - 斩杀当前目标后，武将继续攻击下一个目标。每次连斩后攻击提升。
     /// </summary>
@@ -2400,24 +2515,24 @@ namespace Assets.System.WarModule
                     if (major) return 30;
                     switch (dmgType)
                     {
-                        case Damage.Types.Critical: rate = 20; break;
-                        case Damage.Types.Rouse: rate = 40; break;
+                        case Damage.Types.Critical: rate = 50; break;
+                        case Damage.Types.Rouse: rate = 60; break;
                     }
                     break;
                 case 174:
                     if (major) return 50;
                     switch (dmgType)
                     {
-                        case Damage.Types.Critical: rate = 30; break;
-                        case Damage.Types.Rouse: rate = 60; break;
+                        case Damage.Types.Critical: rate = 70; break;
+                        case Damage.Types.Rouse: rate = 80; break;
                     }
                     break;
                 case 175:
                     if (major) return 70;
                     switch (dmgType)
                     {
-                        case Damage.Types.Critical: rate = 50; break;
-                        case Damage.Types.Rouse: rate = 80; break;
+                        case Damage.Types.Critical: rate = 90; break;
+                        case Damage.Types.Rouse: rate = 100; break;
                     }
                     break;
                 default: throw MilitaryNotValidError(this);
