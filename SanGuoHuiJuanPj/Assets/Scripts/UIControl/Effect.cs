@@ -721,6 +721,7 @@ public static class Effect
             case 006://刺盾
             case 00601://拒马
             case 015://长枪
+            case 01501://枪骑
             case 01502://重弩车
                 return true;
             default: return false;
