@@ -99,11 +99,9 @@ public class AudioController1 : MonoBehaviour
     //播放长背景音乐参数设置
     public void PlayLongBackMusInit()
     {
+        if (!GamePref.PrefMusicPlay) return;
         isPlayRandom = false;
         audioSource.loop = true;
-
-        if (!GamePref.PrefMusicPlay)
-            return;
         audioSource.Play();
     }
 
@@ -118,9 +116,9 @@ public class AudioController1 : MonoBehaviour
         audioSource.PlayDelayed(delayedTime);
     }
 
-    public void MusicSwitch(bool isPlay)
+    public void MusicSwitch(bool isSetToPlay)
     {
-        if(isPlay)audioSource.Play();
+        if(isSetToPlay)audioSource.Play();
         else audioSource.Pause();
     }
 }
