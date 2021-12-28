@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Data;
-using System.Linq;
 using Assets.System.WarModule;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Monetization;
 using UnityEngine.UI;
 
 public class CardAnimator : MonoBehaviour

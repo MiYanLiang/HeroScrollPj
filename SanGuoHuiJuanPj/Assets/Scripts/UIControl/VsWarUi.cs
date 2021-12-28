@@ -1,19 +1,39 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class VsWarUi : MonoBehaviour
 {
-    public int Id;
-    public Image Title;
-    public Image InfoUi;
-    public Image Flag;
-    public Text TimeCount;
-    public Text HostName;
-    public Text MilitaryPower;
-    public Button ClickButton;
-    public GameObject HostDisplay;
-    public GameObject LoseDisplay;
-    public GameObject ChallengerDisplay;
-    public GameObject PrevChallenger;
-    public long ExpiredTime { get; set; }
+    public int Id { get; set; }
+    public WarInfoUi WarInfo;
+    public ChallengeInfoUi ChallengeUi;
+    public RankingUi Board;
+
+    public void SetUi()
+    {
+        throw new NotImplementedException();
+    }
+    [Serializable]
+    public class RankingUi
+    {
+        public GameObject Obj;
+        public Text No;
+        public Text HostName;
+        public Text MPower;
+        public Button ChallengeButton;
+    }
+    [Serializable]
+    public class ChallengeInfoUi
+    {
+        public GameObject Obj;
+        public Text Rank;
+        public Image ChallengeImage;
+        public Text TimerUi;
+    }
+    [Serializable]
+    public class WarInfoUi
+    {
+        public GameObject Obj;
+        public Image TextImage;
+    }
 }
