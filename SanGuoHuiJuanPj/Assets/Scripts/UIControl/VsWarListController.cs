@@ -26,7 +26,7 @@ public class VsWarListController : MonoBehaviour
         foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
         _vsWarUiList.Clear();
 #if UNITY_EDITOR
-        Versus.GetWars(OnRefreshWarList);
+        Versus.GetRkWars(OnRefreshWarList);
 #endif
 
         void OnRefreshWarList(string data)
@@ -37,60 +37,45 @@ public class VsWarListController : MonoBehaviour
                 Versus.ShowHints(data);
                 return;
             }
-            var list = bag.Get<List<List<object>>>(0);
+
+            var list = bag.Get<Dictionary<int, Dictionary<int, object>>>(0);
             foreach (var obj in list)
             {
-                var warId = int.Parse(obj[0].ToString());
-                var host = DataBag.Parse<List<object>>(obj[1]);
-                var warIdentity = int.Parse(obj[2].ToString());
-                var expired = long.Parse(obj[3].ToString());
-                GenerateUi(warId, host, (Versus.SpWarIdentity)warIdentity,expired);
+                var warId = obj.Key;
+                var rank = obj.Value;
+                GenerateUi(warId, rank);
             }
         }
     }
 
-    private void GenerateUi(int warId, List<object> host, Versus.SpWarIdentity identity, long expired)
+    private void GenerateUi(int warId, Dictionary<int, object> rank)
     {
         var ui = Instantiate(UiPrefab, listView.content);
 
-        ui.ChallengerDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Challenger);
-        ui.HostDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Host);
-        ui.LoseDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevHost);
-        ui.InfoUi.gameObject.SetActive(identity != Versus.SpWarIdentity.Anonymous);
-        ui.PrevChallenger.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevChallenger);
-
-        ui.ExpiredTime = expired;
-        ui.HostName.text = host[0].ToString();
-        ui.MilitaryPower.text = host[2].ToString();
-        ui.gameObject.SetActive(true);
-        ui.Id = warId;
-        ui.ClickButton.onClick.RemoveAllListeners();
-        ui.ClickButton.onClick.AddListener(() => OnSelectAction?.Invoke(warId));
+        //ui.ChallengerDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Challenger);
+        //ui.HostDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Host);
+        //ui.LoseDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevHost);
+        //ui.InfoUi.gameObject.SetActive(identity != Versus.SpWarIdentity.Anonymous);
+        //ui.PrevChallenger.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevChallenger);
+        //if (rank.Count > 0)
+        //{
+        //    ui.HostName.text = rank[0].ToString();
+        //    ui.MilitaryPower.text = rank[1].ToString();
+        //}
+        //
+        //ui.gameObject.SetActive(true);
+        //ui.Id = warId;
+        //ui.ClickButton.onClick.RemoveAllListeners();
+        //ui.ClickButton.onClick.AddListener(() => OnSelectAction?.Invoke(warId));
         /*
          * 1.btn click binding
          * 2.ui update
          */
+        
         _vsWarUiList.Add(ui);
     }
 
     public void Display(bool isShow) => gameObject.SetActive(isShow);
-
-    public void UpdateChallengeTimer()
-    {
-        var now = SysTime.UnixNow;
-        _vsWarUiList.ForEach(u =>
-        {
-            var milliSecs = u.ExpiredTime - now;
-            if (milliSecs >= 0)
-            {
-                var ts = TimeSpan.FromMilliseconds(milliSecs);
-                u.TimeCount.text = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}";
-                return;
-            }
-
-            u.TimeCount.text = string.Empty;
-        });
-    }
 
     private class ChallengeDto : DataBag
     {

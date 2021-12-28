@@ -52,7 +52,7 @@ public class VsWarStageController : MonoBehaviour
         gameObject.SetActive(true);
         TimerObj.SetActive(false);
 #if UNITY_EDITOR
-        Versus.WarStageInfo(warId, OnApiAction);
+        Versus.RkWarStageInfo(warId, OnApiAction);
 #endif
 
         void OnApiAction(string obj)

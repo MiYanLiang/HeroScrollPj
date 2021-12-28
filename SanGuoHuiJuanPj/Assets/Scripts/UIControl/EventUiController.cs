@@ -3,13 +3,14 @@ using UnityEngine;
 
 public class EventUiController : MonoBehaviour
 {
-    public static bool IsInit { get; set; }
+    public static bool ShowOnce { get; set; }
     [SerializeField] UDate ExpiredDate;
 
     void Start()
     {
-        gameObject.SetActive(!IsInit);
-        IsInit = true;
+        gameObject.SetActive(!ShowOnce);
+        ShowOnce = true;
+        if (ShowOnce) return;
         gameObject.SetActive(!ExpiredDate.IsExpired());
     }
 

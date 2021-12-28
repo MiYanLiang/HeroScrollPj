@@ -108,8 +108,6 @@ public class AudioController1 : MonoBehaviour
     //播放音乐
     public void PlayAudioSource(float delayedTime)
     {
-        //Debug.Log("AudioController1.PlayAudioSource()");
-
         if (!GamePref.PrefMusicPlay)
             return;
 

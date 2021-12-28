@@ -22,41 +22,48 @@ public class Versus : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    public static string Api = "https://localhost:5001/api/spwar";
+    public static string SpApi { get; } = "https://localhost:5001/api/spwar";
+    public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
     public const int TestCharId = -2;
 
     public const string GetWarsV1 = "GetWarsV1";
 
-    public static void GetWars(Action<string> onRefreshWarList) =>
-        Http.Get($"{Api}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
+    public static void GetRkWars(Action<string> onRefreshWarList) =>
+        Http.Get($"{RkApi}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
+    public static void GetSpWars(Action<string> onRefreshWarList) =>
+        Http.Get($"{SpApi}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
     
     public const string GetWarInfoApi = "GetWarInfoV1";
-    public static void WarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{Api}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
+
+    public static void RkWarStageInfo(int warId, Action<string> onApiAction, int? hostId = null) => Http.Get(
+        $"{RkApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}" +
+        (hostId.HasValue ? $"&hostId={hostId.Value}" : string.Empty), onApiAction, GetWarInfoApi);
+    public static void SpWarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{SpApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
     public static void StartChallenge(int warId, Action<string> onChallengeRespond) =>
-        Http.Post($"{Api}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
+        Http.Post($"{SpApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
     public static void GetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
-        Http.Get($"{Api}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
+        Http.Get($"{SpApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
             callBackAction, GetCheckpointFormationV1);
 
     public const string SubmitFormationV1 = "SubmitFormationV1";
     public static void PostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
-        Http.Post($"{Api}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
+        Http.Post($"{SpApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
             SubmitFormationV1);
 
     public const string CheckPointWarResultV1 = "CheckPointResultV1";
     public static void GetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
-        Http.Get($"{Api}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
+        Http.Get($"{SpApi}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
             CheckPointWarResultV1);
 
     public const string CancelChallengeV1 = "CancelChallengeV1";
     public static void PostCancelChallenge(int warId, Action<string> callbackAction) =>
-        Http.Post($"{Api}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
+        Http.Post($"{SpApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
             CancelChallengeV1);
 
 #endif
@@ -265,7 +272,6 @@ public class Versus : MonoBehaviour
         if (lastDelta < 1) return;
         lastDelta = Time.deltaTime;
         foreach (var action in challengeTimer) action.Value.Invoke(SysTime.UnixNow);
-        warListController.UpdateChallengeTimer();
     }
 
     public void RemoveChallengeTimer(int warId)
