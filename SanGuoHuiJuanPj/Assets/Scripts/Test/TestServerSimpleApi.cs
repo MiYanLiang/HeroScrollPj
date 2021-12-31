@@ -34,7 +34,7 @@ public class TestServerSimpleApi : MonoBehaviour
         StartButton = chessboard.StartButton;
         StartButton.gameObject.SetActive(false);
         yield return new WaitForSeconds(1f);
-        Versus.Init();
+        Versus.Init(Versus.TestCharId);
         Versus.StartNewGame();
     }
 

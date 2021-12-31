@@ -12,9 +12,11 @@ public class VsWarListController : MonoBehaviour
     [SerializeField] private ScrollRect listView;
     [SerializeField] private VsWarUi UiPrefab;
     private List<VsWarUi> _vsWarUiList = new List<VsWarUi>();
-    private UnityAction<int> OnSelectAction { get; set; }
-    public void Init(UnityAction<int> onSelectAction)
+    private Versus Vs { get; set; }
+    private UnityAction<int,int> OnSelectAction { get; set; }
+    public void Init(Versus vs,UnityAction<int,int> onSelectAction)
     {
+        Vs = vs;
         gameObject.SetActive(true);
         OnSelectAction = onSelectAction;
         UiPrefab.gameObject.SetActive(false);
@@ -38,60 +40,57 @@ public class VsWarListController : MonoBehaviour
                 return;
             }
 
-            var list = bag.Get<Dictionary<int, Dictionary<int, object>>>(0);
-            foreach (var obj in list)
+            var wars = bag.Get<List<RkWarDto>>(0);
+            var challenges = bag.Get<Dictionary<int, Versus.ChallengeDto>>(1);
+            foreach (var war in wars)
             {
-                var warId = obj.Key;
-                var rank = obj.Value;
-                GenerateUi(warId, rank);
+                challenges.TryGetValue(war.WarId, out var challenge);
+                GenerateUi(war, war.RankingBoard.FindIndex(r => r.CharId == Versus.CharId), challenge);
             }
         }
     }
 
-    private void GenerateUi(int warId, Dictionary<int, object> rank)
+    private void GenerateUi(RkWarDto war, int index, Versus.ChallengeDto challengeDto)
     {
         var ui = Instantiate(UiPrefab, listView.content);
-
-        //ui.ChallengerDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Challenger);
-        //ui.HostDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.Host);
-        //ui.LoseDisplay.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevHost);
-        //ui.InfoUi.gameObject.SetActive(identity != Versus.SpWarIdentity.Anonymous);
-        //ui.PrevChallenger.gameObject.SetActive(identity == Versus.SpWarIdentity.PrevChallenger);
-        //if (rank.Count > 0)
-        //{
-        //    ui.HostName.text = rank[0].ToString();
-        //    ui.MilitaryPower.text = rank[1].ToString();
-        //}
-        //
-        //ui.gameObject.SetActive(true);
-        //ui.Id = warId;
-        //ui.ClickButton.onClick.RemoveAllListeners();
-        //ui.ClickButton.onClick.AddListener(() => OnSelectAction?.Invoke(warId));
-        /*
-         * 1.btn click binding
-         * 2.ui update
-         */
-        
+        ui.Init(war.WarId);
+        ui.SetBoard(index, war.RankingBoard, OnSelectAction);
+        ui.SetChallengeUi(challengeDto);
+        if (challengeDto != null) Vs.RegChallengeUi(challengeDto, ui.ChallengeUi.TimerUi);
         _vsWarUiList.Add(ui);
     }
 
     public void Display(bool isShow) => gameObject.SetActive(isShow);
 
-    private class ChallengeDto : DataBag
+    public class RkWarDto
     {
         public int WarId { get; set; }
-        public int CharacterId { get; set; }
-        public string HostName { get; set; }
-        public long StartTime { get; set; }
-        /// <summary>
-        /// key = index, value = checkpoints
-        /// </summary>
-        public Dictionary<int, int[]> Stages { get; set; }
-        /// <summary>
-        /// key = index, value = units(ex -17)
-        /// </summary>
-        public Dictionary<int, int> StageUnit { get; set; }
-        public Dictionary<int, bool> StageProgress { get; set; }
+        public List<Rank> RankingBoard { get; set; }
+
+        public RkWarDto() { }
+        public RkWarDto(int warId, IEnumerable<Rank> rankingBoard)
+        {
+            WarId = warId;
+            RankingBoard = rankingBoard.ToList();
+        }
+
+        public class Rank
+        {
+            public int CharId { get; set; }
+            public string CharName { get; set; }
+            public int MPower { get; set; }
+
+            public Rank()
+            {
+
+            }
+            public Rank(int charId, string charName, int mPower)
+            {
+                CharId = charId;
+                CharName = charName;
+                MPower = mPower;
+            }
+        }
     }
 
 }
