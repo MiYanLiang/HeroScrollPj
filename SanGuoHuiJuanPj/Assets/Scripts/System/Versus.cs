@@ -12,15 +12,15 @@ using UnityEngine.UI;
 //对决页面
 public class Versus : MonoBehaviour
 {
-    public enum SpWarIdentity
+    public enum WarIdentity
     {
-        Anonymous = 0,//一般人
-        Challenger = 1,//挑战者
-        Host = 2,//关主
-        PrevHost = 3,//上个关主
-        PrevChallenger = 4//过期关卡的挑战者
+        Under,
+        Above,
+        Challenger,
+        Host
     }
 
+    private static Versus instance;
 #if UNITY_EDITOR
     public static string SpApi { get; } = "https://localhost:5001/api/spwar";
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
@@ -42,46 +42,71 @@ public class Versus : MonoBehaviour
     public static void SpWarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{SpApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
-    public static void StartChallenge(int warId, Action<string> onChallengeRespond) =>
+    public static void SpStartChallenge(int warId, Action<string> onChallengeRespond) =>
         Http.Post($"{SpApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
+    public static void RkStartChallenge(int warId, int hostId, Action<string> onChallengeRespond) =>
+        Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&hostId={hostId}", string.Empty,
+            onChallengeRespond, StartChallengeV1);
+
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
-    public static void GetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
+    public static void SpGetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
         Http.Get($"{SpApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
             callBackAction, GetCheckpointFormationV1);
 
+    public static void
+        RkGetCheckpointFormation(int warId, int hostId, int checkpointId, Action<string> callBackAction) =>
+        Http.Get(
+            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&hostId={hostId}&charId={TestCharId}&pointId={checkpointId}",
+            callBackAction, GetCheckpointFormationV1);
+
     public const string SubmitFormationV1 = "SubmitFormationV1";
-    public static void PostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
+    public static void SpPostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
         Http.Post($"{SpApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
             SubmitFormationV1);
 
+    public static void RkPostSubmitFormation(int warId, int pointId, string content,
+        Action<string> onCallBack) =>
+        Http.Post($"{RkApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}",
+            content, onCallBack,
+            SubmitFormationV1);
+
     public const string CheckPointWarResultV1 = "CheckPointResultV1";
-    public static void GetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
+    public static void SpGetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
         Http.Get($"{SpApi}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
+            CheckPointWarResultV1);
+    public static void RkGetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
+        Http.Get($"{RkApi}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
             CheckPointWarResultV1);
 
     public const string CancelChallengeV1 = "CancelChallengeV1";
-    public static void PostCancelChallenge(int warId, Action<string> callbackAction) =>
+    public static void SpPostCancelChallenge(int warId, Action<string> callbackAction) =>
         Http.Post($"{SpApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
+            CancelChallengeV1);
+    public static void RkPostCancelChallenge(int warId, Action<string> callbackAction) =>
+        Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
             CancelChallengeV1);
 
 #endif
+
+    public static int CharId { get; private set; }
+
     [SerializeField] private WarBoardUi WarBoard;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
     [SerializeField] private Image Infoboard;
     [SerializeField] private int MaxCards;
     [SerializeField] private VsWarStageController warStageController;
     [SerializeField] private VersusWindow _versusWindow;
+    [SerializeField] private Image BlockingPanel;
     public VsWarListController warListController;
-    /// <summary>
-    /// key = warId
-    /// </summary>
-    private Dictionary<int,UnityAction<long>> challengeTimer = new Dictionary<int, UnityAction<long>>();
+
     public int CityLevel = 1;
 
-    public void Init()
+    public void Init(int charId)
     {
+        instance = this;
+        CharId = charId;
         if (!EffectsPoolingControl.instance.IsInit)
             EffectsPoolingControl.instance.Init();
         WarBoard.Init();
@@ -94,36 +119,36 @@ public class Versus : MonoBehaviour
     void Start()
     {
         DataTable.instance.Init();
-        Init(); 
+        Init(TestCharId); 
     } 
 #endif
 
     private void ControllerInit()
     {
-        warListController.Init(OnSelectedWar);
+        warListController.Init(this, OnSelectedWar);
         warStageController.Init(this, OnReadyWarboard);
     }
-
-    private void OnReadyWarboard(int warId, int pointId, int maxCards, Dictionary<int, IGameCard> formation)
+    
+    private void OnReadyWarboard((int warId, int hostId, int pointId, int maxCards) o, Dictionary<int, IGameCard> formation)
     {
         StartNewGame();
         SetEnemyFormation(formation);
         InitCardToRack();
-        MaxCards = maxCards;
-        WarBoard.MaxCards = maxCards;
-        WarBoard.gameObject.SetActive(true);
+        MaxCards = o.maxCards;
+        WarBoard.MaxCards = o.maxCards;
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() => OnSubmitFormation(warId, pointId));
-
+        WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
+            OnSubmitFormation(o.warId, o.pointId));
+        WarboardActive(true);
     }
 
-    private void OnSubmitFormation(int warId, int pointId)
+    private void OnSubmitFormation(int warId,int pointId)
     {
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         var json = Json.Serialize(challengerFormation);
 #if UNITY_EDITOR
-        PostSubmitFormation(warId, pointId, json, OnCallBack);
+        RkPostSubmitFormation(warId, pointId, json, OnCallBack);
 #endif
 
         void OnCallBack(string data)
@@ -134,13 +159,14 @@ public class Versus : MonoBehaviour
                 ShowHints(data);
                 return;
             }
-            var id = bag.Get<int>(0);
+            var wId = bag.Get<int>(0);
             var isChallengerWin = bag.Get<bool>(1);
             var rounds = bag.Get<List<ChessRound>>(2);
             var chessmen = bag.Get<List<WarResult.Operator>>(3);
+            var hostId = bag.Get<int>(4);
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
             warListController.GetWarList();
-            OnSelectedWar(id);
+            OnSelectedWar(wId, hostId);
         }
     }
 
@@ -152,10 +178,10 @@ public class Versus : MonoBehaviour
         warStageController.Display(false);
     }
 
-    private void OnSelectedWar(int warId)
+    private void OnSelectedWar(int warId,int hostId)
     {
         warListController.Display(false);
-        warStageController.Set(warId);
+        warStageController.Set(warId, hostId);
     }
 
     #region PlayerVersus
@@ -203,7 +229,7 @@ public class Versus : MonoBehaviour
         StartCoroutine(ChessAnimation(data));
     }
 
-    public void ReadyWarboard(SpWarIdentity spWarIdentity, bool isChallengerWin, List<ChessRound> rounds,
+    public void ReadyWarboard(WarIdentity spWarIdentity, bool isChallengerWin, List<ChessRound> rounds,
         List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
@@ -232,7 +258,13 @@ public class Versus : MonoBehaviour
         Time.timeScale = 1f;
         if (result.IsChallengerWin)
             yield return WarBoard.ChallengerWinAnimation();
-        _versusWindow.Open(result.IsChallengerWin, () => WarBoard.gameObject.SetActive(false));
+        _versusWindow.Open(result.IsChallengerWin, () => WarboardActive(false));
+    }
+
+    private void WarboardActive(bool isActive)
+    {
+        WarBoard.gameObject.SetActive(isActive);
+        BlockingPanel.gameObject.SetActive(isActive);
     }
 
     public void StartNewGame()
@@ -271,26 +303,32 @@ public class Versus : MonoBehaviour
         lastDelta += Time.deltaTime;
         if (lastDelta < 1) return;
         lastDelta = Time.deltaTime;
-        foreach (var action in challengeTimer) action.Value.Invoke(SysTime.UnixNow);
+        UpdateChallengerTimer();
     }
 
-    public void RemoveChallengeTimer(int warId)
+    private void UpdateChallengerTimer()
     {
-        if (!challengeTimer.ContainsKey(warId))return;
-        challengeTimer.Remove(warId);
-    }
-    public void RegChallengeTimer(int warId,long expiredTime ,UnityAction<TimeSpan> updateAction)
-    {
-        if (challengeTimer.ContainsKey(warId))
-            challengeTimer.Remove(warId);
-        challengeTimer.Add(warId, now => ExpiredUpdate(warId, now, expiredTime, updateAction));
-    }
-    private void ExpiredUpdate(int warId, long now, long expired, UnityAction<TimeSpan> updateAction)
-    {
-        var timeSpan = TimeSpan.FromMilliseconds(expired - now);
-        updateAction(timeSpan);
-    }
+        foreach (var obj in ChallengeExpSet.ToDictionary(c => c.Key, c => c.Value))
+        {
+            var warId = obj.Key;
+            var uiTimer = obj.Value;
+            var milSecs = uiTimer.ExpiredTime - SysTime.UnixNow;
+            if (milSecs < 0)
+            {
+                ChallengeExpSet.Remove(warId);
+                DisplayWarlistPage(true);
+                continue;
+            }
 
+            var timeSpan = TimeSpan.FromMilliseconds(milSecs);
+            uiTimer.Uis = uiTimer.Uis.Where(u => u != null).ToList();
+            foreach (var ui in uiTimer.Uis)
+                UpdateTimerUi(timeSpan, ui);
+        }
+
+        void UpdateTimerUi(TimeSpan ts, Text u) =>
+            u.text = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}";
+    }
 
     public class Card : IGameCard
     {
@@ -356,6 +394,26 @@ public class Versus : MonoBehaviour
 
     }
 
+    public class ChallengeDto : DataBag
+    {
+        public int WarId { get; set; }
+        public int WarIsd { get; set; }
+        public int CharacterId { get; set; }
+        public string HostName { get; set; }
+        public int HostId { get; set; }
+        public long StartTime { get; set; }
+        public long ExpiredTime { get; set; }
+        /// <summary>
+        /// key = index, value = checkpoints
+        /// </summary>
+        public Dictionary<int, int[]> Stages { get; set; }
+        /// <summary>
+        /// key = index, value = units(ex -17)
+        /// </summary>
+        public Dictionary<int, int> StageUnit { get; set; }
+        public Dictionary<int, bool> PointProgress { get; set; }
+    }
+
     [Serializable]
     private class VersusWindow
     {
@@ -397,4 +455,41 @@ public class Versus : MonoBehaviour
     }
 
     public static void ShowHints(string text) => PlayerDataForGame.instance.ShowStringTips(text);
+
+    //key = warId
+    private static readonly Dictionary<int, ChallengerUiTimer> ChallengeExpSet =
+        new Dictionary<int, ChallengerUiTimer>();
+
+    public void RegChallengeUi(ChallengeDto challenge, Text text)
+    {
+        var warId = challenge.WarId;
+        //如果有相同的warId但过期时间不同，去除旧的UI更新
+        if (ChallengeExpSet.ContainsKey(warId) &&
+            ChallengeExpSet[warId].ExpiredTime != challenge.ExpiredTime)
+            ChallengeExpSet.Remove(warId);
+        //如果表中无warId，生成
+        if (!ChallengeExpSet.ContainsKey(warId))
+            ChallengeExpSet.Add(warId, new ChallengerUiTimer(challenge.ExpiredTime));
+
+        if (ChallengeExpSet[warId].Uis.Contains(text)) return;
+        ChallengeExpSet[warId].Uis.Add(text);
+        UpdateChallengerTimer();
+    }
+
+    public void RemoveFromTimer(Text text)
+    {
+        foreach (var cha in ChallengeExpSet.Where(cha => cha.Value.Uis.Contains(text))) cha.Value.Uis.Remove(text);
+    }
+
+    private class ChallengerUiTimer
+    {
+        public long ExpiredTime { get; }
+        public List<Text> Uis { get; set; } 
+        public ChallengerUiTimer(long expiredTime)
+        {
+            ExpiredTime = expiredTime;
+            Uis = new List<Text>();
+        }
+
+    }
 }
