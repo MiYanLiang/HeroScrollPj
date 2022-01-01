@@ -69,7 +69,7 @@ public class VsWarStageController : MonoBehaviour
             WarId = bag.Get<int>(0);//warId
             var hostName = bag.Get<List<object>>(1);
             var warIdentity = (Versus.WarIdentity)bag.Get<int>(2);
-            var data = bag.Get<List<List<string>>>(3); //3 warIdentity
+            var data = bag.Get<List<List<string>>>(3); 
             SpCheckPoints = new List<RkCheckpoint>();
             for (int i = 0; i < data.Count; i++)
             {
@@ -88,7 +88,7 @@ public class VsWarStageController : MonoBehaviour
             UpdatePage(hostName[0].ToString(),int.Parse(hostName[1].ToString()), int.Parse(hostName[2].ToString()), warIdentity, SpCheckPoints);
             var challenge = bag.Get<Versus.ChallengeDto>(4);
             if (challenge == null) return;
-            UpdateStageProgress(warIdentity,challenge);
+            UpdateCpProgress(warIdentity,challenge);
         }
     }
 
@@ -103,8 +103,7 @@ public class VsWarStageController : MonoBehaviour
 
         SetOppInfo(gender, militaryPower);
         SetCancelButton(warIdentity);
-        ChallengeBtnActive(!(warIdentity == Versus.WarIdentity.Challenger ||
-                            warIdentity == Versus.WarIdentity.Host));
+        ChallengeBtnActive(warIdentity == Versus.WarIdentity.Under);
 
         for (var row = cps.Count - 1; row >= 0; row--)
         {
@@ -122,9 +121,9 @@ public class VsWarStageController : MonoBehaviour
         }
     }
 
-    private void UpdateStageProgress(Versus.WarIdentity spIdentity, Versus.ChallengeDto cha)
+    private void UpdateCpProgress(Versus.WarIdentity identity, Versus.ChallengeDto cha)
     {
-        if (spIdentity == Versus.WarIdentity.Challenger)
+        if (identity == Versus.WarIdentity.Challenger)
         {
             TimerObj.gameObject.SetActive(true);
             Vs.RemoveFromTimer(CountdownText);//移除公用倒计时UI。
@@ -199,7 +198,7 @@ public class VsWarStageController : MonoBehaviour
                 return;
             }
             UpdatePage(HostName, OppGender, OppMilitaryPower, Versus.WarIdentity.Challenger, SpCheckPoints);
-            UpdateStageProgress(Versus.WarIdentity.Challenger, cha);
+            UpdateCpProgress(Versus.WarIdentity.Challenger, cha);
             Vs.warListController.GetWarList();
         }
     }

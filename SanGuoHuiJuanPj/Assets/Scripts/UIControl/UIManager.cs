@@ -178,7 +178,7 @@ public class UIManager : MonoBehaviour
                 throw new ArgumentOutOfRangeException();
         }
 
-        PlayerDataForGame.instance.WarType = PlayerDataForGame.WarTypes.None;
+        //PlayerDataForGame.instance.WarType = PlayerDataForGame.WarTypes.None;
         var tips = PlayerDataForGame.instance.mainSceneTips;
         if (!string.IsNullOrWhiteSpace(tips))
         {
