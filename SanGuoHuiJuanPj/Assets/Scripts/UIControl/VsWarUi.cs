@@ -33,15 +33,21 @@ public class VsWarUi : MonoBehaviour
 
     private void SetRank(string value) => ChallengeUi.Rank.text = value;
 
-    public void SetBoard(int index,List<VsWarListController.RkWarDto.Rank> rankList,UnityAction<int,int> onClickAction)
+    public void SetBoard(int index, List<VsWarListController.RkWarDto.Rank> rankList, bool isChallenger,
+        UnityAction<int, int> onClickAction)
     {
         foreach (var rankingUi in List) Destroy(rankingUi.gameObject);
         for (var i = 0; i < rankList.Count; i++)
         {
             var rank = rankList[i];
             var ui = Instantiate(RankingBoardUiPrefab, BoardScrollRect.content);
-            ui.Set(i + 1, rank.CharName, rank.MPower,
-                i == index ? default(UnityAction) : () => onClickAction(WarId, rank.CharId));
+            if (!isChallenger)
+            {
+
+                ui.Set(i + 1, rank.CharName, rank.MPower, i == index ? default(UnityAction) : () => onClickAction(WarId, rank.CharId));
+            }
+            else
+                ui.Set(i + 1, rank.CharName, rank.MPower, null);
             List.Add(ui);
         }
         var rankText = index >= 0 ? (index + 1).ToString() : "~";
@@ -61,6 +67,7 @@ public class VsWarUi : MonoBehaviour
         public Text Rank;
         public Image ChallengeImage;
         public Text TimerUi;
+        public Button Button;
     }
     [Serializable] public class WarInfoUi : IUiObj
     {

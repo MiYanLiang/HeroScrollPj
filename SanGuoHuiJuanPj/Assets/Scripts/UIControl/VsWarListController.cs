@@ -54,9 +54,16 @@ public class VsWarListController : MonoBehaviour
     {
         var ui = Instantiate(UiPrefab, listView.content);
         ui.Init(war.WarId);
-        ui.SetBoard(index, war.RankingBoard, OnSelectAction);
         ui.SetChallengeUi(challengeDto);
-        if (challengeDto != null) Vs.RegChallengeUi(challengeDto, ui.ChallengeUi.TimerUi);
+        var isChallenger = challengeDto != null;
+        ui.SetBoard(index, war.RankingBoard, isChallenger, OnSelectAction);
+        ui.ChallengeUi.Button.gameObject.SetActive(isChallenger);
+        if (isChallenger)
+        {
+            Vs.RegChallengeUi(challengeDto, ui.ChallengeUi.TimerUi);
+            ui.ChallengeUi.Button.onClick.RemoveAllListeners();
+            ui.ChallengeUi.Button.onClick.AddListener(() => OnSelectAction.Invoke(war.WarId, challengeDto.HostId));
+        }
         _vsWarUiList.Add(ui);
     }
 
