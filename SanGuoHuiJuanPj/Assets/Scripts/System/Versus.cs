@@ -14,10 +14,10 @@ public class Versus : MonoBehaviour
 {
     public enum WarIdentity
     {
-        Under,
-        Above,
-        Challenger,
-        Host
+        Anonymous,
+        Challenger,//挑战者
+        Host,//关主
+        Uncertain//过期的挑战者(挑战WarInstanceId已经不存在了)
     }
 
     private static Versus instance;
@@ -25,7 +25,7 @@ public class Versus : MonoBehaviour
     public static string SpApi { get; } = "https://localhost:5001/api/spwar";
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
-    public const int TestCharId = -2;
+    public const int TestCharId = -5;
 
     public const string GetWarsV1 = "GetWarsV1";
 
@@ -36,9 +36,8 @@ public class Versus : MonoBehaviour
     
     public const string GetWarInfoApi = "GetWarInfoV1";
 
-    public static void RkWarStageInfo(int warId, Action<string> onApiAction, int? hostId = null) => Http.Get(
-        $"{RkApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}" +
-        (hostId.HasValue ? $"&hostId={hostId.Value}" : string.Empty), onApiAction, GetWarInfoApi);
+    public static void RkWarStageInfo(int warId,int warIsd ,Action<string> onApiAction) => Http.Get(
+        $"{RkApi}/{GetWarInfoApi}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", onApiAction, GetWarInfoApi);
     public static void SpWarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{SpApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
@@ -46,8 +45,8 @@ public class Versus : MonoBehaviour
         Http.Post($"{SpApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
-    public static void RkStartChallenge(int warId, int hostId, Action<string> onChallengeRespond) =>
-        Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&hostId={hostId}", string.Empty,
+    public static void RkStartChallenge(int warId, int warIsd, Action<string> onChallengeRespond) =>
+        Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
@@ -56,9 +55,9 @@ public class Versus : MonoBehaviour
             callBackAction, GetCheckpointFormationV1);
 
     public static void
-        RkGetCheckpointFormation(int warId, int hostId, int checkpointId, Action<string> callBackAction) =>
+        RkGetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
         Http.Get(
-            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&hostId={hostId}&charId={TestCharId}&pointId={checkpointId}",
+            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
             callBackAction, GetCheckpointFormationV1);
 
     public const string SubmitFormationV1 = "SubmitFormationV1";
@@ -129,7 +128,7 @@ public class Versus : MonoBehaviour
         warStageController.Init(this, OnReadyWarboard);
     }
     
-    private void OnReadyWarboard((int warId, int hostId, int pointId, int maxCards) o, Dictionary<int, IGameCard> formation)
+    private void OnReadyWarboard((int warId,int warIsd, int pointId, int maxCards) o, Dictionary<int, IGameCard> formation)
     {
         StartNewGame();
         SetEnemyFormation(formation);
@@ -138,11 +137,18 @@ public class Versus : MonoBehaviour
         WarBoard.MaxCards = o.maxCards;
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
         WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
-            OnSubmitFormation(o.warId, o.pointId));
+            OnSubmitFormation(o.warId, o.warIsd, o.pointId));
         WarboardActive(true);
     }
 
-    private void OnSubmitFormation(int warId,int pointId)
+    private enum ChallengeResult
+    {
+        NotFound,
+        InProgress,
+        Clear
+    }
+
+    private void OnSubmitFormation(int warId, int warIsd, int pointId)
     {
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
@@ -163,10 +169,11 @@ public class Versus : MonoBehaviour
             var isChallengerWin = bag.Get<bool>(1);
             var rounds = bag.Get<List<ChessRound>>(2);
             var chessmen = bag.Get<List<WarResult.Operator>>(3);
-            var hostId = bag.Get<int>(4);
+            var cr = bag.Get<int>(4);
+            var result = (ChallengeResult)cr;
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
             warListController.GetWarList();
-            OnSelectedWar(wId, hostId);
+            OnSelectedWar(wId, warIsd);
         }
     }
 
@@ -178,10 +185,10 @@ public class Versus : MonoBehaviour
         warStageController.Display(false);
     }
 
-    private void OnSelectedWar(int warId,int hostId)
+    private void OnSelectedWar(int warId,int warIsd)
     {
         warListController.Display(false);
-        warStageController.Set(warId, hostId);
+        warStageController.Set(warId, warIsd);
     }
 
     #region PlayerVersus
@@ -491,5 +498,65 @@ public class Versus : MonoBehaviour
             Uis = new List<Text>();
         }
 
+    }
+
+    public class RkCheckpoint
+    {
+        public int PointId { get; set; }
+        public int Index { get; set; }
+        public string Title { get; set; }
+        public int EventType { get; set; }
+        public int MaxCards { get; set; }
+        public int MaxRounds { get; set; }
+        public int FormationCount { get; set; }
+
+        public RkCheckpoint(int pointId, int index, string title, int eventType, int maxCards, int maxRounds, int formationCount)
+        {
+            PointId = pointId;
+            Index = index;
+            Title = title;
+            EventType = eventType;
+            MaxCards = maxCards;
+            MaxRounds = maxRounds;
+            FormationCount = formationCount;
+        }
+    }
+
+
+    public class RkWarDto
+    {
+        public int WarId { get; set; }
+        public int Index { get; set; }
+        public Dictionary<int, Rank> RankingBoard { get; set; }
+
+        public RkWarDto()
+        {
+        }
+        public RkWarDto(int warId, int index, Dictionary<int, Rank> rankingBoard)
+        {
+            WarId = warId;
+            Index = index;
+            RankingBoard = rankingBoard;
+        }
+
+        public class Rank
+        {
+            public int WarIsd { get; set; }
+            public int HostId { get; set; }
+            public string CharName { get; set; }
+            public int MPower { get; set; }
+
+            public Rank()
+            {
+
+            }
+            public Rank(int warIsd, int hostId, string charName, int mPower)
+            {
+                WarIsd = warIsd;
+                HostId = hostId;
+                CharName = charName;
+                MPower = mPower;
+            }
+        }
     }
 }

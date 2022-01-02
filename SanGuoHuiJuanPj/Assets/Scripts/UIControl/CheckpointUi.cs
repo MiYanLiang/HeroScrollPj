@@ -24,7 +24,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
     public int PointId { get; private set; } = -1;
     public int StageIndex { get; private set; } = -1;
 
-    public void Set(VsWarStageController.RkCheckpoint cp, UnityAction selectedAction)
+    public void Set(Versus.RkCheckpoint cp, UnityAction selectedAction)
     {
         PointId = cp.PointId;
         StageIndex = cp.Index;
