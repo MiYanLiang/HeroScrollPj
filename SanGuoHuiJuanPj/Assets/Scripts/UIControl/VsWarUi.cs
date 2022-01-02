@@ -33,18 +33,20 @@ public class VsWarUi : MonoBehaviour
 
     private void SetRank(string value) => ChallengeUi.Rank.text = value;
 
-    public void SetBoard(int index, List<VsWarListController.RkWarDto.Rank> rankList, bool isChallenger,
-        UnityAction<int, int> onClickAction)
+    public void SetBoard(int index, Dictionary<int,Versus.RkWarDto.Rank> rankSet, bool isChallenger,
+        UnityAction<int,int> onClickAction)
     {
         foreach (var rankingUi in List) Destroy(rankingUi.gameObject);
-        for (var i = 0; i < rankList.Count; i++)
+        foreach (var obj in rankSet.OrderBy(r=>r.Key))
         {
-            var rank = rankList[i];
+            var i = obj.Key;
+            var rank = obj.Value;
             var ui = Instantiate(RankingBoardUiPrefab, BoardScrollRect.content);
             if (!isChallenger)
             {
 
-                ui.Set(i + 1, rank.CharName, rank.MPower, i == index ? default(UnityAction) : () => onClickAction(WarId, rank.CharId));
+                ui.Set(i + 1, rank.CharName, rank.MPower,
+                    i == index ? default(UnityAction) : () => onClickAction(WarId, rank.WarIsd));
             }
             else
                 ui.Set(i + 1, rank.CharName, rank.MPower, null);

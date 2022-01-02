@@ -40,64 +40,34 @@ public class VsWarListController : MonoBehaviour
                 return;
             }
 
-            var wars = bag.Get<List<RkWarDto>>(0);
+            var wars = bag.Get<List<Versus.RkWarDto>>(0);
             var challenges = bag.Get<Dictionary<int, Versus.ChallengeDto>>(1);
             foreach (var war in wars)
             {
                 challenges.TryGetValue(war.WarId, out var challenge);
-                GenerateUi(war, war.RankingBoard.FindIndex(r => r.CharId == Versus.CharId), challenge);
+                GenerateUi(war, challenge);
             }
         }
     }
 
-    private void GenerateUi(RkWarDto war, int index, Versus.ChallengeDto challengeDto)
+    private void GenerateUi(Versus.RkWarDto war, Versus.ChallengeDto challengeDto)
     {
         var ui = Instantiate(UiPrefab, listView.content);
         ui.Init(war.WarId);
         ui.SetChallengeUi(challengeDto);
         var isChallenger = challengeDto != null;
-        ui.SetBoard(index, war.RankingBoard, isChallenger, OnSelectAction);
+        ui.SetBoard(war.Index, war.RankingBoard, isChallenger, OnSelectAction);
         ui.ChallengeUi.Button.gameObject.SetActive(isChallenger);
         if (isChallenger)
         {
             Vs.RegChallengeUi(challengeDto, ui.ChallengeUi.TimerUi);
             ui.ChallengeUi.Button.onClick.RemoveAllListeners();
-            ui.ChallengeUi.Button.onClick.AddListener(() => OnSelectAction.Invoke(war.WarId, challengeDto.HostId));
+            ui.ChallengeUi.Button.onClick.AddListener(() =>
+                OnSelectAction.Invoke(war.WarId, challengeDto.WarIsd));
         }
         _vsWarUiList.Add(ui);
     }
 
     public void Display(bool isShow) => gameObject.SetActive(isShow);
-
-    public class RkWarDto
-    {
-        public int WarId { get; set; }
-        public List<Rank> RankingBoard { get; set; }
-
-        public RkWarDto() { }
-        public RkWarDto(int warId, IEnumerable<Rank> rankingBoard)
-        {
-            WarId = warId;
-            RankingBoard = rankingBoard.ToList();
-        }
-
-        public class Rank
-        {
-            public int CharId { get; set; }
-            public string CharName { get; set; }
-            public int MPower { get; set; }
-
-            public Rank()
-            {
-
-            }
-            public Rank(int charId, string charName, int mPower)
-            {
-                CharId = charId;
-                CharName = charName;
-                MPower = mPower;
-            }
-        }
-    }
 
 }
