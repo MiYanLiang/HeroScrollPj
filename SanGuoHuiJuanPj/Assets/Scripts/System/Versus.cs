@@ -25,7 +25,7 @@ public class Versus : MonoBehaviour
     public static string SpApi { get; } = "https://localhost:5001/api/spwar";
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
-    public const int TestCharId = -5;
+    public const int TestCharId = -7;
 
     public const string GetWarsV1 = "GetWarsV1";
 
