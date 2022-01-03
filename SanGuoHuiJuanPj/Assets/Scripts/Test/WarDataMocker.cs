@@ -41,7 +41,7 @@ public class WarDataMocker : MonoBehaviour
     }
 #endif
 
-    private void PrepareCards()
+    public void PrepareCards()
     {
         var hst = PlayerDataForGame.instance.hstData;
         var hfMap = DataTable.Hero.Values.Select(card =>
@@ -67,6 +67,10 @@ public class WarDataMocker : MonoBehaviour
         }
         else
         {
+            PlayerDataForGame.instance.isHadNewSaveData = false;
+            PlayerDataForGame.instance.hstData = new HSTDataClass();
+            LoadSaveData.instance.LoadByJson();
+            hst = PlayerDataForGame.instance.hstData;
             forceId = (int)force;
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
                 .Where(c => hfMap[c.id] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
