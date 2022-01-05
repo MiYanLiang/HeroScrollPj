@@ -22,7 +22,6 @@ public class Versus : MonoBehaviour
 
     private static Versus instance;
 #if UNITY_EDITOR
-    public static string SpApi { get; } = "https://localhost:5001/api/spwar";
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
     public const int TestCharId = -7;
@@ -31,58 +30,39 @@ public class Versus : MonoBehaviour
 
     public static void GetRkWars(Action<string> onRefreshWarList) =>
         Http.Get($"{RkApi}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
-    public static void GetSpWars(Action<string> onRefreshWarList) =>
-        Http.Get($"{SpApi}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
-    
+
     public const string GetWarInfoApi = "GetWarInfoV1";
 
     public static void RkWarStageInfo(int warId,int warIsd ,Action<string> onApiAction) => Http.Get(
         $"{RkApi}/{GetWarInfoApi}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", onApiAction, GetWarInfoApi);
-    public static void SpWarStageInfo(int warId, Action<string> onApiAction) => Http.Get($"{SpApi}/{GetWarInfoApi}?warId={warId}&charId={TestCharId}", onApiAction, GetWarInfoApi);
 
     public const string StartChallengeV1 = "StartChallengeV1";
-    public static void SpStartChallenge(int warId, Action<string> onChallengeRespond) =>
-        Http.Post($"{SpApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}", string.Empty,
-            onChallengeRespond, StartChallengeV1);
 
     public static void RkStartChallenge(int warId, int warIsd, Action<string> onChallengeRespond) =>
         Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}", string.Empty,
             onChallengeRespond, StartChallengeV1);
 
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
-    public static void SpGetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
-        Http.Get($"{SpApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
-            callBackAction, GetCheckpointFormationV1);
 
-    public static void
-        RkGetCheckpointFormation(int warId, int checkpointId, Action<string> callBackAction) =>
+    public static void RkGetCheckpointFormation(int warId, int index, Action<string> callBackAction) => 
         Http.Get(
-            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&pointId={checkpointId}",
+            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&index={index}",
             callBackAction, GetCheckpointFormationV1);
 
     public const string SubmitFormationV1 = "SubmitFormationV1";
-    public static void SpPostSubmitFormation(int warId,int pointId,string content,Action<string> onCallBack) =>
-        Http.Post($"{SpApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}", content, onCallBack,
-            SubmitFormationV1);
 
-    public static void RkPostSubmitFormation(int warId, int pointId, string content,
+    public static void RkPostSubmitFormation(int warId, int index, string content,
         Action<string> onCallBack) =>
-        Http.Post($"{RkApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&pointId={pointId}",
+        Http.Post($"{RkApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&index={index}",
             content, onCallBack,
             SubmitFormationV1);
 
     public const string CheckPointWarResultV1 = "CheckPointResultV1";
-    public static void SpGetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
-        Http.Get($"{SpApi}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
-            CheckPointWarResultV1);
-    public static void RkGetCheckPointWarResult(int warId, int pointId, Action<string> callbackAction) =>
-        Http.Get($"{RkApi}/{CheckPointWarResultV1}?warId={warId}&pointId={pointId}&charId={TestCharId}", callbackAction,
+    public static void RkGetCheckPointWarResult(int warId, int index, Action<string> callbackAction) =>
+        Http.Get($"{RkApi}/{CheckPointWarResultV1}?warId={warId}&index={index}&charId={TestCharId}", callbackAction,
             CheckPointWarResultV1);
 
     public const string CancelChallengeV1 = "CancelChallengeV1";
-    public static void SpPostCancelChallenge(int warId, Action<string> callbackAction) =>
-        Http.Post($"{SpApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
-            CancelChallengeV1);
     public static void RkPostCancelChallenge(int warId, Action<string> callbackAction) =>
         Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
             CancelChallengeV1);
@@ -236,7 +216,7 @@ public class Versus : MonoBehaviour
         StartCoroutine(ChessAnimation(data));
     }
 
-    public void ReadyWarboard(WarIdentity spWarIdentity, bool isChallengerWin, List<ChessRound> rounds,
+    public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds,
         List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
@@ -409,16 +389,24 @@ public class Versus : MonoBehaviour
         public string HostName { get; set; }
         public int HostId { get; set; }
         public long StartTime { get; set; }
+        public int Merit { get; set; }
+        public int TotalMerit { get; set; }
         public long ExpiredTime { get; set; }
-        /// <summary>
-        /// key = index, value = checkpoints
-        /// </summary>
-        public Dictionary<int, int[]> Stages { get; set; }
+
         /// <summary>
         /// key = index, value = units(ex -17)
         /// </summary>
         public Dictionary<int, int> StageUnit { get; set; }
-        public Dictionary<int, bool> PointProgress { get; set; }
+
+        /// <summary>
+        /// key = index, value = nextPoints
+        /// </summary>
+        public Dictionary<int, int[]> Checkpoints { get; set; }
+        /// <summary>
+        /// key = index
+        /// </summary>
+        public Dictionary<int, bool> StageProgress { get; set; }
+        public int[] CurrentPoints { get; set; }
     }
 
     [Serializable]
@@ -502,22 +490,22 @@ public class Versus : MonoBehaviour
 
     public class RkCheckpoint
     {
-        public int PointId { get; set; }
         public int Index { get; set; }
         public string Title { get; set; }
+        public int[] NextPoints { get; set; }
         public int EventType { get; set; }
         public int MaxCards { get; set; }
         public int MaxRounds { get; set; }
         public int FormationCount { get; set; }
 
-        public RkCheckpoint(int pointId, int index, string title, int eventType, int maxCards, int maxRounds, int formationCount)
+        public RkCheckpoint(int index, string title, int eventType, int maxCards, int maxRounds, int[] nextPoints, int formationCount)
         {
-            PointId = pointId;
             Index = index;
             Title = title;
             EventType = eventType;
             MaxCards = maxCards;
             MaxRounds = maxRounds;
+            NextPoints = nextPoints;
             FormationCount = formationCount;
         }
     }

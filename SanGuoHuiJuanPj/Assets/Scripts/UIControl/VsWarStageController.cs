@@ -72,36 +72,37 @@ public class VsWarStageController : MonoBehaviour
             WarId = bag.Get<int>(0);//warId
             var host = bag.Get<List<object>>(1);
             var warIdentity = (Versus.WarIdentity)bag.Get<int>(2);
-            var data = bag.Get<List<List<string>>>(3);
+            var cpData = bag.Get<List<List<object>>>(3);
             var cps = new List<Versus.RkCheckpoint>();
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < cpData.Count; i++)
             {
-                var cp = data[i];
+                var cp = cpData[i];
 
-                var cpPointId = int.Parse(cp[0]); //0 pointId
-                var cpIndex = int.Parse(cp[1]); //1 index
-                var cpTitle = cp[2]; //2 title
-                var cpEventType = int.Parse(cp[3]); //cpEvent
-                var cpMaxCards = int.Parse(cp[4]); //4 maxCard
-                var cpMaxRounds = int.Parse(cp[5]); //5 maxRound
-                var cpFormationCount = int.Parse(cp[6]); //6 formationCount
-                cps.Add(new Versus.RkCheckpoint(cpPointId, cpIndex, cpTitle, cpEventType, cpMaxCards, cpMaxRounds,
-                    cpFormationCount));
+                var cpIndex = DataBag.Parse<int>(cp[0]); //0 index
+                var cpTitle = cp[1].ToString(); //1 title
+                var cpEventType = DataBag.Parse<int>(cp[2]); //2 cpEvent
+                var cpMaxCards = DataBag.Parse<int>(cp[3]); //3 maxCard
+                var cpMaxRounds = DataBag.Parse<int>(cp[4]); //4 maxRound
+                var next = DataBag.Parse<int[]>(cp[5]); //5 maxRound
+                var cpFormationCount = DataBag.Parse<int>(cp[6]); //6 formationCount
+                cps.Add(new Versus.RkCheckpoint(index: cpIndex, title: cpTitle, eventType: cpEventType,
+                    maxCards: cpMaxCards, cpMaxRounds, nextPoints: next, formationCount: cpFormationCount));
             }
 
             var challenge = bag.Get<Versus.ChallengeDto>(4);
             var rank = bag.Get<int>(5);
             var hostRank = bag.Get<int>(6);
             var hostName = host[0].ToString();
-            var hostGender = int.Parse(host[1].ToString());
-            var hostMPower = int.Parse(host[2].ToString());
+            var hostGender = DataBag.Parse<int>(host[1]);
+            var hostMPower = DataBag.Parse<int>(host[2]);
             UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps);
             if (challenge == null) return;
             UpdateCpProgress(warIdentity, challenge);
         }
     }
 
-    private void UpdatePage(string hostName,int gender,int militaryPower,int playerRank,int hostRank, Versus.WarIdentity warIdentity,List<Versus.RkCheckpoint> cps)
+    private void UpdatePage(string hostName, int gender, int militaryPower, int playerRank, int hostRank,
+        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps)
     {
         HostName = hostName;
         PlayerRank = playerRank;
@@ -113,6 +114,7 @@ public class VsWarStageController : MonoBehaviour
             CpList.ForEach(c => Pool.Recycle(c));
             CpList.Clear();
         }
+
         if (warIdentity == Versus.WarIdentity.Uncertain)
             CancelWindow.SetCancel(() => Versus.RkPostCancelChallenge(WarId, msg => Vs.DisplayWarlistPage(true)));
 
@@ -124,7 +126,11 @@ public class VsWarStageController : MonoBehaviour
                 playerRank > hostRank); //排位低于
 
         ChallengeBtnActive(isChallengeAvailable);
+        UpdateCityUis(cps);
+    }
 
+    private void UpdateCityUis(List<Versus.RkCheckpoint> cps)
+    {
         for (var row = cps.Count - 1; row >= 0; row--)
         {
             var sequenceIndex = row % RowSequence.Length;
@@ -135,7 +141,7 @@ public class VsWarStageController : MonoBehaviour
                 ui.gameObject.SetActive(true);
                 ui.Display(false);
                 if (col == RowSequence[sequenceIndex])
-                    ui.Set(cp, () => OnSelectedUi(cp.PointId));
+                    ui.Set(cp, () => OnSelectedUi(cp.Index));
                 CpList.Add(ui);
             }
         }
@@ -149,20 +155,18 @@ public class VsWarStageController : MonoBehaviour
             Vs.RemoveFromTimer(CountdownText);//移除公用倒计时UI。
             Vs.RegChallengeUi(cha, CountdownText);//重新注册当前挑战的时间
         }
-        var unPassIds = cha.PointProgress.Where(c => !c.Value).Select(c => c.Key).ToList();
-        var currentStage = cha.Stages.Where(c => c.Value.Any(i => unPassIds.Contains(i))).OrderBy(c => c.Key)
-            .Select(c => c.Value).FirstOrDefault();
-        cha.PointProgress.Join(CpList, p => p.Key, c => c.PointId, (p, c) => (c, p.Value)).ToList().ForEach(o =>
+        var progressList = cha.StageProgress.Join(CpList, p => p.Key, c => c.StageIndex, (p, c) => (c, p.Value))
+            .ToList();
+        for (var i = 0; i < progressList.Count; i++)
         {
-            var (ui, isPass) = o;
+            var (ui, isPass) = progressList[i];
             ui.SetProgress(isPass);
-            if (isPass) ui.SetReportButton(() => OnReportAction(ui.PointId));
-            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.PointId));
-            var isChallengePoint = currentStage != null && currentStage.Contains(ui.PointId);
+            if (isPass) ui.SetReportButton(() => OnReportAction(ui.StageIndex));
+            else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.StageIndex));
+            var isChallengePoint = cha.CurrentPoints.Contains(i);
             ui.AttackButton.gameObject.SetActive(isChallengePoint);
-            if (!isChallengePoint) return;
-            ui.SetDock(true);
-        });
+            ui.SetDock(isChallengePoint);
+        }
     }
 
 
@@ -191,7 +195,7 @@ public class VsWarStageController : MonoBehaviour
     }
 
 
-    public void OnSelectedUi(int pointId) => CpList.ForEach(c => c.SetSelected(c.PointId == pointId));
+    public void OnSelectedUi(int stageIndex) => CpList.ForEach(c => c.SetSelected(c.StageIndex == stageIndex));
 
     private void ChallengeBtnActive(bool isActive)
     {
@@ -224,10 +228,10 @@ public class VsWarStageController : MonoBehaviour
         }
     }
 
-    private void OnReportAction(int pointId)
+    private void OnReportAction(int index)
     {
 #if UNITY_EDITOR
-        Versus.RkGetCheckPointWarResult(WarId, pointId, OnCallBackResult);
+        Versus.RkGetCheckPointWarResult(WarId, index, OnCallBackResult);
 #endif
 
         void OnCallBackResult(string data)
@@ -239,11 +243,10 @@ public class VsWarStageController : MonoBehaviour
                 return;
             }
 
-            var identity = (Versus.WarIdentity)bag.Get<int>(0);
-            var isChallengerWin = bag.Get<bool>(1);
-            var rounds = bag.Get<List<ChessRound>>(2);
-            var ops = bag.Get<List<Versus.WarResult.Operator>>(3).Cast<IOperatorInfo>().ToList();
-            Vs.ReadyWarboard(identity,isChallengerWin, rounds, ops);
+            var isChallengerWin = bag.Get<bool>(0);
+            var rounds = bag.Get<List<ChessRound>>(1);
+            var ops = bag.Get<List<Versus.WarResult.Operator>>(2).Cast<IOperatorInfo>().ToList();
+            Vs.ReadyWarboard(isChallengerWin, rounds, ops);
         }
     }
 
@@ -263,8 +266,8 @@ public class VsWarStageController : MonoBehaviour
                 return;
             }
             var formation = bag.Get<Dictionary<int, Versus.Card>>(0);
-            var cp = RkCheckPoints.Single(c => c.PointId == checkpointId);
-            OnAttackCity?.Invoke((WarId, WarIsd, cp.PointId, cp.MaxCards),
+            var cp = RkCheckPoints.Single(c => c.Index == checkpointId);
+            OnAttackCity?.Invoke((WarId, WarIsd, cp.Index , cp.MaxCards),
                 formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value));
         }
     }
