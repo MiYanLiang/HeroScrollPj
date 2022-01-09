@@ -19,9 +19,14 @@ public class Versus : MonoBehaviour
         Host,//关主
         Uncertain//过期的挑战者(挑战WarInstanceId已经不存在了)
     }
-
+    public enum FormationMode
+    {
+        自由军团,
+        仅选中军团
+    }
     private static Versus instance;
 #if UNITY_EDITOR
+    public FormationMode Mode;
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
     public const int TestCharId = -7;
@@ -38,8 +43,9 @@ public class Versus : MonoBehaviour
 
     public const string StartChallengeV1 = "StartChallengeV1";
 
-    public static void RkStartChallenge(int warId, int warIsd, Action<string> onChallengeRespond) =>
-        Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}", string.Empty,
+    public static void RkStartChallenge(int warId, int warIsd, int troopId, Action<string> onChallengeRespond) =>
+        Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}&troopId={troopId}",
+            string.Empty,
             onChallengeRespond, StartChallengeV1);
 
     public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
@@ -97,9 +103,15 @@ public class Versus : MonoBehaviour
 #if UNITY_EDITOR
     void Start()
     {
+        StartCoroutine(AwaitInit());
+    }
+
+    IEnumerator AwaitInit()
+    {
+        yield return new WaitUntil(() => GameSystem.IsInit);
         DataTable.instance.Init();
-        Init(TestCharId); 
-    } 
+        Init(TestCharId);
+    }
 #endif
 
     private void ControllerInit()
@@ -107,12 +119,18 @@ public class Versus : MonoBehaviour
         warListController.Init(this, OnSelectedWar);
         warStageController.Init(this, OnReadyWarboard);
     }
-    
-    private void OnReadyWarboard((int warId,int warIsd, int pointId, int maxCards) o, Dictionary<int, IGameCard> formation)
+
+    private void OnReadyWarboard((int warId, int warIsd, int pointId, int maxCards, int troopId) o,
+        Dictionary<int, IGameCard> formation,GameCard[] except)
     {
         StartNewGame();
         SetEnemyFormation(formation);
-        InitCardToRack();
+        var forceId = o.troopId;
+#if UNITY_EDITOR
+        if(Mode == FormationMode.自由军团)
+            forceId = -2;
+#endif
+        InitCardToRack(forceId, except);
         MaxCards = o.maxCards;
         WarBoard.MaxCards = o.maxCards;
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
@@ -143,6 +161,7 @@ public class Versus : MonoBehaviour
             if (bag == null)
             {
                 ShowHints(data);
+                CancelWindow.Display(() => WarboardActive(false));
                 return;
             }
             var wId = bag.Get<int>(0);
@@ -156,6 +175,8 @@ public class Versus : MonoBehaviour
             OnSelectedWar(wId, warIsd);
         }
     }
+
+    [SerializeField] private WbCancelWindow CancelWindow;
 
     public void DisplayWarlistPage(bool refresh)
     {
@@ -174,10 +195,10 @@ public class Versus : MonoBehaviour
     #region PlayerVersus
 
     //初始化卡牌列表
-    private void InitCardToRack()
+    private void InitCardToRack(int forceId, GameCard[] except)
     {
-        var forceId = PlayerDataForGame.instance.CurrentWarForceId;
         var hstData = PlayerDataForGame.instance.hstData;
+
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
@@ -190,20 +211,22 @@ public class Versus : MonoBehaviour
         PlayerDataForGame.instance.fightHeroId.Clear();
         PlayerDataForGame.instance.fightTowerId.Clear();
         PlayerDataForGame.instance.fightTrapId.Clear();
-
         //临时记录武将存档信息
-        hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
-        hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
-        hstData.trapSaveData.Enlist(forceId).ToList()
+        var list = hstData.heroSaveData.Concat(hstData.towerSaveData)
+            .Concat(hstData.trapSaveData)
+            .Enlist(forceId)
+            .Except(except,GameCardComparer)
+            .ToList();
+            list
             .ForEach(WarBoard.CreateCardToRack);
     }
+
+    public static IEqualityComparer<GameCard> GameCardComparer { get; set; } = new GameCardComparer();
 
     public void PlayResult(WarResult data)
     {
         Infoboard.transform.DOLocalMoveY(1440, 2);
-        WarBoard.NewGame(false);
+        WarBoard.NewGame(false, true);
         foreach (var op in data.Chessmen)
         {
             var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
@@ -220,7 +243,7 @@ public class Versus : MonoBehaviour
         List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
-        WarBoard.NewGame(true);
+        WarBoard.NewGame(true, true);
         foreach (var op in result.Chessmen)
         {
             var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
@@ -256,7 +279,7 @@ public class Versus : MonoBehaviour
 
     public void StartNewGame()
     {
-        WarBoard.NewGame(true);
+        WarBoard.NewGame(true, true);
         var card = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, CityLevel));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);
@@ -407,6 +430,7 @@ public class Versus : MonoBehaviour
         /// </summary>
         public Dictionary<int, bool> StageProgress { get; set; }
         public int[] CurrentPoints { get; set; }
+        public int TroopId { get; set; }
     }
 
     [Serializable]
@@ -545,6 +569,44 @@ public class Versus : MonoBehaviour
                 CharName = charName;
                 MPower = mPower;
             }
+        }
+    }
+    [Serializable]private class WbCancelWindow
+    {
+        public GameObject Window;
+        public Button CancelButton;
+
+        public void Display(UnityAction action)
+        {
+            Window.gameObject.SetActive(true);
+            CancelButton.onClick.RemoveAllListeners();
+            CancelButton.onClick.AddListener(() => Window.SetActive(false));
+            CancelButton.onClick.AddListener(action);
+        }
+    }
+}
+
+public class GameCardComparer : IEqualityComparer<GameCard>
+{
+    public bool Equals(GameCard x, GameCard y)
+    {
+        if (ReferenceEquals(x, y)) return true;
+        if (ReferenceEquals(x, null)) return false;
+        if (ReferenceEquals(y, null)) return false;
+        if (x.GetType() != y.GetType()) return false;
+        return x.CardId == y.CardId && 
+               x.Level == y.Level && 
+               x.Type == y.Type;
+    }
+
+    public int GetHashCode(GameCard obj)
+    {
+        unchecked
+        {
+            var hashCode = obj.CardId;
+            hashCode = (hashCode * 397) ^ obj.Level;
+            hashCode = (hashCode * 397) ^ obj.Type;
+            return hashCode;
         }
     }
 }

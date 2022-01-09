@@ -93,17 +93,25 @@ public class WarBoardUi : MonoBehaviour
         Background.gameObject.SetActive(true);
 
     }
+
     /// <summary>
     /// 新棋局
     /// </summary>
-    public void NewGame(bool showStartBtn)
+    public void NewGame(bool showStartBtn, bool clearRack)
     {
         if (PlayerScope.Any())
         {
             foreach (var card in PlayerScope) RecycleCardUi(card);
             PlayerScope.Clear();
         }
+
         ResetGame(showStartBtn);
+        if (clearRack)
+        {
+            foreach (var card in CardOnRack) RecycleCardUi(card);
+            CardOnRack.Clear();
+        }
+            
     }
 
     private void ResetGame(bool showStartBtn)
@@ -235,6 +243,7 @@ public class WarBoardUi : MonoBehaviour
 
 
     #region 棋子暂存区与棋盘区
+    public List<FightCardData> CardOnRack { get; } = new List<FightCardData>();
 
     /**
      * 主要目的：
@@ -265,34 +274,45 @@ public class WarBoardUi : MonoBehaviour
     /// <param name="card"></param>
     public void PlaceCard(FightCardData card)
     {
-        var chessman = PlayerScope.FirstOrDefault(c => c == card);
-        if (card.Pos <= -1)//回到卡组
-        {
-            card.cardObj.transform.SetParent(Rack.ScrollRect.content);
-            card.cardObj.transform.localPosition = Vector3.zero;
-            if (!card.IsLock) card.cardObj.DragComponent.SetController(Rack);
-            if (chessman != null) PlayerScope.Remove(chessman);
-
-        }
-        else
-        {
-            if (chessman == null) PlayerScope.Add(card);
-            var chessPos = Chessboard.GetChessPos(card);
-            if (!card.IsLock)
-            {
-                card.cardObj.DragComponent.SetController(ChessboardInputControl);
-                PlayUiAudio(85, 0);
-            }
-            card.cardObj.transform.SetParent(chessPos.transform);
-            card.cardObj.transform.localPosition = Vector3.zero;
-            EffectsPoolingControl.instance.GetSparkEffect(
-                Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), card.cardObj.transform);
-        }
+        if (card.Pos <= -1) //回到卡组
+            SetToRack(card);
+        else 
+            SetToBoard(card);
 
         card.cardObj.SetSelected(card.Pos > -1 && !card.IsLock);
         RefreshPresetFloorBuffs(IsFirstRound);
         UpdateHeroEnlistText();
+
+        void SetToRack(FightCardData fc)
+        {
+            fc.cardObj.transform.SetParent(Rack.ScrollRect.content);
+            fc.cardObj.transform.localPosition = Vector3.zero;
+            if (!fc.IsLock) fc.cardObj.DragComponent.SetController(Rack);
+            var chessman = PlayerScope.FirstOrDefault(c => c == fc);
+            if (chessman != null) PlayerScope.Remove(chessman);
+            CardOnRack.Add(fc);
+        }
+
+        void SetToBoard(FightCardData fc)
+        {
+            var chessman = PlayerScope.FirstOrDefault(c => c == fc);
+            if (chessman == null) PlayerScope.Add(fc);
+            var chessPos = Chessboard.GetChessPos(fc);
+            if (!fc.IsLock)
+            {
+                fc.cardObj.DragComponent.SetController(ChessboardInputControl);
+                PlayUiAudio(85, 0);
+            }
+
+            if (CardOnRack.FirstOrDefault(c => c == fc) != null)
+                CardOnRack.Remove(fc);
+            fc.cardObj.transform.SetParent(chessPos.transform);
+            fc.cardObj.transform.localPosition = Vector3.zero;
+            EffectsPoolingControl.instance.GetSparkEffect(
+                Effect.OnChessboardEventEffect(Effect.ChessboardEvent.PlaceCardToBoard), fc.cardObj.transform);
+        }
     }
+
 
     public void RecycleCardUi(FightCardData card)
     {

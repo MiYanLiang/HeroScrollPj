@@ -26,8 +26,10 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private Text OppNameText;
     [SerializeField] private Sprite[] genderSprites;
     [SerializeField] private CancelWindowUi CancelWindow;
+    [SerializeField] private VsForceSelectorUi ForceSelectorUi;
     private int WarId { get; set; } = -1;
     private int WarIsd { get; set; } = -1;
+    public int TroopId { get; set; } = -1;
     public int OppGender { get; private set; }
     public int OppMilitaryPower { get; private set; }
     private string HostName { get; set; }
@@ -35,13 +37,15 @@ public class VsWarStageController : MonoBehaviour
     private int PlayerRank { get; set; }
     private List<CheckpointUi> CpList { get; } = new List<CheckpointUi>();
     private List<Versus.RkCheckpoint> RkCheckPoints { get; set; }
-
+    private int[] UsedTroops { get; set; }
+    public List<GameCard> UsedCards { get; set; }
     private ObjectPool<CheckpointUi> Pool { get; set; }
     //(warId , pointId)
-    private UnityAction<(int, int, int, int), Dictionary<int, IGameCard>> OnAttackCity { get; set; }
+    private UnityAction<(int, int, int, int,int), Dictionary<int, IGameCard>, GameCard[]> OnAttackCity { get; set; }
     private Versus Vs { get; set; }
 
-    public void Init(Versus versus, UnityAction<(int, int, int, int), Dictionary<int, IGameCard>> onAttackCityAction)
+    public void Init(Versus versus,
+        UnityAction<(int, int, int, int, int), Dictionary<int, IGameCard>, GameCard[]> onAttackCityAction)
     {
         Vs = versus;
         OnAttackCity = onAttackCityAction;
@@ -49,6 +53,13 @@ public class VsWarStageController : MonoBehaviour
         Pool = new ObjectPool<CheckpointUi>(() => Instantiate(CheckpointUiPrefab, MapScrollRect.content));
         CheckpointUiPrefab.gameObject.SetActive(false);
         BackButton.onClick.AddListener(() => versus.DisplayWarlistPage(false));
+        ForceSelectorUi.OnSelectedTroop += OnFlagSelected;
+    }
+
+    private void OnFlagSelected(int troopId)
+    {
+        TroopId = troopId;
+        ChallengeButton.interactable = TroopId >= 0;
     }
 
     public void Set(int warId, int warIsd)
@@ -92,22 +103,27 @@ public class VsWarStageController : MonoBehaviour
             var challenge = bag.Get<Versus.ChallengeDto>(4);
             var rank = bag.Get<int>(5);
             var hostRank = bag.Get<int>(6);
+            var usedTroops = bag.Get<int[]>(7);
+            var usedCards = bag.Get<List<int[]>>(8);
             var hostName = host[0].ToString();
             var hostGender = DataBag.Parse<int>(host[1]);
             var hostMPower = DataBag.Parse<int>(host[2]);
-            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps);
+            ForceSelectorUi.Init();
+            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps, usedTroops, usedCards);
             if (challenge == null) return;
             UpdateCpProgress(warIdentity, challenge);
         }
     }
 
     private void UpdatePage(string hostName, int gender, int militaryPower, int playerRank, int hostRank,
-        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps)
+        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps, int[] usedTroops, List<int[]> usedCards)
     {
         HostName = hostName;
         PlayerRank = playerRank;
         ChallengeRank = hostRank;
         RkCheckPoints = cps;
+        UsedTroops = usedTroops;
+        UsedCards = usedCards.Select(c => GameCard.Instance(c[0], c[1], c[2])).ToList();
         CancelWindow.Window.SetActive(false);
         if (CpList.Any())
         {
@@ -127,6 +143,8 @@ public class VsWarStageController : MonoBehaviour
 
         ChallengeBtnActive(isChallengeAvailable);
         UpdateCityUis(cps);
+        ForceSelectorUi.RegLimitedForce(UsedTroops);
+        ForceSelectorUi.OnSelected();
     }
 
     private void UpdateCityUis(List<Versus.RkCheckpoint> cps)
@@ -151,12 +169,14 @@ public class VsWarStageController : MonoBehaviour
     {
         if (identity == Versus.WarIdentity.Challenger)
         {
+            ForceSelectorUi.OnSelected(cha.TroopId, true);
             TimerObj.gameObject.SetActive(true);
             Vs.RemoveFromTimer(CountdownText);//移除公用倒计时UI。
             Vs.RegChallengeUi(cha, CountdownText);//重新注册当前挑战的时间
         }
         var progressList = cha.StageProgress.Join(CpList, p => p.Key, c => c.StageIndex, (p, c) => (c, p.Value))
             .ToList();
+        TroopId = cha.TroopId;
         for (var i = 0; i < progressList.Count; i++)
         {
             var (ui, isPass) = progressList[i];
@@ -168,7 +188,6 @@ public class VsWarStageController : MonoBehaviour
             ui.SetDock(isChallengePoint);
         }
     }
-
 
     private void SetOppInfo(int gender, int militaryPower)
     {
@@ -209,7 +228,7 @@ public class VsWarStageController : MonoBehaviour
     private void RequestChallenge()
     {
 #if UNITY_EDITOR
-        Versus.RkStartChallenge(WarId, WarIsd, OnChallengeRespond);
+        Versus.RkStartChallenge(WarId, WarIsd, TroopId, OnChallengeRespond);
 #endif
 
         void OnChallengeRespond(string databag)
@@ -222,7 +241,7 @@ public class VsWarStageController : MonoBehaviour
             }
 
             UpdatePage(HostName, OppGender, OppMilitaryPower, PlayerRank, ChallengeRank, Versus.WarIdentity.Challenger,
-                RkCheckPoints);
+                RkCheckPoints, UsedTroops, UsedCards.Select(c => new[] { c.CardId, c.Type, c.Level }).ToList());
             UpdateCpProgress(Versus.WarIdentity.Challenger, cha);
             Vs.warListController.GetWarList();
         }
@@ -267,8 +286,8 @@ public class VsWarStageController : MonoBehaviour
             }
             var formation = bag.Get<Dictionary<int, Versus.Card>>(0);
             var cp = RkCheckPoints.Single(c => c.Index == checkpointId);
-            OnAttackCity?.Invoke((WarId, WarIsd, cp.Index , cp.MaxCards),
-                formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value));
+            OnAttackCity?.Invoke((WarId, WarIsd, cp.Index, cp.MaxCards, TroopId),
+                formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value), UsedCards.ToArray());
         }
     }
 

@@ -59,7 +59,7 @@ public class WarDataMocker : MonoBehaviour
             PlayerDataForGame.instance.hstData.trapSaveData = ConvertCard(traps,(int)GameCardType.Trap);
 
             List<GameCard> ConvertCard(IList<MyCard> list,int ti) =>
-                list.Select(c => new GameCard { id = c.CardId, level = c.Level, typeIndex = ti }).ToList();
+                list.Select(c => new GameCard { id = c.CardId, level = c.Level, typeIndex = ti, isFight = 1}).ToList();
 
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
                 .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
