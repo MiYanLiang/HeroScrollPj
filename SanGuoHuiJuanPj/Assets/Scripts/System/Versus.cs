@@ -84,6 +84,7 @@ public class Versus : MonoBehaviour
     [SerializeField] private VsWarStageController warStageController;
     [SerializeField] private VersusWindow _versusWindow;
     [SerializeField] private Image BlockingPanel;
+    [SerializeField] private Button XButton;
     public VsWarListController warListController;
 
     public int CityLevel = 1;
@@ -97,6 +98,7 @@ public class Versus : MonoBehaviour
         WarBoard.Init();
         WarBoard.MaxCards = MaxCards;
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
+        XButton.onClick.AddListener(() => WarboardActive(false));
         ControllerInit();
     }
 
@@ -136,6 +138,8 @@ public class Versus : MonoBehaviour
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
         WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
             OnSubmitFormation(o.warId, o.warIsd, o.pointId));
+        WarBoard.Chessboard.StartButton.onClick.AddListener(() => XButton.interactable = false);
+        XButton.interactable = true;
         WarboardActive(true);
     }
 
@@ -215,13 +219,10 @@ public class Versus : MonoBehaviour
         var list = hstData.heroSaveData.Concat(hstData.towerSaveData)
             .Concat(hstData.trapSaveData)
             .Enlist(forceId)
-            .Except(except,GameCardComparer)
+            .Where(c=> !except.Any(e=> e.CardId == c.CardId && e.Type == c.Type))
             .ToList();
-            list
-            .ForEach(WarBoard.CreateCardToRack);
+        list.ForEach(WarBoard.CreateCardToRack);
     }
-
-    public static IEqualityComparer<GameCard> GameCardComparer { get; set; } = new GameCardComparer();
 
     public void PlayResult(WarResult data)
     {
@@ -258,7 +259,9 @@ public class Versus : MonoBehaviour
         {
             WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
             PlayResult(result);
+            XButton.interactable = false;
         });
+        XButton.interactable = true;
     }
 
     private IEnumerator ChessAnimation(WarResult result)
@@ -582,31 +585,6 @@ public class Versus : MonoBehaviour
             CancelButton.onClick.RemoveAllListeners();
             CancelButton.onClick.AddListener(() => Window.SetActive(false));
             CancelButton.onClick.AddListener(action);
-        }
-    }
-}
-
-public class GameCardComparer : IEqualityComparer<GameCard>
-{
-    public bool Equals(GameCard x, GameCard y)
-    {
-        if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
-        if (x.GetType() != y.GetType()) return false;
-        return x.CardId == y.CardId && 
-               x.Level == y.Level && 
-               x.Type == y.Type;
-    }
-
-    public int GetHashCode(GameCard obj)
-    {
-        unchecked
-        {
-            var hashCode = obj.CardId;
-            hashCode = (hashCode * 397) ^ obj.Level;
-            hashCode = (hashCode * 397) ^ obj.Type;
-            return hashCode;
         }
     }
 }
