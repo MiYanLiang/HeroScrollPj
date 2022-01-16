@@ -138,7 +138,7 @@ public class LoginUiController : MonoBehaviour
         var viewBag = ViewBag.Instance().SetValues(GamePref.Username, GamePref.Password,
             SystemInfo.deviceUniqueIdentifier,
             changePassword.password.text);
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 GamePref.SetUsername(vb.GetValue<string>(0));
                 GamePref.SetPassword(changePassword.password.text);

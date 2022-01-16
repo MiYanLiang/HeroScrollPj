@@ -371,7 +371,7 @@ public class WarsUIManager : MonoBehaviour
                 { IsFirstRewardTaken = ca.isTakeReward, UnlockProgress = ca.unLockCount, WarId = ca.warId })
                 .SetValues(reward.Token, reward.Chests);
 
-            ApiPanel.instance.Invoke(vb =>
+            ApiPanel.instance.InvokeVb(vb =>
                 {
                     var player = vb.GetPlayerDataDto();
                     var campaign = vb.GetWarCampaignDto();

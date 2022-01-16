@@ -115,7 +115,7 @@ using UnityEngine.UI;
     {
         if (TimeSystemControl.instance.IsJinNangAvailable())
         {
-            ApiPanel.instance.Invoke(OnOpenJinNang, OnJinNangFailed, EventStrings.Req_JinNang);
+            ApiPanel.instance.InvokeVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Req_JinNang);
             return;
         }
         OnJinNangFailed(string.Empty);
@@ -260,7 +260,7 @@ using UnityEngine.UI;
             UIManager.instance.ShowOrHideGuideObj(1, false);
         }
 
-        ApiPanel.instance.Invoke(viewBag =>
+        ApiPanel.instance.InvokeVb(viewBag =>
                 OnChestRecallAction(UIManager.instance.WarChestRecallAction(viewBag), chestUi),
             PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_WarChest,
             ViewBag.Instance().SetValues(chestId, consume));

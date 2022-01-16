@@ -25,57 +25,58 @@ public class Versus : MonoBehaviour
         仅选中军团
     }
     private static Versus instance;
+    
 #if UNITY_EDITOR
     public FormationMode Mode;
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
     public const int TestCharId = -7;
 
+    public static DataBag OnProcessApi(string data)
+    {
+        var bag = DataBag.DeserializeBag(data);
+        if (bag == null) ShowHints(data);
+        return bag;
+    }
+
     public const string GetWarsV1 = "GetWarsV1";
-
-    public static void GetRkWars(Action<string> onRefreshWarList) =>
-        Http.Get($"{RkApi}/{GetWarsV1}?charId={TestCharId}", onRefreshWarList, GetWarsV1);
-
-    public const string GetWarInfoApi = "GetWarInfoV1";
-
-    public static void RkWarStageInfo(int warId,int warIsd ,Action<string> onApiAction) => Http.Get(
-        $"{RkApi}/{GetWarInfoApi}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", onApiAction, GetWarInfoApi);
-
+    public const string GetStageV1 = "GetStageV1";
+    public const string GetGetFormationV1 = "GetFormationV1";
+    public const string GetCheckPointResultV1 = "GetCheckPointResultV1";
     public const string StartChallengeV1 = "StartChallengeV1";
+    public const string SubmitFormationV1 = "SubmitFormationV1";
+    public const string CancelChallengeV1 = "CancelChallengeV1";
 
-    public static void RkStartChallenge(int warId, int warIsd, int troopId, Action<string> onChallengeRespond) =>
+    public static void GetRkWars(Action<DataBag> apiAction) => Http.Get($"{RkApi}/{GetWarsV1}?charId={TestCharId}",
+        result => apiAction(OnProcessApi(result)), GetWarsV1);
+
+    public static void GetRkWarStageInfo(int warId,int warIsd ,Action<DataBag> apiAction) => Http.Get(
+        $"{RkApi}/{GetStageV1}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", result => apiAction(OnProcessApi(result)), GetStageV1);
+    public static void GetRkCheckpointFormation(int warId, int index, Action<DataBag> apiAction) => 
+        Http.Get(
+            $"{RkApi}/{GetGetFormationV1}?warId={warId}&charId={TestCharId}&index={index}",
+            result => apiAction(OnProcessApi(result)), GetGetFormationV1);
+
+    public static void GetRkCheckPointWarResult(int warId, int index, Action<DataBag> apiAction) =>
+        Http.Get($"{RkApi}/{GetCheckPointResultV1}?warId={warId}&index={index}&charId={TestCharId}", result => apiAction(OnProcessApi(result)),
+            GetCheckPointResultV1);
+
+    public static void PostRkStartChallenge(int warId, int warIsd, int troopId, Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}&troopId={troopId}",
             string.Empty,
-            onChallengeRespond, StartChallengeV1);
+            result => apiAction(OnProcessApi(result)), StartChallengeV1);
 
-    public const string GetCheckpointFormationV1 = "GetCheckpointFormationV1";
-
-    public static void RkGetCheckpointFormation(int warId, int index, Action<string> callBackAction) => 
-        Http.Get(
-            $"{RkApi}/{GetCheckpointFormationV1}?warId={warId}&charId={TestCharId}&index={index}",
-            callBackAction, GetCheckpointFormationV1);
-
-    public const string SubmitFormationV1 = "SubmitFormationV1";
-
-    public static void RkPostSubmitFormation(int warId, int index, string content,
-        Action<string> onCallBack) =>
+    public static void PostRkSubmitFormation(int warId, int index, string content,
+        Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&index={index}",
-            content, onCallBack,
+            content, result => apiAction(OnProcessApi(result)),
             SubmitFormationV1);
 
-    public const string CheckPointWarResultV1 = "CheckPointResultV1";
-    public static void RkGetCheckPointWarResult(int warId, int index, Action<string> callbackAction) =>
-        Http.Get($"{RkApi}/{CheckPointWarResultV1}?warId={warId}&index={index}&charId={TestCharId}", callbackAction,
-            CheckPointWarResultV1);
-
-    public const string CancelChallengeV1 = "CancelChallengeV1";
-    public static void RkPostCancelChallenge(int warId, Action<string> callbackAction) =>
-        Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, callbackAction,
+    public static void PostRkCancelChallenge(int warId, Action<DataBag> apiAction) =>
+        Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, result => apiAction(OnProcessApi(result)),
             CancelChallengeV1);
 
 #endif
-
-    public static int CharId { get; private set; }
 
     [SerializeField] private WarBoardUi WarBoard;
     [SerializeField] private ChessboardVisualizeManager ChessboardManager;
@@ -86,13 +87,13 @@ public class Versus : MonoBehaviour
     [SerializeField] private Image BlockingPanel;
     [SerializeField] private Button XButton;
     public VsWarListController warListController;
-
+    public bool IsAvailableChallenge { get; private set; }
     public int CityLevel = 1;
 
-    public void Init(int charId)
+
+    public void Init()
     {
         instance = this;
-        CharId = charId;
         if (!EffectsPoolingControl.instance.IsInit)
             EffectsPoolingControl.instance.Init();
         WarBoard.Init();
@@ -103,6 +104,7 @@ public class Versus : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+
     void Start()
     {
         StartCoroutine(AwaitInit());
@@ -112,7 +114,7 @@ public class Versus : MonoBehaviour
     {
         yield return new WaitUntil(() => GameSystem.IsInit);
         DataTable.instance.Init();
-        Init(TestCharId);
+        Init();
     }
 #endif
 
@@ -154,20 +156,21 @@ public class Versus : MonoBehaviour
     {
         WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
-        var json = Json.Serialize(challengerFormation);
+        ApiPanel.instance.InvokeRk(OnCallBack, msn =>
+        {
+            ShowHints(msn);
+            CancelWindow.Display(() => WarboardActive(false));
+        }, SubmitFormationV1, 
+            warId,
+            pointId, 
+            challengerFormation);
 #if UNITY_EDITOR
-        RkPostSubmitFormation(warId, pointId, json, OnCallBack);
+        var json = Json.Serialize(challengerFormation);
+        //PostRkSubmitFormation(warId, pointId, json, OnCallBack);
 #endif
 
-        void OnCallBack(string data)
+        void OnCallBack(DataBag bag)
         {
-            var bag = DataBag.DeserializeBag(data);
-            if (bag == null)
-            {
-                ShowHints(data);
-                CancelWindow.Display(() => WarboardActive(false));
-                return;
-            }
             var wId = bag.Get<int>(0);
             var isChallengerWin = bag.Get<bool>(1);
             var rounds = bag.Get<List<ChessRound>>(2);
@@ -365,7 +368,7 @@ public class Versus : MonoBehaviour
 
     }
 
-    public class WarResult : DataBag
+    public class WarResult 
     {
         public List<Operator> Chessmen { get; set; }
 
@@ -407,7 +410,7 @@ public class Versus : MonoBehaviour
 
     }
 
-    public class ChallengeDto : DataBag
+    public class ChallengeDto 
     {
         public int WarId { get; set; }
         public int WarIsd { get; set; }
@@ -586,5 +589,10 @@ public class Versus : MonoBehaviour
             CancelButton.onClick.AddListener(() => Window.SetActive(false));
             CancelButton.onClick.AddListener(action);
         }
+    }
+
+    public void SetState(int state)
+    {
+        IsAvailableChallenge = state > 0;
     }
 }

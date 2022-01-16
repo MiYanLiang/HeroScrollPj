@@ -22,7 +22,7 @@ public class TestSignalRConnection : MonoBehaviour
 
     public void TestRequest()
     {
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 XDebug.Log(typeof(TestSignalRConnection), $"Api[{EventStrings.Req_OnlineCharacters}] Success!");
                 XDebug.Log(typeof(TestSignalRConnection), Json.Serialize(vb));

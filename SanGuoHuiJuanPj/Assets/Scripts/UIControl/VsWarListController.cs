@@ -27,21 +27,16 @@ public class VsWarListController : MonoBehaviour
     {
         foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
         _vsWarUiList.Clear();
+        ApiPanel.instance.InvokeRk(OnRefreshWarList, Versus.ShowHints, Versus.GetWarsV1);
 #if UNITY_EDITOR
-        Versus.GetRkWars(OnRefreshWarList);
+        //Versus.GetRkWars(OnRefreshWarList);
 #endif
-
-        void OnRefreshWarList(string data)
+        void OnRefreshWarList(DataBag bag)
         {
-            var bag = DataBag.DeserializeBag(data);
-            if (bag == null)
-            {
-                Versus.ShowHints(data);
-                return;
-            }
-
-            var wars = bag.Get<List<Versus.RkWarDto>>(0);
-            var challenges = bag.Get<Dictionary<int, Versus.ChallengeDto>>(1);
+            var state = bag.Get<int>(0);
+            Vs.SetState(state);
+            var wars = bag.Get<List<Versus.RkWarDto>>(1);
+            var challenges = bag.Get<Dictionary<int, Versus.ChallengeDto>>(2);
             foreach (var war in wars)
             {
                 challenges.TryGetValue(war.WarId, out var challenge);
@@ -49,6 +44,7 @@ public class VsWarListController : MonoBehaviour
             }
         }
     }
+
 
     private void GenerateUi(Versus.RkWarDto war, Versus.ChallengeDto challengeDto)
     {

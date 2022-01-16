@@ -252,7 +252,7 @@ public class Expedition : MonoBehaviour
     {
         var playerUnlockProgress = PlayerDataForGame.instance.warsData.warUnlockSaveData.Single(w => w.warId == warId);
         if (playerUnlockProgress.isTakeReward) PlayerDataForGame.instance.ShowStringTips("首通宝箱已领取！");
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 var re = vb.GetResourceDto();
                 var py = vb.GetPlayerDataDto();

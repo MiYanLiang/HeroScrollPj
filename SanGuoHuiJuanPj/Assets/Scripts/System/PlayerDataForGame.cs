@@ -373,7 +373,7 @@ public class PlayerDataForGame : MonoBehaviour
         }
         var cards = hstData.heroSaveData.Concat(hstData.towerSaveData).Concat(hstData.trapSaveData)
             .Enlist(CurrentWarForceId).Select(c => c.ToDto()).ToList();
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 WarReward = new WarReward(vb.Values[0].ToString(), selectedWarId, 0);
                 var troop = vb.GetTroopDto();

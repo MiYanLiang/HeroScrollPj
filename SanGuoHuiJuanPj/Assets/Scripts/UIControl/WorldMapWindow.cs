@@ -45,7 +45,7 @@ public class WorldMapWindow : MonoBehaviour
 
     public void CreateCharacter()
     {
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 Debug.Log("角色创建成功！");
             }, Debug.Log,
