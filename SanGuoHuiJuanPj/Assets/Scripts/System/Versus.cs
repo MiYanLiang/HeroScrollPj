@@ -100,10 +100,11 @@ public class Versus : MonoBehaviour
         WarBoard.MaxCards = MaxCards;
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
         XButton.onClick.AddListener(() => WarboardActive(false));
+        SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, _ => warListController.GetWarList());
         ControllerInit();
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && !DEBUG
 
     void Start()
     {
