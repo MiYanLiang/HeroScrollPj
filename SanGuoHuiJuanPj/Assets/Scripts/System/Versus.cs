@@ -90,7 +90,6 @@ public class Versus : MonoBehaviour
     public bool IsAvailableChallenge { get; private set; }
     public int CityLevel = 1;
 
-
     public void Init()
     {
         instance = this;
@@ -596,4 +595,5 @@ public class Versus : MonoBehaviour
     {
         IsAvailableChallenge = state > 0;
     }
+
 }
