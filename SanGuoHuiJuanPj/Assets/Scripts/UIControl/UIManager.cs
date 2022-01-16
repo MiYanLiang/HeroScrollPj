@@ -143,7 +143,7 @@ public class UIManager : MonoBehaviour
         InitializationPlayerInfo();
         expedition.Init();
         Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist);
-        //Versus.Init();
+        Versus.Init();
         InitChickenOpenTs();
         //chickenWindow.Init();
         InitBaYeFun();
@@ -431,7 +431,7 @@ public class UIManager : MonoBehaviour
         }
 
         var warChestId = DataTable.BaYeTask[index].WarChestTableId;
-        ApiPanel.instance.Invoke(bag => WarChestRecallAction(bag),
+        ApiPanel.instance.InvokeVb(bag => WarChestRecallAction(bag),
             PlayerDataForGame.instance.ShowStringTips,
             EventStrings.Req_WarChest,
             ViewBag.Instance().SetValues(warChestId, 3));
@@ -547,7 +547,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 var player = vb.GetPlayerDataDto();
                 var dto = vb.GetGameCardDto();
@@ -591,7 +591,7 @@ public class UIManager : MonoBehaviour
 
     private void OnCardEnlist(GameCard card)
     {
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 var troop = vb.GetTroopDto();
                 PlayerDataForGame.instance.UpdateTroopEnlist(troop);
@@ -612,7 +612,7 @@ public class UIManager : MonoBehaviour
         queRenWindows.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.RemoveAllListeners();
         queRenWindows.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
         {
-            ApiPanel.instance.Invoke(vb =>
+            ApiPanel.instance.InvokeVb(vb =>
                 {
                     var player = vb.GetPlayerDataDto();
                     var gameCards = vb.GetPlayerGameCardDtos();
@@ -928,7 +928,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 var rC = vb.GetRCode();
                 var py = vb.GetPlayerDataDto();

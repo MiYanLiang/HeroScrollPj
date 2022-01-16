@@ -51,7 +51,7 @@ public class RoastedChickenWindow : MonoBehaviour
 
     private void RequestChickenApi(int chickenId)
     {
-        ApiPanel.instance.Invoke(OnSuccessRequestChicken, msg =>
+        ApiPanel.instance.InvokeVb(OnSuccessRequestChicken, msg =>
             {
                 PlayerDataForGame.instance.ShowStringTips(msg);
                 ButtonsInteractive(true);

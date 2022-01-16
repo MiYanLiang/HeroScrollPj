@@ -30,7 +30,7 @@ public class LoginMocker : MonoBehaviour
             .WarCampaignDto(new WarCampaignDto{IsFirstRewardTaken = true,UnlockProgress = 31,WarId = 122})
             .SetValues("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1SWQiOiIxNzQ5IiwicElkIjoiMTQ2MCIsImNwIjoiMTIyIiwidHAiOiIxMDUiLCJnYyI6IjYiLCJuYmYiOjE2MTk2NzQwNTYsImV4cCI6MTYxOTY3NTg1NiwiaWF0IjoxNjE5Njc0MDU2LCJpc3MiOiJIZXJvU2Nyb2xsUGoiLCJhdWQiOiJIZXJvU2Nyb2xsQ2xpZW50In0.OrQVE7U__POfMEse0oAEg7sRY-QUAdv8u43s3qcrPco", new List<int>{112,112,112,112,132,132,112,112,112});
 
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
             {
                 var player = vb.GetPlayerDataDto();
                 var campaign = vb.GetWarCampaignDto();

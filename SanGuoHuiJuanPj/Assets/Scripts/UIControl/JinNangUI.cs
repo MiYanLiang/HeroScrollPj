@@ -79,7 +79,7 @@ public class JinNangUI: MonoBehaviour
             AdConsume.SetCallBackAction(success =>
             {
                 if (success)
-                    ApiPanel.instance.Invoke(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
+                    ApiPanel.instance.InvokeVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
                         EventStrings.Req_TokenResources, ViewBag.Instance().SetValue(token));
             },OnSuccessDoubleReward, ViewBag.Instance().SetValues(1, token), false);
             AdConsume.ShowWithUpdate();

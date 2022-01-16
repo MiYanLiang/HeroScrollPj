@@ -46,7 +46,7 @@ public class AdConsumeController : MonoBehaviour
 
     private void OnTicketConsumeInvoke()
     {
-        ApiPanel.instance.Invoke(vb =>
+        ApiPanel.instance.InvokeVb(vb =>
         {
             var tickets = vb.GetInt(0);
             PlayerDataForGame.instance.UpdateFreeAdTicket(tickets);

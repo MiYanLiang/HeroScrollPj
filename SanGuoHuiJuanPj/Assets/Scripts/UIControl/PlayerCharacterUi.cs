@@ -131,7 +131,7 @@ public class PlayerCharacterUi : MonoBehaviour
         void ApiRequest(CharacterUpdateInfos updateInfo,Expression<Func<object>> ex)
         {
             var func = ex.Compile();
-            ApiPanel.instance.Invoke(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
+            ApiPanel.instance.InvokeVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Req_UpdateCharacterInfo, ViewBag.Instance().SetValues(updateInfo, func()));
         }
     }
@@ -168,7 +168,7 @@ public class PlayerCharacterUi : MonoBehaviour
         if (Character.IsValidCharacter())//完整信息才请求
         {
             PlayerDataForGame.instance.Character = global::Character.Instance(Character);
-            ApiPanel.instance.Invoke(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
+            ApiPanel.instance.InvokeVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Req_CreateCharacter, ViewBag.Instance().PlayerCharacterDto(Character.ToDto()), false);
             return;
         }

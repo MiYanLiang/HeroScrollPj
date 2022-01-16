@@ -29,11 +29,11 @@ public class ApiPanel : MonoBehaviour
     }
 
 
-    public void Invoke(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+    public void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         IViewBag bag = default) =>
-        Invoke(successAction, failedAction, method, bag, true);
+        InvokeVb(successAction, failedAction, method, bag, true);
 
-    public void Invoke(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+    public void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         IViewBag bag,bool closeBusyAfterInvoke)
     {
         SetBusy(this);
@@ -47,6 +47,35 @@ public class ApiPanel : MonoBehaviour
         Client.Invoke(method, result =>
         {
             var viewBag = Json.Deserialize<ViewBag>(result);
+            if (viewBag == null) failedAction?.Invoke(result);
+            else successAction.Invoke(viewBag);
+            if(closeBusyAfterInvoke) SetBusy(false);
+        }, bag);
+    }
+
+    public void InvokeRk(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
+        params object[] args) =>
+        InvokeBag(successAction, failedAction, true, EventStrings.Req_Rk, method, args);
+
+    public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string controller,
+        string method, params object[] args) =>
+        InvokeBag(successAction, failedAction, true, controller, method, args);
+
+    public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller,string method,
+        params object[] args)
+    {
+        SetBusy(this);
+#if UNITY_EDITOR
+        if (isSkipApi)
+        {
+            successAction.Invoke(new DataBag());
+            return;
+        }
+#endif
+        var bag = DataBag.SerializeBag(method, args);
+        Client.Invoke(controller, result =>
+        {
+            var viewBag = Json.Deserialize<DataBag>(result);
             if (viewBag == null) failedAction?.Invoke(result);
             else successAction.Invoke(viewBag);
             if(closeBusyAfterInvoke) SetBusy(false);

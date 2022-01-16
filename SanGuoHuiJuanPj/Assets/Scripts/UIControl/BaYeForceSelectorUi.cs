@@ -6,23 +6,6 @@ using UnityEngine.UI;
 
 public class BaYeForceSelectorUi : ForceSelectorUi
 {
-    //public Button button;
-    //public Image image;
-    //public ForceFlagUI forceFlag;
-
-    //public bool displayLing;
-    //// Start is called before the first frame update
-    //public void Start() => DisplayLing(false);
-    //public void DisplayLing(bool yes)
-    //{
-    //    displayLing = yes;
-    //    image.gameObject.SetActive(yes);
-    //}
-
-    /// <summary>
-    /// key = forceId, value = totalLing
-    /// </summary>
-
     public override void Init(PlayerDataForGame.WarTypes warType)
     {
         base.Init(warType);

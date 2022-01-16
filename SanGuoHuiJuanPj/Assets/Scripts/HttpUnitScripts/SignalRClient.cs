@@ -155,7 +155,7 @@ public class SignalRClient : MonoBehaviour
 
     public async Task SynchronizeSaved()
     {
-        var jData = await Invoke(EventStrings.Req_Saved);
+        var jData = await InvokeVb(EventStrings.Req_Saved);
         var bag = Json.Deserialize<ViewBag>(jData);
         var playerData = bag.GetPlayerDataDto();
         var character = bag.GetPlayerCharacterDto();
@@ -279,11 +279,16 @@ public class SignalRClient : MonoBehaviour
 
     public async void Invoke(string method, UnityAction<string> recallAction , IViewBag bag = default, CancellationTokenSource tokenSource = default)
     {
-        var result = await Invoke(method, bag, tokenSource);
+        var result = await InvokeVb(method, bag, tokenSource);
+        UnityMainThread.thread.RunNextFrame(()=>recallAction?.Invoke(result));
+    }
+    public async void Invoke(string method, UnityAction<string> recallAction , string databagSerialized, CancellationTokenSource tokenSource = default)
+    {
+        var result = await InvokeBag(method, databagSerialized, tokenSource);
         UnityMainThread.thread.RunNextFrame(()=>recallAction?.Invoke(result));
     }
 
-    private async Task<string> Invoke(string method, IViewBag bag = default, CancellationTokenSource tokenSource = default)
+    private async Task<string> InvokeVb(string method, IViewBag bag = default, CancellationTokenSource tokenSource = default)
     {
         try
         {
@@ -291,6 +296,26 @@ public class SignalRClient : MonoBehaviour
             if (tokenSource == null) tokenSource = new CancellationTokenSource();
             var result = await _hub.InvokeCoreAsync(method, _stringType,
                 bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) },
+                tokenSource.Token);
+            return result?.ToString();
+        }
+        catch (Exception e)
+        {
+#if UNITY_EDITOR
+            XDebug.LogError<SignalRClient>($"Error on interpretation {method}:{e.Message}");
+#endif
+            GameSystem.ServerRequestException(method, e.Message);
+            if (!tokenSource.IsCancellationRequested) tokenSource.Cancel();
+            return $"请求服务器异常: {e}";
+        }
+    }
+    private async Task<string> InvokeBag(string method, string serialized, CancellationTokenSource tokenSource = default)
+    {
+        try
+        {
+            if (tokenSource == null) tokenSource = new CancellationTokenSource();
+            var result = await _hub.InvokeCoreAsync(method, _stringType,
+                string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized },
                 tokenSource.Token);
             return result?.ToString();
         }
@@ -361,7 +386,7 @@ public class SignalRClient : MonoBehaviour
             .PlayerWarCampaignDtos(campaign)
             .PlayerGameCardDtos(cards.Select(c => c.c.ToDto()).ToArray())
             .PlayerTroopDtos(troops);
-        await Invoke(EventStrings.Req_UploadPy, viewBag);
+        await InvokeVb(EventStrings.Req_UploadPy, viewBag);
     }
 
     #endregion

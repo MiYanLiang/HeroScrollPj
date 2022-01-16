@@ -54,7 +54,7 @@ namespace Assets.HttpUnitScripts
         private void RequestingOnlineCharactersApi()
         {
             isRequestingCharacter = true;
-            ApiPanel.instance.Invoke(OnCharactersApiRespond,OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters,ViewBag.Instance());
+            ApiPanel.instance.InvokeVb(OnCharactersApiRespond,OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters,ViewBag.Instance());
         }
 
         private void OnFailedToGetCharacters(string failedMessage)

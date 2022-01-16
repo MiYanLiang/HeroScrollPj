@@ -26,8 +26,10 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private Text OppNameText;
     [SerializeField] private Sprite[] genderSprites;
     [SerializeField] private CancelWindowUi CancelWindow;
+    [SerializeField] private VsForceSelectorUi ForceSelectorUi;
     private int WarId { get; set; } = -1;
     private int WarIsd { get; set; } = -1;
+    public int TroopId { get; set; } = -1;
     public int OppGender { get; private set; }
     public int OppMilitaryPower { get; private set; }
     private string HostName { get; set; }
@@ -35,13 +37,16 @@ public class VsWarStageController : MonoBehaviour
     private int PlayerRank { get; set; }
     private List<CheckpointUi> CpList { get; } = new List<CheckpointUi>();
     private List<Versus.RkCheckpoint> RkCheckPoints { get; set; }
+    private int[] UsedTroops { get; set; }
 
     private ObjectPool<CheckpointUi> Pool { get; set; }
+
     //(warId , pointId)
-    private UnityAction<(int, int, int, int), Dictionary<int, IGameCard>> OnAttackCity { get; set; }
+    private UnityAction<(int, int, int, int, int), Dictionary<int, IGameCard>, GameCard[]> OnAttackCity { get; set; }
     private Versus Vs { get; set; }
 
-    public void Init(Versus versus, UnityAction<(int, int, int, int), Dictionary<int, IGameCard>> onAttackCityAction)
+    public void Init(Versus versus,
+        UnityAction<(int, int, int, int, int), Dictionary<int, IGameCard>, GameCard[]> onAttackCityAction)
     {
         Vs = versus;
         OnAttackCity = onAttackCityAction;
@@ -49,6 +54,13 @@ public class VsWarStageController : MonoBehaviour
         Pool = new ObjectPool<CheckpointUi>(() => Instantiate(CheckpointUiPrefab, MapScrollRect.content));
         CheckpointUiPrefab.gameObject.SetActive(false);
         BackButton.onClick.AddListener(() => versus.DisplayWarlistPage(false));
+        ForceSelectorUi.OnSelectedTroop += OnFlagSelected;
+    }
+
+    private void OnFlagSelected(int troopId)
+    {
+        TroopId = troopId;
+        ChallengeButton.interactable = TroopId >= 0;
     }
 
     public void Set(int warId, int warIsd)
@@ -57,19 +69,18 @@ public class VsWarStageController : MonoBehaviour
         WarIsd = warIsd;
         gameObject.SetActive(true);
         TimerObj.SetActive(false);
+        ApiPanel.instance.InvokeRk(OnApiAction, msg =>
+        {
+            Versus.ShowHints(msg);
+            CancelWindow.SetCancel(() => Vs.DisplayWarlistPage(true));
+        }, Versus.GetStageV1, warId, warIsd);
 #if UNITY_EDITOR
-        Versus.RkWarStageInfo(warId, warIsd, OnApiAction);
+        //Versus.GetRkWarStageInfo(warId, warIsd, OnApiAction);
 #endif
 
-        void OnApiAction(string obj)
+        void OnApiAction(DataBag bag)
         {
-            var bag = DataBag.DeserializeBag(obj);
-            if (bag == null)
-            {
-                CancelWindow.SetCancel(()=>Vs.DisplayWarlistPage(true));
-                return;
-            }
-            WarId = bag.Get<int>(0);//warId
+            WarId = bag.Get<int>(0); //warId
             var host = bag.Get<List<object>>(1);
             var warIdentity = (Versus.WarIdentity)bag.Get<int>(2);
             var cpData = bag.Get<List<List<object>>>(3);
@@ -92,22 +103,25 @@ public class VsWarStageController : MonoBehaviour
             var challenge = bag.Get<Versus.ChallengeDto>(4);
             var rank = bag.Get<int>(5);
             var hostRank = bag.Get<int>(6);
+            var usedTroops = bag.Get<int[]>(7);
             var hostName = host[0].ToString();
             var hostGender = DataBag.Parse<int>(host[1]);
             var hostMPower = DataBag.Parse<int>(host[2]);
-            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps);
+            ForceSelectorUi.Init();
+            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps, usedTroops);
             if (challenge == null) return;
             UpdateCpProgress(warIdentity, challenge);
         }
     }
 
     private void UpdatePage(string hostName, int gender, int militaryPower, int playerRank, int hostRank,
-        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps)
+        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps, int[] usedTroops)
     {
         HostName = hostName;
         PlayerRank = playerRank;
         ChallengeRank = hostRank;
         RkCheckPoints = cps;
+        UsedTroops = usedTroops;
         CancelWindow.Window.SetActive(false);
         if (CpList.Any())
         {
@@ -116,17 +130,28 @@ public class VsWarStageController : MonoBehaviour
         }
 
         if (warIdentity == Versus.WarIdentity.Uncertain)
-            CancelWindow.SetCancel(() => Versus.RkPostCancelChallenge(WarId, msg => Vs.DisplayWarlistPage(true)));
+            CancelWindow.SetCancel(() =>
+            {
+
+#if UNITY_EDITOR
+                //Versus.PostRkCancelChallenge(WarId, bag => Vs.DisplayWarlistPage(true));
+#endif
+                ApiPanel.instance.InvokeRk(bag => Vs.DisplayWarlistPage(true), bag => Vs.DisplayWarlistPage(true),
+                    Versus.CancelChallengeV1, WarId);
+            });
 
         SetOppInfo(gender, militaryPower);
         SetCancelButton(warIdentity);
         var isChallengeAvailable =
+            Vs.IsAvailableChallenge && //挑战开放
             warIdentity == Versus.WarIdentity.Anonymous //非关主或是挑战者身份
             && (playerRank < 0 || //不在排行榜上。
                 playerRank > hostRank); //排位低于
 
         ChallengeBtnActive(isChallengeAvailable);
         UpdateCityUis(cps);
+        ForceSelectorUi.RegLimitedForce(UsedTroops);
+        ForceSelectorUi.OnSelected();
     }
 
     private void UpdateCityUis(List<Versus.RkCheckpoint> cps)
@@ -151,12 +176,15 @@ public class VsWarStageController : MonoBehaviour
     {
         if (identity == Versus.WarIdentity.Challenger)
         {
+            ForceSelectorUi.OnSelected(cha.TroopId, true);
             TimerObj.gameObject.SetActive(true);
-            Vs.RemoveFromTimer(CountdownText);//移除公用倒计时UI。
-            Vs.RegChallengeUi(cha, CountdownText);//重新注册当前挑战的时间
+            Vs.RemoveFromTimer(CountdownText); //移除公用倒计时UI。
+            Vs.RegChallengeUi(cha, CountdownText); //重新注册当前挑战的时间
         }
+
         var progressList = cha.StageProgress.Join(CpList, p => p.Key, c => c.StageIndex, (p, c) => (c, p.Value))
             .ToList();
+        TroopId = cha.TroopId;
         for (var i = 0; i < progressList.Count; i++)
         {
             var (ui, isPass) = progressList[i];
@@ -168,7 +196,6 @@ public class VsWarStageController : MonoBehaviour
             ui.SetDock(isChallengePoint);
         }
     }
-
 
     private void SetOppInfo(int gender, int militaryPower)
     {
@@ -187,11 +214,14 @@ public class VsWarStageController : MonoBehaviour
         CancelButton.onClick.RemoveAllListeners();
         CancelButton.onClick.AddListener(OnRequestCancel);
     }
+
     private void OnRequestCancel()
     {
 #if UNITY_EDITOR
-        Versus.RkPostCancelChallenge(WarId, _ => Vs.DisplayWarlistPage(true));
+        //Versus.PostRkCancelChallenge(WarId, _ => Vs.DisplayWarlistPage(true));
 #endif
+        ApiPanel.instance.InvokeRk(bag => Vs.DisplayWarlistPage(true), bag => Vs.DisplayWarlistPage(true),
+            Versus.CancelChallengeV1, WarId);
     }
 
 
@@ -208,21 +238,17 @@ public class VsWarStageController : MonoBehaviour
 
     private void RequestChallenge()
     {
+        ApiPanel.instance.InvokeRk(OnChallengeRespond, Versus.ShowHints, Versus.StartChallengeV1, WarId, WarIsd,
+            TroopId);
 #if UNITY_EDITOR
-        Versus.RkStartChallenge(WarId, WarIsd, OnChallengeRespond);
+        //Versus.PostRkStartChallenge(WarId, WarIsd, TroopId, OnChallengeRespond);
 #endif
 
-        void OnChallengeRespond(string databag)
+        void OnChallengeRespond(DataBag bag)
         {
-            var cha = DataBag.Deserialize<Versus.ChallengeDto>(databag);
-            if (cha == null)
-            {
-                Versus.ShowHints(databag);
-                return;
-            }
-
+            var cha = bag.Get<Versus.ChallengeDto>(0);
             UpdatePage(HostName, OppGender, OppMilitaryPower, PlayerRank, ChallengeRank, Versus.WarIdentity.Challenger,
-                RkCheckPoints);
+                RkCheckPoints, UsedTroops);
             UpdateCpProgress(Versus.WarIdentity.Challenger, cha);
             Vs.warListController.GetWarList();
         }
@@ -230,19 +256,13 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnReportAction(int index)
     {
+        ApiPanel.instance.InvokeRk(OnCallBackResult, Versus.ShowHints, Versus.GetCheckPointResultV1, WarId, index);
 #if UNITY_EDITOR
-        Versus.RkGetCheckPointWarResult(WarId, index, OnCallBackResult);
+        //Versus.GetRkCheckPointWarResult(WarId, index, OnCallBackResult);
 #endif
 
-        void OnCallBackResult(string data)
+        void OnCallBackResult(DataBag bag)
         {
-            var bag = DataBag.DeserializeBag(data);
-            if (bag == null)
-            {
-                Versus.ShowHints(data);
-                return;
-            }
-
             var isChallengerWin = bag.Get<bool>(0);
             var rounds = bag.Get<List<ChessRound>>(1);
             var ops = bag.Get<List<Versus.WarResult.Operator>>(2).Cast<IOperatorInfo>().ToList();
@@ -253,22 +273,18 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnAttackCheckpointAction(int checkpointId)
     {
+        ApiPanel.instance.InvokeRk(CallBackAction, Versus.ShowHints, Versus.GetGetFormationV1, WarId, checkpointId);
 #if UNITY_EDITOR
-        Versus.RkGetCheckpointFormation(WarId, checkpointId, CallBackAction);
+        //Versus.GetRkCheckpointFormation(WarId, checkpointId, CallBackAction);
 #endif
 
-        void CallBackAction(string data)
+        void CallBackAction(DataBag bag)
         {
-            var bag = DataBag.DeserializeBag(data);
-            if (bag == null)
-            {
-                Versus.ShowHints(data);
-                return;
-            }
             var formation = bag.Get<Dictionary<int, Versus.Card>>(0);
             var cp = RkCheckPoints.Single(c => c.Index == checkpointId);
-            OnAttackCity?.Invoke((WarId, WarIsd, cp.Index , cp.MaxCards),
-                formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value));
+            var usedCards = bag.Get<GameCardDto[]>(1);
+            OnAttackCity?.Invoke((WarId, WarIsd, cp.Index, cp.MaxCards, TroopId),
+                formation.ToDictionary(f => f.Key, f => (IGameCard)f.Value), usedCards.Select(GameCard.Instance).ToArray());
         }
     }
 
@@ -277,7 +293,8 @@ public class VsWarStageController : MonoBehaviour
         gameObject.SetActive(isShow);
     }
 
-    [Serializable]private class CancelWindowUi
+    [Serializable]
+    private class CancelWindowUi
     {
         public GameObject Window;
         public Button CancelButton;
@@ -289,5 +306,4 @@ public class VsWarStageController : MonoBehaviour
             CancelButton.onClick.AddListener(onRequestCancel);
         }
     }
-
 }

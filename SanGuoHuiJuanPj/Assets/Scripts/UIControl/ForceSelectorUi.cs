@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class ForceSelectorUi : MonoBehaviour
@@ -19,6 +20,7 @@ public class ForceSelectorUi : MonoBehaviour
     [Header("-1为没音效")]
     public int onSelectedAudioId = -1;
 
+    public event UnityAction<int> OnSelectedTroop;
     private Dictionary<int, ForceFlagUI> data = new Dictionary<int, ForceFlagUI>();
     private Dictionary<int, Button> btnData = new Dictionary<int, Button>();
     /// <summary>
@@ -26,7 +28,8 @@ public class ForceSelectorUi : MonoBehaviour
     /// </summary>
     public IReadOnlyDictionary<int, ForceFlagUI> Data => data;
     public IReadOnlyDictionary<int, Button> BtnData => btnData;
-    public virtual void Init(PlayerDataForGame.WarTypes warType)
+
+    public virtual void Init(PlayerDataForGame.WarTypes warType = PlayerDataForGame.WarTypes.None)
     {
         var totalUnlock = PlayerDataForGame.instance.UnlockForceId;
         var totalDisplayForce = mode == Modes.仅显示可用
@@ -58,15 +61,24 @@ public class ForceSelectorUi : MonoBehaviour
             {
                 case Modes.全显值暗:
                 {
-                    var isEnable=i <= totalUnlock;
+                    var isEnable = i <= totalUnlock;
                     btn.interactable = isEnable;
                     forceFlag.Interaction(isEnable,DataTable.Force[forceId].UnlockLevel + "级");
-                    if (btn.enabled) btn.onClick.AddListener(() => OnSelected(warType, forceId));
+                    if (btn.enabled)
+                    {
+                        if (warType == PlayerDataForGame.WarTypes.None)
+                            btn.onClick.AddListener(() => OnSelected(forceId));
+                        else
+                            btn.onClick.AddListener(() => OnSelected(warType, forceId));
+                    };
                     break;
                 }
                 case Modes.仅显示可用:
                 {
-                    btn.onClick.AddListener(() => OnSelected(warType, forceId));
+                    if (warType == PlayerDataForGame.WarTypes.None)
+                        btn.onClick.AddListener(() => OnSelected(forceId));
+                    else
+                        btn.onClick.AddListener(() => OnSelected(warType, forceId));
                     break;
                 }
                 default:
@@ -75,7 +87,8 @@ public class ForceSelectorUi : MonoBehaviour
             btn.gameObject.SetActive(true);
         }
         buttonPrefab.gameObject.SetActive(false);
-        OnSelected(warType, PlayerDataForGame.instance.WarForceMap[warType]);
+        if (warType != PlayerDataForGame.WarTypes.None)
+            OnSelected(warType, PlayerDataForGame.instance.WarForceMap[warType]);
     }
 
     private void ButtonUiReset(Button btn)
@@ -88,17 +101,26 @@ public class ForceSelectorUi : MonoBehaviour
 
     public virtual void OnSelected(PlayerDataForGame.WarTypes warType,int forceId = -1)
     {
+        OnSelected(forceId);
+        PlayerDataForGame.instance.WarForceMap[warType] = forceId;
+    }
+
+    public virtual void OnSelected(int forceId = -1, bool disableUi = false)
+    {
+        OnSelectedTroop?.Invoke(forceId);
         if (onSelectedAudioId > -1)
         {
             AudioController0.instance.ForcePlayAudio(onSelectedAudioId);
         }
+
         foreach (var obj in data)
         {
             var ui = obj.Value;
             var force = obj.Key;
             ui.Select(force == forceId);
         }
-        PlayerDataForGame.instance.WarForceMap[warType] = forceId;
+
+        foreach (var button in btnData) button.Value.interactable = !disableUi;
     }
 
 }
