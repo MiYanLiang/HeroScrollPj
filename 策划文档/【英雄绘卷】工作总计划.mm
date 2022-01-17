@@ -270,8 +270,10 @@
 </node>
 </node>
 <node CREATED="1642325375251" ID="ID_820321341" MODIFIED="1642325377990" TEXT="&#x5173;&#x5361;">
-<node CREATED="1642325434836" ID="ID_111204943" MODIFIED="1642382007993" TEXT="&#x5173;&#x5361;&#x5934;&#x50cf;&#x6362;&#x6210;&#x65d7;&#x5e1c;+&#x540d;&#x5b57;">
-<icon BUILTIN="idea"/>
+<node CREATED="1642325434836" ID="ID_111204943" MODIFIED="1642387259122" TEXT="&#x5173;&#x5361;&#x5934;&#x50cf;&#x6362;&#x6210;&#x65d7;&#x5e1c;+&#x540d;&#x5b57;">
+<icon BUILTIN="button_cancel"/>
+</node>
+<node CREATED="1642389518177" ID="ID_728996869" MODIFIED="1642389526624" TEXT="&#x6218;&#x5f79;&#x6807;&#x9898;">
 <icon BUILTIN="messagebox_warning"/>
 </node>
 </node>
@@ -284,15 +286,18 @@
 <icon BUILTIN="messagebox_warning"/>
 </node>
 <node CREATED="1642380827155" ID="ID_762065043" MODIFIED="1642380871798" TEXT="&#x4e0a;&#x9635;&#x6570;&#x5728;&#x6218;&#x6597;&#x5f00;&#x59cb;&#x540e;&#x7acb;&#x523b;&#x5237;&#x65b0;"/>
-<node CREATED="1642380193298" ID="ID_392506642" MODIFIED="1642381900321" TEXT="&#x9000;&#x51fa;&#x6218;&#x6597;&#x6309;&#x94ae;&#xff1a;&#x5f00;&#x59cb;&#x6218;&#x6597;&#x524d;&#x4e3a;&#x9000;&#x51fa;&#x6218;&#x6597;&#xff0c;&#x6218;&#x6597;&#x5f00;&#x59cb;&#x540e;&#x4e3a;&#x8df3;&#x8fc7;&#x6218;&#x6597;">
+<node CREATED="1642380193298" ID="ID_392506642" MODIFIED="1642389537946" TEXT="5&#x56de;&#x5408;&#x540e;&#xff0c;&#x6309;&#x94ae;&#x70b9;&#x4eae;&#xff1a;&#x70b9;&#x51fb;&#x540e;&#x8df3;&#x8fc7;&#x6218;&#x6597;">
 <icon BUILTIN="messagebox_warning"/>
 <icon BUILTIN="messagebox_warning"/>
 </node>
 <node CREATED="1642344947888" ID="ID_477388513" MODIFIED="1642381909369" TEXT="bug">
 <node CREATED="1642344957063" ID="ID_1498347607" MODIFIED="1642344972896" TEXT="&#x654c;&#x65b9;&#x94c1;&#x9a91;&#x4e0d;&#x80fd;&#x8fde;&#x73af;"/>
 <node CREATED="1642344973481" ID="ID_46260858" MODIFIED="1642344981458" TEXT="&#x8f85;&#x4f50;&#x76ee;&#x6807;&#x9009;&#x62e9;&#x9519;&#x8bef;"/>
-<node CREATED="1642345306848" ID="ID_1580602515" MODIFIED="1642381912520" TEXT="&#x653b;&#x6253;&#x66f2;&#x963f;&#x62a5;&#x9519;">
+<node CREATED="1642345306848" ID="ID_1580602515" MODIFIED="1642389571304" TEXT="&#x653b;&#x6253;&#x3010;&#x5f81;&#x8ba8;&#x6c5f;&#x4e1c;&#x3011;&#x3010;&#x66f2;&#x963f;&#x3011;&#x62a5;&#x9519;">
 <icon BUILTIN="messagebox_warning"/>
+<node CREATED="1642389626950" ID="ID_646462151" MODIFIED="1642389639370" TEXT="&#x5c1d;&#x8bd5;&#x66f4;&#x6362;&#x5175;&#x79cd;">
+<icon BUILTIN="idea"/>
+</node>
 </node>
 </node>
 </node>
