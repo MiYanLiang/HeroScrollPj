@@ -13,6 +13,8 @@ public class VsWarUi : MonoBehaviour
     public ChallengeInfoUi ChallengeUi;
     public RankingUi RankingBoardUiPrefab;
     public ScrollRect BoardScrollRect;
+    [SerializeField] private GameObject[] WarBgs;
+    [SerializeField] private Sprite[] WarTitles;
     private List<RankingUi> List { get; set; }
 
     public void Init(int warId)
@@ -21,6 +23,12 @@ public class VsWarUi : MonoBehaviour
         List = new List<RankingUi>();
         WarId = warId;
         gameObject.SetActive(true);
+        for (int i = 0; i < WarBgs.Length; i++)
+        {
+            WarBgs[i].SetActive(i == warId);
+            if(i==warId) WarInfo.TextImage.sprite = WarTitles[i];
+        }
+
     }
 
     public void SetChallengeUi(Versus.ChallengeDto challenge)

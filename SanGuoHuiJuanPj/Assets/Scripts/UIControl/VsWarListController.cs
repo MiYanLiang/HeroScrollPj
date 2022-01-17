@@ -33,8 +33,8 @@ public class VsWarListController : MonoBehaviour
 #endif
         void OnRefreshWarList(DataBag bag)
         {
-            var state = bag.Get<int>(0);
-            Vs.SetState(state);
+            var timer = bag.Get<Versus.RkTimerDto>(0);
+            Vs.SetState(timer);
             var wars = bag.Get<List<Versus.RkWarDto>>(1);
             var challenges = bag.Get<Dictionary<int, Versus.ChallengeDto>>(2);
             foreach (var war in wars)

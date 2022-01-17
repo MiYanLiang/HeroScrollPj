@@ -2,9 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Assets;
 using Assets.System.WarModule;
 using CorrelateLib;
 using DG.Tweening;
+using Newtonsoft.Json;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -86,15 +89,20 @@ public class Versus : MonoBehaviour
     [SerializeField] private VersusWindow _versusWindow;
     [SerializeField] private Image BlockingPanel;
     [SerializeField] private Button XButton;
+    [SerializeField] private Text RkTimer;
+    [SerializeField] private VersusRestrictUi Restrict;
     public VsWarListController warListController;
-    public bool IsAvailableChallenge { get; private set; }
+    public RkTimerDto RkState { get; private set; }
     public int CityLevel = 1;
+    private event UnityAction UpdateEverySecond;
 
     public void Init()
     {
         instance = this;
         if (!EffectsPoolingControl.instance.IsInit)
             EffectsPoolingControl.instance.Init();
+        UpdateEverySecond += RkTimerUpdater;
+        SetRkTimer(string.Empty);
         WarBoard.Init();
         WarBoard.MaxCards = MaxCards;
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
@@ -179,7 +187,19 @@ public class Versus : MonoBehaviour
             var result = (ChallengeResult)cr;
             PlayResult(new WarResult(isChallengerWin, chessmen.Cast<IOperatorInfo>().ToList(), rounds));
             warListController.GetWarList();
-            OnSelectedWar(wId, warIsd);
+            switch (result)
+            {
+                case ChallengeResult.NotFound:
+                    break;
+                case ChallengeResult.InProgress:
+                    OnSelectedWar(wId, warIsd);
+                    break;
+                case ChallengeResult.Clear:
+                    DisplayWarlistPage(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
@@ -320,6 +340,7 @@ public class Versus : MonoBehaviour
         if (lastDelta < 1) return;
         lastDelta = Time.deltaTime;
         UpdateChallengerTimer();
+        UpdateEverySecond?.Invoke();
     }
 
     private void UpdateChallengerTimer()
@@ -577,6 +598,22 @@ public class Versus : MonoBehaviour
             }
         }
     }
+    public enum RkTimerState
+    {
+        Process = 0,
+        Done = 1,
+        Finalized = 2,
+        Cancelled = 3
+    }
+
+    public class RkTimerDto
+    {
+        public int State { get; set; }
+        [JsonIgnore]public RkTimerState Status => (RkTimerState)State;
+        public long TimeOut { get; set; }
+        public long Finalize { get; set; }
+    }
+
     [Serializable]private class WbCancelWindow
     {
         public GameObject Window;
@@ -591,9 +628,78 @@ public class Versus : MonoBehaviour
         }
     }
 
-    public void SetState(int state)
+    public void SetState(RkTimerDto state) => RkState = state;
+
+    private void RkTimerUpdater()
     {
-        IsAvailableChallenge = state > 0;
+        if(RkState==null)
+        {
+            SetRkTimer(string.Empty);
+            return;
+        }
+        switch (RkState.Status)
+        {
+            case RkTimerState.Process:
+            {
+                var ts = SysTime.UtcFromUnixTicks(RkState.TimeOut).ToLocalTime() - DateTime.Now;
+                SetRkTimer($"{ts.TotalHours:00}:{ts.Minutes:00}:{ts.Seconds:00}");
+            }
+                break;
+            case RkTimerState.Done:
+            {
+                var ts = SysTime.UtcFromUnixTicks(RkState.Finalize).ToLocalTime() - DateTime.Now;
+                SetRkTimer($"{ts.TotalHours:00}:{ts.Minutes:00}:{ts.Seconds:00}");
+            }
+                break;
+            case RkTimerState.Finalized:
+            case RkTimerState.Cancelled:
+                SetRkTimer(string.Empty);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+    public void SetRkTimer(string text) => RkTimer.text = text;
+    public void Display(bool display)
+    {
+        gameObject.SetActive(display);
+        if (display) Restrict.Set();
+        else Restrict.Reset();
+    }
+
+    [Serializable]
+    private class VersusRestrictUi
+    {
+        public Image Window;
+        public Text LevelNotReach;
+        public Button CreateCharacterButton;
+
+        public void Set()
+        {
+            Window.gameObject.SetActive(true);
+            LevelNotReach.gameObject.SetActive(false);
+            CreateCharacterButton.gameObject.SetActive(false);
+            if (PlayerDataForGame.instance.pyData.Level < 9)
+            {
+                LevelNotReach.gameObject.SetActive(true);
+                return;
+            }
+
+            var hasCharacter = PlayerDataForGame.instance.Character.IsValidCharacter();
+            if (!hasCharacter)
+            {
+                CreateCharacterButton.gameObject.SetActive(true);
+                return;
+            }
+            Window.gameObject.SetActive(false);
+        }
+
+        public void Reset()
+        {
+            Window.gameObject.SetActive(false);
+            LevelNotReach.gameObject.SetActive(false);
+            CreateCharacterButton.gameObject.SetActive(false);
+        }
     }
 
 }

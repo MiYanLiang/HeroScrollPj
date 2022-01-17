@@ -16,6 +16,9 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
     public Text CityName;
     public Animator SelectedObj;
     public Image Dock;
+    public Sprite UndoneDock;
+    public Sprite CompleteDock;
+
     [SerializeField] private BattleInfo Info;
     [SerializeField] private Occupied Occupier;
 
@@ -38,7 +41,7 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
         SetSelected(false);
         SetProgress(false);
         SetLose(false);
-        SetDock(false);
+        Dock.gameObject.SetActive(false);
         gameObject.SetActive(true);
         Display(true);
     }
@@ -65,7 +68,6 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
     {
         StageIndex = -1;
         Display(false);
-        SetDock(false);
         SetProgress(false); 
         SetLose(false);
         gameObject.SetActive(false);
@@ -76,8 +78,13 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
         SetAttackButton(null);
     }
     
-    public void SetDock(bool display) => Dock.gameObject.SetActive(display);
-    public void SetProgress(bool isPass) => PassImage.gameObject.SetActive(isPass);
+    public void SetProgress(bool isPass)
+    {
+        Dock.gameObject.SetActive(true);
+        Dock.sprite = isPass ? CompleteDock : UndoneDock;
+        PassImage.gameObject.SetActive(isPass);
+    }
+
     public void SetLose(bool isLose) => LoseImage.gameObject.SetActive(isLose);
 
     public void SetSelected(bool isSelected)
@@ -118,19 +125,18 @@ public class CheckpointUi: MonoBehaviour,IPoolObject
     [Serializable]
     private class Occupied
     {
-        public Image Dock;
+        public Image Frame;
         public Image Avatar;
-
         public void Set(Sprite avatar)
         {
-            Dock.gameObject.SetActive(true);
+            Frame.gameObject.SetActive(true);
             Avatar.gameObject.SetActive(true);
             Avatar.sprite = avatar;
         }
 
         public void Off()
         {
-            Dock.gameObject.SetActive(false);
+            Frame.gameObject.SetActive(false);
             Avatar.gameObject.SetActive(false);
         }
     }

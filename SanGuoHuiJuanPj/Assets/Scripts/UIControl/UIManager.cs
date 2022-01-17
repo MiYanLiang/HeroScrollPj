@@ -749,10 +749,9 @@ public class UIManager : MonoBehaviour
         particlesForInterface[index].SetActive(true);
         bayeErrorPanel.gameObject.SetActive(false);
         bayeBelowLevelPanel.gameObject.SetActive(false);
+        Versus.Display(index == 3);
         //暂时未开启的页面 
-        waitWhileImpress.gameObject.SetActive(
-            index == 3 //对决 
-        );
+        //waitWhileImpress.gameObject.SetActive(index == 3);//对决
         switch (index)
         {
             case 0://桃园 
@@ -765,7 +764,8 @@ public class UIManager : MonoBehaviour
                 expedition.OnClickChangeWarsFun(expedition.RecordedExpeditionWarId);
                 warsChooseListObj.transform.parent.parent.GetComponent<ScrollRect>().DOVerticalNormalizedPos(0f, 0.3f);
                 break;
-            case 4://霸业 
+            case 4: //霸业
+            {
                 var isPlayerEnoughLevel = PlayerDataForGame.instance.pyData.Level > 4;
                 bayeBelowLevelPanel.gameObject.SetActive(!isPlayerEnoughLevel);
                 if (!isPlayerEnoughLevel) break;
@@ -774,18 +774,21 @@ public class UIManager : MonoBehaviour
                     BaYeManager.instance.Init();
                     InitBaYeFun();
                 }
+
                 if (BaYeManager.instance.isShowTips)
                 {
                     PlayerDataForGame.instance.ShowStringTips(BaYeManager.instance.tipsText);
                     BaYeManager.instance.tipsText = string.Empty;
                     BaYeManager.instance.isShowTips = false;
                 }
+            }
                 break;
             case 1://主城 
                 break;
             case 3://对决 
-                PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(67));
+            {
                 break;
+            }
             default:
                 XDebug.LogError<UIManager>($"未知页面索引[{index}]。");
                 throw new ArgumentOutOfRangeException();

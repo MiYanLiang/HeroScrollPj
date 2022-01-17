@@ -143,7 +143,7 @@ public class VsWarStageController : MonoBehaviour
         SetOppInfo(gender, militaryPower);
         SetCancelButton(warIdentity);
         var isChallengeAvailable =
-            Vs.IsAvailableChallenge && //挑战开放
+            Vs.RkState != null && Vs.RkState.Status == Versus.RkTimerState.Process && //挑战开放
             warIdentity == Versus.WarIdentity.Anonymous //非关主或是挑战者身份
             && (playerRank < 0 || //不在排行榜上。
                 playerRank > hostRank); //排位低于
@@ -193,7 +193,6 @@ public class VsWarStageController : MonoBehaviour
             else ui.SetAttackButton(() => OnAttackCheckpointAction(ui.StageIndex));
             var isChallengePoint = cha.CurrentPoints.Contains(i);
             ui.AttackButton.gameObject.SetActive(isChallengePoint);
-            ui.SetDock(isChallengePoint);
         }
     }
 
