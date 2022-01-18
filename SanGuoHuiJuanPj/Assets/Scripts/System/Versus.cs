@@ -38,7 +38,7 @@ public class Versus : MonoBehaviour
     public static DataBag OnProcessApi(string data)
     {
         var bag = DataBag.DeserializeBag(data);
-        if (bag == null) ShowHints(data);
+        if (bag == null) instance.GetBackToWarListPage(data);
         return bag;
     }
 
@@ -91,6 +91,8 @@ public class Versus : MonoBehaviour
     [SerializeField] private Button XButton;
     [SerializeField] private Text RkTimer;
     [SerializeField] private VersusRestrictUi Restrict;
+    [SerializeField] private RoundUi roundUi;
+    public Sprite[] WarTitles;
     public VsWarListController warListController;
     public RkTimerDto RkState { get; private set; }
     public int CityLevel = 1;
@@ -105,6 +107,7 @@ public class Versus : MonoBehaviour
         SetRkTimer(string.Empty);
         WarBoard.Init();
         WarBoard.MaxCards = MaxCards;
+        WarBoard.UpdateHeroEnlistText();
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
         XButton.onClick.AddListener(() => WarboardActive(false));
         SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, _ => warListController.GetWarList());
@@ -128,7 +131,7 @@ public class Versus : MonoBehaviour
 
     private void ControllerInit()
     {
-        warListController.Init(this, OnSelectedWar);
+        warListController.Init(this, DisplayStagePage);
         warStageController.Init(this, OnReadyWarboard);
     }
 
@@ -148,9 +151,38 @@ public class Versus : MonoBehaviour
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
         WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
             OnSubmitFormation(o.warId, o.warIsd, o.pointId));
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() => XButton.interactable = false);
+        WarBoard.Chessboard.StartButton.onClick.AddListener(OnPlayChessRounds);
         XButton.interactable = true;
+        WarBoard.UpdateHeroEnlistText();
+        roundUi.Off();
         WarboardActive(true);
+    }
+
+    private void OnPlayChessRounds()
+    {
+        XButton.interactable = false;
+        roundUi.SetRound(0);
+        WarBoard.OnRoundStart += OnEveryRound;
+    }
+
+    private void OnEveryRound(int round)
+    {
+        roundUi.SetRound(round);
+        if(round <= 5)return;
+        if(!XButton.interactable)
+        {
+            XButton.interactable = true;
+            XButton.onClick.RemoveAllListeners();
+            XButton.onClick.AddListener(() =>
+            {
+                if (currentChessAnimation != null)
+                {
+                    StopCoroutine(currentChessAnimation);
+                    currentChessAnimation = null;
+                }
+                WarboardActive(false);
+            });
+        }
     }
 
     private enum ChallengeResult
@@ -166,7 +198,7 @@ public class Versus : MonoBehaviour
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         ApiPanel.instance.InvokeRk(OnCallBack, msn =>
         {
-            ShowHints(msn);
+            GetBackToWarListPage(msn);
             CancelWindow.Display(() => WarboardActive(false));
         }, SubmitFormationV1, 
             warId,
@@ -192,7 +224,7 @@ public class Versus : MonoBehaviour
                 case ChallengeResult.NotFound:
                     break;
                 case ChallengeResult.InProgress:
-                    OnSelectedWar(wId, warIsd);
+                    DisplayStagePage(wId, warIsd);
                     break;
                 case ChallengeResult.Clear:
                     DisplayWarlistPage(false);
@@ -213,7 +245,7 @@ public class Versus : MonoBehaviour
         warStageController.Display(false);
     }
 
-    private void OnSelectedWar(int warId,int warIsd)
+    private void DisplayStagePage(int warId,int warIsd)
     {
         warListController.Display(false);
         warStageController.Set(warId, warIsd);
@@ -260,8 +292,10 @@ public class Versus : MonoBehaviour
             ChessboardManager.InstanceChessman(card);
         }
 
-        StartCoroutine(ChessAnimation(data));
+        currentChessAnimation = StartCoroutine(ChessAnimation(data));
     }
+
+    private Coroutine currentChessAnimation { get; set; }
 
     public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds,
         List<IOperatorInfo> ops)
@@ -290,7 +324,7 @@ public class Versus : MonoBehaviour
     private IEnumerator ChessAnimation(WarResult result)
     {
         Time.timeScale = GamePref.PrefWarSpeed;
-        yield return WarBoard.AnimRounds(result.Rounds);
+        yield return WarBoard.AnimRounds(result.Rounds, false);
         Time.timeScale = 1f;
         if (result.IsChallengerWin)
             yield return WarBoard.ChallengerWinAnimation();
@@ -301,6 +335,13 @@ public class Versus : MonoBehaviour
     {
         WarBoard.gameObject.SetActive(isActive);
         BlockingPanel.gameObject.SetActive(isActive);
+        if (!isActive)
+        {
+            Time.timeScale = 1f;
+            AudioController1.instance.ChangeBackMusic();
+            WarBoard.OnRoundStart -= OnEveryRound;
+            roundUi.Off();
+        }
     }
 
     public void StartNewGame()
@@ -500,7 +541,11 @@ public class Versus : MonoBehaviour
         public void Close() => Window.gameObject.SetActive(false);
     }
 
-    public static void ShowHints(string text) => PlayerDataForGame.instance.ShowStringTips(text);
+    public void GetBackToWarListPage(string text)
+    {
+        DisplayWarlistPage(true);
+        PlayerDataForGame.instance.ShowStringTips(text);
+    }
 
     //key = warId
     private static readonly Dictionary<int, ChallengerUiTimer> ChallengeExpSet =
@@ -647,8 +692,9 @@ public class Versus : MonoBehaviour
                 break;
             case RkTimerState.Done:
             {
-                var ts = SysTime.UtcFromUnixTicks(RkState.Finalize).ToLocalTime() - DateTime.Now;
-                SetRkTimer($"{ts.TotalHours:00}:{ts.Minutes:00}:{ts.Seconds:00}");
+                //var ts = SysTime.UtcFromUnixTicks(RkState.Finalize).ToLocalTime() - DateTime.Now;
+                //SetRkTimer($"{ts.TotalHours:00}:{ts.Minutes:00}:{ts.Seconds:00}");
+                SetRkTimer("战场清扫中...");
             }
                 break;
             case RkTimerState.Finalized:
@@ -702,4 +748,18 @@ public class Versus : MonoBehaviour
         }
     }
 
+    [Serializable]
+    private class RoundUi
+    {
+        public GameObject Ui;
+        public Text RoundText;
+
+        public void Off() => Ui.gameObject.SetActive(false);
+
+        public void SetRound(int round)
+        {
+            Ui.gameObject.SetActive(true);
+            RoundText.text = $"{round}";
+        }
+    }
 }

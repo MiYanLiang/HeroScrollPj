@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -34,7 +35,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private List<SpriteObj> Sprites { get; } = new List<SpriteObj>();
     public UnityEvent<bool, int, int> OnResourceUpdate = new PlayerResourceEvent();
     public UnityEvent<FightCardData> OnCardRemove = new CardDefeatedEvent();
-    
+    public event UnityAction<int> OnRoundStart;
+
     private bool isShady = false;
 
     private List<WarGameCardUi> GarbageUi = new List<WarGameCardUi>();//UI垃圾收集器，千万别重用UI，如果没分开重写放置棋格上的方法，会造成演示UI引用混乱
@@ -160,9 +162,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return gridTween;
     }
     //演示回合
-    public IEnumerator AnimateRound(ChessRound round)
+    public IEnumerator AnimateRound(ChessRound round,bool playRoundStartAudio)
     {
-        PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
+        OnRoundStart?.Invoke(round.InstanceId);
+        if (playRoundStartAudio) PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
         ChessboardPreAnimation().Play();
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundStart);
 
@@ -743,19 +746,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             SpriteUpdate(chessPos, conduct.Element, conduct.Total >= 0);
     }
 
-    //void SpriteUpdateByResult(ChessPos chessPos, ActivityResult result)
-    //{
-    //    var sprites = Sprites.Where(s => s.Pos == chessPos.Pos).ToList();
-    //    foreach (var spriteType in result.Sprites)
-    //    {
-    //        var sprite = sprites.FirstOrDefault(s => s.SpriteType == spriteType);
-    //        SpriteUpdate(chessPos, spriteType, sprite == null || !sprite.IsSpriteDisplay);
-    //        if (sprite != null) sprites.Remove(sprite);
-    //    }
-    //    foreach (var spriteObj in sprites) SpriteUpdate(chessPos, spriteObj.SpriteType, false);
-    //}
-
-
     private void SpriteUpdate(ChessPos chessPos, int spriteType, bool isAdd)
     {
         var buffId = Effect.GetFloorBuffId(PosSprite.GetKind(spriteType));
@@ -838,14 +828,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private void PlayAudio(int clipIndex)
     {
         if (clipIndex < 0) return;
-        if (WarsUIManager.instance == null || AudioController0.instance == null) return;
-        var clip = WarsUIManager.instance.audioClipsFightEffect[clipIndex];
-#if UNITY_EDITOR
-        if (clip == null)
-            Debug.LogError($"找不到音效id = {clipIndex}!");
-#endif
-        var volume = WarsUIManager.instance.audioVolumeFightEffect[clipIndex];
-        AudioController0.instance.StackPlaying(clip, volume);
+        if (WarMusicController.Instance == null || AudioController0.instance == null) return;
+        WarMusicController.Instance.PlayWarEffect(clipIndex);
     }
 
     private class SpriteObj

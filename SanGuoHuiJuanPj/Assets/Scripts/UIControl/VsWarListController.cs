@@ -27,7 +27,7 @@ public class VsWarListController : MonoBehaviour
     {
         foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
         _vsWarUiList.Clear();
-        ApiPanel.instance.InvokeRk(OnRefreshWarList, Versus.ShowHints, Versus.GetWarsV1);
+        ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
         //Versus.GetRkWars(OnRefreshWarList);
 #endif
@@ -49,7 +49,7 @@ public class VsWarListController : MonoBehaviour
     private void GenerateUi(Versus.RkWarDto war, Versus.ChallengeDto challengeDto)
     {
         var ui = Instantiate(UiPrefab, listView.content);
-        ui.Init(war.WarId);
+        ui.Init(war.WarId,Vs.WarTitles);
         ui.SetChallengeUi(challengeDto);
         var isChallenger = challengeDto != null;
         ui.SetBoard(war.Index, war.RankingBoard, isChallenger, OnSelectAction);

@@ -45,7 +45,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
 
     private IEnumerator TestRoundAnim(ChessRound chessRound)
     {
-        yield return AnimateRound(chessRound);
+        yield return AnimateRound(chessRound, true);
         WarBoardUi.StartButtonAnim(true, chessboard.StartButton);
     }
 

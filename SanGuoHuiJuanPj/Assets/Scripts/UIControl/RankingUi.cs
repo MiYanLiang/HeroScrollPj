@@ -9,11 +9,12 @@ public class RankingUi : MonoBehaviour
     public Text MPower;
     public Button ChallengeButton;
 
-    public void Set(int rank, string charName,int milPower,UnityAction onclickAction)
+    public void Set(int rank, string charName, int milPower, bool isHost, UnityAction onclickAction)
     {
         gameObject.SetActive(true);
         No.text = rank.ToString();
         HostName.text = charName;
+        if (!isHost) HostName.color = Color.white;
         MPower.text = milPower.ToString();
         ChallengeButton.onClick.RemoveAllListeners();
         if (onclickAction == default)

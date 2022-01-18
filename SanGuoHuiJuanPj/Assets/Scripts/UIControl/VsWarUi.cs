@@ -14,10 +14,9 @@ public class VsWarUi : MonoBehaviour
     public RankingUi RankingBoardUiPrefab;
     public ScrollRect BoardScrollRect;
     [SerializeField] private GameObject[] WarBgs;
-    [SerializeField] private Sprite[] WarTitles;
     private List<RankingUi> List { get; set; }
 
-    public void Init(int warId)
+    public void Init(int warId,Sprite[] warTitles)
     {
         RankingBoardUiPrefab.gameObject.SetActive(false);
         List = new List<RankingUi>();
@@ -26,7 +25,7 @@ public class VsWarUi : MonoBehaviour
         for (int i = 0; i < WarBgs.Length; i++)
         {
             WarBgs[i].SetActive(i == warId);
-            if(i==warId) WarInfo.TextImage.sprite = WarTitles[i];
+            if(i==warId) WarInfo.TextImage.sprite = warTitles[i];
         }
 
     }
@@ -47,17 +46,17 @@ public class VsWarUi : MonoBehaviour
         foreach (var rankingUi in List) Destroy(rankingUi.gameObject);
         foreach (var obj in rankSet.OrderBy(r=>r.Key))
         {
-            var i = obj.Key;
+            var rIndex = obj.Key;
             var rank = obj.Value;
             var ui = Instantiate(RankingBoardUiPrefab, BoardScrollRect.content);
             if (!isChallenger)
             {
 
-                ui.Set(i + 1, rank.CharName, rank.MPower,
-                    i == index ? default(UnityAction) : () => onClickAction(WarId, rank.WarIsd));
+                ui.Set(rIndex + 1, rank.CharName, rank.MPower, rIndex == index,
+                    rIndex == index ? default(UnityAction) : () => onClickAction(WarId, rank.WarIsd));
             }
             else
-                ui.Set(i + 1, rank.CharName, rank.MPower, null);
+                ui.Set(rIndex + 1, rank.CharName, rank.MPower, rIndex == index, null);
             List.Add(ui);
         }
         var rankText = index >= 0 ? (index + 1).ToString() : "~";

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
@@ -35,6 +36,7 @@ public class WarBoardUi : MonoBehaviour
     [SerializeField] private float AutoRoundSecs = 1.5f;
     private Slider AutoRoundSlider => Chessboard.AutoRoundSlider;
     public event UnityAction OnRoundPause;
+    public event UnityAction<int> OnRoundStart;
     private ObjectPool<WarGameCardUi> UiPool { get; set; }
 
     public void Init()
@@ -42,6 +44,7 @@ public class WarBoardUi : MonoBehaviour
         Rack.Init(this);
         ChessboardInputControl.Init(this);
         ChessboardManager.Init(Chessboard, JiBanManager);
+        ChessboardManager.OnRoundStart += i => OnRoundStart?.Invoke(i);
         OnRoundPause += () => IsDragDisable = false;
         ChessboardManager.OnCardRemove.AddListener(OnCardRemove);
         OnGameSet.AddListener(playerWin =>
@@ -209,7 +212,7 @@ public class WarBoardUi : MonoBehaviour
 
     private IEnumerator PlayRound(ChessRound round,bool invokeRoundPauseTrigger)
     {
-        yield return ChessboardManager.AnimateRound(round);
+        yield return ChessboardManager.AnimateRound(round, true);
         var chess = NewWarManager.ChessOperator;
         if (chess.IsGameOver)
         {
@@ -264,7 +267,7 @@ public class WarBoardUi : MonoBehaviour
 
     private void PlayUiAudio(int clipIndex, float delayedTime)
     {
-        if(WarsUIManager.instance) WarsUIManager.instance.PlayAudioForSecondClip(clipIndex, delayedTime);
+        if (WarMusicController.Instance) WarMusicController.Instance.PlayWarEffect(clipIndex);
     }
 
 
@@ -445,10 +448,12 @@ public class WarBoardUi : MonoBehaviour
 
     public void ChangeChessboardBg(Sprite sprite) => Chessboard.Background.sprite = sprite;
 
-    public IEnumerator AnimRounds(List<ChessRound> rounds)
+    public IEnumerator AnimRounds(List<ChessRound> rounds, bool playRoundStartAudio)
     {
         foreach (var round in rounds)
-            yield return ChessboardManager.AnimateRound(round);
+        {
+            yield return ChessboardManager.AnimateRound(round, playRoundStartAudio);
+        }
     }
 
     private void Update()
@@ -465,5 +470,6 @@ public class WarBoardUi : MonoBehaviour
                 AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
         }
     }
+
 }
 public class GameSetEvent : UnityEvent<bool> { }

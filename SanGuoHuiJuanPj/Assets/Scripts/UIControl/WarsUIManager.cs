@@ -598,9 +598,10 @@ public class WarsUIManager : MonoBehaviour
         currentEvent = EventTypes.战斗;
         PlayAudioClip(21);
         int bgmIndex = checkPoint.BattleBGM;
-        AudioController1.instance.isNeedPlayLongMusic = true;
-        AudioController1.instance.ChangeAudioClip(audioClipsFightBack[bgmIndex], audioVolumeFightBack[bgmIndex]);
-        AudioController1.instance.PlayLongBackMusInit();
+        WarMusicController.Instance.PlayBgm(bgmIndex);
+        //AudioController1.instance.isNeedPlayLongMusic = true;
+        //AudioController1.instance.ChangeAudioClip(audioClipsFightBack[bgmIndex], audioVolumeFightBack[bgmIndex]);
+        //AudioController1.instance.PlayLongBackMusInit();
         InitChessboard(stage);
     }
 
@@ -1134,23 +1135,23 @@ public class WarsUIManager : MonoBehaviour
 
     [SerializeField] GameObject[] guideObjs; // 指引objs 0:开始关卡 1:查看奇遇 2:升级按钮
 
-    public void PlayAudioForSecondClip(int clipIndex, float delayedTime)
-    {
-        var clip = audioClipsFightEffect[clipIndex];
-        var volume = audioVolumeFightEffect[clipIndex];
-        if (AudioController0.instance.ChangeAudioClip(clip, volume))
-        {
-            AudioController0.instance.PlayAudioSource(0);
-            return;
-        }
+    //public void PlayAudioForSecondClip(int clipIndex, float delayedTime)
+    //{
+    //    var clip = audioClipsFightEffect[clipIndex];
+    //    var volume = audioVolumeFightEffect[clipIndex];
+    //    if (AudioController0.instance.ChangeAudioClip(clip, volume))
+    //    {
+    //        AudioController0.instance.PlayAudioSource(0);
+    //        return;
+    //    }
 
-        AudioController0.instance.audioSource.volume *= 0.75f;
-        audioSource.clip = audioClipsFightEffect[clipIndex];
-        audioSource.volume = audioVolumeFightEffect[clipIndex];
-        if (!GamePref.PrefMusicPlay)
-            return;
-        audioSource.PlayDelayed(delayedTime);
-    }
+    //    AudioController0.instance.audioSource.volume *= 0.75f;
+    //    audioSource.clip = audioClipsFightEffect[clipIndex];
+    //    audioSource.volume = audioVolumeFightEffect[clipIndex];
+    //    if (!GamePref.PrefMusicPlay)
+    //        return;
+    //    audioSource.PlayDelayed(delayedTime);
+    //}
 
     bool isShowQuitTips = false;
 
@@ -1261,6 +1262,7 @@ public class WarsUIManager : MonoBehaviour
         }
     }
 }
+
 public class GameStage
 {
     public CheckpointTable Checkpoint { get; set; }

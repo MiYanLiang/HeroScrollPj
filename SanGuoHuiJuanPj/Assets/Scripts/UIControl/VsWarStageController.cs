@@ -24,9 +24,11 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private Image OppAvatar;
     [SerializeField] private Text OppMilitaryPowerText;
     [SerializeField] private Text OppNameText;
+    [SerializeField] private Image TitleImage;
     [SerializeField] private Sprite[] genderSprites;
     [SerializeField] private CancelWindowUi CancelWindow;
     [SerializeField] private VsForceSelectorUi ForceSelectorUi;
+    [SerializeField] private CharacterSetUi Player;
     private int WarId { get; set; } = -1;
     private int WarIsd { get; set; } = -1;
     public int TroopId { get; set; } = -1;
@@ -68,12 +70,11 @@ public class VsWarStageController : MonoBehaviour
         WarId = warId;
         WarIsd = warIsd;
         gameObject.SetActive(true);
+        Player.Off();
+        if (Vs.WarTitles.Length > warId)
+            TitleImage.sprite = Vs.WarTitles[warId];
         TimerObj.SetActive(false);
-        ApiPanel.instance.InvokeRk(OnApiAction, msg =>
-        {
-            Versus.ShowHints(msg);
-            CancelWindow.SetCancel(() => Vs.DisplayWarlistPage(true));
-        }, Versus.GetStageV1, warId, warIsd);
+        ApiPanel.instance.InvokeRk(OnApiAction, Vs.GetBackToWarListPage, Versus.GetStageV1, warId, warIsd);
 #if UNITY_EDITOR
         //Versus.GetRkWarStageInfo(warId, warIsd, OnApiAction);
 #endif
@@ -176,6 +177,11 @@ public class VsWarStageController : MonoBehaviour
     {
         if (identity == Versus.WarIdentity.Challenger)
         {
+            var c = PlayerDataForGame.instance.Character;
+            var hst = PlayerDataForGame.instance.hstData;
+            var mPower = hst.heroSaveData.Concat(hst.towerSaveData.Concat(hst.trapSaveData)).Enlist(cha.TroopId)
+                .Sum(gc => gc.Power());
+            Player.Set(c.Name, c.Avatar, mPower);
             ForceSelectorUi.OnSelected(cha.TroopId, true);
             TimerObj.gameObject.SetActive(true);
             Vs.RemoveFromTimer(CountdownText); //移除公用倒计时UI。
@@ -237,7 +243,7 @@ public class VsWarStageController : MonoBehaviour
 
     private void RequestChallenge()
     {
-        ApiPanel.instance.InvokeRk(OnChallengeRespond, Versus.ShowHints, Versus.StartChallengeV1, WarId, WarIsd,
+        ApiPanel.instance.InvokeRk(OnChallengeRespond, Vs.GetBackToWarListPage, Versus.StartChallengeV1, WarId, WarIsd,
             TroopId);
 #if UNITY_EDITOR
         //Versus.PostRkStartChallenge(WarId, WarIsd, TroopId, OnChallengeRespond);
@@ -255,7 +261,7 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnReportAction(int index)
     {
-        ApiPanel.instance.InvokeRk(OnCallBackResult, Versus.ShowHints, Versus.GetCheckPointResultV1, WarId, index);
+        ApiPanel.instance.InvokeRk(OnCallBackResult, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV1, WarId, index);
 #if UNITY_EDITOR
         //Versus.GetRkCheckPointWarResult(WarId, index, OnCallBackResult);
 #endif
@@ -272,13 +278,15 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnAttackCheckpointAction(int checkpointId)
     {
-        ApiPanel.instance.InvokeRk(CallBackAction, Versus.ShowHints, Versus.GetGetFormationV1, WarId, checkpointId);
+        ApiPanel.instance.InvokeRk(CallBackAction, Vs.GetBackToWarListPage, Versus.GetGetFormationV1, WarId, checkpointId);
 #if UNITY_EDITOR
         //Versus.GetRkCheckpointFormation(WarId, checkpointId, CallBackAction);
 #endif
 
         void CallBackAction(DataBag bag)
         {
+            WarMusicController.Instance.OnBattleMusic();
+            WarMusicController.Instance.PlayBgm(2);
             var formation = bag.Get<Dictionary<int, Versus.Card>>(0);
             var cp = RkCheckPoints.Single(c => c.Index == checkpointId);
             var usedCards = bag.Get<GameCardDto[]>(1);
@@ -303,6 +311,25 @@ public class VsWarStageController : MonoBehaviour
             Window.gameObject.SetActive(true);
             CancelButton.onClick.RemoveAllListeners();
             CancelButton.onClick.AddListener(onRequestCancel);
+        }
+    }
+
+    [Serializable]
+    private class CharacterSetUi
+    {
+        public GameObject Ui;
+        public Text Name;
+        public Text MPower;
+        public Image Avatar;
+
+        public void Off() => Ui.gameObject.SetActive(false);
+
+        public void Set(string name, int avatar, int mPower)
+        {
+            Name.text = name;
+            Avatar.sprite = GameResources.Instance.Avatar[avatar];
+            MPower.text = mPower.ToString();
+            Ui.gameObject.SetActive(true);
         }
     }
 }
