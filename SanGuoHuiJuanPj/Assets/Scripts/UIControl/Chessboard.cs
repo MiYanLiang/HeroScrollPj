@@ -69,23 +69,24 @@ public class Chessboard : MonoBehaviour
     public ChessPos GetChessPos(int index, bool isPlayer) => GetScope(isPlayer)[index];
     public ChessPos GetChessPos(FightCardData card) => GetScope(card.IsPlayer)[card.Pos];
 
-    public void PlaceCard(int index, FightCardData card)
+    public void PlaceCard(int pos, FightCardData card)
     {
         try
         {
             if (!data.ContainsKey(card.InstanceId))
                 data.Add(card.InstanceId, card);
             var scope = GetScope(card.isPlayerCard);
-            var pos = scope.FirstOrDefault(p => p.Card == card);
-            if (pos != null) RemoveCard(pos.Pos, card.IsPlayer); //移除卡牌前位置
-            if (scope[index].Card != null) RemoveCard(index, card.isPlayerCard); //移除目标位置上的卡牌
-            scope[index].PlaceCard(card, true);
-            card.SetPos(index);
+            var chessPos = scope.FirstOrDefault(p => p.Card == card);
+            if (chessPos != null) RemoveCard(chessPos.Pos, card.IsPlayer); //移除卡牌前位置
+            if (scope[pos].Card != null) RemoveCard(pos, card.isPlayerCard); //移除目标位置上的卡牌
+            scope[pos].PlaceCard(card, true);
+            card.SetPos(pos);
             card.cardObj.transform.SetAsFirstSibling();
         }
-        catch (IndexOutOfRangeException e)
+        catch (Exception e)
         {
-            Debug.LogError($"注意棋格Index问题，检查是否有棋子重叠。:{e}");
+            Debug.LogError(
+                $"注意棋格Index问题，检查{card.InstanceId}棋子[id={card.CardId},type={card.CardType},pos={pos}]重叠。:{e}");
         }
     }
 

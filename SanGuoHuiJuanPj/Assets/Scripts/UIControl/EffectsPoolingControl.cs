@@ -294,7 +294,7 @@ public class EffectsPoolingControl : MonoBehaviour
     /// </summary>
     public void RecycleEffect(EffectStateUi go)
     {
-        go.Animator.enabled = true;
+        if(go.Animator) go.Animator.enabled = true;
         go.transform.SetParent(transform);
         go.gameObject.SetActive(false);
     }
