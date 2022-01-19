@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Assets;
 using Assets.System.WarModule;
@@ -94,17 +95,19 @@ public class Versus : MonoBehaviour
     [SerializeField] private RoundUi roundUi;
     public Sprite[] WarTitles;
     public VsWarListController warListController;
+    public PlayerCharacterUi PlayerCharacterUi;
     public RkTimerDto RkState { get; private set; }
     public int CityLevel = 1;
     private event UnityAction UpdateEverySecond;
 
-    public void Init()
+    public void Init(UIManager uiMgr)
     {
         instance = this;
         if (!EffectsPoolingControl.instance.IsInit)
             EffectsPoolingControl.instance.Init();
         UpdateEverySecond += RkTimerUpdater;
         SetRkTimer(string.Empty);
+        if (uiMgr != null) Restrict.Init(uiMgr, PlayerCharacterUi);
         WarBoard.Init();
         WarBoard.MaxCards = MaxCards;
         WarBoard.UpdateHeroEnlistText();
@@ -165,10 +168,12 @@ public class Versus : MonoBehaviour
         WarBoard.OnRoundStart += OnEveryRound;
     }
 
+    private int RoundCount = 0;
     private void OnEveryRound(int round)
     {
         roundUi.SetRound(round);
-        if(round <= 5)return;
+        RoundCount++;
+        if(RoundCount <= 5)return;
         if(!XButton.interactable)
         {
             XButton.interactable = true;
@@ -177,7 +182,7 @@ public class Versus : MonoBehaviour
             {
                 if (currentChessAnimation != null)
                 {
-                    StopCoroutine(currentChessAnimation);
+                    StopAllCoroutines();
                     currentChessAnimation = null;
                 }
                 WarboardActive(false);
@@ -194,7 +199,7 @@ public class Versus : MonoBehaviour
 
     private void OnSubmitFormation(int warId, int warIsd, int pointId)
     {
-        WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
+        WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         ApiPanel.instance.InvokeRk(OnCallBack, msn =>
         {
@@ -292,10 +297,12 @@ public class Versus : MonoBehaviour
             ChessboardManager.InstanceChessman(card);
         }
 
-        currentChessAnimation = StartCoroutine(ChessAnimation(data));
+        currentChessAnimation = ChessAnimation(data);
+        RoundCount = 0;
+        StartCoroutine(currentChessAnimation);
     }
 
-    private Coroutine currentChessAnimation { get; set; }
+    private IEnumerator currentChessAnimation { get; set; }
 
     public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds,
         List<IOperatorInfo> ops)
@@ -314,7 +321,7 @@ public class Versus : MonoBehaviour
         WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
         WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
         {
-            WarBoard.Chessboard.StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
+            WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, false);
             PlayResult(result);
             XButton.interactable = false;
         });
@@ -337,11 +344,15 @@ public class Versus : MonoBehaviour
         BlockingPanel.gameObject.SetActive(isActive);
         if (!isActive)
         {
+            EffectsPoolingControl.instance.ResetPools();
             Time.timeScale = 1f;
             AudioController1.instance.ChangeBackMusic();
             WarBoard.OnRoundStart -= OnEveryRound;
             roundUi.Off();
+            WarBoard.NewGame(false, false);
         }
+
+        WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, true);
     }
 
     public void StartNewGame()
@@ -719,6 +730,17 @@ public class Versus : MonoBehaviour
         public Image Window;
         public Text LevelNotReach;
         public Button CreateCharacterButton;
+
+        public void Init(UIManager uiMgr, PlayerCharacterUi ui)
+        {
+            CreateCharacterButton.onClick.RemoveAllListeners();
+            ui.OnCloseAction -= SwitchMainPage;
+            ui.OnCloseAction += SwitchMainPage;
+            CreateCharacterButton.onClick.AddListener(ui.Show);
+
+            void SwitchMainPage() => uiMgr.MainPageSwitching(3);
+        }
+
 
         public void Set()
         {

@@ -126,6 +126,7 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update 
     public void Init()
     {
+        if (IsInit) return;
         AudioController1.instance.ChangeBackMusic();
 
         TimeSystemControl.instance.InitStaminaCount(PlayerDataForGame.instance.Stamina.Value <
@@ -143,7 +144,7 @@ public class UIManager : MonoBehaviour
         InitializationPlayerInfo();
         expedition.Init();
         Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist);
-        Versus.Init();
+        Versus.Init(this);
         InitChickenOpenTs();
         //chickenWindow.Init();
         InitBaYeFun();

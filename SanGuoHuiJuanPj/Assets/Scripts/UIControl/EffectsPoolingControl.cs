@@ -43,6 +43,13 @@ public class EffectsPoolingControl : MonoBehaviour
         IsInit = true;
     }
 
+    public void ResetPools()
+    {
+        foreach (var obj in EffectPool.Values.SelectMany(o=>o).ToList()) RecycleEffect(obj);
+        foreach (var buff in BuffPool.Values.SelectMany(o=>o).ToList()) RecycleEffect(buff);
+        foreach (var buff in FloorBuffPool.Values.SelectMany(o=>o).ToList()) RecycleEffect(buff);
+    }
+
     private void InitializedEffectsObj()
     {
         for (int i = 0; i < effectsNameStr.Length; i++)
@@ -104,8 +111,8 @@ public class EffectsPoolingControl : MonoBehaviour
         GameObject effect = null;
         if (!EffectPool.ContainsKey(sparkId))
             EffectPool.Add(sparkId, new List<GameObject>());
-        
-        effect = EffectPool[sparkId].FirstOrDefault(e => !e.activeSelf);
+        EffectPool[sparkId] = EffectPool[sparkId].Where(s => s != null).ToList();
+        effect = EffectPool[sparkId].FirstOrDefault(e => e != null && !e.activeSelf);
         if (effect == null)
         {
             effect = Instantiate(GameResources.Instance.Spark[sparkId]);
@@ -242,7 +249,8 @@ public class EffectsPoolingControl : MonoBehaviour
             BuffPool[tmp.Key] = tmp.Value.Where(e => e != null).ToList();
         if (!BuffPool.ContainsKey(buffId))
             BuffPool.Add(buffId, new List<EffectStateUi>());
-        var buff = BuffPool[buffId].FirstOrDefault(e => !e.gameObject.activeSelf);
+        BuffPool[buffId] = BuffPool[buffId].Where(b => b != null).ToList();
+        var buff = BuffPool[buffId].FirstOrDefault(e => e != null && !e.gameObject.activeSelf);
         if (buff == null)
         {
             buff = Instantiate(GameResources.Instance.Buff[buffId], trans);
@@ -260,7 +268,8 @@ public class EffectsPoolingControl : MonoBehaviour
         if (id == -1) return null;
         if (!FloorBuffPool.ContainsKey(id))
             FloorBuffPool.Add(id, new List<EffectStateUi>());
-        var buff = FloorBuffPool[id].FirstOrDefault(e => !e.gameObject.activeSelf);
+        FloorBuffPool[id] = FloorBuffPool[id].Where(e => e != null).ToList();
+        var buff = FloorBuffPool[id].FirstOrDefault(e => e != null && !e.gameObject.activeSelf);
         if (buff == null)
         {
             buff = Instantiate(GameResources.Instance.FloorBuff[id], trans);

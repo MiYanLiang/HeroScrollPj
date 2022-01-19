@@ -30,6 +30,7 @@ public class PlayerCharacterUi : MonoBehaviour
     public Button SignEditButton;
     private ComponentActivateSwitch<Button> mapper;
     public Character Character { get; private set; }
+    public event UnityAction OnCloseAction;
     
     private bool isInit = false;
     private States state;
@@ -45,7 +46,7 @@ public class PlayerCharacterUi : MonoBehaviour
         mapper.Add(States.NewCharacter, SubmitButton);
         mapper.Add(States.Registered, NameEditButton, NicknameEditButton, GenderEditButton, SignEditButton);
         SubmitButton.onClick.AddListener(ReqCreateCharacter);
-        CloseButton.onClick.AddListener(()=>gameObject.SetActive(false));
+        CloseButton.onClick.AddListener(Off);
         GenderUi.Init();
         GenderUi.SetAvailability(true);
         gameObject.SetActive(false);
@@ -156,7 +157,11 @@ public class PlayerCharacterUi : MonoBehaviour
         GenderEditButton.interactable = GenderUi.Gender != (CharacterGender)Character.Gender;
     }
 
-    public void Off() => gameObject.SetActive(false);
+    public void Off()
+    {
+        gameObject.SetActive(false);
+        OnCloseAction?.Invoke();
+    }
 
     private void ReqCreateCharacter()
     {

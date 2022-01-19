@@ -16,6 +16,7 @@ public class WarBoardUi : MonoBehaviour
     /// </summary>
     public int MaxCards;
     public Chessboard Chessboard;
+    public Animator StartBtnAnimator;
     public JiBanAnimationManager JiBanManager;
     [SerializeField] private Image Background;
     [SerializeField] private PlayerCardRack Rack;
@@ -459,7 +460,7 @@ public class WarBoardUi : MonoBehaviour
     private void Update()
     {
         if (Chessboard == null) return;
-        if (!IsGameOver && !IsBusy && !IsFirstRound && AutoRoundToggle != null && AutoRoundToggle.isOn)
+        if (!IsGameOver && !IsBusy && !IsFirstRound && AutoRoundToggle.isActiveAndEnabled && AutoRoundToggle != null && AutoRoundToggle.isOn)
         {
             autoRoundTimer += Time.deltaTime;
             if (autoRoundTimer >= AutoRoundSecs)
@@ -470,6 +471,5 @@ public class WarBoardUi : MonoBehaviour
                 AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
         }
     }
-
 }
 public class GameSetEvent : UnityEvent<bool> { }
