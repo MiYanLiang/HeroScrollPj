@@ -23,9 +23,12 @@ public static class GameSystemExtension
     /// </summary>
     /// <param name="cards"></param>
     /// <param name="forceId">军团Id</param>
+    /// <param name="isFight"></param>
     /// <returns></returns>
-    public static IEnumerable<GameCard> Enlist(this IEnumerable<GameCard> cards, int forceId) =>
-        cards.Where(card => GetForceId(card) == forceId && card.level > 0 && card.isFight > 0);
+    public static IEnumerable<GameCard> Enlist(this IEnumerable<GameCard> cards, int forceId, bool isFight = true) =>
+        isFight
+            ? cards.Where(card => GetForceId(card) == forceId && card.level > 0 && card.isFight > 0)
+            : cards.Where(card => GetForceId(card) == forceId && card.level > 0);
     public static bool IsEnlistAble(this GameCard card) => card.Level > 0;
     public static int GetForceId(this GameCard card)
     {
