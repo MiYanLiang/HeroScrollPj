@@ -750,6 +750,7 @@ public class UIManager : MonoBehaviour
         particlesForInterface[index].SetActive(true);
         bayeErrorPanel.gameObject.SetActive(false);
         bayeBelowLevelPanel.gameObject.SetActive(false);
+        Barrack.gameObject.SetActive(index == 1);
         Versus.Display(index == 3);
         //暂时未开启的页面 
         //waitWhileImpress.gameObject.SetActive(index == 3);//对决
@@ -787,9 +788,7 @@ public class UIManager : MonoBehaviour
             case 1://主城 
                 break;
             case 3://对决 
-            {
                 break;
-            }
             default:
                 XDebug.LogError<UIManager>($"未知页面索引[{index}]。");
                 throw new ArgumentOutOfRangeException();

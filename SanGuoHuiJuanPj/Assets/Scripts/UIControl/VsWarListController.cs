@@ -59,7 +59,10 @@ public class VsWarListController : MonoBehaviour
             Vs.RegChallengeUi(challengeDto, ui.ChallengeUi.TimerUi);
             ui.ChallengeUi.Button.onClick.RemoveAllListeners();
             ui.ChallengeUi.Button.onClick.AddListener(() =>
-                OnSelectAction.Invoke(war.WarId, challengeDto.WarIsd));
+            {
+                Vs.PlayClickAudio();
+                OnSelectAction.Invoke(war.WarId, challengeDto.WarIsd);
+            });
         }
         _vsWarUiList.Add(ui);
     }
