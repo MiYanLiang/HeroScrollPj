@@ -41,5 +41,12 @@ namespace Assets.Editor
         public string SIGNALR_LOGIN_API           ;
         public string DEVICE_LOGIN_API            ;
         public string RESET_GAMEPLAY_API          ;
+        public string GetWarsV1                   ;
+        public string GetStageV1                  ;
+        public string GetGetFormationV1           ;
+        public string GetCheckPointResultV1       ;
+        public string StartChallengeV1            ;
+        public string SubmitFormationV1           ;
+        public string CancelChallengeV1           ;
     }
 }

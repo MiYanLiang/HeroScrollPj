@@ -30,8 +30,8 @@ public static class Server
     //todo: CDN测试服
     //private static string ServerUrl { get; set; } = "https://heroscroll.azureedge.net/api/";
     // Todo: 测试服
-    private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
-    //private static string ServerUrl { get; set; } = "http://localhost:7071/api/";
+    //private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
+    private static string ServerUrl { get; set; } = "http://localhost:7071/api/";
     public static string PLAYER_SAVE_DATA_UPLOAD_API { get; private set; } = "UploadSaveData";
     public static string INSTANCE_ID_API { get; private set; } = "GenerateUserId";
     public static string REQUEST_USERNAME_API { get; private set; } = "RequestUsername";
@@ -67,6 +67,13 @@ public static class Server
         SIGNALR_LOGIN_API = fields.SIGNALR_LOGIN_API;
         DEVICE_LOGIN_API = fields.DEVICE_LOGIN_API;
         RESET_GAMEPLAY_API = fields.RESET_GAMEPLAY_API;
+        Versus.GetWarsV1 = fields.GetWarsV1;
+        Versus.GetStageV1 = fields.GetStageV1;
+        Versus.GetGetFormationV1 = fields.GetGetFormationV1;
+        Versus.GetCheckPointResultV1 = fields.GetCheckPointResultV1;
+        Versus.StartChallengeV1 = fields.StartChallengeV1;
+        Versus.SubmitFormationV1 = fields.SubmitFormationV1;
+        Versus.CancelChallengeV1 = fields.CancelChallengeV1;
 #endif
     }
 

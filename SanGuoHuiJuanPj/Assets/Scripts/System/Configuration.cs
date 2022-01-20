@@ -35,6 +35,13 @@ public class ServerFields
         REQUEST_USERNAME_API = configAsset.REQUEST_USERNAME_API;
         DEVICE_LOGIN_API = configAsset.DEVICE_LOGIN_API;
         RESET_GAMEPLAY_API = configAsset.RESET_GAMEPLAY_API;
+        GetWarsV1 = configAsset.GetWarsV1;
+        GetStageV1 = configAsset.GetStageV1;
+        GetGetFormationV1 = configAsset.GetGetFormationV1;
+        GetCheckPointResultV1 = configAsset.GetCheckPointResultV1;
+        StartChallengeV1 = configAsset.StartChallengeV1;
+        SubmitFormationV1 = configAsset.SubmitFormationV1;
+        CancelChallengeV1 = configAsset.CancelChallengeV1;
     }
 
     public ServerFields() { }
@@ -49,4 +56,14 @@ public class ServerFields
     public string REQUEST_USERNAME_API { get; set; }
     public string DEVICE_LOGIN_API { get; set; }
     public string RESET_GAMEPLAY_API { get; set; }
+
+    #region Rk
+    public string CancelChallengeV1 { get; set; }
+    public string SubmitFormationV1 { get; set; }
+    public string StartChallengeV1 { get; set; }
+    public string GetCheckPointResultV1 { get; set; }
+    public string GetGetFormationV1 { get; set; }
+    public string GetStageV1 { get; set; }
+    public string GetWarsV1 { get; set; }
+    #endregion
 }

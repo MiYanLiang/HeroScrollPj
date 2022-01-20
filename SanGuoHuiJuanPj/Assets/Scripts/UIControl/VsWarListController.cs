@@ -25,14 +25,14 @@ public class VsWarListController : MonoBehaviour
 
     public void GetWarList()
     {
-        foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
-        _vsWarUiList.Clear();
         ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
         //Versus.GetRkWars(OnRefreshWarList);
 #endif
         void OnRefreshWarList(DataBag bag)
         {
+            foreach (var ui in _vsWarUiList) Destroy(ui.gameObject);
+            _vsWarUiList.Clear();
             var timer = bag.Get<Versus.RkTimerDto>(0);
             Vs.SetState(timer);
             var wars = bag.Get<List<Versus.RkWarDto>>(1);

@@ -92,6 +92,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         _cardData.Clear();
         Chessboard.ResetChessboard();
+        ResetWinAnimation();
     }
 
     public void SetPlayerCard(FightCardData playerBase)
@@ -151,6 +152,14 @@ public class ChessboardVisualizeManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         RouseEffectObj.gameObject.gameObject.SetActive(false);
         Time.timeScale = 1;
+    }
+
+    private void ResetWinAnimation()
+    {
+        boomUIObj.gameObject.SetActive(false);
+        fireUIObj.gameObject.SetActive(false);
+        gongKeUIObj.gameObject.SetActive(false);
+        RouseEffectObj.gameObject.gameObject.SetActive(false);
     }
 
     private Tween ChessboardPreAnimation()

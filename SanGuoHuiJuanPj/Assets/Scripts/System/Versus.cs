@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Assets;
 using Assets.System.WarModule;
 using CorrelateLib;
 using DG.Tweening;
 using Newtonsoft.Json;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -29,7 +27,7 @@ public class Versus : MonoBehaviour
         仅选中军团
     }
     private static Versus instance;
-    
+
 #if UNITY_EDITOR
     public FormationMode Mode;
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
@@ -79,7 +77,14 @@ public class Versus : MonoBehaviour
     public static void PostRkCancelChallenge(int warId, Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, result => apiAction(OnProcessApi(result)),
             CancelChallengeV1);
-
+#else
+    public static string GetWarsV1 { get; set; }
+    public static string GetStageV1 { get; set; }
+    public static string GetGetFormationV1 { get; set; }
+    public static string GetCheckPointResultV1 { get; set; }
+    public static string StartChallengeV1 { get; set; }
+    public static string SubmitFormationV1 { get; set; }
+    public static string CancelChallengeV1 { get; set; }
 #endif
 
     [SerializeField] private WarBoardUi WarBoard;
@@ -286,7 +291,7 @@ public class Versus : MonoBehaviour
 
     public void PlayResult(WarResult data)
     {
-        Infoboard.transform.DOLocalMoveY(1440, 2);
+        //Infoboard.transform.DOLocalMoveY(1440, 2);
         WarBoard.NewGame(false, true);
         foreach (var op in data.Chessmen)
         {

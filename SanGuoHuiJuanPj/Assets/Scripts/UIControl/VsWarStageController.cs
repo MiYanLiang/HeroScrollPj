@@ -69,11 +69,6 @@ public class VsWarStageController : MonoBehaviour
     {
         WarId = warId;
         WarIsd = warIsd;
-        gameObject.SetActive(true);
-        Player.Off();
-        if (Vs.WarTitles.Length > warId)
-            TitleImage.sprite = Vs.WarTitles[warId];
-        TimerObj.SetActive(false);
         ApiPanel.instance.InvokeRk(OnApiAction, Vs.GetBackToWarListPage, Versus.GetStageV1, warId, warIsd);
 #if UNITY_EDITOR
         //Versus.GetRkWarStageInfo(warId, warIsd, OnApiAction);
@@ -82,6 +77,15 @@ public class VsWarStageController : MonoBehaviour
         void OnApiAction(DataBag bag)
         {
             WarId = bag.Get<int>(0); //warId
+            gameObject.SetActive(true);
+
+            //**Reset**//
+            Player.Off();
+            if (Vs.WarTitles.Length > WarId)
+                TitleImage.sprite = Vs.WarTitles[WarId];
+            TimerObj.SetActive(false);
+            //**Reset**//
+
             var host = bag.Get<List<object>>(1);
             var warIdentity = (Versus.WarIdentity)bag.Get<int>(2);
             var cpData = bag.Get<List<List<object>>>(3);
