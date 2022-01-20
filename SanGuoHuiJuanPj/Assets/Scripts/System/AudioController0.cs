@@ -40,6 +40,7 @@ public class AudioController0 : MonoBehaviour
         return aus;
     }
 
+    public void StackPlaying(int id) => StackPlaying(audioClips[id], audioVolumes[id]);
     public void StackPlaying(AudioClip clip, float volume)
     {
         if (!GamePref.PrefMusicPlay) return;
@@ -63,6 +64,8 @@ public class AudioController0 : MonoBehaviour
 
     public void ForcePlayAudio(int audioClipId)
     {
+        if (!GamePref.PrefMusicPlay)
+            return;
         StopAllCoroutines();
         if(audioSource.isPlaying) audioSource.Stop();
         audioSource.clip = audioClips[audioClipId];
@@ -81,6 +84,8 @@ public class AudioController0 : MonoBehaviour
     //改变记录状态
     IEnumerator StartPlaying(float waitTime)
     {
+        if (!GamePref.PrefMusicPlay)
+            yield break;
         isPlaying = true;
         audioSource.PlayDelayed(waitTime);
         yield return new WaitForSeconds(audioSource.clip.length);
@@ -112,6 +117,8 @@ public class AudioController0 : MonoBehaviour
     /// </summary>
     public void RandomPlayGuZhengAudio()
     {
+        if (!GamePref.PrefMusicPlay)
+            return;
         int rand = Random.Range(1, 8);
         //ChangeAudioClip(rand);
         ForcePlayAudio(rand);
@@ -120,7 +127,9 @@ public class AudioController0 : MonoBehaviour
 
     public void MusicSwitch(bool isPlayMusic)
     {
-        if(isPlayMusic) audioSource.Play();
+        if (!GamePref.PrefMusicPlay)
+            return;
+        if (isPlayMusic) audioSource.Play();
         else audioSource.Pause();
     }
 

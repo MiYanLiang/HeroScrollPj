@@ -222,6 +222,7 @@ public class Versus : MonoBehaviour
 
         void OnCallBack(DataBag bag)
         {
+            PlayChessboard();
             var wId = bag.Get<int>(0);
             var isChallengerWin = bag.Get<bool>(1);
             var rounds = bag.Get<List<ChessRound>>(2);
@@ -796,7 +797,7 @@ public class Versus : MonoBehaviour
     public void PlayAttackCityAudio() => PlayAudio(AudioFields.AttackCityAud);
     public void PlayChessboard() => PlayAudio(AudioFields.StartPlayChessboardAud);
 
-    private void PlayAudio(int id) => AudioController0.instance.ForcePlayAudio(id);
+    private void PlayAudio(int id) => AudioController0.instance.StackPlaying(id);
 
     [Serializable]
     private class AudioField

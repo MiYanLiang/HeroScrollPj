@@ -116,7 +116,8 @@ public class AudioController1 : MonoBehaviour
 
     public void MusicSwitch(bool isSetToPlay)
     {
-        if(isSetToPlay)audioSource.Play();
+        if (!GamePref.PrefMusicPlay) return;
+        if (isSetToPlay)audioSource.Play();
         else audioSource.Pause();
     }
 }
