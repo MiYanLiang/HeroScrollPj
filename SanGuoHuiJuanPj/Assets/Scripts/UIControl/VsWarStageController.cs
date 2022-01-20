@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -18,7 +19,7 @@ public class VsWarStageController : MonoBehaviour
     [SerializeField] private Button BackButton;
     [SerializeField] private Button ChallengeButton;
     [SerializeField] private Button CancelButton;
-    [SerializeField] private UnityEvent onStartChallengeEvent;
+    [SerializeField] private Animator onStartChallengeAnimator;
     [SerializeField] private GameObject TimerObj;
     [SerializeField] private Text CountdownText;
     [SerializeField] private Image OppAvatar;
@@ -55,7 +56,11 @@ public class VsWarStageController : MonoBehaviour
         gameObject.SetActive(false);
         Pool = new ObjectPool<CheckpointUi>(() => Instantiate(CheckpointUiPrefab, MapScrollRect.content));
         CheckpointUiPrefab.gameObject.SetActive(false);
-        BackButton.onClick.AddListener(() => versus.DisplayWarlistPage(false));
+        BackButton.onClick.AddListener(() =>
+        {
+            Vs.PlayClickAudio();
+            versus.DisplayWarlistPage(false);
+        });
         ForceSelectorUi.OnSelectedTroop += OnFlagSelected;
     }
 
@@ -137,11 +142,11 @@ public class VsWarStageController : MonoBehaviour
         if (warIdentity == Versus.WarIdentity.Uncertain)
             CancelWindow.SetCancel(() =>
             {
-
+                Vs.PlayClickAudio();
 #if UNITY_EDITOR
                 //Versus.PostRkCancelChallenge(WarId, bag => Vs.DisplayWarlistPage(true));
 #endif
-                ApiPanel.instance.InvokeRk(bag => Vs.DisplayWarlistPage(true), bag => Vs.DisplayWarlistPage(true),
+                ApiPanel.instance.InvokeRk(_ => Vs.DisplayWarlistPage(true), _ => Vs.DisplayWarlistPage(true),
                     Versus.CancelChallengeV1, WarId);
             });
 
@@ -226,6 +231,7 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnRequestCancel()
     {
+        Vs.PlayClickAudio();
 #if UNITY_EDITOR
         //Versus.PostRkCancelChallenge(WarId, _ => Vs.DisplayWarlistPage(true));
 #endif
@@ -234,19 +240,29 @@ public class VsWarStageController : MonoBehaviour
     }
 
 
-    public void OnSelectedUi(int stageIndex) => CpList.ForEach(c => c.SetSelected(c.StageIndex == stageIndex));
+    public void OnSelectedUi(int stageIndex)
+    {
+        Vs.PlayClickAudio();
+        CpList.ForEach(c => c.SetSelected(c.StageIndex == stageIndex));
+    }
 
     private void ChallengeBtnActive(bool isActive)
     {
         ChallengeButton.gameObject.SetActive(isActive);
         ChallengeButton.onClick.RemoveAllListeners();
         if (!isActive) return;
-        ChallengeButton.onClick.AddListener(onStartChallengeEvent.Invoke);
+        ChallengeButton.onClick.AddListener(()=>onStartChallengeAnimator.gameObject.SetActive(true));
         ChallengeButton.onClick.AddListener(RequestChallenge);
+    }
+
+    void OnDisable()
+    {
+        onStartChallengeAnimator.gameObject.SetActive(false);
     }
 
     private void RequestChallenge()
     {
+        Vs.PlayChallengeAudio();
         ApiPanel.instance.InvokeRk(OnChallengeRespond, Vs.GetBackToWarListPage, Versus.StartChallengeV1, WarId, WarIsd,
             TroopId);
 #if UNITY_EDITOR
@@ -265,6 +281,7 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnReportAction(int index)
     {
+        Vs.PlayAttackCityAudio();
         ApiPanel.instance.InvokeRk(OnCallBackResult, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV1, WarId, index);
 #if UNITY_EDITOR
         //Versus.GetRkCheckPointWarResult(WarId, index, OnCallBackResult);
@@ -282,6 +299,7 @@ public class VsWarStageController : MonoBehaviour
 
     private void OnAttackCheckpointAction(int checkpointId)
     {
+        Vs.PlayAttackCityAudio();
         ApiPanel.instance.InvokeRk(CallBackAction, Vs.GetBackToWarListPage, Versus.GetGetFormationV1, WarId, checkpointId);
 #if UNITY_EDITOR
         //Versus.GetRkCheckpointFormation(WarId, checkpointId, CallBackAction);

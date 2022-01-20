@@ -98,6 +98,7 @@ public class Versus : MonoBehaviour
     [SerializeField] private Text RkTimer;
     [SerializeField] private VersusRestrictUi Restrict;
     [SerializeField] private RoundUi roundUi;
+    [SerializeField] private AudioField AudioFields;
     public Sprite[] WarTitles;
     public VsWarListController warListController;
     public PlayerCharacterUi PlayerCharacterUi;
@@ -176,8 +177,8 @@ public class Versus : MonoBehaviour
     private int RoundCount = 0;
     private void OnEveryRound(int round)
     {
-        roundUi.SetRound(round);
         RoundCount++;
+        roundUi.SetRound(RoundCount);
         if(RoundCount <= 5)return;
         if(!XButton.interactable)
         {
@@ -788,5 +789,21 @@ public class Versus : MonoBehaviour
             Ui.gameObject.SetActive(true);
             RoundText.text = $"{round}";
         }
+    }
+
+    public void PlayClickAudio() => PlayAudio(AudioFields.ClickAud);
+    public void PlayChallengeAudio() => PlayAudio(AudioFields.StartChallengeAud);
+    public void PlayAttackCityAudio() => PlayAudio(AudioFields.AttackCityAud);
+    public void PlayChessboard() => PlayAudio(AudioFields.StartPlayChessboardAud);
+
+    private void PlayAudio(int id) => AudioController0.instance.ForcePlayAudio(id);
+
+    [Serializable]
+    private class AudioField
+    {
+        [Header("点击音效")] public int ClickAud;
+        [Header("开始挑战")] public int StartChallengeAud;
+        [Header("攻击城池")] public int AttackCityAud;
+        [Header("开始战斗")] public int StartPlayChessboardAud;
     }
 }
