@@ -17529,6 +17529,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 7725b7a9e47cce94d8a1ab5579001bbf, type: 3}
   - {fileID: 8300000, guid: 469d4f8bd9f0cbc41876d6e930a16084, type: 3}
   - {fileID: 8300000, guid: 753bd4fc92c56ed488b664f970f37482, type: 3}
+  - {fileID: 8300000, guid: 57ced41738137fd4f8f194e3beb3467f, type: 3}
+  - {fileID: 8300000, guid: 13b40d82f6a3e0448a574f1afeddf16c, type: 3}
   audioVolumes:
   - 1
   - 0.8
