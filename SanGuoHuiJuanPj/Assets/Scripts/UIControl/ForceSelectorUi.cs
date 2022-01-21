@@ -67,7 +67,7 @@ public class ForceSelectorUi : MonoBehaviour
                     if (btn.enabled)
                     {
                         if (warType == PlayerDataForGame.WarTypes.None)
-                            btn.onClick.AddListener(() => OnSelected(forceId, isEnable));
+                            btn.onClick.AddListener(() => OnSelected(forceId));
                         else
                             btn.onClick.AddListener(() => OnSelected(warType, forceId));
                     };

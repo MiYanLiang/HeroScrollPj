@@ -726,9 +726,12 @@ public class Versus : MonoBehaviour
     public void Display(bool display)
     {
         gameObject.SetActive(display);
-        if (display) Restrict.Set();
+        if (display)
+        {
+            Restrict.Set();
+            DisplayWarlistPage(true);
+        }
         else Restrict.Reset();
-        DisplayWarlistPage(true);
     }
 
     [Serializable]
