@@ -162,7 +162,7 @@ public class VsWarStageController : MonoBehaviour
         ChallengeBtnActive(isChallengeAvailable);
         UpdateCityUis(cps);
         ForceSelectorUi.RegLimitedForce(UsedTroops);
-        ForceSelectorUi.OnSelected(TroopId);
+        ForceSelectorUi.OnSelected(TroopId, currentTroopId >= 0);
     }
 
     

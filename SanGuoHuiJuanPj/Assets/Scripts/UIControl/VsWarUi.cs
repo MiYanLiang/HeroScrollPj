@@ -14,9 +14,18 @@ public class VsWarUi : MonoBehaviour
     public RankingUi RankingBoardUiPrefab;
     public ScrollRect BoardScrollRect;
     [SerializeField] private GameObject[] WarBgs;
+    [SerializeField] private Sprite[] Flags;
     private List<RankingUi> List { get; set; }
+    private static Dictionary<int, string> FlagSet { get; } = new Dictionary<int, string>
+    {
+        { 0, "刘" },
+        { 1, "曹" },
+        { 2, "孙" },
+        { 3, "袁" },
+        { 4, "吕" }
+    };
 
-    public void Init(int warId,Sprite[] warTitles)
+    public void Init(int warId, Sprite[] warTitles)
     {
         RankingBoardUiPrefab.gameObject.SetActive(false);
         List = new List<RankingUi>();
@@ -25,9 +34,8 @@ public class VsWarUi : MonoBehaviour
         for (int i = 0; i < WarBgs.Length; i++)
         {
             WarBgs[i].SetActive(i == warId);
-            if(i==warId) WarInfo.TextImage.sprite = warTitles[i];
+            if (i == warId) WarInfo.TextImage.sprite = warTitles[i];
         }
-
     }
 
     public void SetChallengeUi(Versus.ChallengeDto challenge)
@@ -49,14 +57,21 @@ public class VsWarUi : MonoBehaviour
             var rIndex = obj.Key;
             var rank = obj.Value;
             var ui = Instantiate(RankingBoardUiPrefab, BoardScrollRect.content);
+            var flagId = rank.TroopId;
+            if (!FlagSet.TryGetValue(flagId, out var flagTitle))
+                flagTitle = string.IsNullOrWhiteSpace(rank.CharName) ? string.Empty : rank.CharName.First().ToString();
+            Sprite fImg;
+            if (flagId >= 0 && flagId < Flags.Length)
+                fImg = Flags[flagId];
+            else fImg = Flags.Last();
+
             if (!isChallenger)
             {
-
-                ui.Set(rIndex + 1, rank.CharName, rank.MPower, rIndex == index,
+                ui.Set(rIndex + 1, rank.CharName, rank.MPower, fImg, flagTitle, rIndex == index,
                     rIndex == index ? default(UnityAction) : () => onClickAction(WarId, rank.WarIsd));
             }
             else
-                ui.Set(rIndex + 1, rank.CharName, rank.MPower, rIndex == index, null);
+                ui.Set(rIndex + 1, rank.CharName, rank.MPower, fImg, flagTitle, rIndex == index, null);
             List.Add(ui);
         }
         var rankText = index >= 0 ? (index + 1).ToString() : "未上榜。";

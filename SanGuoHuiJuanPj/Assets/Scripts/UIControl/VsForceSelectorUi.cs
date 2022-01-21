@@ -22,7 +22,15 @@ public class VsForceSelectorUi : ForceSelectorUi
 
     public override void OnSelected(int forceId = -1, bool disableUi = false)
     {
-        if (LimitedList.Contains(forceId)) return;
+        var limitedIds = LimitedList.ToArray();
+        if(forceId>=0)
+        {
+            var playerLevel = PlayerDataForGame.instance.pyData.Level;
+            var lockedTroops = DataTable.Force.Where(p => p.Value.UnlockLevel > playerLevel).Select(f => f.Key).ToList();
+            limitedIds = limitedIds.Concat(lockedTroops).Distinct().ToArray();
+        }
+
+        if (limitedIds.Contains(forceId)) return;
         base.OnSelected(forceId, disableUi);
     }
 }
