@@ -63,7 +63,7 @@ public class VsWarUi : MonoBehaviour
         SetRank(rankText);
     }
 
-    private void Show(IUiObj uiObj,bool show) => uiObj.Obj.SetActive(show);
+    private void Show(IUiObj uiObj, bool show) => uiObj.Obj.SetActive(show);
 
     public interface IUiObj
     {

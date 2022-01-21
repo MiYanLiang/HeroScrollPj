@@ -119,8 +119,14 @@ public class Versus : MonoBehaviour
         WarBoard.UpdateHeroEnlistText();
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
         XButton.onClick.AddListener(() => WarboardActive(false));
-        SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, _ => warListController.GetWarList());
+        SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, OnUpdateWarList);
         ControllerInit();
+    }
+
+    private void OnUpdateWarList(string arg0)
+    {
+        if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene) return;
+        warListController.GetWarList();
     }
 
 #if UNITY_EDITOR && !DEBUG
@@ -353,7 +359,7 @@ public class Versus : MonoBehaviour
         {
             EffectsPoolingControl.instance.ResetPools();
             Time.timeScale = 1f;
-            AudioController1.instance.ChangeBackMusic();
+            AudioController1.instance.FadeEndMusic();
             WarBoard.OnRoundStart -= OnEveryRound;
             roundUi.Off();
             WarBoard.NewGame(false, false);
@@ -645,19 +651,12 @@ public class Versus : MonoBehaviour
         {
             public int WarIsd { get; set; }
             public int HostId { get; set; }
+            public int TroopId { get; set; }
             public string CharName { get; set; }
             public int MPower { get; set; }
-
             public Rank()
             {
 
-            }
-            public Rank(int warIsd, int hostId, string charName, int mPower)
-            {
-                WarIsd = warIsd;
-                HostId = hostId;
-                CharName = charName;
-                MPower = mPower;
             }
         }
     }
@@ -729,6 +728,7 @@ public class Versus : MonoBehaviour
         gameObject.SetActive(display);
         if (display) Restrict.Set();
         else Restrict.Reset();
+        DisplayWarlistPage(true);
     }
 
     [Serializable]

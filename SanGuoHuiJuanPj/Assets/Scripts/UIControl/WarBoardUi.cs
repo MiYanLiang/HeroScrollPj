@@ -176,7 +176,7 @@ public class WarBoardUi : MonoBehaviour
         if (!Chessboard.gameObject.activeSelf) return;
         Chessboard.gameObject.SetActive(false);
         Background.gameObject.SetActive(false);
-        AudioController1.instance.ChangeBackMusic();
+        AudioController1.instance.FadeEndMusic();
     }
 
     //改变游戏速度

@@ -41,7 +41,6 @@ public class VsWarStageController : MonoBehaviour
     private List<CheckpointUi> CpList { get; } = new List<CheckpointUi>();
     private List<Versus.RkCheckpoint> RkCheckPoints { get; set; }
     private int[] UsedTroops { get; set; }
-
     private ObjectPool<CheckpointUi> Pool { get; set; }
 
     //(warId , pointId)
@@ -114,24 +113,26 @@ public class VsWarStageController : MonoBehaviour
             var rank = bag.Get<int>(5);
             var hostRank = bag.Get<int>(6);
             var usedTroops = bag.Get<int[]>(7);
+            var currentTroopId = bag.Get<int>(8);
             var hostName = host[0].ToString();
             var hostGender = DataBag.Parse<int>(host[1]);
             var hostMPower = DataBag.Parse<int>(host[2]);
             ForceSelectorUi.Init();
-            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps, usedTroops);
+            UpdatePage(hostName, hostGender, hostMPower, rank, hostRank, warIdentity, cps, usedTroops, currentTroopId);
             if (challenge == null) return;
             UpdateCpProgress(warIdentity, challenge);
         }
     }
 
     private void UpdatePage(string hostName, int gender, int militaryPower, int playerRank, int hostRank,
-        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps, int[] usedTroops)
+        Versus.WarIdentity warIdentity, List<Versus.RkCheckpoint> cps, int[] usedTroops,int currentTroopId)
     {
         HostName = hostName;
         PlayerRank = playerRank;
         ChallengeRank = hostRank;
         RkCheckPoints = cps;
         UsedTroops = usedTroops;
+        TroopId = currentTroopId;
         CancelWindow.Window.SetActive(false);
         if (CpList.Any())
         {
@@ -161,8 +162,10 @@ public class VsWarStageController : MonoBehaviour
         ChallengeBtnActive(isChallengeAvailable);
         UpdateCityUis(cps);
         ForceSelectorUi.RegLimitedForce(UsedTroops);
-        ForceSelectorUi.OnSelected();
+        ForceSelectorUi.OnSelected(TroopId);
     }
+
+    
 
     private void UpdateCityUis(List<Versus.RkCheckpoint> cps)
     {
@@ -273,7 +276,7 @@ public class VsWarStageController : MonoBehaviour
         {
             var cha = bag.Get<Versus.ChallengeDto>(0);
             UpdatePage(HostName, OppGender, OppMilitaryPower, PlayerRank, ChallengeRank, Versus.WarIdentity.Challenger,
-                RkCheckPoints, UsedTroops);
+                RkCheckPoints, UsedTroops, TroopId);
             UpdateCpProgress(Versus.WarIdentity.Challenger, cha);
             Vs.warListController.GetWarList();
         }
