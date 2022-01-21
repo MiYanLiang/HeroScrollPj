@@ -58,7 +58,7 @@ public class VsWarStageController : MonoBehaviour
         BackButton.onClick.AddListener(() =>
         {
             Vs.PlayClickAudio();
-            versus.DisplayWarlistPage(false);
+            versus.DisplayWarlistPage();
         });
         ForceSelectorUi.OnSelectedTroop += OnFlagSelected;
     }
@@ -147,7 +147,7 @@ public class VsWarStageController : MonoBehaviour
 #if UNITY_EDITOR
                 //Versus.PostRkCancelChallenge(WarId, bag => Vs.DisplayWarlistPage(true));
 #endif
-                ApiPanel.instance.InvokeRk(_ => Vs.DisplayWarlistPage(true), _ => Vs.DisplayWarlistPage(true),
+                ApiPanel.instance.InvokeRk(_ => Vs.DisplayWarlistPage(), _ => Vs.DisplayWarlistPage(),
                     Versus.CancelChallengeV1, WarId);
             });
 
@@ -238,7 +238,7 @@ public class VsWarStageController : MonoBehaviour
 #if UNITY_EDITOR
         //Versus.PostRkCancelChallenge(WarId, _ => Vs.DisplayWarlistPage(true));
 #endif
-        ApiPanel.instance.InvokeRk(bag => Vs.DisplayWarlistPage(true), bag => Vs.DisplayWarlistPage(true),
+        ApiPanel.instance.InvokeRk(bag => Vs.DisplayWarlistPage(), bag => Vs.DisplayWarlistPage(),
             Versus.CancelChallengeV1, WarId);
     }
 

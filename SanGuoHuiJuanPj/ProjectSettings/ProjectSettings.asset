@@ -133,7 +133,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 2.70
+  bundleVersion: 2.71
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -179,7 +179,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.MoTa.LegendOfHeroTest
   buildNumber: {}
-  AndroidBundleVersionCode: 105
+  AndroidBundleVersionCode: 106
   AndroidMinSdkVersion: 21
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 0

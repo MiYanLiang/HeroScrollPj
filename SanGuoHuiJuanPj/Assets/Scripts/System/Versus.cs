@@ -119,15 +119,21 @@ public class Versus : MonoBehaviour
         WarBoard.UpdateHeroEnlistText();
         ChessboardManager.Init(WarBoard.Chessboard, WarBoard.JiBanManager);
         XButton.onClick.AddListener(() => WarboardActive(false));
-        SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, OnUpdateWarList);
+        //SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate,  OnUpdateWarList);
         ControllerInit();
     }
 
-    private void OnUpdateWarList(string arg0)
-    {
-        if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene) return;
-        warListController.GetWarList();
-    }
+    //private void OnUpdateWarList(string arg0)
+    //{
+    //    if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene &&
+    //        UIManager.instance != null && 
+    //        UIManager.instance.currentPage == UIManager.Pages.对决 
+    //       ) return;
+    //    warListController.GetWarList();
+    //}
+
+    //private void OnDestroy() => SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, OnUpdateWarList);
+
 
 #if UNITY_EDITOR && !DEBUG
 
@@ -245,7 +251,7 @@ public class Versus : MonoBehaviour
                     DisplayStagePage(wId, warIsd);
                     break;
                 case ChallengeResult.Clear:
-                    DisplayWarlistPage(false);
+                    DisplayWarlistPage();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -255,13 +261,17 @@ public class Versus : MonoBehaviour
 
     [SerializeField] private WbCancelWindow CancelWindow;
 
-    public void DisplayWarlistPage(bool refresh)
+    public void DisplayWarlistPage()
     {
-        if (refresh)
-            warListController.GetWarList();
-        warListController.Display(true);
-        warStageController.Display(false);
+        warListController.GetWarList(OnSuccessCallBack);
+
+        void OnSuccessCallBack()
+        {
+            warListController.Display(true);
+            warStageController.Display(false);
+        }
     }
+
 
     private void DisplayStagePage(int warId,int warIsd)
     {
@@ -418,7 +428,7 @@ public class Versus : MonoBehaviour
             if (milSecs < 0)
             {
                 ChallengeExpSet.Remove(warId);
-                DisplayWarlistPage(true);
+                DisplayWarlistPage();
                 continue;
             }
 
@@ -567,7 +577,7 @@ public class Versus : MonoBehaviour
 
     public void GetBackToWarListPage(string text)
     {
-        DisplayWarlistPage(true);
+        DisplayWarlistPage();
         PlayerDataForGame.instance.ShowStringTips(text);
     }
 
@@ -729,7 +739,7 @@ public class Versus : MonoBehaviour
         if (display)
         {
             Restrict.Set();
-            DisplayWarlistPage(true);
+            DisplayWarlistPage();
         }
         else Restrict.Reset();
     }
