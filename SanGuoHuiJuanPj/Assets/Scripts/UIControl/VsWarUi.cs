@@ -59,7 +59,7 @@ public class VsWarUi : MonoBehaviour
                 ui.Set(rIndex + 1, rank.CharName, rank.MPower, rIndex == index, null);
             List.Add(ui);
         }
-        var rankText = index >= 0 ? (index + 1).ToString() : "~";
+        var rankText = index >= 0 ? (index + 1).ToString() : "未上榜。";
         SetRank(rankText);
     }
 

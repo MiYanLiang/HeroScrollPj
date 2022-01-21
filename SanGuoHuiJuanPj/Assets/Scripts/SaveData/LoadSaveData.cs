@@ -35,13 +35,7 @@ public class LoadSaveData : MonoBehaviour
         XDebug.Init();
         isLoadingSaveData = true;
         isHadSaveData = IsSaveFilesExist();
-        if(AudioController0.instance)
-        {
-            AudioController0.instance.MusicSwitch(GamePref.PrefMusicPlay);
-        }
-
         isEncrypted = float.Parse(Application.version) < 1.9f ? PlayerPrefs.GetInt(ISNEEDENCRYPT) : 1;
-
     }
 
     /// <summary> 
