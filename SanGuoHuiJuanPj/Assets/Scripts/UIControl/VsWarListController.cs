@@ -23,7 +23,7 @@ public class VsWarListController : MonoBehaviour
         GetWarList();
     }
 
-    public void GetWarList()
+    public void GetWarList(UnityAction onSuccessAction = null)
     {
         ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
@@ -42,6 +42,7 @@ public class VsWarListController : MonoBehaviour
                 challenges.TryGetValue(war.WarId, out var challenge);
                 GenerateUi(war, challenge);
             }
+            onSuccessAction?.Invoke();
         }
     }
 
@@ -69,4 +70,8 @@ public class VsWarListController : MonoBehaviour
 
     public void Display(bool isShow) => gameObject.SetActive(isShow);
 
+    void OnEnable() => SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+    void OnDisable() => SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+
+    private void CallRefreshWarList(string arg0) => GetWarList();
 }

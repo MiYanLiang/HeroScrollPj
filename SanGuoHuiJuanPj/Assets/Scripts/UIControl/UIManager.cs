@@ -127,7 +127,7 @@ public class UIManager : MonoBehaviour
     public void Init()
     {
         if (IsInit) return;
-        AudioController1.instance.ChangeBackMusic();
+        AudioController1.instance.FadeEndMusic();
 
         TimeSystemControl.instance.InitStaminaCount(PlayerDataForGame.instance.Stamina.Value <
                                                     TimeSystemControl.instance.MaxStamina);

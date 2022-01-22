@@ -578,6 +578,7 @@ public class WarsUIManager : MonoBehaviour
 
         WarBoard.StartNewGame(enemyBase, playerBase, enemyCards);
         waitForRoundStart = true;
+        WarBoard.gameObject.SetActive(true);
     }
 
     private bool waitForRoundStart;

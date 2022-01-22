@@ -51,9 +51,7 @@ public class StartSceneUIManager : MonoBehaviour
         }
         //播放诗句
         ShowNextVerse(0);
-        AudioController1.instance.isNeedPlayLongMusic = true;
-        AudioController1.instance.ChangeAudioClip(pianTouAudio, pianTouAudioVolume);
-        AudioController1.instance.PlayLongBackMusInit();
+        AudioController1.instance.PlayLoop(pianTouAudio, pianTouAudioVolume);
     }
 
     public void DontHaveSaveDataPlayStory()

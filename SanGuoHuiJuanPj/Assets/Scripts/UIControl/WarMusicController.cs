@@ -18,12 +18,7 @@ public class WarMusicController : MonoBehaviour
         PlayAudio(21);
     }
 
-    public void PlayBgm(int index, float volume = 0.5f)
-    {
-        AudioController1.instance.isNeedPlayLongMusic = true;
-        AudioController1.instance.ChangeAudioClip(BattleBgm[index], volume);
-        AudioController1.instance.PlayLongBackMusInit();
-    }
+    public void PlayBgm(int index, float volume = 0.5f) => AudioController1.instance.PlayLoop(BattleBgm[index], volume);
 
     public void PlayWarEffect(int clipIndex, float volume = 1f)
     {

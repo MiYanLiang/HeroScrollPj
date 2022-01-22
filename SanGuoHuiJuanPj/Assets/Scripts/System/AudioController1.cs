@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 public class AudioController1 : MonoBehaviour
@@ -74,22 +75,32 @@ public class AudioController1 : MonoBehaviour
 
 
     //关闭长背景音乐
-    public void ChangeBackMusic()
+    public void FadeEndMusic()
     {
         isNeedPlayLongMusic = false;
-        audioSource.DOFade(0, 3f).OnComplete(delegate ()
+        StartCoroutine(AudioFade(3));
+
+        IEnumerator AudioFade(int secs)
         {
+            var frame = secs * 1000 / 100;
+            var value = audioSource.volume / frame;
+            for (int i = 0; i < frame; i++)
+            {
+                audioSource.volume -= value;
+                yield return new WaitForSeconds(0.1f);
+            }
+
             if (!isNeedPlayLongMusic)
             {
                 audioSource.Stop();
                 audioSource.loop = false;
                 isPlayRandom = true;
             }
-        });
+        }
     }
 
     //改变音乐播放器clip
-    public void ChangeAudioClip(AudioClip audioClip, float audioVolume)
+    private void ChangeAudioClip(AudioClip audioClip, float audioVolume)
     {
         //Debug.Log("audioVolume: " + audioVolume + " audioClip: " + audioClip.name);
         audioSource.clip = audioClip;
@@ -97,9 +108,12 @@ public class AudioController1 : MonoBehaviour
     }
 
     //播放长背景音乐参数设置
-    public void PlayLongBackMusInit()
+    public void PlayLoop(AudioClip audioClip, float audioVolume)
     {
         if (!GamePref.PrefMusicPlay) return;
+        StopAllCoroutines();
+        isNeedPlayLongMusic = true;
+        ChangeAudioClip(audioClip, audioVolume);
         isPlayRandom = false;
         audioSource.loop = true;
         audioSource.Play();
