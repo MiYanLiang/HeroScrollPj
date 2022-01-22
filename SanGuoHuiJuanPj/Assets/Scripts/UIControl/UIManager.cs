@@ -187,6 +187,10 @@ public class UIManager : MonoBehaviour
             PlayerDataForGame.instance.mainSceneTips = string.Empty;
         }
     }
+    public void OnConfirmation(UnityAction confirmAction,ConfirmationWindowUi.Resources resource,int cost = 0)
+    {
+        ConfirmationWindowUi.Show(confirmAction, resource, cost);
+    }
     //显示霸业玩法说明 
     public void ShowInfoBaYe()
     {
@@ -194,10 +198,14 @@ public class UIManager : MonoBehaviour
         string text = DataTable.GetStringText(69);
         ShowInfo(title, text);
     }
-
-    public void OnConfirmation(UnityAction confirmAction,ConfirmationWindowUi.Resources resource,int cost = 0)
+    /// <summary>
+    /// 显示对决玩法说明
+    /// </summary>
+    public void ShowInfoDuiJue() 
     {
-        ConfirmationWindowUi.Show(confirmAction, resource, cost);
+        string title = DataTable.GetStringText(129);
+        string text = DataTable.GetStringText(130);
+        ShowInfo(title, text);
     }
 
     /// <summary> 
