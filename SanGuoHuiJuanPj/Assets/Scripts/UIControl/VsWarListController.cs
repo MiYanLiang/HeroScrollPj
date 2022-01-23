@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Assets;
 using CorrelateLib;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -25,6 +26,7 @@ public class VsWarListController : MonoBehaviour
 
     public void GetWarList(UnityAction onSuccessAction = null)
     {
+        if (!PlayerDataForGame.instance.Character.IsValidCharacter()) return;//需要有角色才可以，否则会报错。
         ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
         //Versus.GetRkWars(OnRefreshWarList);
@@ -73,5 +75,8 @@ public class VsWarListController : MonoBehaviour
     void OnEnable() => SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
     void OnDisable() => SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
 
-    private void CallRefreshWarList(string arg0) => GetWarList();
+    private void CallRefreshWarList(string arg0)
+    {
+        GetWarList();
+    }
 }
