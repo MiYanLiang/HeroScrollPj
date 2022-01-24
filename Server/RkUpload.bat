@@ -1,3 +1,3 @@
 echo off
-.\uploader\UploadDataTable.exe .\uploader\rk https://localhost:5001/api/table/rk
+.\uploader\UploadDataTable.exe .\uploader\rk https://herostate.azurewebsites.net/api/table/rk
 pause
