@@ -26,7 +26,8 @@ public class VsWarListController : MonoBehaviour
 
     public void GetWarList(UnityAction onSuccessAction = null)
     {
-        if (!PlayerDataForGame.instance.Character.IsValidCharacter()) return;//需要有角色才可以，否则会报错。
+        if (PlayerDataForGame.instance.Character == null ||
+            !PlayerDataForGame.instance.Character.IsValidCharacter()) return;//需要有角色才可以，否则会报错。
         ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
         //Versus.GetRkWars(OnRefreshWarList);
