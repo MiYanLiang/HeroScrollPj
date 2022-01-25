@@ -28,6 +28,7 @@ public class VsWarUi : MonoBehaviour
     public void Init(int warId, Sprite[] warTitles)
     {
         RankingBoardUiPrefab.gameObject.SetActive(false);
+        WarInfo.ResetChest();
         List = new List<RankingUi>();
         WarId = warId;
         gameObject.SetActive(true);
@@ -45,6 +46,8 @@ public class VsWarUi : MonoBehaviour
         ChallengeUi.ChallengeImage.gameObject.SetActive(isChallenger);
         ChallengeUi.Rank.gameObject.SetActive(!isChallenger);
     }
+
+    public void SetChest(int chessIndex, UnityAction<UnityAction> onClickAction) => WarInfo.SetChest(chessIndex, onClickAction);
 
     private void SetRank(string value) => ChallengeUi.Rank.text = value;
 
@@ -98,5 +101,34 @@ public class VsWarUi : MonoBehaviour
         GameObject IUiObj.Obj => Obj;
         public GameObject Obj;
         public Image TextImage;
+        public GameObject ChestObj;
+        public Button ChestButton;
+        public Image CloseChestImg;
+        public Image OpenChestImg;
+        public Sprite[] CloseChests;
+        public Sprite[] OpenChests;
+        public void ResetChest() => ChestObj.gameObject.SetActive(false);
+        public void SetChest(int chessIndex,UnityAction<UnityAction> onChestClick)
+        {
+            if (chessIndex > CloseChests.Length) chessIndex = CloseChests.Length - 1;
+            CloseChestImg.sprite = CloseChests[chessIndex];
+            OpenChestImg.sprite = OpenChests[chessIndex];
+            ChestObj.gameObject.SetActive(true);
+            ChestOpen(false);
+            ChestButton.onClick.RemoveAllListeners();
+            ChestButton.onClick.AddListener(() => onChestClick.Invoke(OnClickCallBack));
+        }
+
+        private void OnClickCallBack()
+        {
+            ChestOpen(true);
+            ChestButton.onClick.RemoveAllListeners();
+        }
+
+        private void ChestOpen(bool open)
+        {
+            OpenChestImg.gameObject.SetActive(open);
+            CloseChestImg.gameObject.SetActive(!open);
+        }
     }
 }

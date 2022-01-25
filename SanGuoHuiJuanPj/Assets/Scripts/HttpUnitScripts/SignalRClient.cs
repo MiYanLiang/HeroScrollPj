@@ -210,7 +210,7 @@ public class SignalRClient : MonoBehaviour
             _hub.Closed += OnConnectionClose;
             _hub.Reconnected += OnReconnected;
             _hub.Reconnecting += OnReconnecting;
-            _hub.On<string, string>(EventStrings.Server_Call, OnServerCall);
+            _hub.On<string, string>(EventStrings.ServerCall, OnServerCall);
 
             if (_hub.State == HubConnectionState.Connected) throw new InvalidOperationException("Hub is connected!");
             await _hub.StartAsync(cancellationToken);
