@@ -54,7 +54,7 @@ public class VsWarListController : MonoBehaviour
             foreach (var war in wars)
             {
                 challenges.TryGetValue(war.WarId, out var challenge);
-                GenerateUi(war, challenge, rewardSet.TryGetValue(war.WarId, out var index) ? ++index : -1);
+                GenerateUi(war, challenge, rewardSet.TryGetValue(war.WarId, out var rank) ? rank : -1);
             }
             onSuccessAction?.Invoke();
         }
