@@ -99,11 +99,15 @@ public class Versus : MonoBehaviour
     [SerializeField] private VersusRestrictUi Restrict;
     [SerializeField] private RoundUi roundUi;
     [SerializeField] private AudioField AudioFields;
+
+    
     public Sprite[] WarTitles;
     public VsWarListController warListController;
     public PlayerCharacterUi PlayerCharacterUi;
     public RkTimerDto RkState { get; private set; }
     public int CityLevel = 1;
+
+
     private event UnityAction UpdateEverySecond;
 
     public void Init(UIManager uiMgr)

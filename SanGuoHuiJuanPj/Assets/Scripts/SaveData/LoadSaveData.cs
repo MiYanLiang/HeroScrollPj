@@ -305,7 +305,7 @@ public class LoadSaveData : MonoBehaviour
                         if (isEncrypted != 0)
                             jsonStr3 = EncryptDecipherTool.DESDecrypt(jsonStr3);
                         jsonStr3 = InspectionAndCorrectionString(jsonStr3, new string[] { "}]}" }, filePath3);
-                        save3 = Json.Deserialize<PrivateCodeData>(jsonStr3)?.ToNewSave();
+                        save3 = new GetBoxOrCodeData();// Json.Deserialize<PrivateCodeData>(jsonStr3)?.ToNewSave();
                     }
 
                     //武将士兵塔数据读档 
@@ -412,7 +412,7 @@ public class LoadSaveData : MonoBehaviour
                             jsonStr3 = File.ReadAllText(filePath3);
                             if (isEncrypted != 0)
                                 jsonStr3 = EncryptDecipherTool.DESDecrypt(jsonStr3);
-                            save3 = Json.Deserialize<PrivateCodeData>(jsonStr3).ToNewSave();
+                            save3 = new GetBoxOrCodeData(); //Json.Deserialize<PrivateCodeData>(jsonStr3).ToNewSave();
                         }
                     }
 
@@ -683,18 +683,18 @@ public class LoadSaveData : MonoBehaviour
         return jsonStr;
     }
 
-    private class PrivateCodeData
-    {
-        //战役宝箱
-        public List<int> fightBoxs;
-        //兑换码
-        public List<RCode> redemptionCodeGotList;
+    //private class PrivateCodeData
+    //{
+    //    //战役宝箱
+    //    public List<int> fightBoxs;
+    //    //兑换码
+    //    public List<RCode> redemptionCodeGotList;
 
-        public GetBoxOrCodeData ToNewSave()
-        {
-            var list = DataTable.RCode.Join(redemptionCodeGotList.Where(r=>r.isGot), r => r.Key, c => c.id, (r, _) => r.Value.Code).ToList();
-            return new GetBoxOrCodeData
-                {fightBoxs = fightBoxs, redemptionCodeGotList = list};
-        }
-    }
+    //    public GetBoxOrCodeData ToNewSave()
+    //    {
+    //        var list = DataTable.RCode.Join(redemptionCodeGotList.Where(r=>r.isGot), r => r.Key, c => c.id, (r, _) => r.Value.Code).ToList();
+    //        return new GetBoxOrCodeData
+    //            {fightBoxs = fightBoxs, redemptionCodeGotList = list};
+    //    }
+    //}
 }

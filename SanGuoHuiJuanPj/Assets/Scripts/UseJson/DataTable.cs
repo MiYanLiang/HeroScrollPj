@@ -38,7 +38,7 @@ public class DataTable : MonoBehaviour
         public static IReadOnlyDictionary<int, GameModeTable> GameMode{get; private set;}                      
         public static IReadOnlyDictionary<int, GuideTable> Guide{get; private set;}                            
         public static IReadOnlyDictionary<int, TipsTable> Tips{get; private set;}                              
-        public static IReadOnlyDictionary<int, RCodeTable> RCode{get; private set;}                            
+        //public static IReadOnlyDictionary<int, RCodeTable> RCode{get; private set;}                            
         public static IReadOnlyDictionary<int, ChickenTable> Chicken{get; private set;}                        
         public static IReadOnlyDictionary<int, StaticArrangementTable> StaticArrangement{get; private set;}    
         public static IReadOnlyDictionary<int, TextTable> Text{get; private set;}                              
@@ -137,7 +137,7 @@ public class DataTable : MonoBehaviour
             GameMode = NewConvert(GameModeTable.text, l => new GameModeTable(l));
             Guide = NewConvert(GuideTable.text, l => new GuideTable(l));
             Tips = NewConvert(TipsTable.text, l => new TipsTable(l));
-            RCode = NewConvert(RCodeTable.text, l => new RCodeTable(l));
+            //RCode = NewConvert(RCodeTable.text, l => new RCodeTable(l));
             Chicken = NewConvert(ChickenTable.text, l => new ChickenTable(l));
             StaticArrangement = NewConvert(StaticArrangementTable.text, l => new StaticArrangementTable(l));
             Text = NewConvert(TextTable.text, l => new TextTable(l));
