@@ -171,7 +171,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return gridTween;
     }
     //演示回合
-    public IEnumerator AnimateRound(ChessRound round,bool playRoundStartAudio)
+
+    public IEnumerator AnimateRound(ChessRound round, bool playRoundStartAudio)
     {
         OnRoundStart?.Invoke(round.InstanceId);
         if (playRoundStartAudio) PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.RoundStart));
@@ -189,7 +190,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 #endif
         var cards = OnPreRoundUpdate(round);
         var jbs = JiBanManager.GetAvailableJiBan(cards);
-        
+
         //回合开始演示
         yield return OnRoundBeginAnimation(round.PreAction, jbs);
         yield return FilterDeathChessman();
@@ -201,8 +202,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 yield return ChessmanAnimation(process);
             yield return FilterDeathChessman();
         }
+
         //回合结束演示
-        if(round.FinalAction.ChessProcesses.Count>0)
+        if (round.FinalAction.ChessProcesses.Count > 0)
         {
             foreach (var process in round.FinalAction.ChessProcesses)
                 yield return OnBasicChessProcess(process).Play().WaitForCompletion();
@@ -210,9 +212,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
 
         var gridTween = DOTween.Sequence().Pause();
-        foreach (var image in Chessboard.GridImages) gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
+        foreach (var image in Chessboard.GridImages)
+            gridTween.Join(image.DOFade(1, CardAnimator.instance.Misc.ChessGridFadingSec));
         gridTween.Play();
+
     }
+
     private IEnumerator FilterDeathChessman()
     {
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnFilterChessmen);

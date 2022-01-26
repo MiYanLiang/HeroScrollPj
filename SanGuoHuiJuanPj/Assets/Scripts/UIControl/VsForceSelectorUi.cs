@@ -20,7 +20,7 @@ public class VsForceSelectorUi : ForceSelectorUi
         }
     }
 
-    public override void OnSelected(int forceId = -1, bool disableUi = false)
+    public override void OnSelected(int forceId = -1, bool disableAllUi = false)
     {
         var limitedIds = LimitedList.ToArray();
         if(forceId>=0)
@@ -31,6 +31,6 @@ public class VsForceSelectorUi : ForceSelectorUi
         }
 
         if (limitedIds.Contains(forceId)) return;
-        base.OnSelected(forceId, disableUi);
+        base.OnSelected(forceId, disableAllUi);
     }
 }
