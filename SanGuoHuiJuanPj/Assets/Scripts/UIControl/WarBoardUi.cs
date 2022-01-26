@@ -213,7 +213,7 @@ public class WarBoardUi : MonoBehaviour
 
     private IEnumerator PlayRound(ChessRound round,bool invokeRoundPauseTrigger)
     {
-        yield return ChessboardManager.AnimateRound(round, true);
+        yield return ChessboardManager.AnimateRound(round, playRoundStartAudio: true);
         var chess = NewWarManager.ChessOperator;
         if (chess.IsGameOver)
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
@@ -242,16 +243,17 @@ public class EffectsPoolingControl : MonoBehaviour
         var id = Effect.GetBuffId(con);
         return GetStateBuff(id, trans);
     }
+
     public EffectStateUi GetStateBuff(int buffId, Transform trans)
     {
         if (buffId == -1) return null;
-        foreach (var tmp in BuffPool.Where(b=>b.Value.Any(e=>e ==null)).ToArray())
-            BuffPool[tmp.Key] = tmp.Value.Where(e => e != null).ToList();
+        foreach (var tmp in BuffPool.ToArray())
+            BuffPool[tmp.Key] = tmp.Value.Where(IsValidStateUi).ToList();
         if (!BuffPool.ContainsKey(buffId))
             BuffPool.Add(buffId, new List<EffectStateUi>());
-        BuffPool[buffId] = BuffPool[buffId].Where(b => b != null).ToList();
+        BuffPool[buffId] = BuffPool[buffId].Where(IsValidStateUi).ToList();
         var buff = BuffPool[buffId].FirstOrDefault(e => e != null && !e.gameObject.activeSelf);
-        if (buff == null)
+        if (buff==null || !IsValidStateUi(buff))
         {
             buff = Instantiate(GameResources.Instance.Buff[buffId], trans);
             BuffPool[buffId].Add(buff);
@@ -263,14 +265,18 @@ public class EffectsPoolingControl : MonoBehaviour
 
         return buff;
     }
+    private bool IsValidStateUi(EffectStateUi u) => u != null && u.Image != null;
+
     public EffectStateUi GetFloorBuff(int id, Transform trans)
     {
         if (id == -1) return null;
+        foreach (var tmp in FloorBuffPool.ToArray())
+            FloorBuffPool[tmp.Key] = tmp.Value.Where(IsValidStateUi).ToList();
         if (!FloorBuffPool.ContainsKey(id))
             FloorBuffPool.Add(id, new List<EffectStateUi>());
-        FloorBuffPool[id] = FloorBuffPool[id].Where(e => e != null).ToList();
+        FloorBuffPool[id] = FloorBuffPool[id].Where(IsValidStateUi).ToList();
         var buff = FloorBuffPool[id].FirstOrDefault(e => e != null && !e.gameObject.activeSelf);
-        if (buff == null)
+        if (buff == null || !IsValidStateUi(buff))
         {
             buff = Instantiate(GameResources.Instance.FloorBuff[id], trans);
             FloorBuffPool[id].Add(buff);

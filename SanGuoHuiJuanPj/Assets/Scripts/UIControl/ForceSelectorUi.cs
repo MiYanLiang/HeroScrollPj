@@ -105,7 +105,7 @@ public class ForceSelectorUi : MonoBehaviour
         PlayerDataForGame.instance.WarForceMap[warType] = forceId;
     }
 
-    public virtual void OnSelected(int forceId = -1, bool disableUi = false)
+    public virtual void OnSelected(int forceId = -1, bool disableAllUi = false)
     {
         OnSelectedTroop?.Invoke(forceId);
         if (onSelectedAudioId > -1)
@@ -120,7 +120,12 @@ public class ForceSelectorUi : MonoBehaviour
             ui.Select(force == forceId);
         }
 
-        foreach (var button in btnData) button.Value.interactable = !disableUi;
+        foreach (var button in btnData)
+        {
+            var unlockLevel = DataTable.Force[button.Key].UnlockLevel;
+            var isUnlock = PlayerDataForGame.instance.pyData.Level >= unlockLevel;
+            button.Value.interactable = isUnlock && !disableAllUi;
+        }
     }
 
 }

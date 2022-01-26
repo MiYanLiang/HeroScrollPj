@@ -777,7 +777,8 @@ public class Versus : MonoBehaviour
                 return;
             }
 
-            var hasCharacter = PlayerDataForGame.instance.Character.IsValidCharacter();
+            var hasCharacter = PlayerDataForGame.instance.Character != null &&
+                               PlayerDataForGame.instance.Character.IsValidCharacter();
             if (!hasCharacter)
             {
                 CreateCharacterButton.gameObject.SetActive(true);

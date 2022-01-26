@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Assets;
 using CorrelateLib;
 using Newtonsoft.Json.Linq;
@@ -129,8 +130,32 @@ public class VsWarListController : MonoBehaviour
 
     #region PageActivities
     public void Display(bool isShow) => gameObject.SetActive(isShow);
-    void OnEnable() => SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
-    void OnDisable() => SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+    void OnEnable()
+    {
+        SignalRClient.instance.SubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+#if UNITY_EDITOR
+        SubscribeLog(true);
+#endif
+    }
+
+    void OnDisable()
+    {
+        SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+#if UNITY_EDITOR
+        SubscribeLog(false);
+#endif
+    }
+
+    void OnDestroy()
+    {
+        SignalRClient.instance.UnSubscribeAction(EventStrings.Chn_RkListUpdate, CallRefreshWarList);
+#if UNITY_EDITOR
+        SubscribeLog(false);
+#endif
+    }
+#if UNITY_EDITOR
+    private void SubscribeLog(bool isSubscribe,[CallerMemberName] string methodName = null) => Debug.Log($"{methodName}{(isSubscribe ? "订阅" : "取消")}");
+#endif
     private void CallRefreshWarList(string arg0) => GetWarList();
     #endregion
 
