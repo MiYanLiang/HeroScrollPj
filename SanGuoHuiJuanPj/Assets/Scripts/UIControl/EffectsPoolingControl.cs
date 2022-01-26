@@ -261,6 +261,7 @@ public class EffectsPoolingControl : MonoBehaviour
 
         buff.transform.position = trans.position;
         buff.transform.SetParent(trans);
+        if (buff.Canvas) buff.Canvas.overrideSorting = true;
         buff.gameObject.SetActive(true);
 
         return buff;
@@ -281,9 +282,9 @@ public class EffectsPoolingControl : MonoBehaviour
             buff = Instantiate(GameResources.Instance.FloorBuff[id], trans);
             FloorBuffPool[id].Add(buff);
         }
-
         buff.transform.position = trans.position;
         buff.transform.SetParent(trans);
+        if (buff.Canvas) buff.Canvas.overrideSorting = true;
         buff.gameObject.SetActive(true);
 
         return buff;

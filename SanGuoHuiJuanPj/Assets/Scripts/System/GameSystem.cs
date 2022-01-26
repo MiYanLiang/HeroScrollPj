@@ -161,7 +161,6 @@ public class GameSystem : MonoBehaviour
     {
         StartSceneUIManager.instance.Init();
         StartSceneToServerCS.instance.Init();
-        BarrageUiController.instance.Init();
     }
 
     protected void InitEnqueue(Action action)
