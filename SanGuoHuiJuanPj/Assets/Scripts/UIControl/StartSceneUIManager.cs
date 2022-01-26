@@ -21,10 +21,10 @@ public class StartSceneUIManager : MonoBehaviour
     //[SerializeField]
     //Button startBtn;    //开始按钮
     [SerializeField]
-    GameObject EffectPoolManagerObj;   //特效组
+    EffectsPoolingControl EffectPoolManagerObj;   //特效组
     bool isJumping; //是否在跳转
-    [HideInInspector]public bool isPlayedStory;//是否已播放了剧情
-
+    public bool isPlayedStory;//是否已播放了剧情
+    [SerializeField]private BarrageUiController barrageUiController;
     private void Awake()
     {
         if (instance == null)
@@ -38,6 +38,7 @@ public class StartSceneUIManager : MonoBehaviour
     public void Init()
     {
         InitPictureContentShow();
+        barrageUiController.Init();
     }
 
     //初始加载诗句等
@@ -56,7 +57,7 @@ public class StartSceneUIManager : MonoBehaviour
 
     public void DontHaveSaveDataPlayStory()
     {
-        EffectPoolManagerObj.SetActive(true);
+        EffectPoolManagerObj.gameObject.SetActive(true);
 
         //chooseForceCityObj.transform.GetChild(0).GetComponent<Button>().onClick.Invoke();
         for (int i = 0; i < chooseForceCityObj.transform.childCount; i++)
@@ -65,23 +66,6 @@ public class StartSceneUIManager : MonoBehaviour
                 AudioController0.instance.RandomPlayGuZhengAudio());
         }
         //这里开始生成战斗
-    }
-
-    //结束剧情选择势力
-    public void EndStoryToChooseForce()
-    {
-        isPlayedStory = true;
-        isJumping = false;
-
-        EffectPoolManagerObj.SetActive(false);
-
-        verseListObj.SetActive(false);
-        chooseForceCityObj.SetActive(true);
-        powerIntroText.gameObject.SetActive(true);
-
-        chooseForceCityObj.transform.GetChild(0).GetComponent<Button>().onClick.Invoke();
-
-        StartSceneToServerCS.instance.LoginGameInfoFun();
     }
 
     //诗句展示
