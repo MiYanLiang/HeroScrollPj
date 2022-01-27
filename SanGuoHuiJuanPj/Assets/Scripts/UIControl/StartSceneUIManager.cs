@@ -24,7 +24,7 @@ public class StartSceneUIManager : MonoBehaviour
     EffectsPoolingControl EffectPoolManagerObj;   //特效组
     bool isJumping; //是否在跳转
     public bool isPlayedStory;//是否已播放了剧情
-    [SerializeField]private BarrageUiController barrageUiController;
+    [SerializeField]private GuideStoryUi StoryController;
     private void Awake()
     {
         if (instance == null)
@@ -38,7 +38,7 @@ public class StartSceneUIManager : MonoBehaviour
     public void Init()
     {
         InitPictureContentShow();
-        barrageUiController.Init();
+        StoryController.Init();
     }
 
     //初始加载诗句等

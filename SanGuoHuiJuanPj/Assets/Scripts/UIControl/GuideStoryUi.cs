@@ -14,16 +14,23 @@ public class GuideStoryUi : MonoBehaviour
     [SerializeField] private StoryWindow Story;
     private GuideTable[] guides;          //剧情故事数量
 
-    [SerializeField]
-    GameObject[] guideObjs;     //指引obj
     bool isShowed0 = false;
     bool isShowed1 = false;
-    [SerializeField] private Button startFightBtn;   //开始战斗按钮
+    [SerializeField] private GameObject[] guideObjs;     //指引obj
     [SerializeField] private BarrageUiController barragesController;
+    [SerializeField] private WarBoardUi warBoard;
     private List<string[]> barragesList;
 
-    void Start()
+#if UNITY_EDITOR
+    public void TestPlay()
     {
+        storyIndex++;
+        PlayStoryIntro();
+    }
+#endif
+    public void Init()
+    {
+        barragesController.Init();
         storyIndex = 0;
         guides = DataTable.Guide.Values.ToArray();
 
@@ -213,13 +220,13 @@ public class GuideStoryUi : MonoBehaviour
     };
 
     //播放固定弹幕
-    IEnumerator ShowBarrageForStory(int storyIndex)
+    IEnumerator ShowBarrageForStory(int index)
     {
-        for (int i = 0; i < barragesList[storyIndex].Length; i++)
+        for (int i = 0; i < barragesList[index].Length; i++)
         {
             int randTime = Random.Range(2, 5);  //间隔时间
             yield return new WaitForSeconds(randTime);
-            barragesController.PlayBarrage(barragesList[storyIndex][i]);
+            barragesController.PlayBarrage(barragesList[index][i]);
         }
     }
 
@@ -258,7 +265,7 @@ public class GuideStoryUi : MonoBehaviour
                     guideObjs[0].SetActive(false);
                     guideObjs[1].SetActive(true);
                     isShowed0 = true;
-                    startFightBtn.enabled = true;
+                    Story.Button.enabled = true;
                 }
                 break;
             case 1:
@@ -280,7 +287,9 @@ public class GuideStoryUi : MonoBehaviour
     /// </summary>
     public void PlayStoryIntro()
     {
-        var guides = DataTable.Guide;
+        var guide = DataTable.Guide[storyIndex];
+        if(!Story.Background.gameObject.activeSelf)
+            Story.Background.gameObject.SetActive(true);
         Story.Title.sprite = GetStoryTitle();
         Story.Background.DOFade(1, 1.5f).OnComplete(()=>
         {
@@ -292,23 +301,48 @@ public class GuideStoryUi : MonoBehaviour
                 isShowFHDM = true;
             }
 
-            if (storyIndex < guides.Count)
-            {
-                //FightControlForStart.instance.InitStartFight();
-                //UpdateCardDataForStory();
-            }
+            InitWarboard(guide);
+
             Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
             Story.Intro.DOFade(1, 5f);
-            Story.Intro.DOText(guides[storyIndex].Intro, 8f).OnComplete(()=>
+            Story.Intro.DOText(guide.Intro, 8f).OnComplete(()=>
             {
                 //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
                 //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
+                Story.Button.onClick.RemoveAllListeners();
+                Story.Button.onClick.AddListener(OnStartWarboard);
                 Story.Button.enabled = true;
                 Story.ClickToContinue.gameObject.SetActive(true);
             }).SetEase(Ease.Linear);
 
             storyIndex++;
         });
+    }
+
+    private void InitWarboard(GuideTable guide)
+    {
+        var racks = guide.Poses(GuideProps.Card);
+        var players = guide.Poses(GuideProps.Player);
+        var enemies = guide.Poses(GuideProps.Enemy);
+        warBoard.StartNewGame(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
+            FightCardData.BaseCard(true, guide.BaseHp, 1),
+            enemies.Select((e, i) => ChessCard.Instance(e.CardId, e.CardType, e.Star, i)).ToList());
+        foreach (var c in racks)
+        {
+            var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star)) { posIndex = -1 };
+            warBoard.PlaceCard(card);
+        }
+        for (int i = 0; i < players.Length; i++)
+        {
+            var c = players[i];
+            var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star)) { posIndex = i };
+            warBoard.PlaceCard(card);
+        }
+    }
+
+    private void OnStartWarboard()
+    {
+        warBoard.gameObject.SetActive(true);
     }
 
     ////更新故事战斗数据
