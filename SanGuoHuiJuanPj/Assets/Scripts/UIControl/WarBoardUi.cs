@@ -57,12 +57,13 @@ public class WarBoardUi : MonoBehaviour
     }
 
     //创建玩家卡牌
-    public void CreateCardToRack(GameCard card)
+    public FightCardData CreateCardToRack(GameCard card)
     {
         var fightCard = new FightCardData(card);
         fightCard.isPlayerCard = true;
         GenerateCardUi(fightCard);
         PlaceCard(fightCard);
+        return fightCard;
 
         void GenerateCardUi(FightCardData fCard)
         {
@@ -95,7 +96,6 @@ public class WarBoardUi : MonoBehaviour
         RefreshPresetFloorBuffs(IsFirstRound);
         Chessboard.gameObject.SetActive(true);
         Background.gameObject.SetActive(true);
-
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public class WarBoardUi : MonoBehaviour
     {
         var scope = includeUnlock ? PlayerScope : PlayerScope.Where(p => p.IsLock);
         foreach (var card in scope)
-            PlayerChessmanInit(card);
+            SetPlayerChessman(card);
     }
     /// <summary>
     /// 设置玩家老巢
@@ -182,7 +182,7 @@ public class WarBoardUi : MonoBehaviour
     //改变游戏速度
     public void ChangeTimeScale(int scale = 0, bool save = true) => Chessboard.ChangeTimeScale(scale, save);
 
-    private void PlayerChessmanInit(FightCardData card)
+    public void SetPlayerChessman(FightCardData card)
     {
         NewWarManager.RegCard(card);
         ChessboardManager.SetPlayerCard(card);
@@ -203,7 +203,7 @@ public class WarBoardUi : MonoBehaviour
         foreach (var card in PlayerScope.Where(c => !c.IsLock))
         {
             RecycleCardUi(card);
-            PlayerChessmanInit(card);
+            SetPlayerChessman(card);
             card.IsLock = true;
         }
         IsFirstRound = false;
@@ -470,6 +470,15 @@ public class WarBoardUi : MonoBehaviour
             if (AutoRoundSlider)
                 AutoRoundSlider.value = 1 - autoRoundTimer / AutoRoundSecs;
         }
+    }
+
+    public void SetCustomInstanceCardToBoard(int pos, GameCard c, bool isChallenger, int instanceId)
+    {
+        var card = new FightCardData(GameCard.Instance(c.CardId, c.Type, c.Level));
+        card.SetPos(pos);
+        card.SetInstanceId(instanceId);
+        card.isPlayerCard = isChallenger;
+        ChessboardManager.InstanceChessman(card);
     }
 }
 public class GameSetEvent : UnityEvent<bool> { }

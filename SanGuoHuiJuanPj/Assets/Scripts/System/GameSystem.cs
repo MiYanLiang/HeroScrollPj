@@ -31,6 +31,9 @@ public class GameSystem : MonoBehaviour
     public static GameResources GameResources { get; private set; }
     public static bool IsInit { get; private set; }
     public static MapService MapService { get; private set; }
+#if UNITY_EDITOR
+    [Header("强制播放过场")]public bool ForcePlayStory = false;
+#endif
 
     #region Reference Fields
     public LoginUiController loginUiController;

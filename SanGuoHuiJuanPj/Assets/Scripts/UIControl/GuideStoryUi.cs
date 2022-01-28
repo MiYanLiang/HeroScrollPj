@@ -14,16 +14,27 @@ public class GuideStoryUi : MonoBehaviour
     [SerializeField] private StoryWindow Story;
     private GuideTable[] guides;          //剧情故事数量
 
-    [SerializeField]
-    GameObject[] guideObjs;     //指引obj
     bool isShowed0 = false;
     bool isShowed1 = false;
-    [SerializeField] private Button startFightBtn;   //开始战斗按钮
+    [SerializeField] private GameObject[] guideObjs;     //指引obj
     [SerializeField] private BarrageUiController barragesController;
+    [SerializeField] private WarBoardUi warBoard;
     private List<string[]> barragesList;
 
-    void Start()
+    public void BeginStory()
     {
+        storyIndex++;
+        if (!EffectsPoolingControl.instance.IsInit)
+            EffectsPoolingControl.instance.Init();
+        var loginUi = GameSystem.LoginUi;
+        loginUi.gameObject.SetActive(false);
+        warBoard.Init();
+        PlayStoryIntro();
+    }
+
+    public void Init()
+    {
+        barragesController.Init();
         storyIndex = 0;
         guides = DataTable.Guide.Values.ToArray();
 
@@ -213,13 +224,13 @@ public class GuideStoryUi : MonoBehaviour
     };
 
     //播放固定弹幕
-    IEnumerator ShowBarrageForStory(int storyIndex)
+    IEnumerator ShowBarrageForStory(int index)
     {
-        for (int i = 0; i < barragesList[storyIndex].Length; i++)
+        for (int i = 0; i < barragesList[index].Length; i++)
         {
             int randTime = Random.Range(2, 5);  //间隔时间
             yield return new WaitForSeconds(randTime);
-            barragesController.PlayBarrage(barragesList[storyIndex][i]);
+            barragesController.PlayBarrage(barragesList[index][i]);
         }
     }
 
@@ -258,7 +269,7 @@ public class GuideStoryUi : MonoBehaviour
                     guideObjs[0].SetActive(false);
                     guideObjs[1].SetActive(true);
                     isShowed0 = true;
-                    startFightBtn.enabled = true;
+                    Story.Button.enabled = true;
                 }
                 break;
             case 1:
@@ -274,41 +285,104 @@ public class GuideStoryUi : MonoBehaviour
     }
 
     private Sprite GetStoryTitle() =>
-        Resources.Load("Image/startFightImg/Title/" + (storyIndex + 1), typeof(Sprite)) as Sprite;
+        Resources.Load("Image/startFightImg/Title/" + storyIndex, typeof(Sprite)) as Sprite;
     /// <summary>
     /// 初始化卡牌到战斗位上
     /// </summary>
     public void PlayStoryIntro()
     {
-        var guides = DataTable.Guide;
+        var guide = DataTable.Guide[storyIndex];
+        if(!Story.Background.gameObject.activeSelf)
+            Story.Background.gameObject.SetActive(true);
         Story.Title.sprite = GetStoryTitle();
-        Story.Background.DOFade(1, 1.5f).OnComplete(()=>
+        StartCoroutine(PlayStory(guide));
+    }
+
+    private IEnumerator PlayStory(GuideTable guide)
+    {
+        Story.Intro.text = string.Empty;
+        Story.ClickToContinue.gameObject.SetActive(false);
+        yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
+
+        //播放片头弹幕
+
+        InitWarboard(guide);
+
+        Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
+        StartCoroutine(ShowBarrageForStory(storyIndex - 1));
+        yield return DOTween.Sequence()
+            .Append(Story.Intro.DOFade(1, 5f))
+            .Join(Story.Intro.DOText(guide.Intro, 8f).SetEase(Ease.Linear))
+            .WaitForCompletion();
+        if (!isShowFHDM)
         {
-            //播放片头弹幕
-            StartCoroutine(ShowBarrageForStory(storyIndex));
-            if (!isShowFHDM)
-            {
-                StartCoroutine(ShowFeiHuaBarrage());
-                isShowFHDM = true;
-            }
+            StartCoroutine(ShowFeiHuaBarrage());
+            isShowFHDM = true;
+        }
+        //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
+        //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
+        Story.Button.onClick.RemoveAllListeners();
+        if (guide.Id > 2)
+            Story.Button.onClick.AddListener(StartSceneToServerCS.instance.PromptLoginWindow);
+        else Story.Button.onClick.AddListener(()=>StartCoroutine(OnStartWarboard()));
+        Story.Button.enabled = true;
+        Story.ClickToContinue.gameObject.SetActive(true);
+        storyIndex++;
+    }
 
-            if (storyIndex < guides.Count)
-            {
-                //FightControlForStart.instance.InitStartFight();
-                //UpdateCardDataForStory();
-            }
-            Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
-            Story.Intro.DOFade(1, 5f);
-            Story.Intro.DOText(guides[storyIndex].Intro, 8f).OnComplete(()=>
-            {
-                //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
-                //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
-                Story.Button.enabled = true;
-                Story.ClickToContinue.gameObject.SetActive(true);
-            }).SetEase(Ease.Linear);
+    private void InitWarboard(GuideTable guide)
+    {
+        var racks = guide.Poses(GuideProps.Card);
+        var players = guide.Poses(GuideProps.Player);
+        var enemies = guide.Poses(GuideProps.Enemy);
+        warBoard.StartNewGame(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
+            FightCardData.BaseCard(true, guide.BaseHp, 1),
+            enemies.Where(e => e != null).Select((e, i) => ChessCard.Instance(e.CardId, e.CardType, e.Star, i))
+                .ToList());
+        warBoard.MaxCards = 20;
+        warBoard.UpdateHeroEnlistText();
+        foreach (var c in racks.Where(c=>c!=null)) warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star));
 
-            storyIndex++;
-        });
+        for (int i = 0; i < players.Length; i++)
+        {
+            var c = players[i];
+            if (c == null) continue;
+            var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star))
+            {
+                IsLock = true,
+                posIndex = i,
+                isPlayerCard = true
+            };
+            warBoard.SetPlayerChessman(card);
+        }
+        warBoard.Chessboard.StartButton.gameObject.SetActive(false);
+        warBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
+        warBoard.Chessboard.StartButton.onClick.AddListener(warBoard.OnLocalRoundStart);
+    }
+
+    private IEnumerator OnStartWarboard()
+    {
+        WarMusicController.Instance.OnBattleMusic();
+        WarMusicController.Instance.PlayBgm(storyIndex - 1);
+        Story.Intro.text = string.Empty;
+        warBoard.gameObject.SetActive(true);
+        yield return Story.Background.DOFade(0, 1.5f).WaitForCompletion();
+        Story.Background.gameObject.SetActive(false);
+
+        warBoard.OnGameSet.RemoveListener(FinalizeStory);
+        warBoard.OnGameSet.AddListener(FinalizeStory);
+        warBoard.Chessboard.StartButton.gameObject.SetActive(true);
+    }
+
+    private void FinalizeStory(bool isWin)
+    {
+        StartCoroutine(Finalization());
+        IEnumerator Finalization()
+        {
+            yield return new WaitForSeconds(4f);
+            AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1);
+            PlayStoryIntro();
+        }
     }
 
     ////更新故事战斗数据
