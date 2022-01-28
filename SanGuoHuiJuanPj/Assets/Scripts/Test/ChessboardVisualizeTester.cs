@@ -17,6 +17,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
     [SerializeField] private JiBanAnimationManager jbAnimationManager;
     [SerializeField] private NewWarManager NewWar;
 
+#if UNITY_EDITOR
     void Start()
     {
         DataTable.Init();
@@ -35,6 +36,7 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         GenerateChessmanFromList();
         chessboard.StartButton.onClick.AddListener(RoundStart);
     }
+#endif
 
     public void RoundStart()
     {

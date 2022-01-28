@@ -928,7 +928,7 @@ public class WarsUIManager : MonoBehaviour
                     new GameCard().Instance(GameCardType.Tower, id, 1)))
                 .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
                     new GameCard().Instance(GameCardType.Trap, id, 1)))
-                .ToList().ForEach(WarBoard.CreateCardToRack);
+                .ToList().ForEach(c=>WarBoard.CreateCardToRack(c));
             return;
         }
 #endif
@@ -939,11 +939,11 @@ public class WarsUIManager : MonoBehaviour
         var hstData = PlayerDataForGame.instance.hstData;
         //临时记录武将存档信息
         hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
+            .ForEach(c => WarBoard.CreateCardToRack(c));
         hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
+            .ForEach(c => WarBoard.CreateCardToRack(c));
         hstData.trapSaveData.Enlist(forceId).ToList()
-            .ForEach(WarBoard.CreateCardToRack);
+            .ForEach(c => WarBoard.CreateCardToRack(c));
     }
 
     //初始化场景内容

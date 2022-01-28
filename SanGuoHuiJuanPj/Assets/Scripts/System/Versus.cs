@@ -293,9 +293,9 @@ public class Versus : MonoBehaviour
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
-            hstData.heroSaveData.ForEach(WarBoard.CreateCardToRack);
-            hstData.towerSaveData.ForEach(WarBoard.CreateCardToRack);
-            hstData.trapSaveData.ForEach(WarBoard.CreateCardToRack);
+            hstData.heroSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
+            hstData.towerSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
+            hstData.trapSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
             return;
         }
 #endif
@@ -308,7 +308,7 @@ public class Versus : MonoBehaviour
             .Enlist(forceId)
             .Where(c=> !except.Any(e=> e.CardId == c.CardId && e.Type == c.Type))
             .ToList();
-        list.ForEach(WarBoard.CreateCardToRack);
+        list.ForEach(c => WarBoard.CreateCardToRack(c));
     }
 
     public void PlayResult(WarResult data)
@@ -316,13 +316,10 @@ public class Versus : MonoBehaviour
         //Infoboard.transform.DOLocalMoveY(1440, 2);
         WarBoard.NewGame(false, true);
         foreach (var op in data.Chessmen)
-        {
-            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
-            card.SetPos(op.Pos);
-            card.SetInstanceId(op.InstanceId);
-            card.isPlayerCard = op.IsChallenger;
-            ChessboardManager.InstanceChessman(card);
-        }
+            WarBoard.SetCustomInstanceCardToBoard(op.Pos, 
+                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level),
+                op.IsChallenger,
+                op.InstanceId);
 
         currentChessAnimation = ChessAnimation(data);
         RoundCount = 0;

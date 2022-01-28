@@ -128,10 +128,10 @@ public class AudioController1 : MonoBehaviour
         audioSource.PlayDelayed(delayedTime);
     }
 
-    public void MusicSwitch(bool isSetToPlay)
+    public void MusicSwitch(bool play)
     {
         if (!GamePref.PrefMusicPlay) return;
-        if (isSetToPlay)audioSource.Play();
+        if (play)audioSource.Play();
         else audioSource.Pause();
     }
 }

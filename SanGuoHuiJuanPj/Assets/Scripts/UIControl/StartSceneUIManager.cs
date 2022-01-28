@@ -14,8 +14,7 @@ public class StartSceneUIManager : MonoBehaviour
     Text powerIntroText;  //势力介绍
     [SerializeField]
     float verseShowSpeed;
-    [SerializeField]
-    AudioClip pianTouAudio;
+    public AudioClip pianTouAudio;
     [SerializeField]
     float pianTouAudioVolume;
     //[SerializeField]
@@ -24,7 +23,7 @@ public class StartSceneUIManager : MonoBehaviour
     EffectsPoolingControl EffectPoolManagerObj;   //特效组
     bool isJumping; //是否在跳转
     public bool isPlayedStory;//是否已播放了剧情
-    [SerializeField]private GuideStoryUi StoryController;
+    public GuideStoryUi StoryController;
     private void Awake()
     {
         if (instance == null)
@@ -53,19 +52,6 @@ public class StartSceneUIManager : MonoBehaviour
         //播放诗句
         ShowNextVerse(0);
         AudioController1.instance.PlayLoop(pianTouAudio, pianTouAudioVolume);
-    }
-
-    public void DontHaveSaveDataPlayStory()
-    {
-        EffectPoolManagerObj.gameObject.SetActive(true);
-
-        //chooseForceCityObj.transform.GetChild(0).GetComponent<Button>().onClick.Invoke();
-        for (int i = 0; i < chooseForceCityObj.transform.childCount; i++)
-        {
-            chooseForceCityObj.transform.GetChild(i).GetComponent<Button>().onClick.AddListener(() =>
-                AudioController0.instance.RandomPlayGuZhengAudio());
-        }
-        //这里开始生成战斗
     }
 
     //诗句展示
