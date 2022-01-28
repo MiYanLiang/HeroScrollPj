@@ -70,19 +70,31 @@ public static class GameSystemExtension
         return card;
     }
 
-    public static Chessman[] Poses(this GuideTable c, GuideProps prop)
+    public static Dictionary<int, Chessman> Poses(this GuideTable c, GuideProps prop)
     {
         switch (prop)
         { 
             case GuideProps.Card:
-                return new[] {c.Card1, c.Card2, c.Card3, c.Card4, c.Card5};
-            case GuideProps.Player:
-                return new []{c.Pos1,c.Pos2,c.Pos3,c.Pos4,c.Pos5,c.Pos6,c.Pos7,c.Pos8,c.Pos9,c.Pos10,c.Pos11,c.Pos12,c.Pos13,c.Pos14,c.Pos15,c.Pos16,c.Pos17,c.Pos18,c.Pos19,c.Pos20};
-            case GuideProps.Enemy:
-                return new[]
+                return new Dictionary<int, Chessman>
                 {
-                    c.EPos1, c.EPos2, c.EPos3, c.EPos4, c.EPos5, c.EPos6, c.EPos7, c.EPos8, c.EPos9, c.EPos10, c.EPos11,
-                    c.EPos12, c.EPos13, c.EPos14, c.EPos15, c.EPos16, c.EPos17, c.EPos18, c.EPos19, c.EPos20
+                    { 0, c.Card1 }, { 1, c.Card2 }, { 2, c.Card3 }, { 3, c.Card4 },
+                    { 4, c.Card5 }
+                };
+            case GuideProps.Player:
+                return new Dictionary<int, Chessman>
+                {
+                    { 0, c.Pos1 }, { 1, c.Pos2 }, { 2, c.Pos3 }, { 3, c.Pos4 }, { 4, c.Pos5 }, { 5, c.Pos6 },
+                    { 6, c.Pos7 }, { 7, c.Pos8 }, { 8, c.Pos9 }, { 9, c.Pos10 }, { 10, c.Pos11 }, { 11, c.Pos12 },
+                    { 12, c.Pos13 }, { 13, c.Pos14 }, { 14, c.Pos15 }, { 15, c.Pos16 }, { 16, c.Pos17 }, { 17, c.Pos18 },
+                    { 18, c.Pos19 }, { 19, c.Pos20 }
+                };
+            case GuideProps.Enemy:
+                return new Dictionary<int,Chessman>
+                {
+                    { 0, c.EPos1 }, { 1, c.EPos2 }, { 2, c.EPos3 }, { 3, c.EPos4 }, { 4, c.EPos5 }, { 5, c.EPos6 },
+                    { 6, c.EPos7 }, { 7, c.EPos8 }, { 8, c.EPos9 }, { 9, c.EPos10 }, { 10, c.EPos11 },
+                    { 11, c.EPos12 }, { 12, c.EPos13 }, { 13, c.EPos14 }, { 14, c.EPos15 }, { 15, c.EPos16 },
+                    { 16, c.EPos17 }, { 17, c.EPos18 }, { 18, c.EPos19 }, { 19, c.EPos20 }
                 };
             default:
                 throw new ArgumentOutOfRangeException($"{c.GetType().Name}.{nameof(prop)}", prop, null);

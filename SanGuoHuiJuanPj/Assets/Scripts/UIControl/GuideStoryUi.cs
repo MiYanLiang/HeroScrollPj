@@ -303,7 +303,9 @@ public class GuideStoryUi : MonoBehaviour
         Story.Intro.text = string.Empty;
         Story.ClickToContinue.gameObject.SetActive(false);
         yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
-
+        Story.Intro.gameObject.SetActive(true);
+        Story.TitleObj.gameObject.SetActive(true);
+        Story.MoonObj.gameObject.SetActive(true);
         //播放片头弹幕
 
         InitWarboard(guide);
@@ -337,20 +339,20 @@ public class GuideStoryUi : MonoBehaviour
         var enemies = guide.Poses(GuideProps.Enemy);
         warBoard.StartNewGame(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
             FightCardData.BaseCard(true, guide.BaseHp, 1),
-            enemies.Where(e => e != null).Select((e, i) => ChessCard.Instance(e.CardId, e.CardType, e.Star, i))
+            enemies.Where(e => e.Value != null).Select((e, i) => ChessCard.Instance(e.Value.CardId, e.Value.CardType, e.Value.Star, e.Key))
                 .ToList());
         warBoard.MaxCards = 20;
         warBoard.UpdateHeroEnlistText();
-        foreach (var c in racks.Where(c=>c!=null)) warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star));
+        foreach (var c in racks.Values.Where(c=>c!=null)) warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star));
 
-        for (int i = 0; i < players.Length; i++)
+        foreach (var chessman in players)
         {
-            var c = players[i];
+            var c = chessman.Value;
             if (c == null) continue;
             var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star))
             {
                 IsLock = true,
-                posIndex = i,
+                posIndex = chessman.Key,
                 isPlayerCard = true
             };
             warBoard.SetPlayerChessman(card);
@@ -529,5 +531,7 @@ public class GuideStoryUi : MonoBehaviour
         public Text Intro;
         public Text ClickToContinue;
         public Button Button;
+        public GameObject MoonObj;
+        public GameObject TitleObj;
     }
 }
