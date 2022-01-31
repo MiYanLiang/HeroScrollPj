@@ -337,7 +337,7 @@ public class GuideStoryUi : MonoBehaviour
         var racks = guide.Poses(GuideProps.Card);
         var players = guide.Poses(GuideProps.Player);
         var enemies = guide.Poses(GuideProps.Enemy);
-        warBoard.StartNewGame(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
+        warBoard.InitNewChessboard(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
             FightCardData.BaseCard(true, guide.BaseHp, 1),
             enemies.Where(e => e.Value != null).Select((e, i) => ChessCard.Instance(e.Value.CardId, e.Value.CardType, e.Value.Star, e.Key))
                 .ToList());
