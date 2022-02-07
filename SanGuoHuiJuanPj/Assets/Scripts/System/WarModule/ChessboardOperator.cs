@@ -458,17 +458,17 @@ namespace Assets.System.WarModule
             ActivityResult ProcessActivity()
             {
                 Activity activity;
-                try
-                {
+                //try
+                //{
                     //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
                     activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                         conducts, skill, rePos);
-                }
-                catch (Exception e)
-                {
-                    throw XDebug.Throw<ChessboardOperator>(
-                        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]");
-                }
+                //}
+                //catch (Exception e)
+                //{
+                //    throw XDebug.Throw<ChessboardOperator>(
+                //        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
+                //}
 
                 if (target.Operator != null)
                     activity.TargetStatus = GetFullCondition(target.Operator);

@@ -108,7 +108,7 @@ public class AudioController1 : MonoBehaviour
     }
 
     //播放长背景音乐参数设置
-    public void PlayLoop(AudioClip audioClip, float audioVolume)
+    public void PlayLoop(AudioClip audioClip, float audioVolume,float delayed = 0f)
     {
         if (!GamePref.PrefMusicPlay) return;
         StopAllCoroutines();
@@ -116,7 +116,7 @@ public class AudioController1 : MonoBehaviour
         ChangeAudioClip(audioClip, audioVolume);
         isPlayRandom = false;
         audioSource.loop = true;
-        audioSource.Play();
+        audioSource.PlayDelayed(delayed);
     }
 
     //播放音乐
