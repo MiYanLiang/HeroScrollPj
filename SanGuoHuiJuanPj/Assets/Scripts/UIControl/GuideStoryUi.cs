@@ -298,8 +298,10 @@ public class GuideStoryUi : MonoBehaviour
         StartCoroutine(PlayStory(guide));
     }
 
+    private bool isStoryTextComplete = false;
     private IEnumerator PlayStory(GuideTable guide)
     {
+        isStoryTextComplete = false;
         Story.Intro.text = string.Empty;
         Story.ClickToContinue.gameObject.SetActive(false);
         yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
@@ -308,25 +310,25 @@ public class GuideStoryUi : MonoBehaviour
         Story.MoonObj.gameObject.SetActive(true);
         //播放片头弹幕
 
-        InitWarboard(guide);
-
-        Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
-        StartCoroutine(ShowBarrageForStory(storyIndex - 1));
-        yield return DOTween.Sequence()
+        DOTween.Sequence()
             .Append(Story.Intro.DOFade(1, 5f))
             .Join(Story.Intro.DOText(guide.Intro, 8f).SetEase(Ease.Linear))
-            .WaitForCompletion();
+            .AppendCallback(() => isStoryTextComplete = true);
+        Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
+        StartCoroutine(ShowBarrageForStory(storyIndex - 1));
         if (!isShowFHDM)
         {
             StartCoroutine(ShowFeiHuaBarrage());
             isShowFHDM = true;
         }
+        InitWarboard(guide);
+        yield return new WaitUntil(() => isStoryTextComplete);
         //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
         //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
         Story.Button.onClick.RemoveAllListeners();
         if (guide.Id > 2)
             Story.Button.onClick.AddListener(StartSceneToServerCS.instance.PromptLoginWindow);
-        else Story.Button.onClick.AddListener(()=>StartCoroutine(OnStartWarboard()));
+        else Story.Button.onClick.AddListener(OnStartWarboard);
         Story.Button.enabled = true;
         Story.ClickToContinue.gameObject.SetActive(true);
         storyIndex++;
@@ -334,16 +336,19 @@ public class GuideStoryUi : MonoBehaviour
 
     private void InitWarboard(GuideTable guide)
     {
+        warBoard.InitNewGame(false, true);
         var racks = guide.Poses(GuideProps.Card);
         var players = guide.Poses(GuideProps.Player);
         var enemies = guide.Poses(GuideProps.Enemy);
-        warBoard.StartNewGame(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
+        warBoard.InitNewChessboard(FightCardData.BaseCard(false, guide.EnemyBaseHp, 1),
             FightCardData.BaseCard(true, guide.BaseHp, 1),
-            enemies.Where(e => e.Value != null).Select((e, i) => ChessCard.Instance(e.Value.CardId, e.Value.CardType, e.Value.Star, e.Key))
+            enemies.Where(e => e.Value != null).Select((e, i) =>
+                    ChessCard.Instance(e.Value.CardId, e.Value.CardType, e.Value.Star, e.Key))
                 .ToList());
         warBoard.MaxCards = 20;
         warBoard.UpdateHeroEnlistText();
-        foreach (var c in racks.Values.Where(c=>c!=null)) warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star));
+        foreach (var c in racks.Values.Where(c => c != null))
+            warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star));
 
         foreach (var chessman in players)
         {
@@ -357,20 +362,19 @@ public class GuideStoryUi : MonoBehaviour
             };
             warBoard.SetPlayerChessman(card);
         }
+
         warBoard.Chessboard.StartButton.gameObject.SetActive(false);
         warBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
         warBoard.Chessboard.StartButton.onClick.AddListener(warBoard.OnLocalRoundStart);
     }
 
-    private IEnumerator OnStartWarboard()
+    private void OnStartWarboard()
     {
         WarMusicController.Instance.OnBattleMusic();
         WarMusicController.Instance.PlayBgm(storyIndex - 1);
         Story.Intro.text = string.Empty;
         warBoard.gameObject.SetActive(true);
-        yield return Story.Background.DOFade(0, 1.5f).WaitForCompletion();
-        Story.Background.gameObject.SetActive(false);
-
+        Story.Background.DOFade(0, 1.5f).OnComplete(() => Story.Background.gameObject.SetActive(false));
         warBoard.OnGameSet.RemoveListener(FinalizeStory);
         warBoard.OnGameSet.AddListener(FinalizeStory);
         warBoard.Chessboard.StartButton.gameObject.SetActive(true);
@@ -381,8 +385,8 @@ public class GuideStoryUi : MonoBehaviour
         StartCoroutine(Finalization());
         IEnumerator Finalization()
         {
-            yield return new WaitForSeconds(4f);
-            AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1);
+            AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1, 4);
+            yield return new WaitForSeconds(4);
             PlayStoryIntro();
         }
     }

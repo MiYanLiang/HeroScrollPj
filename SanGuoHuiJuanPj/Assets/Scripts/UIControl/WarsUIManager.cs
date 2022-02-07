@@ -576,7 +576,7 @@ public class WarsUIManager : MonoBehaviour
             }
         }
 
-        WarBoard.StartNewGame(enemyBase, playerBase, enemyCards);
+        WarBoard.InitNewChessboard(enemyBase, playerBase, enemyCards);
         waitForRoundStart = true;
         WarBoard.gameObject.SetActive(true);
     }

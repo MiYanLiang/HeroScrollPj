@@ -314,7 +314,7 @@ public class Versus : MonoBehaviour
     public void PlayResult(WarResult data)
     {
         //Infoboard.transform.DOLocalMoveY(1440, 2);
-        WarBoard.NewGame(false, true);
+        WarBoard.InitNewGame(false, true);
         foreach (var op in data.Chessmen)
             WarBoard.SetCustomInstanceCardToBoard(op.Pos, 
                 GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level),
@@ -332,7 +332,7 @@ public class Versus : MonoBehaviour
         List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
-        WarBoard.NewGame(true, true);
+        WarBoard.InitNewGame(true, true);
         foreach (var op in result.Chessmen)
         {
             var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
@@ -373,7 +373,7 @@ public class Versus : MonoBehaviour
             AudioController1.instance.FadeEndMusic();
             WarBoard.OnRoundStart -= OnEveryRound;
             roundUi.Off();
-            WarBoard.NewGame(false, false);
+            WarBoard.InitNewGame(false, false);
         }
 
         WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, true);
@@ -381,7 +381,7 @@ public class Versus : MonoBehaviour
 
     public void StartNewGame()
     {
-        WarBoard.NewGame(true, true);
+        WarBoard.InitNewGame(true, true);
         var card = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, CityLevel));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);

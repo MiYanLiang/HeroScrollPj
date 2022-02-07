@@ -82,8 +82,13 @@ public class WarBoardUi : MonoBehaviour
         if (isShow) aboutCardUi.InfoText.text = card.GetInfo().About;
         aboutCardUi.gameObject.SetActive(isShow);
     }
-
-    public void StartNewGame(FightCardData enemyBase, FightCardData playerBase, List<ChessCard> enemyCards)
+    /// <summary>
+    /// 新棋盘布局，不牵涉卡牌架子上的卡牌
+    /// </summary>
+    /// <param name="enemyBase"></param>
+    /// <param name="playerBase"></param>
+    /// <param name="enemyCards"></param>
+    public void InitNewChessboard(FightCardData enemyBase, FightCardData playerBase, List<ChessCard> enemyCards)
     {
         IsFirstRound = true;
         IsGameOver = false;
@@ -99,9 +104,9 @@ public class WarBoardUi : MonoBehaviour
     }
 
     /// <summary>
-    /// 新棋局
+    /// 初始化新棋局
     /// </summary>
-    public void NewGame(bool showStartBtn, bool clearRack)
+    public void InitNewGame(bool showStartBtn, bool clearRack)
     {
         if (PlayerScope.Any())
         {
