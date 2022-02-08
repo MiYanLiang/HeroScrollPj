@@ -7,6 +7,7 @@ public interface IPoolObject
 {
     void ObjReset();
 }
+
 public class ObjectPool<TObj> where TObj : IPoolObject
 {
     public event UnityAction<TObj> OnGet;

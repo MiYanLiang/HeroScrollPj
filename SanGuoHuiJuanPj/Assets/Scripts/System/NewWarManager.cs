@@ -48,11 +48,13 @@ public class NewWarManager : MonoBehaviour, ILogger
         return cards;
     }
 
-    private FightCardData RegChessCard(ChessCard chessCard, bool isChallenger)
+    public FightCardData RegChessCard(ChessCard chessCard, bool isChallenger, int customHp = 0)
     {
         var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
         card.SetPos(chessCard.Pos);
         card.isPlayerCard = isChallenger;
+        if (customHp > 0) card.ResetHp(customHp);
+
         //card = ChessOperator.RegOperator(card);
         RegCard(card);
         return card;

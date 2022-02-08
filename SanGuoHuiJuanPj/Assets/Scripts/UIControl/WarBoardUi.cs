@@ -162,17 +162,26 @@ public class WarBoardUi : MonoBehaviour
     {
         if (enemyBaseObj != null && enemyBaseObj.gameObject) 
             Destroy(enemyBaseObj.gameObject);
-        enemyCards.Add(new ChessCard
+        //enemyCards.Add(new ChessCard
+        //{
+        //    Id = -1,
+        //    Level = enemyBase.Level,
+        //    Pos = 17,
+        //    Type = GameCardType.Base
+        //});
+        var baseCard =new ChessCard
         {
             Id = -1,
             Level = enemyBase.Level,
             Pos = 17,
             Type = GameCardType.Base
-        });
+        };
         NewWarManager.Enemy = enemyCards.ToArray();
         var confirmedEnemies = NewWarManager.ConfirmInstanceEnemies();
+        var eBase = NewWarManager.RegChessCard(baseCard, false, enemyBase.HitPoint);
+        ChessboardManager.InstanceChessman(eBase);
         foreach (var card in confirmedEnemies) ChessboardManager.InstanceChessman(card);
-        enemyBaseObj = confirmedEnemies.First(c=>c.Pos == 17).cardObj;
+        enemyBaseObj = eBase.cardObj; //confirmedEnemies.First(c=>c.Pos == 17).cardObj;
     }
 
     public void CloseChessboard()

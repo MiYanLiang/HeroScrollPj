@@ -16,9 +16,9 @@ public class GuideStoryUi : MonoBehaviour
 
     bool isShowed0 = false;
     bool isShowed1 = false;
-    [SerializeField] private GameObject[] guideObjs;     //指引obj
     [SerializeField] private BarrageUiController barragesController;
     [SerializeField] private WarBoardUi warBoard;
+    [SerializeField] private Image GuidePanel; //指引档板
     private List<string[]> barragesList;
 
     public void BeginStory()
@@ -258,32 +258,6 @@ public class GuideStoryUi : MonoBehaviour
     }
     ///////////////////////////////////////////
 
-    //展示指引
-    public void ChangeGuideForFight(int index)
-    {
-        switch (index)
-        {
-            case 0:
-                if (!isShowed0)
-                {
-                    guideObjs[0].SetActive(false);
-                    guideObjs[1].SetActive(true);
-                    isShowed0 = true;
-                    Story.Button.enabled = true;
-                }
-                break;
-            case 1:
-                if (!isShowed1)
-                {
-                    guideObjs[1].SetActive(false);
-                    isShowed1 = true;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
     private Sprite GetStoryTitle() =>
         Resources.Load("Image/startFightImg/Title/" + storyIndex, typeof(Sprite)) as Sprite;
     /// <summary>
@@ -331,6 +305,7 @@ public class GuideStoryUi : MonoBehaviour
         else Story.Button.onClick.AddListener(OnStartWarboard);
         Story.Button.enabled = true;
         Story.ClickToContinue.gameObject.SetActive(true);
+        GuidePanel.gameObject.SetActive(guide.Id == 1);
         storyIndex++;
     }
 
@@ -365,11 +340,16 @@ public class GuideStoryUi : MonoBehaviour
 
         warBoard.Chessboard.StartButton.gameObject.SetActive(false);
         warBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        warBoard.Chessboard.StartButton.onClick.AddListener(warBoard.OnLocalRoundStart);
+        warBoard.Chessboard.StartButton.onClick.AddListener(() =>
+        {
+            warBoard.OnLocalRoundStart();
+            GuidePanel.gameObject.SetActive(false);
+        });
     }
 
     private void OnStartWarboard()
     {
+        PlayZhanZhongBarrage();
         WarMusicController.Instance.OnBattleMusic();
         WarMusicController.Instance.PlayBgm(storyIndex - 1);
         Story.Intro.text = string.Empty;
@@ -390,142 +370,6 @@ public class GuideStoryUi : MonoBehaviour
             PlayStoryIntro();
         }
     }
-
-    ////更新故事战斗数据
-    //private void UpdateCardDataForStory()
-    //{
-    //    //羁绊数据重置
-    //    CardManager.ResetJiBan(FightControlForStart.instance.playerJiBanAllTypes);
-    //    CardManager.ResetJiBan(FightControlForStart.instance.enemyJiBanAllTypes);
-    //    if (playerFightCardsDatas[17] == null)
-    //    {
-    //        CreatePlayerHomeCard();
-    //    }
-    //    else
-    //    {
-    //        playerFightCardsDatas[17].cardObj.transform.GetChild(4).gameObject.SetActive(false);
-    //        enemyFightCardsDatas[17].cardObj.transform.GetChild(4).gameObject.SetActive(false);
-
-    //        playerFightCardsDatas[17].fullHp =
-    //            playerFightCardsDatas[17].nowHp = guides[storyIndex].BaseHp; //我方血量
-    //        enemyFightCardsDatas[17].fullHp =
-    //            enemyFightCardsDatas[17].nowHp = guides[storyIndex].EnemyBaseHp; //敌方血量
-
-    //        playerFightCardsDatas[17].cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
-    //        enemyFightCardsDatas[17].cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
-    //    }
-
-    //    //清空备战位
-    //    for (int i = 0; i < herosCardListTran.childCount; i++)
-    //    {
-    //        Destroy(herosCardListTran.GetChild(i).gameObject);
-    //    }
-
-    //    playerCardsDatas.Clear();
-    //    //清空棋盘单位
-    //    for (int i = 0; i < 20; i++)
-    //    {
-    //        if (i != 17)
-    //        {
-    //            if (playerFightCardsDatas[i] != null)
-    //            {
-    //                Destroy(playerFightCardsDatas[i].cardObj);
-    //                playerFightCardsDatas[i] = null;
-    //            }
-
-    //            if (enemyFightCardsDatas[i] != null)
-    //            {
-    //                Destroy(enemyFightCardsDatas[i].cardObj);
-    //                enemyFightCardsDatas[i] = null;
-    //            }
-    //        }
-    //    }
-
-    //    FightControlForStart.instance.ClearEmTieQiCardList();
-    //    var guide = guides[storyIndex];
-    //    //创建玩家备战单位
-    //    foreach (var card in guide.Poses(GuideProps.Card))
-    //    {
-    //        if (card == null) continue;
-    //        FightCardData data = CreateFightUnit(card, herosCardListTran, true);
-    //        data.cardObj.GetComponent<CardDragForStart>().posIndex = -1;
-    //        data.cardObj.GetComponent<CardDragForStart>().isFightCard = false;
-    //        data.posIndex = -1;
-    //        data.isPlayerCard = true;
-    //        playerCardsDatas.Add(data);
-    //    }
-
-    //    //创建玩家棋盘单位
-    //    var playerChessmen = guide.Poses(GuideProps.Player);
-    //    for (var i = 0; i < playerChessmen.Length; i++)
-    //    {
-    //        var card = playerChessmen[i];
-    //        if (card == null) continue;
-    //        FightCardData data = CreateFightUnit(card, playerCardsBox, true);
-    //        data.cardObj.GetComponent<CardDragForStart>().posIndex = i;
-    //        data.cardObj.GetComponent<CardDragForStart>().isFightCard = true;
-    //        data.posIndex = i;
-    //        data.isPlayerCard = true;
-    //        data.cardObj.transform.position = playerCardsPos[i].transform.position;
-    //        playerFightCardsDatas[i] = data;
-    //        CardGoIntoBattleProcess(playerFightCardsDatas[i], i, playerFightCardsDatas, true);
-    //    }
-
-    //    //创建敌人棋盘单位
-    //    var enemyChessmen = guide.Poses(GuideProps.Enemy);
-    //    for (int i = 0; i < 20; i++)
-    //    {
-    //        var card = enemyChessmen[i];
-    //        if (card == null) continue;
-    //        FightCardData data = CreateFightUnit(card, enemyCardsBox, false);
-    //        data.posIndex = i;
-    //        data.isPlayerCard = false;
-    //        data.cardObj.transform.position = enemyCardsPos[i].transform.position;
-    //        enemyFightCardsDatas[i] = data;
-    //        CardGoIntoBattleProcess(enemyFightCardsDatas[i], i, enemyFightCardsDatas, true);
-    //    }
-    //}
-
-    ////创建敌方卡牌战斗单位数据
-    //private FightCardData CreateFightUnit(Chessman chessman, Transform cardsBoxTran, bool isPlayerCard)
-    //{
-    //    FightCardData data = new FightCardData();
-    //    data.cardObj = Instantiate(isPlayerCard ? fightCardPyPre : fightCardPre, cardsBoxTran);
-    //    data.cardType = chessman.CardType;
-    //    data.cardId = chessman.CardId;
-    //    data.cardGrade = chessman.Star;
-    //    data.fightState = new FightState();
-    //    var cardType = (GameCardType)chessman.CardType;
-    //    var card = new NowLevelAndHadChip().Instance(cardType, chessman.CardId);
-    //    card.level = chessman.Star;
-    //    var info = card.GetInfo();
-    //    //兵种
-    //    data.cardObj.transform.GetChild(1).GetComponent<Image>().sprite = cardType == GameCardType.Hero
-    //        ? GameResources.HeroImg[card.id]
-    //        : GameResources.FuZhuImg[info.ImageId];
-    //    //血量
-    //    data.cardObj.transform.GetChild(2).GetComponent<Image>().fillAmount = 0;
-    //    //名字
-    //    ShowNameTextRules(data.cardObj.transform.GetChild(3).GetComponent<Text>(), info.Name);
-    //    //名字颜色
-    //    data.cardObj.transform.GetChild(3).GetComponent<Text>().color = NameColorChoose(info.Rare);
-    //    //星级
-    //    data.cardObj.transform.GetChild(4).GetComponent<Image>().sprite = GameResources.GradeImg[info.Rare];
-    //    //兵种
-    //    data.cardObj.transform.GetChild(5).GetComponentInChildren<Text>().text = info.Short;
-    //    //边框
-    //    FrameChoose(info.Rare, data.cardObj.transform.GetChild(6).GetComponent<Image>());
-    //    data.damage = info.GetDamage(card.level);
-    //    data.hpr = info.GameSetRecovery;
-    //    data.fullHp = data.nowHp = info.GetHp(card.level);
-    //    data.activeUnit = cardType == GameCardType.Hero || ((cardType == GameCardType.Tower) &&
-    //                                                        (info.Id == 0 || info.Id == 1 || info.Id == 2 ||
-    //                                                         info.Id == 3 || info.Id == 6));
-    //    data.cardMoveType = info.CombatType;
-    //    data.cardDamageType = info.DamageType;
-    //    if (cardType != GameCardType.Hero) data.cardObj.transform.GetChild(5).GetComponent<Image>().sprite = GameResources.ClassImg[1];
-    //    return data;
-    //}
 
     [Serializable]private class StoryWindow
     {
