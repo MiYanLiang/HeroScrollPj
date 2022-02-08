@@ -751,6 +751,7 @@ public class Versus : MonoBehaviour
         public Image Window;
         public Text LevelNotReach;
         public Button CreateCharacterButton;
+        public int MinLevel = 7;
 
         public void Init(UIManager uiMgr, PlayerCharacterUi ui)
         {
@@ -768,7 +769,7 @@ public class Versus : MonoBehaviour
             Window.gameObject.SetActive(true);
             LevelNotReach.gameObject.SetActive(false);
             CreateCharacterButton.gameObject.SetActive(false);
-            if (PlayerDataForGame.instance.pyData.Level < 9)
+            if (PlayerDataForGame.instance.pyData.Level < MinLevel)
             {
                 LevelNotReach.gameObject.SetActive(true);
                 return;
