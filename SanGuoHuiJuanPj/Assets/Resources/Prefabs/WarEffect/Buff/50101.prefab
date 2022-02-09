@@ -51,6 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Image: {fileID: 1525929175984745641}
   Animator: {fileID: 2605661616627773572}
+  Canvas: {fileID: 0}
 --- !u!1 &1525929175984745643
 GameObject:
   m_ObjectHideFlags: 0
@@ -111,7 +112,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.33786705, g: 0, b: 0.6698113, a: 0.8509804}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

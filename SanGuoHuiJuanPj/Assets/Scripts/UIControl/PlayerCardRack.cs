@@ -21,7 +21,7 @@ public class PlayerCardRack : DragInputControlController<FightCardData>
     public override void PointerDown(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
 
     public override void PointerUp(BaseEventData data, FightCardData card) =>
-        WarBoardUi.DisplayCardInfo(card, true);
+        WarBoardUi.DisplayCardInfo(card, false);
 
     public override void StartDrag(BaseEventData data, FightCardData card)
     {

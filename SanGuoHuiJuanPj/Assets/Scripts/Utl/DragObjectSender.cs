@@ -11,12 +11,12 @@ public abstract class DragObjectSender<T> : MonoBehaviour
 {
     protected IDragInputControl<T> Controller { get; private set; }
     protected abstract T ThisObj { get; }
-    public EventTrigger EventTrigger { get; private set; }
+    public EventTrigger EventTrigger;
 
     public virtual void Init()
     {
-        if (EventTrigger) return;
-        EventTrigger = gameObject.AddComponent<EventTrigger>();
+        //if (EventTrigger) return;
+        //EventTrigger = gameObject.AddComponent<EventTrigger>();
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.PointerDown, OnPointerDown));
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.PointerUp, OnPointerUp));
         EventTrigger.triggers.Add(InstanceEntry(EventTriggerType.BeginDrag, BeginDrag));

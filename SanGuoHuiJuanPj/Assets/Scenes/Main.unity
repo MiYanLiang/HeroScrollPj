@@ -12357,7 +12357,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1511754626}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -17029,8 +17029,6 @@ GameObject:
   - component: {fileID: 419596456}
   - component: {fileID: 419596455}
   - component: {fileID: 419596458}
-  - component: {fileID: 419596454}
-  - component: {fileID: 419596453}
   m_Layer: 5
   m_Name: StartButton
   m_TagString: Untagged
@@ -17062,44 +17060,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0.50001526, y: -2.5000305}
   m_SizeDelta: {x: 134.36633, y: 150.22328}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &419596453
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 419596451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
---- !u!223 &419596454
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 419596451}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 2
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 1
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_AdditionalShaderChannelsFlag: 0
-  m_SortingLayerID: 0
-  m_SortingOrder: 5
-  m_TargetDisplay: 0
 --- !u!114 &419596455
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17327,6 +17287,7 @@ RectTransform:
   - {fileID: 1145892698}
   - {fileID: 1939783183}
   - {fileID: 1511754626}
+  - {fileID: 1771876062}
   - {fileID: 1766169587}
   - {fileID: 1035066265}
   - {fileID: 1150298739}
@@ -22728,7 +22689,7 @@ RectTransform:
   - {fileID: 1887339220}
   - {fileID: 1477387003}
   m_Father: {fileID: 1511754626}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -41157,7 +41118,7 @@ RectTransform:
   - {fileID: 7299465675075469013}
   - {fileID: 4273484615944840927}
   m_Father: {fileID: 1511754626}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -43358,7 +43319,7 @@ RectTransform:
   m_Children:
   - {fileID: 385253748}
   m_Father: {fileID: 423409559}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.3611111, y: -0.015234375}
   m_AnchorMax: {x: 0.6388889, y: 0.054296874}
@@ -48420,7 +48381,7 @@ RectTransform:
   - {fileID: 1537636321}
   - {fileID: 768467725}
   m_Father: {fileID: 423409559}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.0000000105963815, y: 0.040625}
   m_AnchorMax: {x: 1, y: 0.1375}
@@ -61437,7 +61398,6 @@ RectTransform:
   m_Children:
   - {fileID: 1337668308}
   - {fileID: 1848065518}
-  - {fileID: 1771876062}
   - {fileID: 310203500}
   - {fileID: 545048427}
   - {fileID: 974569248}
@@ -72411,7 +72371,7 @@ RectTransform:
   - {fileID: 259632265}
   - {fileID: 236065326}
   m_Father: {fileID: 423409559}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.56844294}
   m_AnchorMax: {x: 1, y: 1.0000015}
@@ -72630,6 +72590,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1771876062}
   - component: {fileID: 1771876063}
+  - component: {fileID: 1771876065}
+  - component: {fileID: 1771876064}
   m_Layer: 5
   m_Name: StartWarUi
   m_TagString: Untagged
@@ -72650,8 +72612,8 @@ RectTransform:
   m_Children:
   - {fileID: 419596452}
   - {fileID: 1361155660}
-  m_Father: {fileID: 1511754626}
-  m_RootOrder: 2
+  m_Father: {fileID: 423409559}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.2685185, y: 0.41510418}
   m_AnchorMax: {x: 0.7314815, y: 0.67552084}
@@ -72673,6 +72635,44 @@ MonoBehaviour:
   Animator: {fileID: 419596458}
   Button: {fileID: 419596457}
   CircleFlicker: {fileID: 1361155659}
+--- !u!114 &1771876064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1771876061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!223 &1771876065
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1771876061}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 5
+  m_TargetDisplay: 0
 --- !u!1001 &1772312654
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -73628,7 +73628,7 @@ PrefabInstance:
     - target: {fileID: 5798720224500134180, guid: e2427affbe95fde4c802ea88513365b4,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5798720224500134180, guid: e2427affbe95fde4c802ea88513365b4,
         type: 3}
@@ -80966,7 +80966,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u7B49\u7EA79\u5F00\u542F\uFF01"
+  m_Text: "\u7B49\u7EA77\u5F00\u542F\uFF01"
 --- !u!222 &1989308032
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -137472,7 +137472,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7121266005235607463
 RectTransform:
   m_ObjectHideFlags: 0
