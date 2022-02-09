@@ -16,7 +16,7 @@ public class WarBoardUi : MonoBehaviour
     /// </summary>
     public int MaxCards;
     public Chessboard Chessboard;
-    public Animator StartBtnAnimator;
+    //public Animator StartBtnAnimator;
     public JiBanAnimationManager JiBanManager;
     [SerializeField] private Image Background;
     [SerializeField] private PlayerCardRack Rack;
@@ -127,7 +127,7 @@ public class WarBoardUi : MonoBehaviour
     {
         ChessboardManager.NewGame();
         NewWarManager.NewGame();
-        if(showStartBtn) StartButtonAnim(true, Chessboard.StartButton);
+        if(showStartBtn) Chessboard.DisplayStartButton(true);
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class WarBoardUi : MonoBehaviour
         autoRoundTimer = 0;
         if (IsBusy) return;
         IsBusy = true;
-        StartButtonAnim(false, Chessboard.StartButton);
+        Chessboard.DisplayStartButton(false);
         //移除地块精灵
         foreach (var pos in PresetMap.Keys.ToArray())
             RemovePreFloorBuff(pos);
@@ -244,21 +244,12 @@ public class WarBoardUi : MonoBehaviour
         IsBusy = false;
         if(invokeRoundPauseTrigger)
         {
-            StartButtonAnim(true, Chessboard.StartButton);
+            Chessboard.DisplayStartButton(true);
             OnRoundPause?.Invoke();
         }
     }
 
     public IEnumerator ChallengerWinAnimation() => ChessboardManager.ChallengerWinAnimation();
-
-    public const string ButtonTrigger = "isShow";
-
-    public static void StartButtonAnim(bool show,Button startButton)
-    {
-        startButton.GetComponent<Animator>().SetBool(ButtonTrigger, show);
-        startButton.interactable = show;
-    }
-
 
     #region 棋子暂存区与棋盘区
     public List<FightCardData> CardOnRack { get; } = new List<FightCardData>();

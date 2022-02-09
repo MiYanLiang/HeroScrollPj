@@ -31,7 +31,7 @@ public class TestServerSimpleApi : MonoBehaviour
 
     private IEnumerator StartInit()
     {
-        StartButton = chessboard.StartButton;
+        //StartButton = chessboard.StartButton;
         StartButton.gameObject.SetActive(false);
         yield return new WaitForSeconds(1f);
         Versus.Init(null);
@@ -78,7 +78,7 @@ public class TestServerSimpleApi : MonoBehaviour
         if (isBusy) return;
         isBusy = true;
         Versus.SetEnemyFormation(selectedFormation.Formation.ToDictionary(c => c.Key, c => c.Value as IGameCard));
-        StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
+        //StartButton.GetComponent<Animator>().SetBool(WarBoardUi.ButtonTrigger, false);
         StartButton.onClick.RemoveAllListeners();
         var f = selectedFormation;
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new ChallengeSet.Card(c.Card));

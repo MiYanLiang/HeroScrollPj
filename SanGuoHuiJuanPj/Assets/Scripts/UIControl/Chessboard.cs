@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class Chessboard : MonoBehaviour
@@ -13,7 +14,8 @@ public class Chessboard : MonoBehaviour
     public Image Background;
     public ChessPos[] PlayerScope;
     public ChessPos[] EnemyScope;
-    public Button StartButton;
+    //public Button StartButton;
+    public StartWarUi StartWarUi;
     public Transform EffectTransform;
     public Animator RouseAnim;
     public Image ShadyImage;
@@ -158,4 +160,12 @@ public class Chessboard : MonoBehaviour
         Time.timeScale = speed;
         SpeedText.text = Multiply + speed;
     }
+
+    public void DisplayStartButton(bool show) => StartWarUi.Display(show);
+
+    public void RemoveAllStartClicks() => StartWarUi.ResetAllClicks();
+
+    public void ResetStartWarUi() => StartWarUi.ResetUi();
+
+    public void SetStartWarUi(UnityAction action) => StartWarUi.SetClickEvent(action);
 }

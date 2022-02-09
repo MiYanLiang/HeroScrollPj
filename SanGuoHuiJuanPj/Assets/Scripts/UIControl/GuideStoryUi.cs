@@ -19,6 +19,7 @@ public class GuideStoryUi : MonoBehaviour
     [SerializeField] private BarrageUiController barragesController;
     [SerializeField] private WarBoardUi warBoard;
     [SerializeField] private Image GuidePanel; //指引档板
+    [SerializeField] private Text[] GuideTexts;//引导文本
     private List<string[]> barragesList;
 
     public void BeginStory()
@@ -35,6 +36,7 @@ public class GuideStoryUi : MonoBehaviour
     public void Init()
     {
         barragesController.Init();
+        GuidePanel.gameObject.SetActive(false);
         storyIndex = 0;
         guides = DataTable.Guide.Values.ToArray();
 
@@ -295,8 +297,8 @@ public class GuideStoryUi : MonoBehaviour
             StartCoroutine(ShowFeiHuaBarrage());
             isShowFHDM = true;
         }
-        InitWarboard(guide);
         yield return new WaitUntil(() => isStoryTextComplete);
+        InitWarboard(guide);
         //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
         //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
         Story.Button.onClick.RemoveAllListeners();
@@ -338,17 +340,40 @@ public class GuideStoryUi : MonoBehaviour
             warBoard.SetPlayerChessman(card);
         }
 
-        warBoard.Chessboard.StartButton.gameObject.SetActive(false);
-        warBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        warBoard.Chessboard.StartButton.onClick.AddListener(() =>
+        warBoard.Chessboard.ResetStartWarUi();
+        warBoard.Chessboard.SetStartWarUi(() =>
         {
             warBoard.OnLocalRoundStart();
             GuidePanel.gameObject.SetActive(false);
         });
     }
 
+    private IEnumerator PlayGuideTexts()
+    {
+        var texts = new List<string>();
+        for (var i = 0; i < GuideTexts.Length; i++)
+        {
+            texts.Add(GuideTexts[i].text);
+            GuideTexts[i].text = string.Empty;
+        }
+        for (var i = 0; i < GuideTexts.Length; i++)
+        {
+            var text = GuideTexts[i];
+            yield return text.DOText(texts[i], 3.5f).WaitForCompletion();
+        }
+    }
+
     private void OnStartWarboard()
     {
+        Story.Intro.gameObject.SetActive(false);
+        Story.TitleObj.gameObject.SetActive(false);
+        Story.MoonObj.gameObject.SetActive(false);
+        Story.Button.onClick.RemoveAllListeners();
+        if (storyIndex == 2)
+        {
+            StartCoroutine(PlayGuideTexts());
+        }
+
         PlayZhanZhongBarrage();
         WarMusicController.Instance.OnBattleMusic();
         WarMusicController.Instance.PlayBgm(storyIndex - 1);
@@ -357,7 +382,7 @@ public class GuideStoryUi : MonoBehaviour
         Story.Background.DOFade(0, 1.5f).OnComplete(() => Story.Background.gameObject.SetActive(false));
         warBoard.OnGameSet.RemoveListener(FinalizeStory);
         warBoard.OnGameSet.AddListener(FinalizeStory);
-        warBoard.Chessboard.StartButton.gameObject.SetActive(true);
+        warBoard.Chessboard.DisplayStartButton(true);
     }
 
     private void FinalizeStory(bool isWin)

@@ -17281,6 +17281,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c03082ef048bac4c9f9c7569a53bee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ForcePlayStory: 0
   loginUiController: {fileID: 1876495554986747119}
   timeSystemControl: {fileID: 924970854062483382}
   playerDataForGame: {fileID: 924970854784821908}
