@@ -34,22 +34,22 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
         _cardData = enemies.Concat(players).ToDictionary(c => c.InstanceId, c => c);
         
         GenerateChessmanFromList();
-        chessboard.StartButton.onClick.AddListener(RoundStart);
+        //chessboard.SetStartWarUi(RoundStart);
     }
 #endif
 
-    public void RoundStart()
-    {
-        WarBoardUi.StartButtonAnim(false, chessboard.StartButton);
-        var round = NewWar.ChessOperator.StartRound();
-        StartCoroutine(TestRoundAnim(round));
-    }
+    //public void RoundStart()
+    //{
+    //    WarBoardUi.StartButtonAnim(false, chessboard.StartButton);
+    //    var round = NewWar.ChessOperator.StartRound();
+    //    StartCoroutine(TestRoundAnim(round));
+    //}
 
-    private IEnumerator TestRoundAnim(ChessRound chessRound)
-    {
-        yield return AnimateRound(chessRound, true);
-        WarBoardUi.StartButtonAnim(true, chessboard.StartButton);
-    }
+    //private IEnumerator TestRoundAnim(ChessRound chessRound)
+    //{
+    //    yield return AnimateRound(chessRound, true);
+    //    WarBoardUi.StartButtonAnim(true, chessboard.StartButton);
+    //}
 
     private void GenerateChessmanFromList()
     {

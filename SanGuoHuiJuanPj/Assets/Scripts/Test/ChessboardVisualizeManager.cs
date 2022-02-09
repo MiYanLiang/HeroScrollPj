@@ -134,11 +134,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         boomUIObj.transform.position = opponentTransform.position;
         fireUIObj.transform.position =
             gongKeUIObj.transform.position = Chessboard.GetChessPos(7, false).transform.position;
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.1f);
         PlayAudio(91);
         boomUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
-        boomUIObj.gameObject.SetActive(false);
+        yield return new WaitForSeconds(1f);
         //欢呼声
         PlayAudio(90);
 
@@ -146,10 +145,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
         fireUIObj.gameObject.SetActive(true);
         yield return new WaitForSeconds(0.3f);
         gongKeUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(0.7f);
+        yield return new WaitForSeconds(1.5f);
+        boomUIObj.gameObject.SetActive(false);
         fireUIObj.gameObject.SetActive(false);
         gongKeUIObj.gameObject.SetActive(false);
-        yield return new WaitForSeconds(0.1f);
         RouseEffectObj.gameObject.gameObject.SetActive(false);
         Time.timeScale = 1;
     }

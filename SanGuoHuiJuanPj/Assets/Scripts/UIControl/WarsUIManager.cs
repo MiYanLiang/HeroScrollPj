@@ -146,7 +146,7 @@ public class WarsUIManager : MonoBehaviour
         });
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
         WarBoard.OnRoundPause += () => waitForRoundStart = true;
-        WarBoard.Chessboard.StartButton.onClick.AddListener(OnRoundStartClick);
+        WarBoard.Chessboard.SetStartWarUi(OnRoundStartClick);
     }
 
 

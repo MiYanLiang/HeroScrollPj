@@ -173,10 +173,10 @@ public class Versus : MonoBehaviour
         InitCardToRack(forceId, except);
         MaxCards = o.maxCards;
         WarBoard.MaxCards = o.maxCards;
-        WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
+        WarBoard.Chessboard.RemoveAllStartClicks();
+        WarBoard.Chessboard.SetStartWarUi(() =>
             OnSubmitFormation(o.warId, o.warIsd, o.pointId));
-        WarBoard.Chessboard.StartButton.onClick.AddListener(OnPlayChessRounds);
+        WarBoard.Chessboard.SetStartWarUi(OnPlayChessRounds);
         XButton.interactable = true;
         WarBoard.UpdateHeroEnlistText();
         roundUi.Off();
@@ -221,7 +221,7 @@ public class Versus : MonoBehaviour
 
     private void OnSubmitFormation(int warId, int warIsd, int pointId)
     {
-        WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, false);
+        WarBoard.Chessboard.DisplayStartButton(false);
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new Card(c.Card) as IGameCard);
         ApiPanel.instance.InvokeRk(OnCallBack, msn =>
         {
@@ -342,10 +342,10 @@ public class Versus : MonoBehaviour
             ChessboardManager.InstanceChessman(card);
         }
         WarBoard.gameObject.SetActive(true);
-        WarBoard.Chessboard.StartButton.onClick.RemoveAllListeners();
-        WarBoard.Chessboard.StartButton.onClick.AddListener(() =>
+        WarBoard.Chessboard.RemoveAllStartClicks();
+        WarBoard.Chessboard.SetStartWarUi(() =>
         {
-            WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, false);
+            WarBoard.Chessboard.DisplayStartButton(false);
             PlayResult(result);
             XButton.interactable = false;
         });
@@ -376,7 +376,7 @@ public class Versus : MonoBehaviour
             WarBoard.InitNewGame(false, false);
         }
 
-        WarBoard.StartBtnAnimator.SetBool(WarBoardUi.ButtonTrigger, true);
+        WarBoard.Chessboard.DisplayStartButton(true);
     }
 
     public void StartNewGame()
