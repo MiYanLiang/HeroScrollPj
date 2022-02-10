@@ -8,10 +8,8 @@ public class EventUiController : MonoBehaviour
 
     void Start()
     {
-        gameObject.SetActive(!ShowOnce);
+        gameObject.SetActive(!ShowOnce && !ExpiredDate.IsExpired());
         ShowOnce = true;
-        if (ShowOnce) return;
-        gameObject.SetActive(!ExpiredDate.IsExpired());
     }
 
     [Serializable]
@@ -24,7 +22,7 @@ public class EventUiController : MonoBehaviour
         public bool IsExpired()
         {
             var date = new DateTime(Year, Month, Day);
-            return date < DateTime.Now;
+            return DateTime.Now > date;
         }
     }
 }

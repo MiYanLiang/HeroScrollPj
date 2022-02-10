@@ -143,11 +143,9 @@ public class PointDesk : MonoBehaviour
     {
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
-        var info = card.GetInfo();
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
-        Info.text = info.Intro;
         var isCardEnlistAble = card.IsEnlistAble();
         CardCapability.gameObject.SetActive(isCardEnlistAble);
         CardCapabilityTxt.text = isCardEnlistAble ? card.Power().ToString() : string.Empty;
@@ -155,11 +153,11 @@ public class PointDesk : MonoBehaviour
         UpdateSellingPrice(card);
         UpdateEnlist();
         UpdateAttributes();
-        UpdateInfoTags();
+        UpdateInfoTags(card);
         TagSelectionPointer.gameObject.SetActive(false);
     }
 
-    private void UpdateInfoTags()
+    private void UpdateInfoTags(GameCard gameCard)
     {
         var major = "主副将";
         ResetTag(About, "典故");
@@ -173,7 +171,6 @@ public class PointDesk : MonoBehaviour
         var military = string.Empty;
         var armed = string.Empty;
         var combatType = string.Empty;
-
         var isHero = card.CardInfo.Type == GameCardType.Hero;
         WuLiText.text = isHero ? "武力：" : "威力：";
         if (isHero)
@@ -254,6 +251,7 @@ public class PointDesk : MonoBehaviour
             SetOnClick(CombatType, combatText);
             ResetTag(Element, ElementText(card.CardInfo.Element, false));
             SetOnClick(Element, ElementText(card.CardInfo.Element, true));
+            Info.text = m.Detail;
         }
         else
         {
@@ -264,6 +262,7 @@ public class PointDesk : MonoBehaviour
             ResetTag(Armed, armed);
             ResetTag(CombatType, string.Empty);
             ResetTag(Element, string.Empty);
+            Info.text = gameCard.GetInfo().Intro;
         }
 
         void ResetTag(CardInfoTagUi ui, string text)
@@ -271,12 +270,14 @@ public class PointDesk : MonoBehaviour
             ui.Button.onClick.RemoveAllListeners();
             ui.Button.interactable = false;
             ui.Text.text = text;
+            ui.Text.color = Color.white;
         }
 
         void SetOnClick(CardInfoTagUi ui,string text)
         {
             ui.Button.onClick.RemoveAllListeners();
             ui.Button.interactable = true;
+            ui.Text.color = Color.black;
             ui.Button.onClick.AddListener(() =>
             {
                 if (TagSelectionPointer)

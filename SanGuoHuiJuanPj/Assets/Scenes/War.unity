@@ -26783,6 +26783,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  EventTrigger: {fileID: 0}
 --- !u!114 &1575295701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37711,6 +37712,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  EventTrigger: {fileID: 0}
 --- !u!114 &2132927402
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39605,6 +39607,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69e7e6012df6e9d4ea11baebc889ceea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  EventTrigger: {fileID: 0}
 --- !u!224 &3730035980269686732
 RectTransform:
   m_ObjectHideFlags: 0

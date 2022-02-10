@@ -184,6 +184,7 @@ public class PlayerDataForGame : MonoBehaviour
     public void JumpSceneFun(GameSystem.GameScene scene, bool isRequestSyncData, Func<bool> untilTrue = null)
     {
         if (isJumping) return;
+        Time.timeScale = 1;
         loadingImg.DOPause();
         StartCoroutine(ShowTransitionEffect(scene, isRequestSyncData, untilTrue));
     }

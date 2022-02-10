@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -18,4 +19,5 @@ public class DragController : DragObjectSender<FightCardData>,IPoolObject
     }
 
     public void ObjReset() => Card = null;
+
 }

@@ -13,7 +13,7 @@ public class ChessboardInputController : DragInputControlController<FightCardDat
 
     public override void PointerDown(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
 
-    public override void PointerUp(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, true);
+    public override void PointerUp(BaseEventData data, FightCardData card) => WarBoardUi.DisplayCardInfo(card, false);
 
     public override void StartDrag(BaseEventData eventData, FightCardData card)
     {
