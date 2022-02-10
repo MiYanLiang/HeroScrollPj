@@ -60,7 +60,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 0.2028302, b: 0.2028302, a: 0.39215687}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -145,3 +145,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Image: {fileID: 1239906190508863074}
   Animator: {fileID: 5546232560233510377}
+  Canvas: {fileID: 0}
