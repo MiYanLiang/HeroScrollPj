@@ -19,13 +19,13 @@ public class ForceFlagUI : MonoBehaviour
     public Text panelText;
     public bool Selected => selected.gameObject.activeSelf;
 
-    public void Set(ForceFlags flag, bool display = true, string nameInText = null)
+    public void Set(int flagId, bool display = true, string nameInText = null)
     {
         var resources = GameResources.Instance;
-        forceFlag.sprite = resources.ForceFlag[flag];
+        forceFlag.sprite = resources.ForceFlag[flagId];
         nameText.gameObject.SetActive(nameInText != null);
         forceName.gameObject.SetActive(nameInText == null);
-        if (nameInText == null) forceName.sprite = resources.ForceName[flag];
+        if (nameInText == null) forceName.sprite = resources.ForceName[flagId];
         else nameText.text = nameInText;
         gameObject.SetActive(display);
     }

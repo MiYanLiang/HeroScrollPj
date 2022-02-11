@@ -47,7 +47,7 @@ public class ForceSelectorUi : MonoBehaviour
                 btn.transform.localScale = Vector3.one;
                 btn.gameObject.name = forceId.ToString();
                 forceFlag = btn.GetComponentInChildren<ForceFlagUI>(true);
-                forceFlag.Set((ForceFlags) forceId);
+                forceFlag.Set(forceId);
                 data.Add(forceId, forceFlag);
                 btnData.Add(forceId, btn);
             }

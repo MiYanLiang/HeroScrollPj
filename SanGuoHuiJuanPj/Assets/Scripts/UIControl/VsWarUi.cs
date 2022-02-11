@@ -16,17 +16,19 @@ public class VsWarUi : MonoBehaviour
     [SerializeField] private GameObject[] WarBgs;
     [SerializeField] private Sprite[] Flags;
     private List<RankingUi> List { get; set; }
-    private static Dictionary<int, string> FlagSet { get; } = new Dictionary<int, string>
-    {
-        { 0, "刘" },
-        { 1, "曹" },
-        { 2, "孙" },
-        { 3, "袁" },
-        { 4, "吕" }
-    };
+    private static Dictionary<int, string> FlagSet { get; set; }
+    //    = new Dictionary<int, string>
+    //{
+    //    { 0, "刘" },
+    //    { 1, "曹" },
+    //    { 2, "孙" },
+    //    { 3, "袁" },
+    //    { 4, "吕" }
+    //};
 
     public void Init(int warId, Sprite[] warTitles)
     {
+        FlagSet = DataTable.Force.ToDictionary(f => f.Key, f => string.Join("\n", f.Value.Short.ToCharArray()));
         RankingBoardUiPrefab.gameObject.SetActive(false);
         WarInfo.ResetChest();
         List = new List<RankingUi>();

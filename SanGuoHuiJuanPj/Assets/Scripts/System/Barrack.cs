@@ -29,7 +29,7 @@ public class Barrack : MonoBehaviour
         PointDesk.OnCardSell.AddListener(onCardSell);
         PointDesk.OnEnlistCall.AddListener(onCardEnlist);//出战
     }
-    private void RefreshTroopName(int troop) => TroopName.text = $"{(ForceFlags)troop}";
+    private void RefreshTroopName(int troop) => TroopName.text = $"{DataTable.Force[troop].Short}";
 
     /// <summary> 
     /// 创建并展示单位列表 

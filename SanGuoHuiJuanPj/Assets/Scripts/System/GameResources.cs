@@ -69,8 +69,8 @@ public class GameResources
     public IReadOnlyDictionary<int, Sprite> FrameImg => frameImgMap;
     public IReadOnlyDictionary<int, Sprite> ArtWindow => artWindowMap;
     public IReadOnlyDictionary<int, Sprite> BattleBG => battleBgMap;
-    public IReadOnlyDictionary<ForceFlags, Sprite> ForceFlag => forceFlagMap;
-    public IReadOnlyDictionary<ForceFlags, Sprite> ForceName => forceNameMap;
+    public IReadOnlyDictionary<int, Sprite> ForceFlag => forceFlagMap;
+    public IReadOnlyDictionary<int, Sprite> ForceName => forceNameMap;
     public IReadOnlyDictionary<string, GameObject> Effects => effectsMap;
     public IReadOnlyDictionary<string, EffectStateUi> StateDin => stateDinMap;
     public IReadOnlyDictionary<int, Sprite> CityFlag => cityFlag;
@@ -96,8 +96,8 @@ public class GameResources
     private IReadOnlyDictionary<int, Sprite> frameImgMap;
     private IReadOnlyDictionary<int, Sprite> artWindowMap;
     private IReadOnlyDictionary<int, Sprite> battleBgMap;
-    private IReadOnlyDictionary<ForceFlags, Sprite> forceFlagMap;
-    private IReadOnlyDictionary<ForceFlags, Sprite> forceNameMap;
+    private IReadOnlyDictionary<int, Sprite> forceFlagMap;
+    private IReadOnlyDictionary<int, Sprite> forceNameMap;
     private IReadOnlyDictionary<string, GameObject> effectsMap;
     private IReadOnlyDictionary<string, EffectStateUi> stateDinMap;
     private IReadOnlyDictionary<int, Sprite> cityFlag;
@@ -154,11 +154,11 @@ public class GameResources
         battleBgMap = new ResourceDataWrapper<int, Sprite>(
             Resources.LoadAll<Sprite>(BattleBgImagesPath).ToDictionary(s => int.Parse(s.name), s => s),
             nameof(battleBgMap));
-        forceFlagMap = new ResourceDataWrapper<ForceFlags, Sprite>(
-            Resources.LoadAll<Sprite>(ForceFlagsPath).ToDictionary(s => (ForceFlags) int.Parse(s.name), s => s),
+        forceFlagMap = new ResourceDataWrapper<int, Sprite>(
+            Resources.LoadAll<Sprite>(ForceFlagsPath).ToDictionary(s => int.Parse(s.name), s => s),
             nameof(forceFlagMap));
-        forceNameMap = new ResourceDataWrapper<ForceFlags, Sprite>(
-            Resources.LoadAll<Sprite>(ForceNamePath).ToDictionary(s => (ForceFlags) int.Parse(s.name), s => s),
+        forceNameMap = new ResourceDataWrapper<int, Sprite>(
+            Resources.LoadAll<Sprite>(ForceNamePath).ToDictionary(s => int.Parse(s.name), s => s),
             nameof(forceNameMap));
         effectsMap = new ResourceDataWrapper<string, GameObject>(
             Resources.LoadAll<GameObject>(EffectsGameObjectPath).ToDictionary(g => g.name, g => g), nameof(effectsMap));

@@ -79,7 +79,7 @@ public class BaYeWindowUI : MiniWindowUI
             var orderId = obj.Key;
             var amt = obj.Value;
             var ling = Instantiate(selectionButtonPrefab, selectionContent);
-            ling.Set((ForceFlags) orderId, amt);
+            ling.Set(orderId, amt);
             ling.gameObject.SetActive(true);
             ling.btn.onClick.AddListener(() =>
             {

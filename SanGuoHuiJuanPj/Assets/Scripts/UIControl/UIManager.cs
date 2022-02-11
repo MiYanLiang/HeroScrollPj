@@ -344,10 +344,10 @@ public class UIManager : MonoBehaviour
                 cityFields.Add(cityField);
                 var baYeEvent = BaYeManager.instance.Map.Single(e => e.CityId == cityPoint);
                 var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityPoint);
-                var flag = (ForceFlags) DataTable.BaYeCityEvent[baYeEvent.EventId].FlagId; //旗帜id 
+                var flagId = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagId; //旗帜id 
                 var flagName = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagText; //旗帜文字 
                 ui.button.interactable = cityList.Length > i;
-                ui.forceFlag.Set(flag, true, flagName);
+                ui.forceFlag.Set(flagId, true, flagName);
                 if (cityList.Length > i)
                 {
                     var city = BaYeManager.instance.Map.Single(c => c.CityId == i);

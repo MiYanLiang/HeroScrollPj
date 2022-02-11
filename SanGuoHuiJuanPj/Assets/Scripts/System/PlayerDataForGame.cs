@@ -110,7 +110,9 @@ public class PlayerDataForGame : MonoBehaviour
     private bool isRequestingSaveFile; //存档请求中
     //计算出战总数量 
     public int TotalCardsEnlisted => fightHeroId.Count + fightTowerId.Count + fightTrapId.Count;
-    public int UnlockForceId => DataTable.PlayerLevelConfig[pyData.Level].UnlockForces;
+
+    public int UnlockForceId =>
+        DataTable.Force.Values.Where(f => f.UnlockLevel <= pyData.Level).Max(f => f.Id);// DataTable.PlayerLevelConfig[pyData.Level].UnlockForces;
     public LocalStamina Stamina
     {
         get

@@ -29,7 +29,7 @@ public class WarMiniWindowUI : MiniWindowUI
         foreach (var ling in reward.Ling)
         {
             var flag = Instantiate(flagPrefab, listView);
-            flag.Set((ForceFlags) ling.Key);
+            flag.Set(ling.Key);
             flag.SetLing(ling.Value);
         }
 

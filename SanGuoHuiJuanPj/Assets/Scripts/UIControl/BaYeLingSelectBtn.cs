@@ -9,9 +9,9 @@ public class BaYeLingSelectBtn : MonoBehaviour
     public Text text;
     public Button btn;
 
-    public void Set(ForceFlags flag, int value)
+    public void Set(int flagId, int value)
     {
-        forceFlagUI.Set(flag);
+        forceFlagUI.Set(flagId);
         text.text = $"+{value}";
     }
 }
