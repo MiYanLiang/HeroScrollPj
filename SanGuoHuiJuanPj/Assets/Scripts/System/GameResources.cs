@@ -7,17 +7,6 @@ using System.Threading.Tasks;
 using CorrelateLib;
 using UnityEngine;
 
-public enum ForceFlags
-{
-    刘 = 0,
-    曹 = 1,
-    孙 = 2,
-    袁 = 3,
-    吕 = 4,
-    司马 = 5,
-    其它 = 6,
-}
-
 public class GameResources
 {
     public static GameResources Instance

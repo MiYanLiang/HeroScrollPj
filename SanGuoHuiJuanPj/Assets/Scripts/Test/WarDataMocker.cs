@@ -15,7 +15,7 @@ public class WarDataMocker : MonoBehaviour
     [Tooltip("初始城市等级")]public int cityLevel;//初始城市等级
     [Header("是否客制化卡牌，不点就用当前存档")]
     [Tooltip("是否选择客制化卡牌组合")]public bool isCustomCard;//是否客制化卡牌
-    [Tooltip("只有选存档才会有效")]public ForceFlags force;
+    [Tooltip("只有选存档才会有效")]public int force;
     public PlayerDataMock playerData;
     [Header("这里是客制化卡牌，必须点了客制化才会使用")]
     public MyCard[] heroes;
