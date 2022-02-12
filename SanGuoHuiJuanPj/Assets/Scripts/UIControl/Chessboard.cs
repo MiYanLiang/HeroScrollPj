@@ -137,7 +137,7 @@ public class Chessboard : MonoBehaviour
         ? grid.GetNeighborIndexes(pos, round)
         : grid.GetNeighborIndexes(pos, round).Where(i => i != 17).ToArray();
 
-    [SerializeField] private float[] SpeedGears = new[] { 1f, 2f, 2.5f, 3f };
+    private static float[] SpeedGears = new[] { 1f, 2f, 2.5f, 3f };
     /// <summary>
     /// 调整战斗速度
     /// </summary>

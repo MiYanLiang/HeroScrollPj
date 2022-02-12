@@ -137,7 +137,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         PlayAudio(91);
         boomUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         //欢呼声
         PlayAudio(90);
 
@@ -145,7 +145,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         fireUIObj.gameObject.SetActive(true);
         yield return new WaitForSeconds(0.3f);
         gongKeUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1f);
         boomUIObj.gameObject.SetActive(false);
         fireUIObj.gameObject.SetActive(false);
         gongKeUIObj.gameObject.SetActive(false);
