@@ -235,9 +235,9 @@ public class WarBoardUi : MonoBehaviour
         if (chess.IsGameOver)
         {
             OnGameSet.Invoke(chess.IsChallengerWin);
-            //ClearStates();
             if (chess.IsChallengerWin)
                 yield return ChallengerWinAnimation();
+            //ClearStates();
             IsGameOver = true;
             IsBusy = false;
             yield break;
