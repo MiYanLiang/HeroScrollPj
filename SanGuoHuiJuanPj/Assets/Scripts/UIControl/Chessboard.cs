@@ -137,14 +137,24 @@ public class Chessboard : MonoBehaviour
         ? grid.GetNeighborIndexes(pos, round)
         : grid.GetNeighborIndexes(pos, round).Where(i => i != 17).ToArray();
 
+    [SerializeField] private float[] SpeedGears = new[] { 1f, 2f, 2.5f, 3f };
+    /// <summary>
+    /// 调整战斗速度
+    /// </summary>
+    /// <param name="scale"></param>
+    /// <param name="save"></param>
     public void ChangeTimeScale(int scale, bool save)
     {
         var warScale = GamePref.PrefWarSpeed;
         if (scale <= 0)
         {
-            warScale *= 2;
-            if (warScale > 2)
-                warScale = 1;
+            var index = Array.FindIndex(SpeedGears, f => Math.Abs(f - warScale) < 0.01f);
+            index++;
+            if (SpeedGears.Length <= index)
+                index = 0;
+            warScale = SpeedGears[index];
+            //if (warScale > 2)
+            //    warScale = 1;
         }
         else warScale = scale;
 
