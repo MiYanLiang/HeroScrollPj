@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,10 +24,18 @@ public class ForceFlagUI : MonoBehaviour
     {
         var resources = GameResources.Instance;
         forceFlag.sprite = resources.ForceFlag[flagId];
-        nameText.gameObject.SetActive(nameInText != null);
-        forceName.gameObject.SetActive(nameInText == null);
-        if (nameInText == null) forceName.sprite = resources.ForceName[flagId];
-        else nameText.text = nameInText;
+        if (DataTable.Force.TryGetValue(flagId, out var force))
+        {
+            nameInText = force.Short;
+        }
+        //nameText.gameObject.SetActive(nameInText != null);
+        //forceName.gameObject.SetActive(nameInText == null);
+        //if (nameInText == null) forceName.sprite = resources.ForceName[flagId];
+        //else nameText.text = nameInText;
+        if (nameInText == null) nameInText = string.Empty;
+        nameText.text = string.Join("\n", nameInText.ToCharArray().Where(c => c != default));
+        nameText.gameObject.SetActive(true);
+        forceName.gameObject.SetActive(false);
         gameObject.SetActive(display);
     }
 
