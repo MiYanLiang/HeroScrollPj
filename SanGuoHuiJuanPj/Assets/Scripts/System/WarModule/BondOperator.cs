@@ -195,7 +195,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuHuSHangJiang : BondOperator
     {
-        private int CowardlyRate => 20;
+        private int CowardlyRate => 25;
         private int DamageRate => 35;
 
         public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
@@ -214,7 +214,30 @@ namespace Assets.System.WarModule
 
         protected override CombatConduct[] RoundStartFriendlyConducts(ChessOperator op) => null;
     }
+    /// <summary>
+    /// 苍龙皓月
+    /// </summary>
+    public class CangLongHaoYue : BondOperator
+    {
+        private int CowardlyRate => 25;
+        private int DamageRate => 100;
 
+        public CangLongHaoYue(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
+        {
+        }
+
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
+        {
+            var damage =
+                AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
+            var scope = ops.First().IsChallenger ? -1 : -2;
+            var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(scope, damage) };
+            conducts.Add(CombatConduct.InstanceBuff(scope, CardState.Cons.Cowardly, rate: CowardlyRate));
+            return new ConductResult(conducts.ToArray());
+        }
+
+        protected override CombatConduct[] RoundStartFriendlyConducts(ChessOperator op) => null;
+    }
     /// <summary>
     /// 卧龙凤雏
     /// </summary>
