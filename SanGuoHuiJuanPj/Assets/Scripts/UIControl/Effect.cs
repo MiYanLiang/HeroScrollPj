@@ -2605,6 +2605,7 @@ public static class Effect
         {
             case JiBanSkillName.WuHuShangJiang: return 10;
             case JiBanSkillName.WuZiLiangJiang:return 58;
+            case JiBanSkillName.CangLongHaoYue:return 58;
             case JiBanSkillName.WeiWuMouShi:return 45;
             case JiBanSkillName.ShuiShiDuDu:return 13;
             case JiBanSkillName.HeBeiSiTingZhu:return 58;
@@ -2776,5 +2777,9 @@ public enum JiBanSkillName
         /// <summary>
         /// 不世之功
         /// </summary>
-    BuShiZhiGong=16
+    BuShiZhiGong=16,
+    /// <summary>
+    /// 苍龙皓月
+    /// </summary>
+    CangLongHaoYue=17,
 }
