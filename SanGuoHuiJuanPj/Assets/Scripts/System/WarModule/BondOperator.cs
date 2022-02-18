@@ -55,13 +55,12 @@ namespace Assets.System.WarModule
             }
 
             var rivals = Chessboard.GetRivals(first,
-                pos => pos.IsPostedAlive &&
-                       pos.IsAliveHero).Select(p => p.Operator);
+                pos => pos.IsPostedAlive && pos.Operator.CardType != GameCardType.Base).Select(p => p.Operator);
 
             foreach (var rival in rivals)
             {
                 var result = RoundStartRivalConduct(ops, rival);
-                if (result == null) return;
+                if (result == null) continue;
                 if (Chessboard.IsRandomPass(result.PushBackRate))
                 {
                     var backPos = Chessboard.BackPos(Chessboard.GetChessPos(rival));
@@ -80,7 +79,7 @@ namespace Assets.System.WarModule
         }
 
         /// <summary>
-        /// 对对面的活动执行.
+        /// 对对面的活动执行. 
         /// </summary>
         /// <param name="chessOperators"></param>
         /// <param name="rival"></param>
@@ -204,6 +203,7 @@ namespace Assets.System.WarModule
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
+            if (rival.CardType != GameCardType.Hero) return new ConductResult(Array.Empty<CombatConduct>());
             var damage =
                 AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
             var scope = ops.First().IsChallenger ? -1 : -2;
@@ -219,7 +219,6 @@ namespace Assets.System.WarModule
     /// </summary>
     public class CangLongHaoYue : BondOperator
     {
-        private int CowardlyRate => 25;
         private int DamageRate => 100;
 
         public CangLongHaoYue(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
@@ -228,11 +227,11 @@ namespace Assets.System.WarModule
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
-            var damage =
-                AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
+            if (rival.CardType == GameCardType.Hero || rival.CardType == GameCardType.Base)
+                return new ConductResult(Array.Empty<CombatConduct>());
+            var damage = AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
             var scope = ops.First().IsChallenger ? -1 : -2;
             var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(scope, damage) };
-            conducts.Add(CombatConduct.InstanceBuff(scope, CardState.Cons.Cowardly, rate: CowardlyRate));
             return new ConductResult(conducts.ToArray());
         }
 
@@ -330,7 +329,7 @@ namespace Assets.System.WarModule
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
-            if (rival.CardType != GameCardType.Hero) return null;
+            if (rival.CardType != GameCardType.Hero) return new ConductResult(Array.Empty<CombatConduct>());
             var buff = CardState.ControllingBuffs
                 .Select(s => new { s, random = Chessboard.Randomize(20) })
                 .OrderBy(s => s.random).First().s;
@@ -378,6 +377,7 @@ namespace Assets.System.WarModule
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
+            if (rival.CardType != GameCardType.Hero) return new ConductResult(Array.Empty<CombatConduct>());
             var damage = AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
             var conduct = new ConductResult(Helper.Singular(
                 CombatConduct.InstanceDamage(ops.First().IsChallenger ? -1 : -2, damage, CombatConduct.WaterDmg)));

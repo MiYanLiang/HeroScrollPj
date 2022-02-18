@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: cdnConfig
   m_EditorClassIdentifier: 
   ServerUrl: https://heroscrollpj.azureedge.net/api/
+  Servers:
+  - https://heroscrollpj.azureedge.net/api/
+  - https://heroscroll.azureedge.net/api/
   PLAYER_SAVE_DATA_UPLOAD_API: UploadSaveData
   INSTANCE_ID_API: GenerateUserId
   REQUEST_USERNAME_API: RequestUsername
