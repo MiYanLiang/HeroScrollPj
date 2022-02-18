@@ -12,7 +12,6 @@ using Assets.Scripts.Utl;
 using Beebyte.Obfuscator;
 using CorrelateLib;
 using Microsoft.AspNetCore.SignalR.Client;
-using Newtonsoft.Json;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Android;
@@ -21,6 +20,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = System.Object;
 using Json = CorrelateLib.Json;
+using Newtonsoft.Json;
 
 [Skip]
 /// <summary>
@@ -116,6 +116,7 @@ public class SignalRClient : MonoBehaviour
         var jsonString = await response.Content.ReadAsStringAsync();
         var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
         var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
+        
         isBusy = false;
         recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
     }

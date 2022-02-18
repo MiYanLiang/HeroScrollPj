@@ -39,6 +39,8 @@ public class VsWarListController : MonoBehaviour
     {
         if (PlayerDataForGame.instance.Character == null ||
             !PlayerDataForGame.instance.Character.IsValidCharacter()) return;//需要有角色才可以，否则会报错。
+        if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene || //非main场景不刷新
+            UIManager.instance.currentPage != UIManager.Pages.对决) return;//非对决页面不刷新
         ApiPanel.instance.InvokeRk(OnRefreshWarList, PlayerDataForGame.instance.ShowStringTips, Versus.GetWarsV1);
 #if UNITY_EDITOR
         //Versus.GetRkWars(OnRefreshWarList);
@@ -72,7 +74,7 @@ public class VsWarListController : MonoBehaviour
         if (rank >= 0)
         {
             var chessId = GetRewardChestValue(rank);
-            ui.SetChest(chessId, OnRequestRkReward);
+            ui.SetChest(chessId, RequestRkReward);
         }
 
         if (isChallenger)
@@ -88,15 +90,17 @@ public class VsWarListController : MonoBehaviour
 
         _vsWarUiList.Add(ui);
 
-        void OnRequestRkReward(UnityAction callBack)
+        void RequestRkReward(UnityAction callBack)
         {
-            ApiPanel.instance.InvokeBag(OnSuccessGetReward, PlayerDataForGame.instance.ShowStringTips,
+            ApiPanel.instance.InvokeBag(SuccessGetReward, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Rk_GetReward, string.Empty, war.WarId);
 
-            void OnSuccessGetReward(DataBag bag)
+            void SuccessGetReward(DataBag bag)
             {
                 var py = bag.Get<PlayerDataDto>(0);
                 var r = bag.Get<RewardDto>(1);
+                var troops = bag.Get<TroopDto[]>(2);
+                var cards = bag.Get<GameCardDto[]>(3);
                 UIManager.instance.ShowRewardsThings(new DeskReward(
                     r.YuanBao, r.YuQue, 0, r.Stamina, r.AdPass,
                     r.RewardCards.Select(c => new CardReward
@@ -105,7 +109,7 @@ public class VsWarListController : MonoBehaviour
                         cardChips = c.Chips,
                         cardType = c.Type
                     }).ToList()), 1.5f);
-                ConsumeManager.instance.SaveChangeUpdatePlayerData(py);
+                ConsumeManager.instance.SaveUpdatePlayerTroops(py, troops, cards);
                 callBack?.Invoke();
             }
         }

@@ -28,7 +28,7 @@ public class Versus : MonoBehaviour
     }
     private static Versus instance;
 
-#if UNITY_EDITOR
+#if !UNITY_EDITOR
     public FormationMode Mode;
     public static string RkApi { get; } = "https://localhost:5001/api/rkwar";
     
