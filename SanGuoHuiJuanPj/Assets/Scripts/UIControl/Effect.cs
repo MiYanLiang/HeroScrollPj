@@ -2605,7 +2605,7 @@ public static class Effect
         {
             case JiBanSkillName.WuHuShangJiang: return 10;
             case JiBanSkillName.WuZiLiangJiang:return 58;
-            case JiBanSkillName.CangLongHaoYue:return 58;
+            case JiBanSkillName.CangLongHaoYue:return 13;
             case JiBanSkillName.WeiWuMouShi:return 45;
             case JiBanSkillName.ShuiShiDuDu:return 13;
             case JiBanSkillName.HeBeiSiTingZhu:return 58;
