@@ -32,7 +32,6 @@ namespace Assets.Editor
     public class ConfigAsset : ScriptableObject
     {
         public string ServerUrl;
-        public string[] Servers;
         public string PLAYER_SAVE_DATA_UPLOAD_API ;
         public string INSTANCE_ID_API             ;
         public string REQUEST_USERNAME_API        ;

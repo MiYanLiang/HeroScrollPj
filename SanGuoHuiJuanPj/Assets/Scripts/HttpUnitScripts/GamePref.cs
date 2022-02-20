@@ -32,6 +32,11 @@ public static class GamePref
         }
     }
 
+    private const string LastServiceZoneString = "LastServiceZone";
+    public static int LastServiceZone => PlayerPrefs.GetInt(LastServiceZoneString);
+    public static void SetLastServiceZone(int zone) => PlayerPrefs.SetInt(LastServiceZoneString, zone);
+
+
     private const string PlayerMusicOffPrefs = "PlayerMusicOffPrefs";
     private const string PlayerWarSpeedPrefs = "PlayerWarSpeedPrefs";
     private const string AccountIdString = "accountName";

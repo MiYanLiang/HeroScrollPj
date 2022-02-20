@@ -24,7 +24,7 @@ public static class Server
     public static string RESET_GAMEPLAY_API { get; private set; } 
 #else
     // todo: CDN正式服
-    private static string ServerUrl { get; set; } = "https://HeroScrollPj.azureedge.net/api/";
+    //private static string ServerUrl { get; set; } = "https://HeroScrollPj.azureedge.net/api/";
     // Todo: 正式服
     //private static string ServerUrl { get; set; } = "https://heroscrollpjapi1.azurewebsites.net/api/";
     //todo: CDN测试服
@@ -32,16 +32,20 @@ public static class Server
     // Todo: 测试服
     //private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
     //private static string ServerUrl { get; set; } = "http://localhost:7071/api/";
-    public static string[] Servers { get; private set; }
+    private static string ServerUrl { get; set; } = "http://localhost:8081/api/";
     public static string PLAYER_SAVE_DATA_UPLOAD_API { get; private set; } = "UploadSaveData";
     public static string INSTANCE_ID_API { get; private set; } = "GenerateUserId";
     public static string REQUEST_USERNAME_API { get; private set; } = "RequestUsername";
     public static string PLAYER_REG_ACCOUNT_API { get; private set; } = "RegUser";
     public static string PLAYER_UPLOAD_COUNT_API { get; private set; } = "UploadCount";
     public static string USER_LOGIN_API { get; private set; } = "Login";
-    public static string SIGNALR_LOGIN_API { get; private set; } = "SignalRLogin";
-    public static string DEVICE_LOGIN_API { get; private set; } = "DeviceSignIn";
+    public static string SIGNALR_LOGIN_API { get; private set; } = "UserSignin"; //"SignalRLogin";
+    public static string DEVICE_LOGIN_API { get; private set; } = "OneClickSignIn"; //"DeviceSignIn";
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
+    public static string TokenLogin { get; private set; } = "TokenLogin";
+    public static string GameServer { get; private set; } = 
+    "https://motahero.azurewebsites.net/api/";
+    //"http://localhost:8081/api/";
 #endif
 
     private static bool isInitialized;
@@ -49,7 +53,7 @@ public static class Server
     {
         return new HttpClient()
         {
-            BaseAddress = new Uri(ServerUrl)
+            BaseAddress = new Uri(GameServer)
         };
     }
 
@@ -59,7 +63,6 @@ public static class Server
         isInitialized = true;
 #if !UNITY_EDITOR
         ServerUrl = fields.ServerUrl;
-        Servers = fields.Servers;
         PLAYER_SAVE_DATA_UPLOAD_API = fields.PLAYER_SAVE_DATA_UPLOAD_API;
         INSTANCE_ID_API = fields.INSTANCE_ID_API;
         REQUEST_USERNAME_API = fields.REQUEST_USERNAME_API;
