@@ -26,7 +26,6 @@ public class ServerFields
     public ServerFields(ConfigAsset configAsset)
     {
         ServerUrl = configAsset.ServerUrl;
-        Servers = configAsset.Servers;
         INSTANCE_ID_API = configAsset.INSTANCE_ID_API;
         PLAYER_UPLOAD_COUNT_API = configAsset.PLAYER_UPLOAD_COUNT_API;
         PLAYER_REG_ACCOUNT_API = configAsset.PLAYER_REG_ACCOUNT_API;
@@ -47,7 +46,6 @@ public class ServerFields
 
     public ServerFields() { }
 
-    public string[] Servers { get; set; }
     public string ServerUrl { get; set; }
     public string PLAYER_SAVE_DATA_UPLOAD_API { get; set; }
     public string INSTANCE_ID_API { get; set; }

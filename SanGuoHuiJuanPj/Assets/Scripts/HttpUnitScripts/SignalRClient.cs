@@ -121,6 +121,21 @@ public class SignalRClient : MonoBehaviour
         recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
     }
 
+    public async Task<bool> TokenLogin(string content)
+    {
+        isBusy = true;
+        cancellationTokenSource = new CancellationTokenSource();
+        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(content);
+        if (connectionInfo == null)
+        {
+            isBusy = false;
+            return false;
+        }
+        var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
+        isBusy = false;
+        return result;
+    }
+
     public async void DirectLogin(UnityAction<bool, int,SignalRConnectionInfo> recallAction)
     {
         if (isBusy) return;
