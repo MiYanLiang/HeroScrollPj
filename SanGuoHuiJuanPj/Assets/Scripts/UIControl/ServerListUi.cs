@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,20 +12,23 @@ public class ServerListUi : SignInBaseUi
     [SerializeField] private ServerUi ServerPrefab;
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Button loginButton;
+    [SerializeField] private Button resetButton;
+    [SerializeField] private Button changePwdButton;
     public Button backButton;
-    [SerializeField] private GameObject createNewWindow;
-    [SerializeField] private Button createNewButton;
-    private Dictionary<int, (ServerUi ui, string url)> Servers = new Dictionary<int, (ServerUi ui, string url)>();
-    private int SelectedZone;
-
-    public void Set(ServerInfo[] servers, UnityAction<int> onLoginAction)
+    [SerializeField] private ConfirmWindowUi confirmWindowUi;
+    private Dictionary<int, (ServerUi ui, string url)> Servers { get; } = new Dictionary<int, (ServerUi ui, string url)>();
+    public int SelectedZone { get; private set; }
+    private UnityAction ResetAction;
+    private UnityAction ChangePwdAction;
+    public void Set(ServerInfo[] servers, UnityAction<int> onLoginAction, UnityAction onClickReset,
+        UnityAction onClickChangePwd)
     {
         foreach (var button in Servers.Values.ToArray()) Destroy(button.ui.gameObject);
         Servers.Clear();
         foreach (ServerInfo server in servers
 #if !UNITY_EDITOR
                      .Where(s=>s.Zone>=0)
-#endif                 
+#endif
                      .ToArray())
         {
             var s = Instantiate(ServerPrefab, scrollRect.content.transform);
@@ -37,6 +41,10 @@ public class ServerListUi : SignInBaseUi
 
         OnSelect(GamePref.LastServiceZone);
         loginButton.onClick.AddListener(() => onLoginAction.Invoke(SelectedZone));
+        resetButton.onClick.RemoveAllListeners();
+        resetButton.onClick.AddListener(onClickReset);
+        changePwdButton.onClick.RemoveAllListeners();
+        changePwdButton.onClick.AddListener(onClickChangePwd);
     }
 
     private void OnSelect(int zone)
@@ -53,7 +61,7 @@ public class ServerListUi : SignInBaseUi
     {
         base.ResetUi();
         ServerPrefab.gameObject.SetActive(false);
-        createNewWindow.gameObject.SetActive(false);
+        confirmWindowUi.gameObject.SetActive(false);
         backButton.onClick.RemoveAllListeners();
         loginButton.onClick.RemoveAllListeners();
     }
@@ -65,14 +73,5 @@ public class ServerListUi : SignInBaseUi
         public string Title { get; set; }
     }
 
-    public void CreateNewWindow(UnityAction action)
-    {
-        createNewWindow.gameObject.SetActive(true);
-        createNewButton.onClick.AddListener(() =>
-        {
-            createNewButton.onClick.RemoveAllListeners();
-            createNewWindow.gameObject.SetActive(false);
-            action();
-        });
-    }
+    public void OpenConfirmWindow(string msg,UnityAction action) => confirmWindowUi.Open(msg, action);
 }

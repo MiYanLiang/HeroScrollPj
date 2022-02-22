@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
@@ -36,7 +37,7 @@ public class LoginUiController : MonoBehaviour
     public Image busyPanel;
     public string DeviceIsBound = @"设备已绑定了账号，请用设备登录修改账号信息!";
     private static bool isDeviceLogin;
-    public ServerListUi.ServerInfo[] Servers { get; set; }
+    public Dictionary<int,ServerListUi.ServerInfo> Servers { get; set; }
     public string LoginToken { get; set; }
 #if UNITY_EDITOR
     void Start()
@@ -107,7 +108,7 @@ public class LoginUiController : MonoBehaviour
     {
         serverList.gameObject.SetActive(true);
         serverList.backButton.onClick.AddListener(()=>OnAction(ActionWindows.Login));
-        serverList.Set(Servers, zone =>
+        serverList.Set(Servers.Values.ToArray(), zone =>
         {
             AsyncInvoke(LoginZone);
 
@@ -117,13 +118,16 @@ public class LoginUiController : MonoBehaviour
                     Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version))));
                 if (!response.IsSuccess())
                 {
-                    serverList.SetMessage("登录失败.");
+                    var message = response.StatusCode == HttpStatusCode.HttpVersionNotSupported
+                        ? "服务器维护中..."
+                        : "登录失败。";
+                    serverList.SetMessage(message);
                     return;
                 }
 
                 if (response.StatusCode == HttpStatusCode.NoContent)
                 {
-                    serverList.CreateNewWindow(()=>AsyncInvoke(CreateNewUserData));
+                    serverList.OpenConfirmWindow("该区并无数据，\n是否创建新角色", () => AsyncInvoke(CreateNewUserData));
                     return;
                 }
 
@@ -147,6 +151,7 @@ public class LoginUiController : MonoBehaviour
                     serverList.SetMessage("登录失败.");
                     return;
                 }
+
                 var isSuccess = await SignalRClient.instance.TokenLogin(await response.Content.ReadAsStringAsync());
                 if (!isSuccess)
                 {
@@ -157,7 +162,21 @@ public class LoginUiController : MonoBehaviour
                 OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
 
             }
-        });
+        }, () => serverList.OpenConfirmWindow(
+            $"重置【{serverList.SelectedZone}】服\n【{Servers[serverList.SelectedZone].Title}】玩家数据，\n请确定？",
+            OnResetAccount), () => OnAction(ActionWindows.ChangePassword));
+    }
+
+    private void OnResetAccount()
+    {
+        AsyncInvoke(RequestApiReset);
+
+        async Task RequestApiReset()
+        {
+            var response = await Http.PostAsync(Server.RESET_GAMEPLAY_API, LoginToken);
+            var message = await response.Content.ReadAsStringAsync();
+            serverList.SetMessage(message);
+        }
     }
 
 
@@ -194,7 +213,7 @@ public class LoginUiController : MonoBehaviour
 
     private void InitChangePassword()
     {
-        changePassword.backBtn.onClick.AddListener(()=>OnAction(ActionWindows.Info));
+        changePassword.backBtn.onClick.AddListener(() => OnAction(ActionWindows.ServerList));
         changePassword.confirmBtn.onClick.AddListener(ChangePasswordApi);
     }
 
@@ -319,9 +338,7 @@ public class LoginUiController : MonoBehaviour
             return;
         }
 
-        LoginToken = bag.Get<string>(0);
-        Servers = bag.Get<ServerListUi.ServerInfo[]>(1);
-        OnAction(ActionWindows.ServerList);
+        ProceedServerList(bag);
     }
 
     private async Task AccountLogin()
@@ -354,8 +371,14 @@ public class LoginUiController : MonoBehaviour
             return;
         }
 
+        ProceedServerList(bag);
+    }
+
+    private void ProceedServerList(DataBag bag)
+    {
         LoginToken = bag.Get<string>(0);
-        Servers = bag.Get<ServerListUi.ServerInfo[]>(1);
+        var list = bag.Get<ServerListUi.ServerInfo[]>(1);
+        Servers = list.ToDictionary(s => s.Zone, s => s);
         OnAction(ActionWindows.ServerList);
     }
 
