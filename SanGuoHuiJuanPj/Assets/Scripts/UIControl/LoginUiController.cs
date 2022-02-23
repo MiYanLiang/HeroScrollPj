@@ -39,6 +39,7 @@ public class LoginUiController : MonoBehaviour
     private static bool isDeviceLogin;
     public Dictionary<int,ServerListUi.ServerInfo> Servers { get; set; }
     public string LoginToken { get; set; }
+    public string Username { get; set; }
 #if UNITY_EDITOR
     void Start()
     {
@@ -173,7 +174,8 @@ public class LoginUiController : MonoBehaviour
 
         async Task RequestApiReset()
         {
-            var response = await Http.PostAsync(Server.RESET_GAMEPLAY_API, LoginToken);
+            var response =
+                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedZone}", LoginToken);
             var message = await response.Content.ReadAsStringAsync();
             serverList.SetMessage(message);
         }
@@ -221,20 +223,39 @@ public class LoginUiController : MonoBehaviour
     {
         if (!IsPassPasswordLogic(changePassword.password, changePassword.rePassword, changePassword.message))
             return;
-        var viewBag = ViewBag.Instance().SetValues(GamePref.Username, GamePref.Password,
-            SystemInfo.deviceUniqueIdentifier,
-            changePassword.password.text);
-        ApiPanel.instance.InvokeVb(vb =>
+        var bag = DataBag.SerializeBag(nameof(ChangePasswordApi), LoginToken, changePassword.password.text);
+        AsyncInvoke(ReqChangePassword);
+        //var viewBag = ViewBag.Instance().SetValues(GamePref.Username, GamePref.Password,
+        //    SystemInfo.deviceUniqueIdentifier,
+        //    changePassword.password.text);
+        //ApiPanel.instance.InvokeVb(vb =>
+        //    {
+        //        GamePref.SetUsername(vb.GetValue<string>(0));
+        //        GamePref.SetPassword(changePassword.password.text);
+        //        Close();
+        //        PlayerDataForGame.instance.ShowStringTips("密码修改成功！");
+        //        GamePref.FlagDeviceReg(changePassword.username.text);
+        //    }, PlayerDataForGame.instance.ShowStringTips,
+        //    EventStrings.Req_ChangePassword,
+        //    viewBag);
+
+        async Task ReqChangePassword()
+        {
+            var response = await Http.PostAsync(nameof(ChangePasswordApi), bag);
+            var message = await response.Content.ReadAsStringAsync();
+            var databag = DataBag.DeserializeBag(message);
+            if (databag == null)
             {
-                GamePref.SetUsername(vb.GetValue<string>(0));
-                GamePref.SetPassword(changePassword.password.text);
-                Close();
-                PlayerDataForGame.instance.ShowStringTips("密码修改成功！");
-                GamePref.FlagDeviceReg(changePassword.username.text);
-            }, PlayerDataForGame.instance.ShowStringTips,
-            EventStrings.Req_ChangePassword,
-            viewBag);
+                changePassword.SetMessage(message);
+                return;
+            }
+
+            changePassword.password.text = string.Empty;
+            changePassword.rePassword.text = string.Empty;
+            changePassword.SetMessage("密码更换成功！");
+        }
     }
+
 
     private void InitAccountInfo()
     {
@@ -378,6 +399,8 @@ public class LoginUiController : MonoBehaviour
     {
         LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
+        Username = bag.Get<string>(2);
+        GamePref.SetUsername(Username);
         Servers = list.ToDictionary(s => s.Zone, s => s);
         OnAction(ActionWindows.ServerList);
     }
