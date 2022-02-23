@@ -44,8 +44,8 @@ public static class Server
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
     public static string TokenLogin { get; private set; } = "TokenLogin";
     public static string GameServer { get; private set; } = 
-    //"https://motahero.azurewebsites.net/api/";
-    "http://localhost:8081/api/";
+    "https://motahero.azurewebsites.net/api/";
+    //"http://localhost:8081/api/";
 #endif
 
     private static bool isInitialized;
