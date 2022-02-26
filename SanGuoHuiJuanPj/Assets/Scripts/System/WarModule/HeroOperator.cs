@@ -1203,7 +1203,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int EaseShieldAddOn => StateDamage() * StateIntelligent() / 20;
+        private int EaseShieldAddOn => StateDamage() * StateIntelligent() / 25;
         private int CriticalRate => 50;
         private int RouseRate => 100;
         protected override void MilitaryPerforms(int skill = 1)
