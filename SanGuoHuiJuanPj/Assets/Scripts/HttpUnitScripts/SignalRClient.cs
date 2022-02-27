@@ -47,6 +47,8 @@ public class SignalRClient : MonoBehaviour
     private static readonly Type _stringType = typeof(string);
     private bool isBusy;
     public ApiPanel ApiPanel;
+    public string LoginToken { get; set; }
+    private int Zone { get; set; } = -1;
 
     private void Awake()
     {
@@ -80,52 +82,57 @@ public class SignalRClient : MonoBehaviour
         await _hub.DisposeAsync();
     }
 
-    /// <summary>
-    /// login
-    /// </summary>
-    /// <param name="recallAction">( isSuccess, statusCode, arrangement )</param>
-    /// <param name="username"></param>
-    /// <param name="password"></param>
-    public async void UserLogin(UnityAction<bool,int ,SignalRConnectionInfo> recallAction, string username,
-        string password)
-    {
-        if (isBusy) return;
-        cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
-        var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API,
-            Json.Serialize(Server.GetUserInfo(username, password)), cancellationTokenSource.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            DebugLog($"连接失败！[{response.StatusCode}]");
-            var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-            switch (response.StatusCode)
-            {
-                case HttpStatusCode.Unauthorized:
-                    severBackCode = ServerBackCode.ERR_PW_ERROR;
-                    break;
-                case HttpStatusCode.HttpVersionNotSupported:
-                    severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
-                    break;
-            }
+    ///// <summary>
+    ///// login
+    ///// </summary>
+    ///// <param name="recallAction">( isSuccess, statusCode, arrangement )</param>
+    ///// <param name="username"></param>
+    ///// <param name="password"></param>
+    //public async void UserLogin(UnityAction<bool,int ,SignalRConnectionInfo> recallAction, string username,
+    //    string password)
+    //{
+    //    if (isBusy) return;
+    //    cancellationTokenSource = new CancellationTokenSource();
+    //    cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
+    //    var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API,
+    //        Json.Serialize(Server.GetUserInfo(username, password)), cancellationTokenSource.Token);
+    //    if (!response.IsSuccessStatusCode)
+    //    {
+    //        DebugLog($"连接失败！[{response.StatusCode}]");
+    //        var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
+    //        switch (response.StatusCode)
+    //        {
+    //            case HttpStatusCode.Unauthorized:
+    //                severBackCode = ServerBackCode.ERR_PW_ERROR;
+    //                break;
+    //            case HttpStatusCode.HttpVersionNotSupported:
+    //                severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
+    //                break;
+    //        }
 
-            isBusy = false;
-            recallAction.Invoke(false, (int) severBackCode, null);
-            return;
-        }
+    //        isBusy = false;
+    //        recallAction.Invoke(false, (int) severBackCode, null);
+    //        return;
+    //    }
 
-        var jsonString = await response.Content.ReadAsStringAsync();
-        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
-        var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
+    //    var jsonString = await response.Content.ReadAsStringAsync();
+    //    var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
+    //    var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
         
-        isBusy = false;
-        recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
+    //    isBusy = false;
+    //    recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
+    //}
+    public async Task<SigninResult> RequestToken(int zone, int createNew)
+    {
+        Zone = zone;
+        var response = await Http.PostAsync(Server.TokenLogin, Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew)));
+        return new SigninResult(response, await response.Content.ReadAsStringAsync());
     }
 
-    public async Task<bool> TokenLogin(string content)
+    public async Task<bool> TokenLogin(SignalRConnectionInfo connectionInfo)
     {
         isBusy = true;
         cancellationTokenSource = new CancellationTokenSource();
-        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(content);
         if (connectionInfo == null)
         {
             isBusy = false;
@@ -136,38 +143,44 @@ public class SignalRClient : MonoBehaviour
         return result;
     }
 
-    public async void DirectLogin(UnityAction<bool, int,SignalRConnectionInfo> recallAction)
-    {
-        if (isBusy) return;
-        cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
-        var response = await Http.PostAsync(Server.DEVICE_LOGIN_API,
-            Json.Serialize(Server.GetUserInfo(GamePref.Username, GamePref.Password)), cancellationTokenSource.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            DebugLog($"连接失败！[{response.StatusCode}]");
-            var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-            switch (response.StatusCode)
-            {
-                case HttpStatusCode.Unauthorized:
-                    severBackCode = ServerBackCode.ERR_PW_ERROR;
-                    break;
-                case HttpStatusCode.HttpVersionNotSupported:
-                    severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
-                    break;
-            }
+    //public async void DirectLogin(UnityAction<bool, int, SignalRConnectionInfo> recallAction)
+    //{
+    //    if (isBusy) return;
+    //    isBusy = true;
+    //    await DirectLoginTask();
+    //    isBusy = false;
 
-            isBusy = false;
-            recallAction.Invoke(false, (int) severBackCode,null);
-            return;
-        }
+    //    async Task DirectLoginTask()
+    //    {
+    //        cancellationTokenSource = new CancellationTokenSource();
+    //        cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
+    //        var response = await Http.PostAsync(Server.DEVICE_LOGIN_API,
+    //            Json.Serialize(Server.GetUserInfo(GamePref.Username, GamePref.Password)),
+    //            cancellationTokenSource.Token);
+    //        if (!response.IsSuccessStatusCode)
+    //        {
+    //            DebugLog($"连接失败！[{response.StatusCode}]");
+    //            var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
+    //            switch (response.StatusCode)
+    //            {
+    //                case HttpStatusCode.Unauthorized:
+    //                    severBackCode = ServerBackCode.ERR_PW_ERROR;
+    //                    break;
+    //                case HttpStatusCode.HttpVersionNotSupported:
+    //                    severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
+    //                    break;
+    //            }
 
-        var jsonString = await response.Content.ReadAsStringAsync();
-        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
-        var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
-        isBusy = false;
-        recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
-    }
+    //            recallAction.Invoke(false, (int)severBackCode, null);
+    //            return;
+    //        }
+
+    //        var jsonString = await response.Content.ReadAsStringAsync();
+    //        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
+    //        var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
+    //        recallAction?.Invoke(result, (int)response.StatusCode, connectionInfo);
+    //    }
+    //}
 
     public async Task SynchronizeSaved()
     {
@@ -209,29 +222,8 @@ public class SignalRClient : MonoBehaviour
                 _hub = null;
             }
 
-            _hub = new HubConnectionBuilder()
-                .WithUrl(connectionInfo.Url, cfg =>
-                    cfg.AccessTokenProvider = () => Task.Run(() => connectionInfo.AccessToken, cancellationToken))
-                .WithAutomaticReconnect(new TimeSpan[]
-                {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(5),
-                    TimeSpan.FromSeconds(10),
-                })
-                .Build();
-            _hub.ServerTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes);
-            _hub.KeepAliveInterval = TimeSpan.FromSeconds(KeeAliveIntervalSecs);
-            _hub.HandshakeTimeout = TimeSpan.FromSeconds(HandShakeTimeoutSecs);
-            _hub.Closed += OnConnectionClose;
-            _hub.Reconnected += OnReconnected;
-            _hub.Reconnecting += OnReconnecting;
-            _hub.On<string, string>(EventStrings.ServerCall, OnServerCall);
-
-            if (_hub.State == HubConnectionState.Connected) throw new InvalidOperationException("Hub is connected!");
-            await _hub.StartAsync(cancellationToken);
-            StatusChanged(_hub.State,$"Host:{connectionInfo.Url},\nToken:{connectionInfo.AccessToken}\n连接成功！");
-            cancellationTokenSource = null;
+            _hub = InstanceHub(connectionInfo.Url, connectionInfo.AccessToken, cancellationToken);
+            await OnHubStartAsync(cancellationToken);
             Application.quitting += OnDisconnect;
         }
         catch (Exception e)
@@ -242,23 +234,90 @@ public class SignalRClient : MonoBehaviour
         return true;
     }
 
+    private async Task OnHubStartAsync(CancellationToken cancellationToken)
+    {
+        if (_hub.State == HubConnectionState.Connected) throw new InvalidOperationException("Hub is connected!");
+        await _hub.StartAsync(cancellationToken);
+        StatusChanged(_hub.State, "SignalRHost:连接成功！");
+        cancellationTokenSource = null;
+    }
+
+    private HubConnection InstanceHub(string url,string token,CancellationToken cancellationToken = default)
+    {
+        var hub = new HubConnectionBuilder()
+            .WithUrl(url, cfg =>
+                cfg.AccessTokenProvider = () => Task.Run(() => token, cancellationToken))
+            .WithAutomaticReconnect(new TimeSpan[]
+            {
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(10),
+            })
+            .Build();
+        hub.ServerTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes);
+        hub.KeepAliveInterval = TimeSpan.FromSeconds(KeeAliveIntervalSecs);
+        hub.HandshakeTimeout = TimeSpan.FromSeconds(HandShakeTimeoutSecs);
+        hub.Closed += OnConnectionClose;
+        hub.Reconnected += OnReconnected;
+        hub.Reconnecting += OnReconnecting;
+        hub.On<string, string>(EventStrings.ServerCall, OnServerCall);
+        return hub;
+    }
+
     private void OnDisconnect() => Disconnect();
 
-    public async void ReconnectServer(UnityAction<bool> onReconnectAction)
+    public async void ReconnectServer(Action<HubConnectionState> callBackAction = null)
     {
-        if(_hub.State != HubConnectionState.Disconnected)return;
+        if (isBusy) return;
+        isBusy = true;
+        await HubReconnectTask(callBackAction);
+        isBusy = false;
+    }
+
+    private async Task HubReconnectTask(Action<HubConnectionState> callBackAction)
+    {
+        if (_hub != null && _hub.State != HubConnectionState.Disconnected)
+            await _hub.StopAsync();
+        
         try
         {
-            await _hub.StartAsync();
-            onReconnectAction?.Invoke(true);
+            isBusy = true;
+            await RetryConnectToServer();
+            isBusy = false;
+            callBackAction?.Invoke(_hub.State);
         }
         catch (Exception e)
         {
 #if UNITY_EDITOR
             DebugLog(e.ToString());
 #endif
-            onReconnectAction?.Invoke(false);
             PlayerDataForGame.instance.ShowStringTips("服务器尝试链接失败，请联系管理员！");
+        }
+
+        async Task RetryConnectToServer()
+        {
+            var result = await RequestToken(Zone, 0);
+            if (result.State != SigninResult.SignInStates.Success)
+            {
+                ReloginResult(false, result.Code);
+                return;
+            }
+            var connectionInfo = Json.Deserialize<SignalRConnectionInfo>(result.Content);
+            if (connectionInfo == null)
+            {
+                ReloginResult(false, -1);
+                return;
+            }
+
+            var success = await TokenLogin(connectionInfo);
+            ReloginResult(success, 100);
+        }
+
+        void ReloginResult(bool success, int code)
+        {
+            var msg = success ? "重连成功！" : $"连接失败,错误码：{code}\n";
+            PlayerDataForGame.instance.ShowStringTips(msg);
         }
     }
 
@@ -470,6 +529,58 @@ public class SignalRClient : MonoBehaviour
             Arrangement = arrangement;
             IsNewRegistered = isNewRegistered;
             Username = username;
+        }
+    }
+    public class SigninResult
+    {
+        public enum SignInStates
+        {
+            Success,
+            NoContent,
+            Failed
+        }
+        public SignInStates State { get; set; }
+        public int Code { get; set; }
+        public string Message { get; set; }
+        public string Content { get; set; }
+
+        public SigninResult(HttpResponseMessage response,string content)
+        {
+            if (!response.IsSuccess())
+            {
+                State = SignInStates.Failed;
+                Message = response.StatusCode == HttpStatusCode.HttpVersionNotSupported
+                    ? "服务器维护中..."
+                    : "登录失败。";
+            }
+            else if(response.StatusCode == HttpStatusCode.NoContent)
+            {
+                State = SignInStates.NoContent;
+                Message = "该区并无数据，\n是否创建新角色";
+            }
+            else
+            {
+                State = SignInStates.Success;
+                Message = "登录成功!";
+            }
+            Code = (int)response.StatusCode;
+            Content = content;
+        }
+    }
+
+    private class TokenLoginModel
+    {
+        public string Token { get; set; }
+        public int Zone { get; set; }
+        public float GameVersion { get; set; }
+        public int New { get; set; }
+
+        public TokenLoginModel(string token, int zone, float gameVersion, int createNew)
+        {
+            Token = token;
+            Zone = zone;
+            GameVersion = gameVersion;
+            New = createNew;
         }
     }
 }

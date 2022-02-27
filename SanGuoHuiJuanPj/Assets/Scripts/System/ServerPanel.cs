@@ -47,7 +47,7 @@ public class ServerPanel : MonoBehaviour
         SignalR = signalR;
         SignalR.SubscribeAction(EventStrings.SC_Disconnect, ServerCallDisconnect);
         SignalR.OnStatusChanged += OnStatusChanged;
-        reconnectButton.onClick.AddListener(()=>Reconnect());
+        reconnectButton.onClick.AddListener(Reconnect);
         exitButton.onClick.AddListener(Application.Quit);
         exitButton.gameObject.SetActive(false);
         gameObject.SetActive(false);
@@ -131,20 +131,7 @@ public class ServerPanel : MonoBehaviour
 
     private void Reconnect()
     {
-        if (!isDisconnectRequested) SignalR.ReconnectServer(OnRetryConnectToServer);
-    }
-
-    private void OnRetryConnectToServer(bool success)
-    {
-        if(success)return;
-        if (GamePref.ClientLoginMethod == 1) SignalR.DirectLogin(ReLoginToServer);
-        else SignalR.UserLogin(ReLoginToServer, GamePref.Username, GamePref.Password);
-    }
-
-    private void ReLoginToServer(bool success, int code, SignalRClient.SignalRConnectionInfo connectionInfo)
-    {
-        var msg = success ? "重连成功！" : $"连接失败,错误码：{code}";
-        PlayerDataForGame.instance.ShowStringTips(msg);
+        if (!isDisconnectRequested) SignalR.ReconnectServer();
     }
 
 }
