@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
 using CorrelateLib;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -38,8 +39,8 @@ public class LoginUiController : MonoBehaviour
     public string DeviceIsBound = @"设备已绑定了账号，请用设备登录修改账号信息!";
     private static bool isDeviceLogin;
     public Dictionary<int,ServerListUi.ServerInfo> Servers { get; set; }
-    public string LoginToken { get; set; }
-    public string Username { get; set; }
+
+
 #if UNITY_EDITOR
     void Start()
     {
@@ -115,54 +116,46 @@ public class LoginUiController : MonoBehaviour
 
             async Task LoginZone()
             {
-                var response = await Http.PostAsync(Server.TokenLogin,
-                    Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version))));
-                if (!response.IsSuccess())
-                {
-                    var message = response.StatusCode == HttpStatusCode.HttpVersionNotSupported
-                        ? "服务器维护中..."
-                        : "登录失败。";
-                    serverList.SetMessage(message);
-                    return;
-                }
-
-                if (response.StatusCode == HttpStatusCode.NoContent)
-                {
-                    serverList.OpenConfirmWindow("该区并无数据，\n是否创建新角色", () => AsyncInvoke(CreateNewUserData));
-                    return;
-                }
-
-                var isSuccess = await SignalRClient.instance.TokenLogin(await response.Content.ReadAsStringAsync());
-                if (!isSuccess)
-                {
-                    serverList.SetMessage("登录失败，请重新登录。");
-                    return;
-                }
-
-                OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
+                var result = await SignalRClient.instance.RequestToken(zone, 0);
+                await UiResponse(result);
             }
 
             async Task CreateNewUserData()
             {
-                var content = new TokenLoginModel(LoginToken, zone, float.Parse(Application.version));
-                content.New = 1;
-                var response = await Http.PostAsync(Server.TokenLogin, Json.Serialize(content));
-                if (!response.IsSuccess())
-                {
-                    serverList.SetMessage("登录失败.");
-                    return;
-                }
-
-                var isSuccess = await SignalRClient.instance.TokenLogin(await response.Content.ReadAsStringAsync());
-                if (!isSuccess)
-                {
-                    serverList.SetMessage("登录失败，请重新登录。");
-                    return;
-                }
-
-                OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
-
+                var result = await SignalRClient.instance.RequestToken(zone, 1);
+                await UiResponse(result);
             }
+
+            async Task UiResponse(SignalRClient.SigninResult result)
+            {
+                switch (result.State)
+                {
+                    case SignalRClient.SigninResult.SignInStates.Failed:
+                        serverList.SetMessage(result.Message);
+                        return;
+                    case SignalRClient.SigninResult.SignInStates.NoContent:
+                        serverList.OpenConfirmWindow(result.Message, () => AsyncInvoke(CreateNewUserData));
+                        return;
+                    case SignalRClient.SigninResult.SignInStates.Success:
+                        var info = Json.Deserialize<SignalRClient.SignalRConnectionInfo>(result.Content);
+                        if (info == null)
+                        {
+                            serverList.SetMessage("客户端请求异常，请联系管理员。");
+                            return;
+                        }
+                        var isSuccess = await SignalRClient.instance.TokenLogin(info);
+                        if (!isSuccess)
+                        {
+                            serverList.SetMessage("登录失败，请重新登录。");
+                            return;
+                        }
+                        OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
         }, () => serverList.OpenConfirmWindow(
             $"重置【{serverList.SelectedZone}】服\n【{Servers[serverList.SelectedZone].Title}】玩家数据，\n请确定？",
             OnResetAccount), () => OnAction(ActionWindows.ChangePassword));
@@ -175,7 +168,7 @@ public class LoginUiController : MonoBehaviour
         async Task RequestApiReset()
         {
             var response =
-                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedZone}", LoginToken);
+                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedZone}", SignalRClient.instance.LoginToken);
             var message = await response.Content.ReadAsStringAsync();
             serverList.SetMessage(message);
         }
@@ -210,7 +203,7 @@ public class LoginUiController : MonoBehaviour
     private void InitForgetPassword()
     {
         forgetPassword.backBtn.onClick.AddListener(()=>OnAction(ActionWindows.Login));
-        forgetPassword.deviceLoginBtn.onClick.AddListener(DeviceLoginApi);
+        forgetPassword.deviceLoginBtn.onClick.AddListener(() => AsyncInvoke(OneClickLogin));
     }
 
     private void InitChangePassword()
@@ -223,21 +216,8 @@ public class LoginUiController : MonoBehaviour
     {
         if (!IsPassPasswordLogic(changePassword.password, changePassword.rePassword, changePassword.message))
             return;
-        var bag = DataBag.SerializeBag(nameof(ChangePasswordApi), LoginToken, changePassword.password.text);
+        var bag = DataBag.SerializeBag(nameof(ChangePasswordApi), SignalRClient.instance.LoginToken, changePassword.password.text);
         AsyncInvoke(ReqChangePassword);
-        //var viewBag = ViewBag.Instance().SetValues(GamePref.Username, GamePref.Password,
-        //    SystemInfo.deviceUniqueIdentifier,
-        //    changePassword.password.text);
-        //ApiPanel.instance.InvokeVb(vb =>
-        //    {
-        //        GamePref.SetUsername(vb.GetValue<string>(0));
-        //        GamePref.SetPassword(changePassword.password.text);
-        //        Close();
-        //        PlayerDataForGame.instance.ShowStringTips("密码修改成功！");
-        //        GamePref.FlagDeviceReg(changePassword.username.text);
-        //    }, PlayerDataForGame.instance.ShowStringTips,
-        //    EventStrings.Req_ChangePassword,
-        //    viewBag);
 
         async Task ReqChangePassword()
         {
@@ -259,7 +239,6 @@ public class LoginUiController : MonoBehaviour
 
     private void InitAccountInfo()
     {
-        //accountInfo.warningMessage.gameObject.SetActive(!GamePref.IsUserAccountCompleted);
         accountInfo.password.contentType = isDeviceLogin ? InputField.ContentType.Password : InputField.ContentType.Standard;
         accountInfo.backBtn.onClick.AddListener(Close);
         accountInfo.changePasswordBtn.onClick.AddListener(() => OnAction(ActionWindows.ChangePassword));
@@ -358,7 +337,8 @@ public class LoginUiController : MonoBehaviour
             OnLoginPageErrorMessage(content);
             return;
         }
-
+        GamePref.SetUsername(login.username.text);
+        GamePref.SetPassword(string.Empty);
         ProceedServerList(bag);
     }
 
@@ -391,16 +371,16 @@ public class LoginUiController : MonoBehaviour
             OnLoginPageErrorMessage(content);
             return;
         }
-
+        GamePref.SetUsername(login.username.text);
+        GamePref.SetPassword(login.password.text);
         ProceedServerList(bag);
     }
 
     private void ProceedServerList(DataBag bag)
     {
-        LoginToken = bag.Get<string>(0);
+        SignalRClient.instance.LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
-        Username = bag.Get<string>(2);
-        GamePref.SetUsername(Username);
+        //Username = bag.Get<string>(2);
         Servers = list.ToDictionary(s => s.Zone, s => s);
         OnAction(ActionWindows.ServerList);
     }
@@ -437,21 +417,6 @@ public class LoginUiController : MonoBehaviour
         UnityMainThread.thread.RunNextFrame(()=> busyPanel.gameObject.SetActive(false));
     }
 
-    private void AccountLoginApi()
-    {
-        busyPanel.gameObject.SetActive(true);
-        login.message.text = string.Empty;
-        SignalRClient.instance.UserLogin((success, code, info) => LoginAction(success, code, info, login.password.text),
-            login.username.text, login.password.text);
-    }
-
-    private void DeviceLoginApi()
-    {
-        busyPanel.gameObject.SetActive(true);
-        login.message.text = string.Empty;
-        SignalRClient.instance.DirectLogin((success, code, info) => LoginAction(success, code, info, Undefined));
-    }
-
     private void LoginAction(bool success, int code, SignalRClient.SignalRConnectionInfo info, string password)
     {
         isDeviceLogin = password == Undefined;
@@ -459,7 +424,6 @@ public class LoginUiController : MonoBehaviour
         busyPanel.gameObject.SetActive(false);
         if (success)
         {
-            GamePref.SetPassword(isDeviceLogin ? string.Empty : password);
             UnityMainThread.thread.RunNextFrame(() =>
                 OnLoggedInAction.Invoke(info.Username, password, info.Arrangement, info.IsNewRegistered));
             return;
@@ -510,18 +474,4 @@ public abstract class SignInBaseUi : MonoBehaviour
         if (message) message.text = string.Empty;
     }
 
-}
-public class TokenLoginModel
-{
-    public string Token { get; set; }
-    public int Zone { get; set; }
-    public float GameVersion { get; set; }
-    public int New { get; set; }
-
-    public TokenLoginModel(string token, int zone, float gameVersion)
-    {
-        Token = token;
-        Zone = zone;
-        GameVersion = gameVersion;
-    }
 }

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
 using CorrelateLib;
+using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -108,24 +109,14 @@ public class ApiPanel : MonoBehaviour
     private IEnumerator DelayedReLogin()
     {
         yield return new WaitForSeconds(1.5f);
-        var isDeviceLogin = GamePref.ClientLoginMethod == 1;
-        if (isDeviceLogin)
-        {
-            Client.Disconnect(() =>
-            {
-                Client.DirectLogin(CallBack);
-            });
-        }else Client.Disconnect(() =>
-        {
-            Client.UserLogin(CallBack, GamePref.Username, GamePref.Password);
-        });
+        Client.ReconnectServer(CallBack);
     }
 
-    private void CallBack(bool success, int code, SignalRClient.SignalRConnectionInfo info)
+    private void CallBack(HubConnectionState hubConnectionState)
     {
 #if UNITY_EDITOR
         XDebug.Log<ServerPanel>(
-            $"Success = {success}, Code = {code}, user: {info.Username}, Token = {info.AccessToken}");
+            $"Connection Status = {hubConnectionState}");
 #endif
         SetBusy(false);
     }
