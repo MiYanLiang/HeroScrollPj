@@ -277,7 +277,7 @@ public class PointDesk : MonoBehaviour
         {
             ui.Button.onClick.RemoveAllListeners();
             ui.Button.interactable = true;
-            ui.Text.color = Color.black;
+            ui.Text.color = ColorDataStatic.name_deepRed;
             ui.Button.onClick.AddListener(() =>
             {
                 if (TagSelectionPointer)
