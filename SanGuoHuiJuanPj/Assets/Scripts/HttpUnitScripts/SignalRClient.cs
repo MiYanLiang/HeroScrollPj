@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
-using Assets;
 using Assets.Scripts.Utl;
 using Beebyte.Obfuscator;
 using CorrelateLib;
 using Microsoft.AspNetCore.SignalR.Client;
-using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Android;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using Object = System.Object;
 using Json = CorrelateLib.Json;
-using Newtonsoft.Json;
 
 [Skip]
 /// <summary>

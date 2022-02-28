@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
 using CorrelateLib;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -308,6 +306,17 @@ public class LoginUiController : MonoBehaviour
         login.resetAccountBtn.onClick.AddListener(()=>OnAction(ActionWindows.ResetAccount));
     }
 
+    private void UpdateUsername(string username)
+    {
+        login.username.text = username;
+        register.username.text = username;
+        accountInfo.username.text = username;
+        changePassword.username.text = username;
+        forgetPassword.username.text = username;
+        resetAccount.username.text = username;
+        GamePref.SetUsername(login.username.text);
+    }
+
     private async Task OneClickLogin()
     {
         var response = await Http.PostAsync(Server.DEVICE_LOGIN_API,
@@ -337,9 +346,9 @@ public class LoginUiController : MonoBehaviour
             OnLoginPageErrorMessage(content);
             return;
         }
+        ProceedServerList(bag);
         GamePref.SetUsername(login.username.text);
         GamePref.SetPassword(string.Empty);
-        ProceedServerList(bag);
     }
 
     private async Task AccountLogin()
@@ -371,7 +380,6 @@ public class LoginUiController : MonoBehaviour
             OnLoginPageErrorMessage(content);
             return;
         }
-        GamePref.SetUsername(login.username.text);
         GamePref.SetPassword(login.password.text);
         ProceedServerList(bag);
     }
@@ -380,7 +388,7 @@ public class LoginUiController : MonoBehaviour
     {
         SignalRClient.instance.LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
-        //Username = bag.Get<string>(2);
+        UpdateUsername(bag.Get<string>(2));
         Servers = list.ToDictionary(s => s.Zone, s => s);
         OnAction(ActionWindows.ServerList);
     }

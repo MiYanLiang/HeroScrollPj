@@ -12,16 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47dce7a34b74320499b89990464516a9, type: 3}
   m_Name: config
   m_EditorClassIdentifier: 
-  ServerUrl: https://heroscrollpjapi1.azurewebsites.net/api/
+  ServerUrl: https://motaHero.azureedge.net/api/
   PLAYER_SAVE_DATA_UPLOAD_API: UploadSaveData
   INSTANCE_ID_API: GenerateUserId
   REQUEST_USERNAME_API: RequestUsername
   PLAYER_REG_ACCOUNT_API: RegUser
   PLAYER_UPLOAD_COUNT_API: UploadCount
   USER_LOGIN_API: Login
-  SIGNALR_LOGIN_API: SignalRLogin
-  DEVICE_LOGIN_API: DeviceSignIn
+  SIGNALR_LOGIN_API: UserSignin
+  DEVICE_LOGIN_API: OneClickSignIn
   RESET_GAMEPLAY_API: ResetGamePlay
+  TOKEN_LOGIN_API: TokenLogin
   GetWarsV1: GetWarsV1
   GetStageV1: GetStageV1
   GetGetFormationV1: GetFormationV1
