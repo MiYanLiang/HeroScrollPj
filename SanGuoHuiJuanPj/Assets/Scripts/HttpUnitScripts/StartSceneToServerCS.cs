@@ -106,6 +106,7 @@ public class StartSceneToServerCS : MonoBehaviour
 
         var usr = username;
         GamePref.SetUsername(usr);
+        GamePref.SetLastServiceZone(SignalRClient.instance.Zone);
         var pwdEmpty = string.IsNullOrEmpty(password);
         if(!pwdEmpty)
         {

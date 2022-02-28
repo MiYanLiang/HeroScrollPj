@@ -48,7 +48,7 @@ public class SignalRClient : MonoBehaviour
     private bool isBusy;
     public ApiPanel ApiPanel;
     public string LoginToken { get; set; }
-    private int Zone { get; set; } = -1;
+    public int Zone { get; private set; } = -1;
 
     private void Awake()
     {
