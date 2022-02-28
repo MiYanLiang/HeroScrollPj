@@ -12,7 +12,6 @@ using UnityEngine;
 public static class Server
 {
 #if !UNITY_EDITOR
-    private static  string ServerUrl { get; set; } 
     public static string PLAYER_SAVE_DATA_UPLOAD_API { get; private set; } 
     public static string INSTANCE_ID_API { get; private set; } 
     public static string REQUEST_USERNAME_API { get; private set; } 
@@ -21,7 +20,9 @@ public static class Server
     public static string USER_LOGIN_API { get; private set; } 
     public static string SIGNALR_LOGIN_API { get; private set; } 
     public static string DEVICE_LOGIN_API { get; private set; } 
-    public static string RESET_GAMEPLAY_API { get; private set; } 
+    public static string RESET_GAMEPLAY_API { get; private set; }
+    public static string GameServer { get; private set; }
+    public static string TokenLogin { get; private set; }
 #else
     // todo: CDN正式服
     //private static string ServerUrl { get; set; } = "https://HeroScrollPj.azureedge.net/api/";
@@ -62,7 +63,7 @@ public static class Server
         if (isInitialized) return;
         isInitialized = true;
 #if !UNITY_EDITOR
-        ServerUrl = fields.ServerUrl;
+        GameServer = fields.ServerUrl;
         PLAYER_SAVE_DATA_UPLOAD_API = fields.PLAYER_SAVE_DATA_UPLOAD_API;
         INSTANCE_ID_API = fields.INSTANCE_ID_API;
         REQUEST_USERNAME_API = fields.REQUEST_USERNAME_API;
@@ -72,6 +73,7 @@ public static class Server
         SIGNALR_LOGIN_API = fields.SIGNALR_LOGIN_API;
         DEVICE_LOGIN_API = fields.DEVICE_LOGIN_API;
         RESET_GAMEPLAY_API = fields.RESET_GAMEPLAY_API;
+        TokenLogin = fields.TOKEN_LOGIN_API;
         Versus.GetWarsV1 = fields.GetWarsV1;
         Versus.GetStageV1 = fields.GetStageV1;
         Versus.GetGetFormationV1 = fields.GetGetFormationV1;
