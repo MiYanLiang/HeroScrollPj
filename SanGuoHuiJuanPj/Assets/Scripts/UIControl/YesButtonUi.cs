@@ -11,7 +11,7 @@ public class YesButtonUi:MonoBehaviour
     public void Set(UnityAction confirmedAction)
     {
         ResetUi();
-        Input.onValueChanged.AddListener(OnValueChange);
+        Input.onEndEdit.AddListener(OnValueChange);
         Button.onClick.AddListener(() =>
         {
             Button.onClick.RemoveAllListeners();
@@ -36,7 +36,7 @@ public class YesButtonUi:MonoBehaviour
     {
         Input.text = string.Empty;
         Input.gameObject.SetActive(true);
-        Input.onValueChanged.RemoveAllListeners();
+        Input.onEndEdit.RemoveAllListeners();
     }
 
     public void ResetUi()
