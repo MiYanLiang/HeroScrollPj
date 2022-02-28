@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.5882353, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -1351,6 +1351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c03082ef048bac4c9f9c7569a53bee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ForcePlayStory: 0
   loginUiController: {fileID: 7150002788780996998}
   timeSystemControl: {fileID: 8495310019451534047}
   playerDataForGame: {fileID: 8495310019662428157}
@@ -12684,7 +12685,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.5882353, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -16423,6 +16424,7 @@ MonoBehaviour:
   login: {fileID: 588297335082370989}
   register: {fileID: 8413035244467873135}
   accountInfo: {fileID: 2466895223068851492}
+  serverList: {fileID: 0}
   changePassword: {fileID: 1636996227902966146}
   forgetPassword: {fileID: 5957305291563803894}
   resetAccount: {fileID: 2733181288129955843}
