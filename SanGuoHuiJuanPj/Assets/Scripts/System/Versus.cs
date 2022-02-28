@@ -37,7 +37,7 @@ public class Versus : MonoBehaviour
     public static DataBag OnProcessApi(string data)
     {
         var bag = DataBag.DeserializeBag(data);
-        if (bag == null) instance.GetBackToWarListPage(data);
+        if (!bag.IsValid()) instance.GetBackToWarListPage(data);
         return bag;
     }
 

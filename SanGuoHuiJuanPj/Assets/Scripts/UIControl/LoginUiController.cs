@@ -222,7 +222,7 @@ public class LoginUiController : MonoBehaviour
             var response = await Http.PostAsync(nameof(ChangePasswordApi), bag);
             var message = await response.Content.ReadAsStringAsync();
             var databag = DataBag.DeserializeBag(message);
-            if (databag == null)
+            if (!databag.IsValid())
             {
                 changePassword.SetMessage(message);
                 return;
@@ -341,7 +341,7 @@ public class LoginUiController : MonoBehaviour
 
         var content = await response.Content.ReadAsStringAsync();
         var bag = DataBag.DeserializeBag(content);
-        if (bag == null)
+        if (!bag.IsValid())
         {
             OnLoginPageErrorMessage(content);
             return;
@@ -375,7 +375,7 @@ public class LoginUiController : MonoBehaviour
 
         var content = await response.Content.ReadAsStringAsync();
         var bag = DataBag.DeserializeBag(content);
-        if (bag == null)
+        if (!bag.IsValid())
         {
             OnLoginPageErrorMessage(content);
             return;

@@ -76,9 +76,9 @@ public class ApiPanel : MonoBehaviour
         var bag = DataBag.SerializeBag(method, args);
         Client.Invoke(controller, result =>
         {
-            var viewBag = Json.Deserialize<DataBag>(result);
-            if (viewBag == null) failedAction?.Invoke(result);
-            else successAction.Invoke(viewBag);
+            var dataBag = DataBag.DeserializeBag(result);
+            if (!dataBag.IsValid()) failedAction?.Invoke(result);
+            else successAction.Invoke(dataBag);
             if(closeBusyAfterInvoke) SetBusy(false);
         }, bag);
     }
