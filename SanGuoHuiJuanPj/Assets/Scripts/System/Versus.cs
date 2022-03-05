@@ -759,7 +759,7 @@ public class Versus : MonoBehaviour
             ui.OnCloseAction -= SwitchMainPage;
             ui.OnCloseAction += SwitchMainPage;
             CreateCharacterButton.onClick.AddListener(ui.Show);
-
+            LevelNotReach.text = $"等级{MinLevel}开启！！";
             void SwitchMainPage() => uiMgr.MainPageSwitching(3);
         }
 

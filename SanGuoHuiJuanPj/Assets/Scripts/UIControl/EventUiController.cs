@@ -6,7 +6,7 @@ public class EventUiController : MonoBehaviour
     public static bool ShowOnce { get; set; }
     [SerializeField] UDate ExpiredDate;
 
-    void Start()
+    public void Init()
     {
         gameObject.SetActive(!ShowOnce && !ExpiredDate.IsExpired());
         ShowOnce = true;

@@ -34,8 +34,7 @@ public class ServerListUi : SignInBaseUi
             var s = Instantiate(ServerPrefab, scrollRect.content.transform);
             s.SelectButton.onClick.AddListener(() => OnSelect(server.Zone));
             Servers.Add(server.Zone, (s, server.Api));
-            s.ZoneText.text = server.Zone.ToString();
-            s.NameText.text = server.Title;
+            s.Init(server.Zone, server.Title, server == servers[servers.Length - 1]);
             s.gameObject.SetActive(true);
         }
 
