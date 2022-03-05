@@ -53,30 +53,6 @@ public class PlayerCharacterUi : MonoBehaviour
         isInit = true;
     }
 
-    //private void ResetApiUpdateUis()
-    //{
-    //    var isCharacterValid = Character != null && Character.IsValidCharacter();
-    //    consumeUis.ForEach(ui => ui.gameObject.SetActive(isCharacterValid));
-    //    if (!isCharacterValid) return;
-    //    UpdateNameApi.SetEditInteractive(new[] { Name });
-    //    UpdateNameApi.SetCost(ApiConsumeUi.Currencies.YvQue, 100);
-    //    UpdateNameApi.ResetApi(() => !string.IsNullOrWhiteSpace(Name.text) && !Name.text.Equals(Character.Name),
-    //        EventStrings.Req_UpdateCharacterName, OnSuccessUpdateCharacter);
-    //    UpdateNicknameApi.SetEditInteractive(new[] { Nickname });
-    //    UpdateNicknameApi.SetCost(ApiConsumeUi.Currencies.YvQue, 100);
-    //    UpdateNicknameApi.ResetApi(
-    //        () => !string.IsNullOrWhiteSpace(Nickname.text) && !Nickname.text.Equals(Character.Nickname),
-    //        EventStrings.Req_UpdateCharacterNickname, OnSuccessUpdateCharacter);
-    //    UpdateGenderApi.SetEditInteractive(new[] { GenderUi.Male, GenderUi.Female });
-    //    UpdateGenderApi.SetCost(ApiConsumeUi.Currencies.YvQue, 100);
-    //    UpdateGenderApi.ResetApi(() => (int)GenderUi.Gender != Character.Gender,
-    //        EventStrings.Req_UpdateCharacterGender, OnSuccessUpdateCharacter);
-    //    UpdateSignApi.SetEditInteractive(new[] { Sign });
-    //    UpdateSignApi.SetCost(ApiConsumeUi.Currencies.YuanBao, 200);
-    //    UpdateSignApi.ResetApi(() => !string.IsNullOrWhiteSpace(Sign.text) && Sign.text.Equals(Character.Sign),
-    //        EventStrings.Req_UpdateCharacterSign, OnSuccessUpdateCharacter);
-    //}
-
     private void OnSuccessUpdateCharacter(ViewBag vb)
     {
         ConsumeManager.instance.SaveChangeUpdatePlayerData(vb.GetPlayerDataDto());
@@ -138,15 +114,9 @@ public class PlayerCharacterUi : MonoBehaviour
     }
 
     private void OnComponentInputSubscribe(InputField inputField)
-    //private void OnComponentInputSubscribe(InputField inputField, Button btn, Expression<Func<string>> valueEx)
     {
         inputField.onValueChanged.RemoveAllListeners();
         inputField.onValueChanged.AddListener(ResolveAllEditBtns);
-        //inputField.onValueChanged.AddListener(input =>
-        //{
-        //    var value = valueEx.Compile()();
-        //    btn.interactable = value != input;
-        //});
     }
 
     private void ResolveAllEditBtns(string arg0)

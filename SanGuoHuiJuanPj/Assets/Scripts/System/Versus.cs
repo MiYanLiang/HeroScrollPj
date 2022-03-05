@@ -751,7 +751,7 @@ public class Versus : MonoBehaviour
         public Image Window;
         public Text LevelNotReach;
         public Button CreateCharacterButton;
-        public int MinLevel = 7;
+        public int MinLevel = 3;
 
         public void Init(UIManager uiMgr, PlayerCharacterUi ui)
         {

@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
+using UnityEngine;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
+using Random = System.Random;
 
 namespace Assets.System.WarModule
 {
@@ -242,6 +245,8 @@ namespace Assets.System.WarModule
                 Log(sb);
             }
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
+            //为了确保可执行的卡牌都在棋盘上
+            OnRecallOperatorPosition(currentOps);
             RefreshChessPosses();
             InvokePreRoundTriggers();
 
@@ -295,6 +300,19 @@ namespace Assets.System.WarModule
             StateFlags.ForEach(s => s.State = default);
             currentRound.IsEnd = true;
             return currentRound;
+        }
+
+        private void OnRecallOperatorPosition(List<ChessOperator> validOperators)
+        {
+            foreach (var op in validOperators)
+            {
+                var pos = GetChessPos(op);
+                if (pos.Operator == op) continue;
+#if UNITY_EDITOR
+                Debug.LogWarning($"{nameof(OnRecallOperatorPosition)}:修复了[{op}]的位置。Pos[{pos.Pos}]原 = {pos.Operator}！");
+#endif
+                pos.SetPos(op);
+            }
         }
 
         private void RefreshChessPosses()
@@ -458,17 +476,17 @@ namespace Assets.System.WarModule
             ActivityResult ProcessActivity()
             {
                 Activity activity;
-                //try
-                //{
+                try
+                {
                     //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
                     activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                         conducts, skill, rePos);
-                //}
-                //catch (Exception e)
-                //{
-                //    throw XDebug.Throw<ChessboardOperator>(
-                //        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
-                //}
+                }
+                catch (Exception e)
+                {
+                    throw XDebug.Throw<ChessboardOperator>(
+                        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target.Operator}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
+                }
 
                 if (target.Operator != null)
                     activity.TargetStatus = GetFullCondition(target.Operator);
@@ -1166,21 +1184,23 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <param name="op"></param>
         /// <param name="pos"></param>
-        public void PosOperator(ChessOperator op, int pos)
+        public bool PosOperator(ChessOperator op, int pos)
         {
+            if (pos >= 0 && !Grid.GetScope(op)[pos].IsPostedAlive) return false;
+
             var oldPos = GetChessPos(op);
             if (oldPos != null) Grid.Remove(GetStatus(op).Pos, op.IsChallenger);
             GetStatus(op).SetPos(pos);
-            if (pos < 0) return;
+            if (pos < 0) return true;
             var replace = Grid.Replace(pos, op);
-            if (replace != null)
-                throw new InvalidOperationException(
-                    $"Pos({pos}) has [{replace.CardId}({replace.CardType})] exist!");
+            if (replace != null && replace.IsAlive)
+                throw new InvalidOperationException($"Pos({pos}) has [{replace.CardId}({replace.CardType})] exist!");
             var chessPos = GetChessPos(op);
             if (RoundState == ProcessCondition.PlaceActions)
                 op.OnPostingTrigger(chessPos);
             else op.OnRePos(pos);
             UpdateAllTerrains();
+            return true;
         }
 
         public IChessPos GetChessPos(IChessOperator op) => Grid.GetChessPos(op, GetStatus(op).Pos);

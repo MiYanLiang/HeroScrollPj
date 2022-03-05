@@ -55,7 +55,26 @@ public class Chessboard : MonoBehaviour
     /// <param name="isPlayer"></param>
     public void OnActivityBeginTransformSibling(int pos, bool isPlayer)
     {
-        var card = GetChessPos(pos, isPlayer).Card;
+        var chessPos = GetChessPos(pos, isPlayer);
+        var card = chessPos.Card;
+        if (card == null)
+        {
+            if (chessPos.Operator == null) return;
+#if UNITY_EDITOR
+            Debug.LogWarning($"{nameof(OnActivityBeginTransformSibling)}:修复找不到卡牌ChessPos[{pos}]并忽略执行！");
+#endif
+            card = data[chessPos.Operator.InstanceId];
+#if UNITY_EDITOR
+            Debug.LogWarning($"{nameof(OnActivityBeginTransformSibling)}:修复找不到卡牌ChessPos[{pos}] = {chessPos.Card}, 替换 = {card.GetInfo()}");
+#endif
+        }
+        OnActivityBeginTransformSibling(card);
+    }
+    /// <summary>
+    /// 棋子控件置高，避免被其它UI挡到
+    /// </summary>
+    public void OnActivityBeginTransformSibling(FightCardData card)
+    {
         var trans = card.cardObj.transform;
         trans.SetParent(transform,true);
         trans.SetAsLastSibling();

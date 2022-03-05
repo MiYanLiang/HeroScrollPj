@@ -24,6 +24,9 @@ public class CardAnimator : MonoBehaviour
     public Tween PreActionTween(FightCardData card, FightCardData target)
     {
         var tween = DOTween.Sequence();
+        try
+        {
+
         switch (card.ChessmanStyle.Type)
         {
             case CombatStyle.Types.None:
@@ -34,6 +37,12 @@ public class CardAnimator : MonoBehaviour
             case CombatStyle.Types.Range:
                 tween.Join(RangePreActAnimation(card));
                 break;
+        }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
 
         return tween;

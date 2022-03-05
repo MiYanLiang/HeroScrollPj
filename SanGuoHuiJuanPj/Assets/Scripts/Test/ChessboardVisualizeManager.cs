@@ -441,10 +441,27 @@ public class ChessboardVisualizeManager : MonoBehaviour
             yield break;
         }
 
-        //把棋子提到最上端
-        Chessboard.OnActivityBeginTransformSibling(process.Major, process.Scope == 0);
+        var pos = Chessboard.GetChessPos(process.Major, process.Scope == 0);
 
-        var majorCard = TryGetCardMap(Chessboard.GetChessPos(process.Major, process.Scope == 0).Card.InstanceId);
+        //为了预防卡牌换位或是找不到了，尝试搜索
+        int opInstance;
+        if (pos.Card == null)
+        {
+            if (pos.Operator == null) //如果op没了直接忽略
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"{nameof(ChessmanAnimation)}:忽略 Pos = {pos}, card = {pos.Card}");
+#endif
+                yield break;
+            }
+
+            opInstance = pos.Operator.InstanceId;
+        }
+        else opInstance = pos.Card.InstanceId;
+        var majorCard = TryGetCardMap(opInstance);
+        if (majorCard == null) yield break;
+        //把棋子提到最上端
+        Chessboard.OnActivityBeginTransformSibling(majorCard);
 
         foreach (var map in process.CombatMaps.OrderBy(c => c.Key))
         {
