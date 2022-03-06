@@ -923,14 +923,18 @@ public class WarsUIManager : MonoBehaviour
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
-            PlayerDataForGame.instance.fightHeroId.Select(id => new GameCard().Instance(GameCardType.Hero, id, 1))
+            var hst = PlayerDataForGame.instance.hstData;
+            PlayerDataForGame.instance.fightHeroId.Select(id =>
+                    new GameCard().Instance(GameCardType.Hero, id, GetLevel(hst.heroSaveData, id)))
                 .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
-                    new GameCard().Instance(GameCardType.Tower, id, 1)))
+                    new GameCard().Instance(GameCardType.Tower, id, GetLevel(hst.towerSaveData, id))))
                 .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
-                    new GameCard().Instance(GameCardType.Trap, id, 1)))
-                .ToList().ForEach(c=>WarBoard.CreateCardToRack(c));
+                    new GameCard().Instance(GameCardType.Trap, id, GetLevel(hst.trapSaveData, id))))
+                .ToList().ForEach(c => WarBoard.CreateCardToRack(c));
             return;
         }
+
+        int GetLevel(List<GameCard> list, int id) => list.First(c => c.CardId == id).Level;
 #endif
         PlayerDataForGame.instance.fightHeroId.Clear();
         PlayerDataForGame.instance.fightTowerId.Clear();
@@ -945,6 +949,7 @@ public class WarsUIManager : MonoBehaviour
         hstData.trapSaveData.Enlist(forceId).ToList()
             .ForEach(c => WarBoard.CreateCardToRack(c));
     }
+
 
     //初始化场景内容
     private void InitMainUiShow()

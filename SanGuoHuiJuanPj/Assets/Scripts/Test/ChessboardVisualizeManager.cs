@@ -374,15 +374,20 @@ public class ChessboardVisualizeManager : MonoBehaviour
             SetAudioSection(audioSection, activity);
             if (IsPlayerResourcesActivity(activity)) continue;
             if (IsSpriteActivity(activity)) continue;
+            var target = TryGetCardMap(activity.To);
+            if (target == null)
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
+#endif
+                continue;
+            }
             if(!CombatTargets.Contains(activity.To))
             {
                 CombatTargets.Add(activity.To);
                 UpdateTargetStatus(activity);
             }
             if (activity.Intention == Activity.Intentions.ChessboardBuffing) continue;//附buff活动不演示，直接在CombatMap结果更新状态
-            var target = TryGetCardMap(activity.To);
-            if (target == null)
-                Debug.LogError($"{activity}：棋盘找不到棋子[{activity.To}]，请确保活动的合法性。");
             action(target, activity, audioSection);
         }
         return audioSection;
