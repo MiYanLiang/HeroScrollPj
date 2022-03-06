@@ -5,16 +5,19 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Preload.unity
     guid: c67a22198c5fc22408ccf6e45414f32e
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Start.unity
     guid: 86a8124b52ab9ea4fb08fb7053ab6646
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main.unity
     guid: 8023cf944df4ee542a56da2ec2f851f6
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/War.unity
     guid: ec2eccffb89fa9e4b8c7f9a16f94b0ac
+  - enabled: 1
+    path: Assets/Scenes/zTest_QQ.unity
+    guid: 67745d2ecf0a3df4e9cdf6cbfe141622
   m_configObjects: {}

@@ -2,9 +2,11 @@
 using System;
 using System.Diagnostics.Contracts;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class QqCaller : MonoBehaviour
 {
+    [SerializeField] private Text Message;
     /****************
     *
     * 发起添加群流程。群号：【英雄绘卷】内测群(216385360) 的 key 为： EWQip3HzKNPESwQ_0P7JvU_yGkTe0SlU
@@ -30,28 +32,55 @@ public class QqCaller : MonoBehaviour
     //    }
     //}
     [SerializeField] private string QQKey = "EWQip3HzKNPESwQ_0P7JvU_yGkTe0SlU";
-    private AndroidJavaClass unityPlayer;
-    private AndroidJavaObject javaObject;
+    private AndroidJavaClass unityPlayerJavaClass;
+    private AndroidJavaObject qqJo;
 
     private void Start()
     {
-        unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        javaObject = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+#if !UNITY_EDITOR
+        unityPlayerJavaClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");//UnityPlayer class
+        var currentAvtivity = unityPlayerJavaClass.GetStatic<AndroidJavaObject>("currentActivity");//get activity
+        var qqJavaClass = new AndroidJavaClass("com.icefoxz.qqcaller.QQGroup");//qqGroup class
+        qqJo = qqJavaClass.CallStatic<AndroidJavaObject>("instance", currentAvtivity);//call instance
+#endif
     }
 
     public void TestJoinQQ()
     {
+        var msg = string.Empty;
+        SetMessage(msg);
         try
         {
             var success = JoinQQGroup();
-            Debug.Log($"尝试调用QQ群：{success}");
+            msg = $"尝试调用QQ群：{success}";
+            SetMessage(msg);
         }
         catch (Exception e)
         {
-            Debug.Log($"尝试调用QQ群：{e}");
+            msg = $"尝试调用QQ群：{e}";
+            SetMessage(msg);
             throw;
         }
     }
 
-    public bool JoinQQGroup() => javaObject.Call<bool>("joinQQGroup", QQKey);
+    public bool JoinQQGroup()
+    {
+        return qqJo.Call<bool>("joinQQGroup", QQKey);
+    }
+
+    public void OnClickJoinQQGroup()
+    {
+#if !UNITY_EDITOR
+        var success = JoinQQGroup();
+        if (!success)
+            PlayerDataForGame.instance.ShowStringTips("尝试打开QQ失败，请确保已安装QQ客户端。");
+#endif
+        PlayerDataForGame.instance.ShowStringTips("安卓手机才能打开QQ群。");
+    }
+    private void SetMessage(string msg)
+    {
+        if (Message)
+            Message.text = msg;
+        Debug.Log(msg);
+    }
 }
