@@ -162,6 +162,7 @@ public class GameSystem : MonoBehaviour
     {
         StartSceneUIManager.instance.Init();
         StartSceneToServerCS.instance.Init();
+        loginUiController.Init();
     }
 
     protected void InitEnqueue(Action action)
