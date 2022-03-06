@@ -112,6 +112,7 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     Text baYeGoldNumText;   //霸业金币数量 
 
+    [SerializeField] private EventUiController EventUi;
     private void Awake()
     {
         if (instance == null)
@@ -153,6 +154,7 @@ public class UIManager : MonoBehaviour
         PlayerDataForGame.instance.selectedWarId = -1;
         PlayerCharacterUi.Init();
         ConfirmationWindowUi.Init();
+        EventUi.Init();
         IsInit = true;
     }
 

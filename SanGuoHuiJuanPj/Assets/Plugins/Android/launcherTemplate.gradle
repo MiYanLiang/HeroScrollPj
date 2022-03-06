@@ -1,13 +1,16 @@
+
+apply plugin: 'com.android.application'
+
 buildscript {
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        // Must be Android Gradle Plugin 3.6.0 or later. For a list of
+        // Must be Android Gradle Plugin 4.0.1 or later. For a list of
         // compatible Gradle versions refer to:
         // https://developer.android.com/studio/releases/gradle-plugin
-        classpath 'com.android.tools.build:gradle:3.6.0'
+        classpath 'com.android.tools.build:gradle:4.0.1'
     }
 }
 
@@ -20,8 +23,6 @@ allprojects {
       }
    }
 }
-
-apply plugin: 'com.android.application'
 
 dependencies {
     implementation project(':unityLibrary')
@@ -65,10 +66,10 @@ android {
         }
         release {
             minifyEnabled **MINIFY_RELEASE**
-            useProguard false
+            useProguard **PROGUARD_RELEASE**
             proguardFiles getDefaultProguardFile('proguard-android.txt')**SIGNCONFIG**
         }
-    }**PACKAGING_OPTIONS****SPLITS**
+    }**PACKAGING_OPTIONS****PLAY_ASSET_PACKS****SPLITS**
 **BUILT_APK_LOCATION**
     bundle {
         language {

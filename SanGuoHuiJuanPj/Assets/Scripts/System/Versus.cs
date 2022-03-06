@@ -751,7 +751,7 @@ public class Versus : MonoBehaviour
         public Image Window;
         public Text LevelNotReach;
         public Button CreateCharacterButton;
-        public int MinLevel = 7;
+        public int MinLevel = 3;
 
         public void Init(UIManager uiMgr, PlayerCharacterUi ui)
         {
@@ -759,7 +759,7 @@ public class Versus : MonoBehaviour
             ui.OnCloseAction -= SwitchMainPage;
             ui.OnCloseAction += SwitchMainPage;
             CreateCharacterButton.onClick.AddListener(ui.Show);
-
+            LevelNotReach.text = $"等级{MinLevel}开启！！";
             void SwitchMainPage() => uiMgr.MainPageSwitching(3);
         }
 

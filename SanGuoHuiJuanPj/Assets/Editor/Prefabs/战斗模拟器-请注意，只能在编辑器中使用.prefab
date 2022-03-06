@@ -9837,6 +9837,7 @@ MonoBehaviour:
   login: {fileID: 6470129202688156240}
   register: {fileID: 2675581895682965650}
   accountInfo: {fileID: 8348729604397029593}
+  serverList: {fileID: 0}
   changePassword: {fileID: 5140663332443827327}
   forgetPassword: {fileID: 237583488772473099}
   resetAccount: {fileID: 8362828899486543358}
@@ -17206,6 +17207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2221f2ab489c2d64b9b86f37464e2005, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ForcePlayStory: 0
   loginUiController: {fileID: 3664066229429656699}
   timeSystemControl: {fileID: 2595742470738714402}
   playerDataForGame: {fileID: 3751974375526295851}
@@ -17215,6 +17217,9 @@ MonoBehaviour:
   adManager: {fileID: 2595742471382943733}
   systemCanvas: {fileID: 6647452183815926914}
   ServerException: {fileID: 3057280551674742377}
+  StartEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &3931407580085302983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17256,15 +17261,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d14e7cc1960c4654da65c83b66f7fb4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  warId: 3
+  warId: 126
   gold: 100
   cityLevel: 1
   isCustomCard: 1
-  force: 0
+  force: 2
   playerData: {fileID: 3751974375526295851}
   heroes:
+  - CardId: 0
+    Level: 6
+  - CardId: 29
+    Level: 6
   - CardId: 3
-    Level: 10
+    Level: 6
+  - CardId: 27
+    Level: 6
+  - CardId: 82
+    Level: 7
   - CardId: 16
     Level: 1
   towers: []

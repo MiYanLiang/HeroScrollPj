@@ -91,7 +91,9 @@ namespace Assets.System.WarModule
                  result.Type == ActivityResult.Types.Heal ||
                  result.Type == ActivityResult.Types.Assist ||
                  result.Type == ActivityResult.Types.Shield))
-                SetPos(activity.RePos);
+            {
+                if (!SetPos(activity.RePos)) activity.RePos = -1;
+            }
             else activity.RePos = -1;
 
             //反击逻辑。当对面执行进攻类型的行动将进行，并且是可反击的对象，执行反击
@@ -217,10 +219,8 @@ namespace Assets.System.WarModule
         /// <param name="activity"></param>
         protected virtual void OnSufferConduct(Activity activity, IChessOperator offender = null){}
 
-        public void SetPos(int pos)
-        {
-            Chessboard.PosOperator(this, pos);
-        }
+        public bool SetPos(int pos) => Chessboard.PosOperator(this, pos);
+
         /// <summary>
         /// 被击退后触发
         /// </summary>
