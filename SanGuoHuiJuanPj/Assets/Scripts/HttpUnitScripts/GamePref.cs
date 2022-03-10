@@ -3,6 +3,8 @@ using UnityEngine;
 
 public static class GamePref
 {
+    public static bool IsPlayedIntro => PlayerPrefs.GetInt(IsPlayedIntroString) > 0;
+    public static void SetIsPlayedIntro(bool isPlayed) => PlayerPrefs.SetInt(IsPlayedIntroString, isPlayed ? 1 : 0);
     public static string Username => PlayerPrefs.GetString(AccountIdString);
     public static string Password => PlayerPrefs.GetString(PasswordString);
     public static string IsFirstPlay => PlayerPrefs.GetString(IsFirstPlayString);
@@ -31,6 +33,8 @@ public static class GamePref
             return Json.Deserialize<BaYeDataClass>(json);
         }
     }
+
+    public const string IsPlayedIntroString = "IsPlayedIntro";
 
     private const string LastServiceZoneString = "LastServiceZone";
     public static int LastServiceZone => PlayerPrefs.GetInt(LastServiceZoneString);

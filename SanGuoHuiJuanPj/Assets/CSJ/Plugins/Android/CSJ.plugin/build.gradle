@@ -1,0 +1,35 @@
+apply plugin: 'com.android.library'
+
+dependencies {
+    implementation fileTree(dir: 'bin', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compileOnly 'com.pangle.cn:ads-sdk-pro:4.2.1.0'
+}
+
+project.rootProject.allprojects {
+    repositories {
+        maven {
+            url "https://artifact.bytedance.com/repository/pangle"
+        }
+    }
+}
+
+android {
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    compileSdkVersion 30
+    buildToolsVersion '31.0.0'
+
+    defaultConfig{
+        proguardFiles  'proguard-user.txt'
+        consumerProguardFiles 'proguard-user.txt'
+    }
+}

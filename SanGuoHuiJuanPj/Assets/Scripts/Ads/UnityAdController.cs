@@ -14,7 +14,7 @@ public class UnityAdController : AdControllerBase, IUnityAdsListener
         }
     }
     private const string GameId = "3997035";
-    private const string PlacementId = "rewardedVideo";
+    private const string PlacementId = "Android_Rewarded";
 #if UNITY_EDITOR
     private bool isDevTest = true;
 #else

@@ -33,6 +33,7 @@ public class LoginUiController : MonoBehaviour
     public RetrievePasswordUi forgetPassword;
     public ResetAccountUi resetAccount;
     public UnityAction<string,string,int,int> OnLoggedInAction;
+    public UnityAction OnSignInAction;
     public UnityAction OnResetAccountAction;
     public Image busyPanel;
     [SerializeField] private Image AddictPanel;
@@ -135,6 +136,7 @@ public class LoginUiController : MonoBehaviour
 
     private void InitServerList()
     {
+        OnSignInAction?.Invoke();
         serverList.gameObject.SetActive(true);
         serverList.backButton.onClick.AddListener(()=>OnAction(ActionWindows.Login));
         serverList.Set(Servers.Values.ToArray(), zone =>
@@ -418,9 +420,9 @@ public class LoginUiController : MonoBehaviour
         SignalRClient.instance.LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
         var username = bag.Get<string>(2);
-        TtAa.StartUp(username);
         UpdateUsername(username);
         Servers = list.ToDictionary(s => s.Zone, s => s);
+        TtAa.StartUp(username);
     }
 
     private void DisplayServerList()

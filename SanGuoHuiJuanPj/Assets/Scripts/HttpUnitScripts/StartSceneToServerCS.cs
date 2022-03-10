@@ -40,7 +40,7 @@ public class StartSceneToServerCS : MonoBehaviour
 #if UNITY_EDITOR
         throw new Exception("清除账号完成,请重启游戏！");
 #endif
-        LoginGameInfoFun();
+        //LoginGameInfoFun();
     }
 
     private void Awake()
@@ -57,12 +57,12 @@ public class StartSceneToServerCS : MonoBehaviour
 
     public void Init()
     {
-        //InfoButtonOnClickFun();//旧按键方法取消
         StartButton.gameObject.SetActive(false);
         PlayerDataForGame.instance.acData.Username = GamePref.Username;
         PlayerDataForGame.instance.acData.Password = GamePref.Password;
         PlayerDataForGame.instance.acData.Phone = PlayerPrefs.GetString(GamePref.PhoneNumber);
-        LoginGameInfoFun();
+        //LoginGameInfoFun();
+        PromptLoginWindow();
     }
 
     /// <summary> 
@@ -70,18 +70,18 @@ public class StartSceneToServerCS : MonoBehaviour
     /// </summary> 
     public void LoginGameInfoFun()
     {
-        //如果有存档或初始剧情已播或是用户名已注册，不播剧情
-        var isUsernameSet = !string.IsNullOrWhiteSpace(GamePref.Username);
-        if (!GameSystem.Instance.ForcePlayStory
-            && (isUsernameSet
 #if UNITY_EDITOR
-                || isSkipInitBattle
-#endif
-                || StartSceneUIManager.instance.isPlayedStory))
+        if(GameSystem.Instance.ForcePlayStory)
         {
-            PromptLoginWindow();
-            return;
+            GamePref.SetPrefWarSpeed(1);
+            GamePref.SetIsPlayedIntro(false);
         }
+#endif
+        //如果有存档或初始剧情已播或是用户名已注册，不播剧情
+        var playedIntro = GamePref.IsPlayedIntro || GamePref.PrefWarSpeed > 1;
+        GameSystem.LoginUi.OnLoggedInAction += OnLoggedIn;
+
+        if (playedIntro) return;
 
         StartSceneUIManager.instance.StoryController.BeginStory();
     }
@@ -90,7 +90,7 @@ public class StartSceneToServerCS : MonoBehaviour
     {
         var login = GameSystem.LoginUi;
         login.OnAction(LoginUiController.ActionWindows.Login);
-        login.OnLoggedInAction += OnLoggedIn;
+        login.OnSignInAction += LoginGameInfoFun;
     }
 
     private void OnLoggedIn(string username, string password, int arrangement, int newReg)

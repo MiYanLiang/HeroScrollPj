@@ -23,10 +23,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     [SerializeField] private AudioSource audioSource;
 
-    private Animator fireUIObj => Chessboard.WinFire;
+    private Chessboard.WinningEffect WinEffect => Chessboard.winningEffect;
 
-    private Animator boomUIObj => Chessboard.WinExplode;
-    private Animator gongKeUIObj => Chessboard.WinText;
     protected FightCardData TryGetCardMap(int id) => CardMap.ContainsKey(id) ? CardMap[id] : null;
 
     protected Dictionary<int, FightCardData> CardMap { get; set; } = new Dictionary<int, FightCardData>();
@@ -92,7 +90,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         _cardData.Clear();
         Chessboard.ResetChessboard();
-        ResetWinAnimation();
+        RouseEffectObj.gameObject.gameObject.SetActive(false);
+        Chessboard.winningEffect.Reset();
     }
 
     public void SetPlayerCard(FightCardData playerBase)
@@ -131,34 +130,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public IEnumerator ChallengerWinAnimation()
     {
         var opponentTransform = Chessboard.GetChessPos(17, false).transform;
-        boomUIObj.transform.position = opponentTransform.position;
-        fireUIObj.transform.position =
-            gongKeUIObj.transform.position = Chessboard.GetChessPos(7, false).transform.position;
-        yield return new WaitForSeconds(0.1f);
-        PlayAudio(91);
-        boomUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(0.5f);
-        //欢呼声
-        PlayAudio(90);
-
-        //火焰
-        fireUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(0.3f);
-        gongKeUIObj.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        boomUIObj.gameObject.SetActive(false);
-        fireUIObj.gameObject.SetActive(false);
-        gongKeUIObj.gameObject.SetActive(false);
+        yield return WinEffect.SetWin(opponentTransform, Chessboard.GetChessPos(7, false).transform);
         RouseEffectObj.gameObject.gameObject.SetActive(false);
         Time.timeScale = 1;
-    }
-
-    private void ResetWinAnimation()
-    {
-        boomUIObj.gameObject.SetActive(false);
-        fireUIObj.gameObject.SetActive(false);
-        gongKeUIObj.gameObject.SetActive(false);
-        RouseEffectObj.gameObject.gameObject.SetActive(false);
     }
 
     private Tween ChessboardPreAnimation()

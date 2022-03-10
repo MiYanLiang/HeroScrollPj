@@ -22,8 +22,14 @@ public class TapTapAntiAddict : MonoBehaviour
     //如果不使用 TapTap 快速认证,需要传入的玩家唯一标识 userIdentifier，由游戏自己定义。
     
     private string userIdentifier = null;//"玩家唯一标识";
+#if UNITY_EDITOR
+    private UnityAction callBackAction;
+#endif
     public void Init(UnityAction<AntiAddictionCallbackData> callbackHandler)
     {
+#if UNITY_EDITOR
+        callBackAction = () => callbackHandler.Invoke(new AntiAddictionCallbackData { code = 500 });
+#else
         AntiAddictionUIKit.Init(gameIdentifier, useTimeLimit, usePaymentLimit, showSwitchAccount,
             (antiAddictionCallbackData) => {
                 int code = antiAddictionCallbackData.code;
@@ -40,10 +46,19 @@ public class TapTapAntiAddict : MonoBehaviour
             },
             ShowMessage
         );
+#endif
     }
 
-    public void StartUp(string userIdentifier) => AntiAddictionUIKit.Startup(false, userIdentifier);
+    public void StartUp(string userIdentifier)
+    {
+#if UNITY_EDITOR
+        callBackAction.Invoke();
+#else
+        AntiAddictionUIKit.Startup(false, userIdentifier);
+#endif
+    }
 
+#if !UNITY_EDITOR
     void OnApplicationPause(bool pauseStatus)
     {
         if (!isLogged) return;
@@ -58,6 +73,7 @@ public class TapTapAntiAddict : MonoBehaviour
     {
         if(isLogged) AntiAddictionUIKit.Logout();
     }
+#endif
 
     private void ShowMessage(string message)
     {

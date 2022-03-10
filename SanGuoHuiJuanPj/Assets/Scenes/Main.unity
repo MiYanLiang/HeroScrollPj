@@ -61691,12 +61691,12 @@ MonoBehaviour:
   - {fileID: 754475147}
   - {fileID: 415719523}
   StartWarUi: {fileID: 1771876063}
-  EffectTransform: {fileID: 310203500}
   RouseAnim: {fileID: 1887339219}
   ShadyImage: {fileID: 218693698}
-  WinFire: {fileID: 6935696096329217368}
-  WinExplode: {fileID: 7299465675075469012}
-  WinText: {fileID: 4273484615944840926}
+  winningEffect:
+    WinExplode: {fileID: 7299465675075469012}
+    WinFire: {fileID: 6935696096329217368}
+    WinText: {fileID: 4273484615944840926}
   AutoRoundToggle: {fileID: 321068817}
   AutoRoundSlider: {fileID: 2104333014}
 --- !u!114 &1511754625

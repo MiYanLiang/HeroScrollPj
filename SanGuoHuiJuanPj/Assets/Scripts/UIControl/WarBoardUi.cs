@@ -25,6 +25,7 @@ public class WarBoardUi : MonoBehaviour
     [SerializeField] private NewWarManager NewWarManager;
     [SerializeField] private Text heroEnlistText; //武将上阵文本
     [SerializeField] AboutCardUi aboutCardUi; //阵上卡牌详情展示位
+    
     public UnityEvent<bool> OnGameSet = new GameSetEvent();
     private WarGameCardUi playerBaseObj { get; set; }
     private WarGameCardUi enemyBaseObj { get; set; }

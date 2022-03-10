@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
@@ -16,12 +17,11 @@ public class Chessboard : MonoBehaviour
     public ChessPos[] EnemyScope;
     //public Button StartButton;
     public StartWarUi StartWarUi;
-    public Transform EffectTransform;
     public Animator RouseAnim;
     public Image ShadyImage;
-    public Animator WinFire;
-    public Animator WinExplode;
-    public Animator WinText;
+
+    [SerializeField] public WinningEffect  winningEffect;
+    
     public Toggle AutoRoundToggle;
     public Slider AutoRoundSlider;
 
@@ -197,4 +197,44 @@ public class Chessboard : MonoBehaviour
     public void ResetStartWarUi() => StartWarUi.ResetUi();
 
     public void SetStartWarUi(UnityAction action) => StartWarUi.SetClickEvent(action);
+
+    [Serializable]public class WinningEffect
+    {
+        public Animator WinExplode;
+        public Animator WinFire;
+        public Animator WinText;
+
+        public IEnumerator SetWin(Transform baseTransform,Transform centerTransform)
+        {
+            WinExplode.transform.position = baseTransform.position;
+            WinFire.transform.position =
+                WinText.transform.position = centerTransform.position;
+            yield return new WaitForSeconds(0.1f);
+            PlayAudio(91);
+            WinExplode.gameObject.SetActive(true);
+            yield return new WaitForSeconds(0.5f);
+            //欢呼声
+            PlayAudio(90);
+
+            //火焰
+            WinFire.gameObject.SetActive(true);
+            yield return new WaitForSeconds(0.3f);
+            WinText.gameObject.SetActive(true);
+        }
+
+        public void Reset()
+        {
+            WinExplode.gameObject.SetActive(false);
+            WinFire.gameObject.SetActive(false);
+            WinText.gameObject.SetActive(false);
+        }
+
+        private void PlayAudio(int clipIndex)
+        {
+            if (clipIndex < 0) return;
+            if (WarMusicController.Instance == null || AudioController0.instance == null) return;
+            WarMusicController.Instance.PlayWarEffect(clipIndex);
+        }
+
+    }
 }

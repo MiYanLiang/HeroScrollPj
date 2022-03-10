@@ -8687,7 +8687,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1489624083
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12676,8 +12676,7 @@ MonoBehaviour:
   adAgent: {fileID: 8180386310278986558}
   Series: 00000000
   UnityRatio: 5
-  DoNewRatio: 2
-  IronSourceRatio: 2
+  PangleRatio: 2
   adEmu: {fileID: 6067863348520743986}
 --- !u!1 &924970853435059649
 GameObject:
