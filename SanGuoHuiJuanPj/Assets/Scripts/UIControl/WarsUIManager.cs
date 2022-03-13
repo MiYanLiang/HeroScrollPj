@@ -145,10 +145,11 @@ public class WarsUIManager : MonoBehaviour
             StartCoroutine(OnPlayerWin());
         });
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
-        WarBoard.OnRoundPause += () => waitForRoundStart = true;
+        WarBoard.OnRoundPause += OnRoundPause; 
         WarBoard.Chessboard.SetStartWarUi(OnRoundStartClick);
     }
 
+    private void OnRoundPause() => waitForRoundStart = true;
 
     IEnumerator Initialize()
     {

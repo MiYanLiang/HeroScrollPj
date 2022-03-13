@@ -5,6 +5,8 @@ using UnityEngine.Events;
 public class UnityAdController : AdControllerBase, IUnityAdsListener
 {
     private AdAgentBase.States status;
+    public override string StatusDetail => Status.ToString();
+
     public override AdAgentBase.States Status
     {
         get

@@ -47,7 +47,7 @@ public class WarBoardUi : MonoBehaviour
         ChessboardInputControl.Init(this);
         ChessboardManager.Init(Chessboard, JiBanManager);
         ChessboardManager.OnRoundStart += i => OnRoundStart?.Invoke(i);
-        OnRoundPause += () => IsDragDisable = false;
+        OnRoundPause += DragEnable;
         ChessboardManager.OnCardRemove.AddListener(OnCardRemove);
         OnGameSet.AddListener(playerWin =>
         {
@@ -55,6 +55,18 @@ public class WarBoardUi : MonoBehaviour
         });
         NewWarManager.Init(Chessboard);
         UiPool = new ObjectPool<WarGameCardUi>(() => PrefabManager.NewWarGameCardUi(Rack.ScrollRect.content));
+    }
+
+    private void DragEnable()
+    {
+        StartCoroutine(WaitForStartButton());
+
+        IEnumerator WaitForStartButton()
+        {
+            yield return new WaitUntil(() => !Chessboard.StartWarUi.IsBusy);
+            IsDragDisable = false;
+            Rack.ScrollRect.content.ForceUpdateRectTransforms();
+        }
     }
 
     //创建玩家卡牌

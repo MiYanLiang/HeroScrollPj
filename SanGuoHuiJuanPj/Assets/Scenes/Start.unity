@@ -7497,7 +7497,6 @@ MonoBehaviour:
   pianTouAudio: {fileID: 8300000, guid: a22aa5f519fba834ea1733f5e749eb92, type: 3}
   pianTouAudioVolume: 1
   EffectPoolManagerObj: {fileID: 1237228125}
-  isPlayedStory: 0
   StoryController: {fileID: 280852577}
 --- !u!114 &654977878
 MonoBehaviour:
@@ -27379,10 +27378,10 @@ RectTransform:
   m_Father: {fileID: 795570893}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -347.48816}
-  m_SizeDelta: {x: 0, y: -954.9763}
+  m_AnchorMin: {x: 0, y: 0.067718394}
+  m_AnchorMax: {x: 1, y: 0.5561481}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3146333416746245986
 MonoBehaviour:

@@ -7,6 +7,7 @@ public class MockController : AdControllerBase
     private UnityAction<bool, string> showAction;
     private UnityAction<bool, string> loadAction;
     public AdAgentBase adAgentBasePrefab;
+    public override string StatusDetail => Status.ToString();
     public override AdAgentBase.States Status => status;
     public AdAgentBase.States status;
     void Start()
