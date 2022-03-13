@@ -10,6 +10,7 @@ public class StartWarUi : MonoBehaviour
     [SerializeField] private Button Button;
     [SerializeField] private GameObject CircleFlicker;
     private bool isBusy = false;
+    public bool IsBusy => isBusy;
 
     public void Display(bool display)
     {

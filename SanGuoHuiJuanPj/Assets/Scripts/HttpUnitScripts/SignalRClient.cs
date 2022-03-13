@@ -43,14 +43,7 @@ public class SignalRClient : MonoBehaviour
 
     private void Awake()
     {
-        if (instance != null)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
+        instance = this;
     }
 
     private void Start()
@@ -115,9 +108,17 @@ public class SignalRClient : MonoBehaviour
     //}
     public async Task<SigninResult> RequestToken(int zone, int createNew)
     {
-        Zone = zone;
-        var response = await Http.PostAsync(Server.TokenLogin, Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew)));
-        return new SigninResult(response, await response.Content.ReadAsStringAsync());
+        try
+        {
+            Zone = zone;
+            var response = await Http.PostAsync(Server.TokenLogin,
+                Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew)));
+            return new SigninResult(response, await response.Content.ReadAsStringAsync());
+        }
+        catch (Exception)
+        {
+            return new SigninResult(SigninResult.SignInStates.Failed, 999, "登录失败，请检查网络或重新登录。", string.Empty);
+        }
     }
 
     public async Task<bool> TokenLogin(SignalRConnectionInfo connectionInfo)
@@ -534,6 +535,14 @@ public class SignalRClient : MonoBehaviour
         public int Code { get; set; }
         public string Message { get; set; }
         public string Content { get; set; }
+
+        public SigninResult(SignInStates state, int code, string message, string content)
+        {
+            State = state;
+            Code = code;
+            Message = message;
+            Content = content;
+        }
 
         public SigninResult(HttpResponseMessage response,string content)
         {

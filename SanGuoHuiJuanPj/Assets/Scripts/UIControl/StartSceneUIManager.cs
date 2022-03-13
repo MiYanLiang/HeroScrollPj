@@ -22,7 +22,6 @@ public class StartSceneUIManager : MonoBehaviour
     [SerializeField]
     EffectsPoolingControl EffectPoolManagerObj;   //特效组
     bool isJumping; //是否在跳转
-    public bool isPlayedStory;//是否已播放了剧情
     public GuideStoryUi StoryController;
     private void Awake()
     {
@@ -31,7 +30,6 @@ public class StartSceneUIManager : MonoBehaviour
             instance = this;
         }
         isJumping = false;
-        isPlayedStory = false;
     }
 
     public void Init()

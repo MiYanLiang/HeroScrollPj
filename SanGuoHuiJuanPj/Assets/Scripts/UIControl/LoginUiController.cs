@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
 using CorrelateLib;
+using Plugins.AntiAddictionUIKit;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -32,12 +33,14 @@ public class LoginUiController : MonoBehaviour
     public RetrievePasswordUi forgetPassword;
     public ResetAccountUi resetAccount;
     public UnityAction<string,string,int,int> OnLoggedInAction;
+    public UnityAction OnSignInAction;
     public UnityAction OnResetAccountAction;
     public Image busyPanel;
+    [SerializeField] private Image AddictPanel;
     public string DeviceIsBound = @"设备已绑定了账号，请用设备登录修改账号信息!";
     private static bool isDeviceLogin;
     public Dictionary<int,ServerListUi.ServerInfo> Servers { get; set; }
-
+    [SerializeField] private TapTapAntiAddict TtAa;
 
 #if UNITY_EDITOR
     void Start()
@@ -47,6 +50,7 @@ public class LoginUiController : MonoBehaviour
         OnResetAccountAction += () => XDebug.Log<LoginUiController>($"{nameof(OnResetAccountAction)} Invoke()!");
         OnAction(ActionWindows.Login);
     }
+
 #endif
 
     private Dictionary<ActionWindows, SignInBaseUi> _windowsObjs;
@@ -70,6 +74,32 @@ public class LoginUiController : MonoBehaviour
         }
     }
 
+    public void Init()
+    {
+        TtAa.Init(TapTapCallbackHandler);
+    }
+
+    private void TapTapCallbackHandler(AntiAddictionCallbackData arg)
+    {
+        AddictPanel.gameObject.SetActive(false);
+        var message = string.Empty;
+        switch (arg.code)
+        {
+            case 500:
+            {
+                DisplayServerList();
+                return;
+            }
+            case 1095: message = "未成年玩家限制。"; break;
+            case 1030: message = "未成年玩家当前无法进入游戏。"; break;
+            case 1000: message = "退出账号。"; break;
+            case 9002: message = "实名未完成。"; break;
+            case 1001: message = "账号点击了切换。"; break;
+            default: message = $"未知错误：{arg.code}"; break;
+        }
+        OnAction(ActionWindows.Login);
+        PlayerDataForGame.instance.ShowStringTips(message);
+    }
     public void OnAction(ActionWindows action)
     {
         if(!gameObject.activeSelf)
@@ -106,6 +136,7 @@ public class LoginUiController : MonoBehaviour
 
     private void InitServerList()
     {
+        OnSignInAction?.Invoke();
         serverList.gameObject.SetActive(true);
         serverList.backButton.onClick.AddListener(()=>OnAction(ActionWindows.Login));
         serverList.Set(Servers.Values.ToArray(), zone =>
@@ -171,7 +202,6 @@ public class LoginUiController : MonoBehaviour
             serverList.SetMessage(message);
         }
     }
-
 
     public void Close()
     {
@@ -346,7 +376,7 @@ public class LoginUiController : MonoBehaviour
             OnLoginPageErrorMessage(content);
             return;
         }
-        ProceedServerList(bag);
+        ProceedAntiAddict(bag);
         GamePref.SetUsername(login.username.text);
         GamePref.SetPassword(string.Empty);
     }
@@ -381,15 +411,23 @@ public class LoginUiController : MonoBehaviour
             return;
         }
         GamePref.SetPassword(login.password.text);
-        ProceedServerList(bag);
+        ProceedAntiAddict(bag);
     }
 
-    private void ProceedServerList(DataBag bag)
+    private void ProceedAntiAddict(DataBag bag)
     {
+        AddictPanel.gameObject.SetActive(true);
         SignalRClient.instance.LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
-        UpdateUsername(bag.Get<string>(2));
+        var username = bag.Get<string>(2);
+        UpdateUsername(username);
         Servers = list.ToDictionary(s => s.Zone, s => s);
+        TtAa.StartUp(username);
+    }
+
+    private void DisplayServerList()
+    {
+        AddictPanel.gameObject.SetActive(false);
         OnAction(ActionWindows.ServerList);
     }
 

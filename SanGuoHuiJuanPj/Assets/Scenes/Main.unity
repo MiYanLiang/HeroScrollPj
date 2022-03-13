@@ -28930,7 +28930,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Message: {fileID: 0}
-  QQKey: EWQip3HzKNPESwQ_0P7JvU_yGkTe0SlU
+  QQKey: Rb-uAH1GXBy2TgmrsHxIGGZlREBQRUXX
 --- !u!1 &663159738
 GameObject:
   m_ObjectHideFlags: 0
@@ -61691,12 +61691,12 @@ MonoBehaviour:
   - {fileID: 754475147}
   - {fileID: 415719523}
   StartWarUi: {fileID: 1771876063}
-  EffectTransform: {fileID: 310203500}
   RouseAnim: {fileID: 1887339219}
   ShadyImage: {fileID: 218693698}
-  WinFire: {fileID: 6935696096329217368}
-  WinExplode: {fileID: 7299465675075469012}
-  WinText: {fileID: 4273484615944840926}
+  winningEffect:
+    WinExplode: {fileID: 7299465675075469012}
+    WinFire: {fileID: 6935696096329217368}
+    WinText: {fileID: 4273484615944840926}
   AutoRoundToggle: {fileID: 321068817}
   AutoRoundSlider: {fileID: 2104333014}
 --- !u!114 &1511754625
@@ -86074,7 +86074,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -19.999996}
+  m_AnchoredPosition: {x: 0, y: -20}
   m_SizeDelta: {x: -17, y: -37.000008}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2122406694
@@ -138080,7 +138080,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7121266005235607463
 RectTransform:
   m_ObjectHideFlags: 0

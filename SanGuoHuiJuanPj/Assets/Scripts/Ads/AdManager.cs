@@ -15,51 +15,60 @@ public class AdManager : AdControllerBase
     [Serializable]public enum Ads
     {
         Unity,
-        //DoNew,
-        //IronSource,
-        //Admob,
-        //MoPub,
+        Pangle
     }
 
     public AdAgentBase adAgent;
     private bool isInit;
+    public bool IsInit => isInit;
+
+    public Ads Current => PangleController.Status == AdAgentBase.States.Loaded ? Ads.Pangle : Ads.Unity;
+
     public AdAgentBase AdAgent => adAgent;
     //public DoNewAdController DoNewAdController { get; private set; }
     //public AdmobController AdmobController { get; private set; }
     public UnityAdController UnityAdController { get; private set; }
     //public MoPubController MoPubController { get; private set; }
     //public IronSourceController IronSourceController { get; private set; }
+    public override string StatusDetail => Status.ToString();
+
     public override AdAgentBase.States Status => AdAgentBase.States.Loaded;
-    [Header("广告播放顺序")]public Ads[] Series;
-    [Header("广告源比率")]
-    public int UnityRatio = 5;
-    //public int AdmobRatio = 1;
-    public int DoNewRatio = 2;
-    //public int MoPubRatio = 1;
-    public int IronSourceRatio = 2;
-    private QueueByRatio<AdControllerBase> Queue;
+    //[Header("广告播放顺序")]public Ads[] Series;
+    [Header("广告源比率")] [SerializeField] private AdField[] AdFields;
+    //public int UnityRatio = 1;
+    //public int PangleRatio = 2;
 
-    private Dictionary<Ads, (int, AdControllerBase)> Controllers
+    [Serializable]private class AdField
     {
-        get
+        public Ads Ad;
+        public int Ratio;
+    }
+    private AdControllerBase InstanceAdControllerType(Ads fieldAd)
+    {
+        switch (fieldAd)
         {
-            if (_controllers == null)
+            case Ads.Unity:
             {
-                _controllers = new Dictionary<Ads, (int, AdControllerBase)>
-                {
-                    {Ads.Unity, (UnityRatio, UnityAdController)},
-                    //{Ads.IronSource,(IronSourceRatio,IronSourceController)},
-                    //{Ads.DoNew, (DoNewRatio, DoNewAdController)}
-                    //{Ads.Admob, (AdmobRatio, AdmobController)},
-                    //{Ads.MoPub, (MoPubRatio, MoPubController)},
-                };
+                var ad = gameObject.AddComponent<UnityAdController>();
+                UnityAdController = ad;
+                ad.Name = Ads.Unity.ToString();
+                ad.Init();
+                return ad;
             }
-
-            return _controllers;
+            case Ads.Pangle:
+            {
+                var ad = gameObject.AddComponent<PangleAdController>();
+                PangleController = ad;
+                ad.Name = Ads.Pangle.ToString();
+                ad.Init();
+                return ad;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(fieldAd), fieldAd, null);
         }
     }
 
-    private Dictionary<Ads, (int,AdControllerBase)> _controllers;
+    public PangleAdController PangleController { get; set; }
 
 #if UNITY_EDITOR
     public EditorAdEmu adEmu;
@@ -70,19 +79,8 @@ public class AdManager : AdControllerBase
         if (isInit) throw XDebug.Throw<AdManager>("Duplicate init!");
         //if (AdAgentBase.instance != null) return;
         isInit = true;
-        //DoNewAdController = gameObject.AddComponent<DoNewAdController>();
-        //DoNewAdController.Init();
-        //IronSourceController = gameObject.AddComponent<IronSourceController>();
-        //IronSourceController.Init();
-        //AdmobController = gameObject.AddComponent<AdmobController>();
-        //AdmobController.Init(AdmobRetryCallBack);
-        UnityAdController = gameObject.AddComponent<UnityAdController>();
-        UnityAdController.Init();
-        //MoPubController = gameObject.AddComponent<MoPubController>();
-        //MoPubController.Init();
-        Queue = new QueueByRatio<AdControllerBase>(
-            Series.Join(Controllers,ad=>ad,c=>c.Key,(_,c)=>c.Value).ToArray()
-        );
+        InstanceAdControllerType(Ads.Pangle);
+        InstanceAdControllerType(Ads.Unity);
         AdAgent?.Init(this);
 #if !UNITY_EDITOR
         StartCoroutine(NextSecondRequestCache());
@@ -92,88 +90,54 @@ public class AdManager : AdControllerBase
     private IEnumerator NextSecondRequestCache()
     {
         yield return new WaitForSeconds(1);
-        //ControllersAdResolve();
+        ControllersAdResolve();
     }
 
     public override void RequestShow(UnityAction<bool, string> requestAction)
     {
 #if UNITY_EDITOR
         adEmu.Set(requestAction);
-        if(adEmu!=null)return;
+        if (adEmu != null) return;
 #endif
-        //admobRetryCount = 0;
-        var controller = Queue.Dequeue();
-        var count = 0;
-        if (controller.Status != AdAgentBase.States.Loaded)
+
+        AdControllerBase controller = PangleController;
+        if (controller.Status == AdAgentBase.States.Loaded)
+            controller.RequestShow(PangleRequestCallback);
+        else PangleController.LoadDirectRewardAd(PangleRequestCallback);
+
+
+        void PangleRequestCallback(bool success, string msg)
         {
-            do
+            if (success)
             {
-                controller = Queue.Dequeue();
-                count++;
-                if (count < 10) continue;//如果广告控制器未重复会一直找
-                //DoNewAdController.RequestDirectShow(requestAction);
-                //ControllersAdResolve();
-                //requestAction.Invoke(false, "无广告源!");//广告控制器重复了
+                requestAction?.Invoke(true, string.Empty);
+                ControllersAdResolve();
                 return;
-            } while (controller.Status != AdAgentBase.States.Loaded); //循环直到到下一个已准备的广告源
-            //ControllersAdResolve();
+            }
+
+            controller = UnityAdController;
+            controller.RequestShow((s, m) =>
+            {
+                requestAction?.Invoke(s, m);
+                ControllersAdResolve();
+            });
         }
-        //PlayerDataForGame.instance.ShowStringTips($"广告源:{Controllers.First(c=>c.Value.Item2 == controller).Key}");
-        controller.RequestShow((success, msg) =>
-        {
-            requestAction(success, msg);
-            //ControllersAdResolve();
-        });
     }
+
 
     public override void RequestLoad(UnityAction<bool, string> loadingAction) => loadingAction(true, string.Empty);
 
-    //private void ControllersAdResolve()
-    //{
-    //    if (DoNewAdController.Status == AdAgentBase.States.Closed ||
-    //        DoNewAdController.Status == AdAgentBase.States.FailedToLoad ||
-    //        DoNewAdController.Status == AdAgentBase.States.None) DoNewAdController.RequestLoad(null);
-    //    // if(AdmobController.Status == AdAgentBase.States.Closed ||
-    //    //    AdmobController.Status == AdAgentBase.States.FailedToLoad ||
-    //    //    AdmobController.Status == AdAgentBase.States.None)
-    //    //     AdmobController.OnLoadAd(AdmobRetryCallBack);
-    //    // if(MoPubController.Status == AdAgentBase.States.Closed ||
-    //    //    MoPubController.Status == AdAgentBase.States.FailedToLoad ||
-    //    //    MoPubController.Status == AdAgentBase.States.None) MoPubController.RequestLoad(null);
-    //}
-}
-
-/// <summary>
-/// 根据比率排队类
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public class QueueByRatio<T>
-{
-    private Dictionary<T, int> data;
-    private Queue<T> queue;
-    public int Count => queue.Count;
-    public T Current { get; private set; }
-
-    public QueueByRatio(params (int, T)[] controllers)
+    private void ControllersAdResolve()
     {
-        data = controllers.ToDictionary(c => c.Item2, c => c.Item1);
-        queue = new Queue<T>(controllers.Select(c => c.Item2));
+        PangleResolve(PangleController);
     }
 
-    private List<T> SetQueue()
+    private void PangleResolve(AdControllerBase controller)
     {
-        var max = data.Values.Max();
-        var list = new List<T>();
-        for (var i = 0; i < max; i++)
-            list.AddRange(data.Where(item => item.Value > i).Select(item => item.Key));
-        return list;
-    }
-
-    public T Dequeue(bool forceChange = false)
-    {
-        if (queue.Count == 0)
-            queue = new Queue<T>(SetQueue());
-        Current = queue.Dequeue();
-        return Current;
+        var adController = (PangleAdController)controller;
+        if (adController.Status == AdAgentBase.States.None ||
+            adController.Status == AdAgentBase.States.Closed ||
+            adController.Status == AdAgentBase.States.FailedToLoad)
+            adController.RequestLoad(adController.OnRequestLoadResult);
     }
 }

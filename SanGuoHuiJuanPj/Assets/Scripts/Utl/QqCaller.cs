@@ -31,7 +31,7 @@ public class QqCaller : MonoBehaviour
     //        return false;
     //    }
     //}
-    [SerializeField] private string QQKey = "EWQip3HzKNPESwQ_0P7JvU_yGkTe0SlU";
+    [SerializeField] private string QQKey = "Rb-uAH1GXBy2TgmrsHxIGGZlREBQRUXX";
     private AndroidJavaClass unityPlayerJavaClass;
     private AndroidJavaObject qqJo;
 

@@ -20,6 +20,8 @@ public class GuideStoryUi : MonoBehaviour
     [SerializeField] private WarBoardUi warBoard;
     [SerializeField] private Image GuidePanel; //指引档板
     [SerializeField] private Text[] GuideTexts;//引导文本
+    [Header("指示显示间隔")][SerializeField] private float GuideTextInterval = 1f;
+    [Header("指示渐变时间")][SerializeField] private float GuideTextFading = 1f;
     private List<string[]> barragesList;
 
     public void BeginStory()
@@ -267,6 +269,7 @@ public class GuideStoryUi : MonoBehaviour
     /// </summary>
     public void PlayStoryIntro()
     {
+        PanelAnimation.gameObject.SetActive(false);
         var guide = DataTable.Guide[storyIndex];
         if(!Story.Background.gameObject.activeSelf)
             Story.Background.gameObject.SetActive(true);
@@ -274,36 +277,37 @@ public class GuideStoryUi : MonoBehaviour
         StartCoroutine(PlayStory(guide));
     }
 
-    private bool isStoryTextComplete = false;
+    [SerializeField] private Animation PanelAnimation;
+    [Header("遮罩动画时间")][SerializeField] private float PanelSec = 5f;
     private IEnumerator PlayStory(GuideTable guide)
     {
-        isStoryTextComplete = false;
         Story.Intro.text = string.Empty;
         Story.ClickToContinue.gameObject.SetActive(false);
         yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
+        PanelAnimation.gameObject.SetActive(true);
         Story.Intro.gameObject.SetActive(true);
         Story.TitleObj.gameObject.SetActive(true);
         Story.MoonObj.gameObject.SetActive(true);
         //播放片头弹幕
-
-        DOTween.Sequence()
-            .Append(Story.Intro.DOFade(1, 5f))
-            .Join(Story.Intro.DOText(guide.Intro, 8f).SetEase(Ease.Linear))
-            .AppendCallback(() => isStoryTextComplete = true);
-        Story.Intro.color = new Color(Story.Intro.color.r, Story.Intro.color.g, Story.Intro.color.b, 0);
+        Story.Intro.text = guide.Intro;
+        Story.Intro.gameObject.SetActive(true);
+        PanelAnimation.Play(PlayMode.StopAll);
         StartCoroutine(ShowBarrageForStory(storyIndex - 1));
         if (!isShowFHDM)
         {
             StartCoroutine(ShowFeiHuaBarrage());
             isShowFHDM = true;
         }
-        yield return new WaitUntil(() => isStoryTextComplete);
+
+        yield return new WaitForSeconds(PanelSec);
+        PanelAnimation.gameObject.SetActive(false);
         InitWarboard(guide);
-        //guideStoryObj.transform.GetChild(1).gameObject.SetActive(true);
-        //guideStoryObj.transform.GetChild(2).gameObject.SetActive(true);
         Story.Button.onClick.RemoveAllListeners();
         if (guide.Id > 2)
-            Story.Button.onClick.AddListener(StartSceneToServerCS.instance.PromptLoginWindow);
+        {
+            GamePref.SetIsPlayedIntro(true);
+            Story.Button.onClick.AddListener(() => GameSystem.LoginUi.gameObject.SetActive(true));
+        }
         else Story.Button.onClick.AddListener(OnStartWarboard);
         Story.Button.enabled = true;
         Story.ClickToContinue.gameObject.SetActive(true);
@@ -350,16 +354,14 @@ public class GuideStoryUi : MonoBehaviour
 
     private IEnumerator PlayGuideTexts()
     {
-        var texts = new List<string>();
-        for (var i = 0; i < GuideTexts.Length; i++)
+        for (int i = 0; i < GuideTexts.Length; i++) GuideTexts[i].gameObject.SetActive(false);
+        for (int i = 0; i < GuideTexts.Length; i++)
         {
-            texts.Add(GuideTexts[i].text);
-            GuideTexts[i].text = string.Empty;
-        }
-        for (var i = 0; i < GuideTexts.Length; i++)
-        {
-            var text = GuideTexts[i];
-            yield return text.DOText(texts[i], 3.5f).WaitForCompletion();
+            yield return new WaitForSeconds(GuideTextInterval);
+            var textUi = GuideTexts[i];
+            yield return textUi.DOFade(0, 0).WaitForCompletion();
+            textUi.gameObject.SetActive(true);
+            yield return textUi.DOFade(1, GuideTextFading).WaitForCompletion();
         }
     }
 
