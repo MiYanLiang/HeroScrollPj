@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 public class StoryEventUIController : MonoBehaviour
 {
     public List<StoryEventPoint> storyEventPoints;
-    public List<GameObject> eventTypePrefabs;
+    public List<BaYeStoryUi> eventTypePrefabs;
     [Header("对应上面事件的音效，-1为为随机古筝，其余负数为无音效。")]
     public List<int> eventTypeAudioIds;
     private Dictionary<int, StoryEventPoint> points;
@@ -33,9 +33,21 @@ public class StoryEventUIController : MonoBehaviour
             point.gameObject.SetActive(isContainEvent);
             if (!isContainEvent) continue;
             var sEvent = storyMap[i];
-            point.content = Instantiate(eventTypePrefabs[sEvent.Type - 1],point.transform);//由于0为无事件，所以第一个是事件1的图标
+            var eventIndex = sEvent.Type - 1;//由于0为无事件，所以第一个是事件1的图标
+            point.content = Instantiate(eventTypePrefabs[eventIndex],point.transform);
+            if (sEvent.Type == 3) //如果是战斗事件
+            {
+                InitWarEventUi(point.content,sEvent.WarId);
+            }
             points.Add(i, point);
         }
+    }
+
+    private void InitWarEventUi(BaYeStoryUi baYeStoryUi, int warId)
+    {
+        var ui = (BaYeWarStoryUi)baYeStoryUi;
+        var (level, color) = BaYeManager.instance.StoryWarEventMap[warId];
+        ui.Set(level, color);
     }
 
     [SkipRename]public void OnStoryEventClick(int eventPoint)
@@ -46,7 +58,7 @@ public class StoryEventUIController : MonoBehaviour
         if ((BaYeManager.StoryEventTypes) sEvent.Type == BaYeManager.StoryEventTypes.讨伐)
             return; //讨伐事件ui在第一次点击是不会销毁的。
         var point = points[eventPoint];
-        Destroy(point.content);
+        Destroy(point.content.gameObject);
         point.gameObject.SetActive(false);
     }
 

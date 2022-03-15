@@ -31,6 +31,7 @@ public class BaYeManager : MonoBehaviour
     [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
     private Dictionary<int, int[]> eventPointAndStoriesMap;//数据表缓存
+    public Dictionary<int,(int level,Color color)> StoryWarEventMap { get; set; }
     public bool isShowTips;//是否弹出文字
     public string tipsText;//弹出文字内容
 
@@ -68,8 +69,18 @@ public class BaYeManager : MonoBehaviour
             };
             GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
         }
+
+        InitStoryWarEventMap();
         InitBaYeMap();
     }
+
+    private void InitStoryWarEventMap()
+    {
+        StoryWarEventMap = new Dictionary<int, (int level, Color color)>();
+        foreach (var o in WarEventLevel.SelectMany(e=> e.Ids.Select(id=>new{warId=id,e.Level,e.Color})))
+            StoryWarEventMap.Add(o.warId, (o.Level, o.Color));
+    }
+
 
     private void InitBaYeMap()
     {
@@ -459,6 +470,7 @@ public class BaYeManager : MonoBehaviour
     [Serializable]private class BaYeWarEventLevel
     {
         public int Level;
+        public Color Color;
         public int[] Ids;
     }
 }
