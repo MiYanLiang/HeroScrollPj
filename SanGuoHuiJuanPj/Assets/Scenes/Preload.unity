@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0.99999946, b: 0.99999946, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -14956,6 +14956,7 @@ MonoBehaviour:
   infoText: {fileID: 924970854793873325}
   loadingImg: {fileID: 924970853729144635}
   lastSenceIndex: 0
+  BaYeManager: {fileID: 924970854784821912}
   textTipsObj: {fileID: 924970853213344148}
   selectedBaYeEventId: 0
   selectedCity: 0
@@ -14971,6 +14972,7 @@ GameObject:
   - component: {fileID: 924970854784821907}
   - component: {fileID: 924970854784821908}
   - component: {fileID: 924970854784821906}
+  - component: {fileID: 924970854784821912}
   m_Layer: 0
   m_Name: PlayerSaveData
   m_TagString: Untagged
@@ -14978,6 +14980,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &924970854784821912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 924970854784821911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0445d753ef0dfd3408e47b1211e90465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BaYeGoldDefault: 30
+  BaYeMaxGold: 75
+  WarEventLevel: []
+  isShowTips: 0
+  tipsText: 
 --- !u!224 &924970854793873320
 RectTransform:
   m_ObjectHideFlags: 0

@@ -126,7 +126,7 @@ public class PlayerDataForGame : MonoBehaviour
 
     public WarReward WarReward { get; set; }
     public StaminaCost CurrentStaCost { get; private set; }
-    public BaYeManager BaYeManager { get; set; }
+    public BaYeManager BaYeManager;
     public bool IsCompleteLoading { get; private set; }
     public int AdPass => pyData.AdPass;
     public int MilitaryPower => GetCards(false).Sum(c => c.Power());

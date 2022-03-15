@@ -28,6 +28,7 @@ public class BaYeManager : MonoBehaviour
 
     public int BaYeGoldDefault = 30; //霸业初始金币
     public int BaYeMaxGold = 75; //霸业金币上限
+    [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
     private Dictionary<int, int[]> eventPointAndStoriesMap;//数据表缓存
     public bool isShowTips;//是否弹出文字
@@ -48,7 +49,7 @@ public class BaYeManager : MonoBehaviour
             Destroy(this);
     }
 
-    public void Init()
+    public void InitBaYe()
     {
         var baYe = GamePref.GetBaYe;
         PlayerDataForGame.instance.baYe = baYe;
@@ -455,4 +456,9 @@ public class BaYeManager : MonoBehaviour
     }
 
     public void CacheCurrentStoryEvent() => CachedStoryEvent = PlayerDataForGame.instance.baYe.storyMap[CurrentEventPoint];
+    [Serializable]private class BaYeWarEventLevel
+    {
+        public int Level;
+        public int[] Ids;
+    }
 }

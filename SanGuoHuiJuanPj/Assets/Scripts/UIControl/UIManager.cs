@@ -113,6 +113,7 @@ public class UIManager : MonoBehaviour
     Text baYeGoldNumText;   //霸业金币数量 
 
     [SerializeField] private EventUiController EventUi;
+
     private void Awake()
     {
         if (instance == null)
@@ -137,8 +138,9 @@ public class UIManager : MonoBehaviour
         if (PlayerDataForGame.instance.BaYeManager == null)
         {
             PlayerDataForGame.instance.BaYeManager = PlayerDataForGame.instance.gameObject.AddComponent<BaYeManager>();
-            PlayerDataForGame.instance.BaYeManager.Init();
         }
+
+        PlayerDataForGame.instance.BaYeManager.InitBaYe();
 
         taoYuan.Init();
 
@@ -783,7 +785,7 @@ public class UIManager : MonoBehaviour
                 if (!isPlayerEnoughLevel) break;
                 if (!SystemTimer.IsToday(PlayerDataForGame.instance.baYe.lastBaYeActivityTime))
                 {
-                    BaYeManager.instance.Init();
+                    BaYeManager.instance.InitBaYe();
                     InitBaYeFun();
                 }
 
