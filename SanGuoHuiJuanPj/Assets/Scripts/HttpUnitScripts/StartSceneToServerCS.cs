@@ -73,16 +73,16 @@ public class StartSceneToServerCS : MonoBehaviour
 #if UNITY_EDITOR
         if(GameSystem.Instance.ForcePlayStory)
         {
-            GamePref.SetPrefWarSpeed(1);
             GamePref.SetIsPlayedIntro(false);
         }
 #endif
         //如果有存档或初始剧情已播或是用户名已注册，不播剧情
-        var playedIntro = GamePref.IsPlayedIntro || GamePref.PrefWarSpeed > 1;
+        var playedIntro = GamePref.IsPlayedIntro || GamePref.PrefWarSpeed > 1.5f;
         GameSystem.LoginUi.OnLoggedInAction += OnLoggedIn;
 
         if (playedIntro) return;
 
+        GamePref.SetPrefWarSpeed(1.5f);
         StartSceneUIManager.instance.StoryController.BeginStory();
     }
 

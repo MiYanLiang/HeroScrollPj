@@ -95,8 +95,8 @@ public class JinNangUI: MonoBehaviour
         UIManager.instance.PlayOnClickMusic();
         //背景按钮无效
         var re = vb.GetResourceDto();
-        var player = vb.GetPlayerDataDto();
-        ConsumeManager.instance.SaveChangeUpdatePlayerData(player);
+        playerDataDto = vb.GetPlayerDataDto();
+        ConsumeManager.instance.SaveChangeUpdatePlayerData(playerDataDto);
         DisplayReward(re.YuanBao * 2, re.Stamina * 2);
         continueBtn.enabled = true;
         AdConsume.Off();

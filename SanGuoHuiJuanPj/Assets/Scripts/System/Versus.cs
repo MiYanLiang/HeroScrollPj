@@ -369,7 +369,7 @@ public class Versus : MonoBehaviour
         if (!isActive)
         {
             EffectsPoolingControl.instance.ResetPools();
-            Time.timeScale = 1f;
+            Time.timeScale = 1.5f;
             AudioController1.instance.FadeEndMusic();
             WarBoard.OnRoundStart -= OnEveryRound;
             roundUi.Off();

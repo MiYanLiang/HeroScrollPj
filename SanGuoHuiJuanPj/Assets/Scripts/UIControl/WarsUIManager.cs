@@ -312,7 +312,7 @@ public class WarsUIManager : MonoBehaviour
     //战役结束
     public void ExpeditionFinalize(bool isWin)
     {
-        Time.timeScale = 1;
+        Time.timeScale = 1f;
         var reward = PlayerDataForGame.instance.WarReward;
         if (isWin)
         {
