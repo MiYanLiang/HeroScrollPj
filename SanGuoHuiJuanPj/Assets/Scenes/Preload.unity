@@ -15010,6 +15010,21 @@ MonoBehaviour:
   - Level: 5
     Color: {r: 1, g: 0.15686275, b: 0, a: 1}
     Ids: bd0b0000
+  - Level: 6
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: be0b0000
+  - Level: 7
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: bf0b0000
+  - Level: 8
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c00b0000
+  - Level: 9
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c10b0000
+  - Level: 10
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c20b0000
   isShowTips: 0
   tipsText: 
 --- !u!224 &924970854793873320
