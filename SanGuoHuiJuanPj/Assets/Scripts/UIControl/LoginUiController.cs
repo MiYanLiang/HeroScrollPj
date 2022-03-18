@@ -48,7 +48,7 @@ public class LoginUiController : MonoBehaviour
         OnLoggedInAction += (username, password,arrangement, newReg) =>
             XDebug.Log<LoginUiController>($"{nameof(OnLoggedInAction)} Invoke({username},{password},{arrangement},{newReg})!");
         OnResetAccountAction += () => XDebug.Log<LoginUiController>($"{nameof(OnResetAccountAction)} Invoke()!");
-        OnAction(ActionWindows.Login);
+        //OnAction(ActionWindows.Login);
     }
 
 #endif
