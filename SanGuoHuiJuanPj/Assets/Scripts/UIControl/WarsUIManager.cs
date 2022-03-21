@@ -35,7 +35,7 @@ public class WarsUIManager : MonoBehaviour
     public Dictionary<int, GameStage> StagesMap { get; } = new Dictionary<int, GameStage>();
     [SerializeField] float percentReturnHp; //回春回血百分比
 
-    public int baYeDefaultLevel = 3;
+    public int baYeCityLevel = 1;
     public int cityLevel = 1; //记录城池等级
     public int goldForCity; //记录城池金币
     private int battleId = -1;
@@ -168,7 +168,7 @@ public class WarsUIManager : MonoBehaviour
                 break;
             case PlayerDataForGame.WarTypes.Baye:
                 GoldForCity = PlayerDataForGame.instance.baYe.gold;
-                cityLevel = baYeDefaultLevel;
+                cityLevel = baYeCityLevel;
                 break;
             case PlayerDataForGame.WarTypes.None:
                 throw XDebug.Throw<WarsUIManager>($"未确认战斗类型[{PlayerDataForGame.WarTypes.None}]，请在调用战斗场景前预设战斗类型。");
