@@ -58,6 +58,9 @@ public class DataTable : MonoBehaviour
         public static IReadOnlyDictionary<int,PlayerNicknameTable>PlayerNickname{get;set;}
         public static IReadOnlyDictionary<int,PlayerSignTable>PlayerSign{get;set;}
         public static IReadOnlyDictionary<int,DirtyWordTable>DirtyWord{get;set;}
+        public static IReadOnlyDictionary<int,BaYeCityStoryTable> BaYeCityStory { get;set;}
+        public static IReadOnlyDictionary<int,BaYeCityOptionTable> BaYeCityOption { get; set; }
+        public static IReadOnlyDictionary<int,BaYeCityResultTable> BaYeCityResult { get; set; }
 
         public TextAsset PlayerInitialConfigTable;
         public TextAsset ResourceConfigTable;
@@ -100,9 +103,13 @@ public class DataTable : MonoBehaviour
         public TextAsset PlayerNicknameTable;
         public TextAsset PlayerSignTable;
         public TextAsset DirtyWordTable;
+        public TextAsset BaYeCityStoryTable;
+        public TextAsset BaYeCityOptionTable;
+        public TextAsset BaYeCityResultTable;
 
-        //private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
-        private void Awake()
+
+    //private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
+    private void Awake()
         {
             if (instance != null && instance != this)
             {
@@ -157,6 +164,9 @@ public class DataTable : MonoBehaviour
             PlayerNickname = NewConvert(PlayerNicknameTable.text, l => new PlayerNicknameTable(l));
             PlayerSign = NewConvert(PlayerSignTable.text, l => new PlayerSignTable(l));
             DirtyWord = NewConvert(DirtyWordTable.text, l => new DirtyWordTable(l));
+            BaYeCityStory= NewConvert(BaYeCityStoryTable.text, l => new BaYeCityStoryTable(l));
+            BaYeCityOption= NewConvert(BaYeCityOptionTable.text, l => new BaYeCityOptionTable(l));
+            BaYeCityResult= NewConvert(BaYeCityResultTable.text, l => new BaYeCityResultTable(l));
         }
 
         private static Dictionary<int, T> NewConvert<T>(string text,Func<IList<string>,T> func)

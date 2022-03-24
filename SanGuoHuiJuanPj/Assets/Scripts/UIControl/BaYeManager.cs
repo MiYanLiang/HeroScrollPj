@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -41,6 +43,7 @@ public class BaYeManager : MonoBehaviour
     public EventTypes CurrentEventType { get; private set; }//当前事件类型
     public int CurrentEventPoint { get; private set; }//当前事件点
     public BaYeStoryEvent CachedStoryEvent { get; private set; }//当前缓存的故事事件
+    private List<CityStory> CityStories { get; set; } = new List<CityStory>(); //城池故事事件
 
     void Awake()
     {
@@ -87,7 +90,6 @@ public class BaYeManager : MonoBehaviour
         var typeName = nameof(BaYeManager);
         try
         {
-
             //初始化城池
             map = DataTable.BaYeCity.Values.Select(city =>
             {
@@ -95,7 +97,7 @@ public class BaYeManager : MonoBehaviour
                 var baYeEventId = city.BaYeCityEventTableIds.Select(id =>
                     new BaYeEventWeightElement(id, DataTable.BaYeCityEvent[id].Weight)).PickOrDefault().Id;
                 //根据地图获取对应的事件id列表，并根据权重随机获取一个事件id
-                var baYeEvent = GetBaYeEvent(baYeEventId, cityId);
+                var baYeEvent = GetBaYeCityBattleEvent(baYeEventId, cityId);
                 return new BaYeCityEvent
                     {CityId = cityId, EventId = baYeEventId, ExpList = baYeEvent.ExpList, WarIds = baYeEvent.WarIds};
             }).ToList(); //根据权重随机战役id
@@ -148,11 +150,81 @@ public class BaYeManager : MonoBehaviour
             GenerateBaYeStoryEvents(); //刷新霸业事件
     }
 
+    private CityStory[] GenerateBaYeCityStories(int[] cityIds)
+    {
+        var stories = DataTable.BaYeCityStory.Values.Select(s => s).ToArray();
+        var cityStories = new CityStory[cityIds.Length];
+        for (var i = 0; i < cityIds.Length; i++)
+        {
+            var id = cityIds[i];
+            var story = stories.Select(s => InstanceWeightElement(s, s.Weight)).PickOrDefault()?.Obj;
+            if (story == null || story.StoryType == 0) continue; //无事件略过
+
+            var cityStory = InstanceCityStory(id, story.Id);
+            cityStories[i] = cityStory;
+            //读取霸业城池故事Id，生成霸业城池故事
+        }
+        return cityStories;
+
+        WeightElement<T> InstanceWeightElement<T>(T obj,int weight)
+        {
+            var e = new WeightElement<T>();
+            e.Obj = obj;
+            e.Weight = weight;
+            return e;
+        }
+    }
+
+    public CityStory InstanceCityStory(int cityId, int storyId)
+    {
+        var resultData = DataTable.BaYeCityResult;
+        var story = DataTable.BaYeCityStory[storyId];
+        if (story.StoryType == 2)
+        {
+            var results = resultData.Join(story.OpsInts, r => r.Key, i => i, (r, _) => r.Value).ToArray();
+            var result = results.Select(InstanceCityResult).ToArray();
+
+            return new CityStory(story.Id, cityId, story.Title, story.Intro, result);
+        }
+
+        var ops = DataTable.BaYeCityOption.Join(story.OpsInts, t => t.Key, id => id, (t, _) => t.Value).ToArray();
+        var options = ops.Select(o =>
+        {
+            var zhanLing = InstanceZhanLing(o.Ling);
+            var results = resultData.Join(o.ResultIds, r => r.Key, i => i, (r, _) => r.Value).Select(InstanceCityResult).ToArray();
+            return new CityStory.CityOption(o.Title, results, o.Gold,  zhanLing , o.AdFree > 0);
+        }).ToArray();
+        return new CityStory(story.Id, cityId, story.Title, story.Intro, options);
+    }
+
+    private CityStory.CityResult InstanceCityResult(BaYeCityResultTable r)
+    {
+        var ling = InstanceZhanLing(r.Ling);
+        return new CityStory.CityResult(r.Weight, r.Brief, r.Gold, ling, r.Exp, r.Progress);
+    }
+
+    private CityStory.ZhanLing[] InstanceZhanLing(int[][] arg)
+    {
+        
+        return arg.Select(a =>
+        {
+            var force = a[0];
+            if(a[0]<0) DataTable.Force.Keys.OrderBy(_ => SysTime.Random.Next(100)).First();
+
+            return new CityStory.ZhanLing(force, a[1]);
+        }).ToArray();
+    }
+
+
     /// <summary>
     /// 刷新霸业故事事件
     /// </summary>
     public void GenerateBaYeStoryEvents()
     {
+        var baYe = PlayerDataForGame.instance.baYe;
+        //霸业城池故事事件
+        var cityStories = GenerateBaYeCityStories(map.Select(c=>c.CityId).ToArray());
+        baYe.cityStories = cityStories.ToDictionary(c => c.CityId, c => c.StoryId);
         //获取玩家等级可开启的事件点id列表
         //获取每个故事id的权重
         //根据权重随机故事事件(story)id
@@ -178,7 +250,7 @@ public class BaYeManager : MonoBehaviour
                 };
             })
             .ToDictionary(e => e.point, e => e.storyEvents.PickOrDefault());
-        PlayerDataForGame.instance.baYe.storyMap = eventPointStoryMap.ToDictionary(m => m.Key, m =>
+        baYe.storyMap = eventPointStoryMap.ToDictionary(m => m.Key, m =>
         {
             var story = m.Value;
             var warId = DataTable.BaYeStoryEvent[story.Id].WarId;
@@ -196,9 +268,8 @@ public class BaYeManager : MonoBehaviour
                 ZhanLing = GetZhanLing(amount,story.ZhanLingRange.Item1, story.ZhanLingRange.Item2)
             };
         }).ToDictionary(kv => kv.Key, kv => kv.Value);
-        PlayerDataForGame.instance.baYe.lastStoryEventsRefreshHour =
-            SystemTimer.instance.Now.Date.AddHours(SystemTimer.instance.Now.Hour);
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+        baYe.lastStoryEventsRefreshHour = SystemTimer.instance.Now.Date.AddHours(SystemTimer.instance.Now.Hour);
+        GamePref.SaveBaYe(baYe);
         UIManager.instance.storyEventUiController.ResetUi();
         if(GameSystem.CurrentScene == GameSystem.GameScene.MainScene)
         {
@@ -271,7 +342,7 @@ public class BaYeManager : MonoBehaviour
         selector.transform.position = targetTransform.position;
     }
 
-    private BaYeCityEvent GetBaYeEvent(int eventId,int cityId)
+    private BaYeCityEvent GetBaYeCityBattleEvent(int eventId,int cityId)
     {
         var baYeEvent = DataTable.BaYeCityEvent[eventId];//读取事件数据
         var mappingTable = DataTable.BaYeLevelMapping[baYeEvent.BaYeLevelMappingId];//获取对应战斗表
@@ -287,38 +358,6 @@ public class BaYeManager : MonoBehaviour
             mapping.Level6, mapping.Level7, mapping.Level8, mapping.Level9
         };
         return levels[levelMappingId];
-    }
-    public void AddExp(int expIndex,int exp)
-    {
-        if (PlayerDataForGame.instance.baYe.ExpData.ContainsKey(expIndex))
-            PlayerDataForGame.instance.baYe.ExpData[expIndex] += exp;
-        else PlayerDataForGame.instance.baYe.ExpData.Add(expIndex, exp);
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-    }
-
-    public void SetGold(int value)
-    {
-        PlayerDataForGame.instance.baYe.gold = value > BaYeMaxGold ? BaYeMaxGold : value;
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-    }
-
-    public void AddGold(int gold)
-    {
-        PlayerDataForGame.instance.baYe.gold += gold;
-        if (PlayerDataForGame.instance.baYe.gold > BaYeMaxGold)
-            PlayerDataForGame.instance.baYe.gold = BaYeMaxGold;
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-    }
-
-    public bool TradeZhanLing(int forceId, int amount)
-    {
-        if (!PlayerDataForGame.instance.baYe.zhanLingMap.ContainsKey(forceId))
-            PlayerDataForGame.instance.baYe.zhanLingMap.Add(forceId, 0);
-        if (amount < 0 && PlayerDataForGame.instance.baYe.zhanLingMap[forceId] < -amount)
-            return false; //如果数目是负数，并玩家数量小于数量返回交易失败
-        PlayerDataForGame.instance.baYe.zhanLingMap[forceId] += amount;
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-        return true;
     }
 
     public void OnBayeStoryEventReward(BaYeStoryEvent storyEvent)
@@ -348,14 +387,6 @@ public class BaYeManager : MonoBehaviour
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
         //PlayerDataForGame.instance.isNeedSaveData = true;
         //LoadSaveData.instance.SaveGameData(5);
-    }
-
-    public void SetExp(int expIndex,int exp)
-    {
-        if (PlayerDataForGame.instance.baYe.ExpData.ContainsKey(expIndex))
-            PlayerDataForGame.instance.baYe.ExpData[expIndex] = exp;
-        else PlayerDataForGame.instance.baYe.ExpData.Add(expIndex, exp);
-        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
     }
 
     //当霸业故事事件被触发
@@ -429,6 +460,75 @@ public class BaYeManager : MonoBehaviour
         }
     }
 
+    //当城池故事事件触发
+    public void OnCityStoryClick(CityStory cityStory)
+    {
+        if (cityStory.Type == CityStory.Types.DirectEvent)
+        {
+            ResultAction(cityStory.DirectResult);
+        }
+        var window = UIManager.instance.baYeCityStoryWindowUi;
+        window.Set(cityStory, op => ResultAction(op.Results));
+
+        void ResultAction(CityStory.CityResult[] results)
+        {
+            var result = results.OrderBy(r => new WeightElement<CityStory.CityResult>
+            {
+                Obj = r,
+                Weight = r.Weight
+            }).Pick();
+            OnBaYeCitySetStoryResult(result);
+        }
+    }
+
+
+    private void OnBaYeCitySetStoryResult(CityStory.CityResult result)
+    {
+        var window = UIManager.instance.baYeCityStoryWindowUi;
+        window.SetResult(result);
+    }
+
+    #region BaYeResources
+    public void AddExp(int expIndex,int exp)
+    {
+        if (PlayerDataForGame.instance.baYe.ExpData.ContainsKey(expIndex))
+            PlayerDataForGame.instance.baYe.ExpData[expIndex] += exp;
+        else PlayerDataForGame.instance.baYe.ExpData.Add(expIndex, exp);
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+    }
+
+    public void SetGold(int value)
+    {
+        PlayerDataForGame.instance.baYe.gold = value > BaYeMaxGold ? BaYeMaxGold : value;
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+    }
+
+    public void AddGold(int gold)
+    {
+        PlayerDataForGame.instance.baYe.gold += gold;
+        if (PlayerDataForGame.instance.baYe.gold > BaYeMaxGold)
+            PlayerDataForGame.instance.baYe.gold = BaYeMaxGold;
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+    }
+
+    public bool TradeZhanLing(int forceId, int amount)
+    {
+        if (!PlayerDataForGame.instance.baYe.zhanLingMap.ContainsKey(forceId))
+            PlayerDataForGame.instance.baYe.zhanLingMap.Add(forceId, 0);
+        if (amount < 0 && PlayerDataForGame.instance.baYe.zhanLingMap[forceId] < -amount)
+            return false; //如果数目是负数，并玩家数量小于数量返回交易失败
+        PlayerDataForGame.instance.baYe.zhanLingMap[forceId] += amount;
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+        return true;
+    }
+    public void SetExp(int expIndex,int exp)
+    {
+        if (PlayerDataForGame.instance.baYe.ExpData.ContainsKey(expIndex))
+            PlayerDataForGame.instance.baYe.ExpData[expIndex] = exp;
+        else PlayerDataForGame.instance.baYe.ExpData.Add(expIndex, exp);
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+    }
+    #endregion
 
     private class StoryEvent : IWeightElement
     {
@@ -472,5 +572,86 @@ public class BaYeManager : MonoBehaviour
         public int Level;
         public Color Color;
         public int[] Ids;
+    }
+    public class CityStory
+    {
+        public enum Types
+        {
+            SelectionEvent = 1,
+            DirectEvent = 2
+        }
+        public int CityId { get; set; }
+        public int StoryId { get; set; }
+        public Types Type { get; set; }
+        public string Title { get; set; }
+        public string Intro { get; set; }
+        public CityOption[] Options { get; set; }
+        public CityResult[] DirectResult { get; set; }
+
+        public CityStory(int storyId, int cityId, string title, string intro, CityOption[] ops)
+        {
+            CityId = cityId;
+            Type = Types.SelectionEvent;
+            Title = title;
+            Intro = intro;
+            Options = ops;
+            StoryId = storyId;
+        }
+        public CityStory(int storyId, int cityId, string title, string intro, CityResult[] result)
+        {
+            CityId = cityId;
+            Type = Types.DirectEvent;
+            Title = title;
+            Intro = intro;
+            DirectResult = result;
+            StoryId = storyId;
+        }
+        public class CityOption
+        {
+            public string Title { get; set; }
+            public CityResult[] Results { get; set; }
+            public int Gold { get; set; }
+            public ZhanLing[] Lings { get; set; }
+            public bool HasAdFree { get; set; }
+
+            public CityOption(string title, CityResult[] results, int gold, ZhanLing[] lings, bool hasAdFree)
+            {
+                Title = title;
+                Results = results;
+                Gold = gold;
+                Lings = lings;
+                HasAdFree = hasAdFree;
+            }
+        }
+        public class CityResult : IWeightElement
+        {
+            public int Weight { get; set; }
+            public string Brief { get; set; }
+            public int Gold { get; set; }
+            public ZhanLing[] Lings { get; set; }
+            public int BaYeExp { get; set; }
+            public int CityProgress { get; set; }
+
+            public CityResult(int weight, string brief, int gold, ZhanLing[] lings, int baYeExp, int cityProgress)
+            {
+                Weight = weight;
+                Brief = brief;
+                Gold = gold;
+                Lings = lings;
+                BaYeExp = baYeExp;
+                CityProgress = cityProgress;
+            }
+        }
+        public class ZhanLing
+        {
+            public int ForceId { get; set; }
+            public int Amt { get; set; }
+
+            public ZhanLing(int forceId, int amt)
+            {
+                ForceId = forceId;
+                Amt = amt;
+            }
+        }
     }
 }

@@ -2779,7 +2779,6 @@ namespace Assets.System.WarModule
 
     public class WeightElement<T> : IWeightElement
     {
-        public static Random Random { get; } = new Random();
         public int Weight { get; set; }
         public T Obj { get; set; }
     }

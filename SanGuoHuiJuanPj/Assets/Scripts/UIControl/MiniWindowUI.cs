@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MiniWindowUI : MonoBehaviour
@@ -17,23 +18,27 @@ public class MiniWindowUI : MonoBehaviour
 
     public virtual void Show(Dictionary<int, int> rewardMap)
     {
-        if (items.Count > 0) items.ForEach(element => element.gameObject.SetActive(false));
-        var index = 0;
+        if (items.Count > 0) items.ForEach(element => Destroy(element.gameObject));
+        items.Clear();
         foreach (var set in rewardMap)
         {
-            if (set.Value <= 0) continue;
-            if (items.Count == index)
+            if (set.Value == 0) continue;
+            InstanceElement(ui =>
             {
-                var item = Instantiate(prefab, listView);
-                items.Add(item);
-            }
-            items[index].image.sprite = rewardImages[set.Key];
-            items[index].text.text = $"+{set.Value}";
-            items[index].gameObject.SetActive(true);
-            index++;
+                ui.image.sprite = rewardImages[set.Key];
+                ui.text.text = $"+{set.Value}";
+                ui.gameObject.SetActive(true);
+            });
         }
         listView.gameObject.SetActive(true);
         gameObject.SetActive(true);
+    }
+
+    public void InstanceElement(Action<MiniWindowElementUI> setUiAction)
+    {
+        var item = Instantiate(prefab, listView);
+        items.Add(item);
+        setUiAction.Invoke(item);
     }
 
     public virtual void Close()

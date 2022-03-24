@@ -77,6 +77,7 @@ public class UIManager : MonoBehaviour
     public BaYeProgressUI baYeProgressUi; //霸业经验条 
     public ChestUI[] baYeChestButtons; //霸业宝箱 
     public StoryEventUIController storyEventUiController;//霸业的故事事件控制器 
+    public BaYeCityStoryWindowUi baYeCityStoryWindowUi;//霸业城池事件窗口
     public BaYeWindowUI baYeWindowUi;//霸业地图小弹窗 
     public Button baYeWarButton;//霸业开始战斗按键 
     public Image bayeBelowLevelPanel;//霸业等级不足挡板 
