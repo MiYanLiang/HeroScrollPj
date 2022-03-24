@@ -9825,7 +9825,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1489624083
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15025,6 +15025,21 @@ MonoBehaviour:
   - Level: 10
     Color: {r: 1, g: 0.15686275, b: 0, a: 1}
     Ids: c20b0000
+  - Level: 11
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c30b0000
+  - Level: 12
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c40b0000
+  - Level: 13
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c50b0000
+  - Level: 14
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c60b0000
+  - Level: 15
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c70b0000
   isShowTips: 0
   tipsText: 
 --- !u!224 &924970854793873320
