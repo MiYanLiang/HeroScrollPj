@@ -51,6 +51,7 @@ public class BaYeCityEventUI : MonoBehaviour
 
     public void SetStory(UnityAction action)
     {
+        storyButton.gameObject.SetActive(true);
         storyButton.onClick.RemoveAllListeners();
         storyButton.onClick.AddListener(ClickAction);
 
@@ -61,4 +62,5 @@ public class BaYeCityEventUI : MonoBehaviour
         }
     }
 
+    public void CloseStory() => storyButton.gameObject.SetActive(false);
 }

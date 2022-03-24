@@ -34,9 +34,9 @@ public class BaYeWindowUI : MiniWindowUI
         adConsume.Init();
     }
 
-    public override void Show(Dictionary<int, int> rewardMap)
+    public override void Show(Dictionary<int, int> rewardMap, Action<MiniWindowElementUI> extraSetAction = null)
     {
-        base.Show(rewardMap);
+        base.Show(rewardMap, extraSetAction);
         DisplayViewChange(DisplayViews.Reward);
     }
 

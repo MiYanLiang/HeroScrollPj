@@ -17,6 +17,7 @@ public class BaYeCityOptionUi: MonoBehaviour
 
     public void Set(string title, bool hasAd, UnityAction onSelectAction)
     {
+        gameObject.SetActive(true);
         Ad.gameObject.SetActive(hasAd);
         text.text = title;
         SelectButton.onClick.RemoveAllListeners();

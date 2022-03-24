@@ -77,6 +77,7 @@ public class UIManager : MonoBehaviour
     public BaYeProgressUI baYeProgressUi; //霸业经验条 
     public ChestUI[] baYeChestButtons; //霸业宝箱 
     public StoryEventUIController storyEventUiController;//霸业的故事事件控制器 
+    public CityStoryEventUIController cityStoryEventUiController;//霸业的故事事件控制器 
     public BaYeCityStoryWindowUi baYeCityStoryWindowUi;//霸业城池事件窗口
     public BaYeWindowUI baYeWindowUi;//霸业地图小弹窗 
     public Button baYeWarButton;//霸业开始战斗按键 
@@ -107,7 +108,7 @@ public class UIManager : MonoBehaviour
     Button jiBanWinCloseBtn;    //羁绊界面关闭按钮 
 
     [SerializeField]
-    public BaYeEventUIController baYeBattleEventController;   //霸业事件点父级 
+    public CityStoryEventUIController baYeBattleEventController;   //霸业事件点父级 
     [SerializeField]
     public GameObject chooseBaYeEventImg;  //选择霸业地点的Img 
     [SerializeField]
@@ -157,6 +158,7 @@ public class UIManager : MonoBehaviour
         PlayerDataForGame.instance.selectedWarId = -1;
         PlayerCharacterUi.Init();
         ConfirmationWindowUi.Init();
+        baYeCityStoryWindowUi.Init();
         EventUi.Init();
         IsInit = true;
     }
@@ -312,6 +314,7 @@ public class UIManager : MonoBehaviour
             baYeWarButton.onClick.RemoveAllListeners();
             baYeWarButton.onClick.AddListener(StartBaYeFight);
             storyEventUiController.ResetUi();
+            cityStoryEventUiController.ResetUi();
             baYeWindowUi.Init();
             var baYe = PlayerDataForGame.instance.baYe;
             PlayerDataForGame.instance.selectedBaYeEventId = -1;
@@ -1197,6 +1200,8 @@ public class UIManager : MonoBehaviour
     private void StopWaitingForQuit() => isWaitingToExit = false;
 
     public void AccountInfo() => GameSystem.LoginUi.OnAction(LoginUiController.ActionWindows.Info);
+
+    public void ReloadMainScene() => PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.MainScene, false);
 
     public void Exit()
     {

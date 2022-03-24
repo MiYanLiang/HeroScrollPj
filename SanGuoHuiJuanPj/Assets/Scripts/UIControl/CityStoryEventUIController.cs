@@ -4,7 +4,7 @@ using System.Linq;
 using Beebyte.Obfuscator;
 using UnityEngine;
 
-public class BaYeEventUIController : MonoBehaviour
+public class CityStoryEventUIController : MonoBehaviour
 {
     public BaYeCityEventUI[] eventList;
 
@@ -18,11 +18,22 @@ public class BaYeEventUIController : MonoBehaviour
         if (GameSystem.CurrentScene != GameSystem.GameScene.MainScene) return;//如果不是主场景不更新。
         var baYe = PlayerDataForGame.instance.baYe;
         var mgr = PlayerDataForGame.instance.BaYeManager;
-        foreach (var baYeCityStory in baYe.cityStories)
+        for (var i = 0; i < eventList.Length; i++)
         {
-            var ui = eventList[baYeCityStory.Key];
-            var cityStory = mgr.InstanceCityStory(baYeCityStory.Key, baYeCityStory.Value);
-            ui.SetStory(() => mgr.OnCityStoryClick(cityStory));
+            var ui = eventList[i];
+            var cityId = i + 1;
+            if (!baYe.cityStories.TryGetValue(cityId, out var storyId))
+            {
+                ui.CloseStory();
+                continue;
+            }
+
+            var cityStory = mgr.InstanceCityStory(cityId, storyId);
+            ui.SetStory(() =>
+            {
+                ui.CloseStory();
+                mgr.OnCityStoryClick(cityStory);
+            });
         }
     }
 }

@@ -16,7 +16,7 @@ public class MiniWindowUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public virtual void Show(Dictionary<int, int> rewardMap)
+    public virtual void Show(Dictionary<int, int> rewardMap,Action<MiniWindowElementUI> extraSetAction = null)
     {
         if (items.Count > 0) items.ForEach(element => Destroy(element.gameObject));
         items.Clear();
@@ -27,7 +27,7 @@ public class MiniWindowUI : MonoBehaviour
             {
                 ui.image.sprite = rewardImages[set.Key];
                 ui.text.text = $"+{set.Value}";
-                ui.gameObject.SetActive(true);
+                extraSetAction?.Invoke(ui);
             });
         }
         listView.gameObject.SetActive(true);
@@ -38,6 +38,7 @@ public class MiniWindowUI : MonoBehaviour
     {
         var item = Instantiate(prefab, listView);
         items.Add(item);
+        item.gameObject.SetActive(true);
         setUiAction.Invoke(item);
     }
 

@@ -15025,6 +15025,21 @@ MonoBehaviour:
   - Level: 10
     Color: {r: 1, g: 0.15686275, b: 0, a: 1}
     Ids: c20b0000
+  - Level: 11
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c30b0000
+  - Level: 12
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c40b0000
+  - Level: 13
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c50b0000
+  - Level: 14
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c60b0000
+  - Level: 15
+    Color: {r: 1, g: 0.15686275, b: 0, a: 1}
+    Ids: c70b0000
   isShowTips: 0
   tipsText: 
 --- !u!224 &924970854793873320
@@ -21157,6 +21172,9 @@ MonoBehaviour:
   PlayerNicknameTable: {fileID: 4900000, guid: d9cc2cfc37cd75f408eb57f32b3d5d03, type: 3}
   PlayerSignTable: {fileID: 4900000, guid: 78a0335937d9ee544b82392f2bbb23e6, type: 3}
   DirtyWordTable: {fileID: 4900000, guid: 1789f5d184582164ca191fe69d5cf068, type: 3}
+  BaYeCityStoryTable: {fileID: 4900000, guid: 9e8ba866ed993a0438ce3f81244a70e5, type: 3}
+  BaYeCityOptionTable: {fileID: 4900000, guid: adbbd05ee1662f24eb0f9cce6a9876f6, type: 3}
+  BaYeCityResultTable: {fileID: 4900000, guid: 1866bc3c9263fcc4aa1ea7849285ddc6, type: 3}
 --- !u!1 &7010308187707866901
 GameObject:
   m_ObjectHideFlags: 0

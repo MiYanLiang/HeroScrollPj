@@ -224,7 +224,7 @@ public class BaYeManager : MonoBehaviour
         var baYe = PlayerDataForGame.instance.baYe;
         //霸业城池故事事件
         var cityStories = GenerateBaYeCityStories(map.Select(c=>c.CityId).ToArray());
-        baYe.cityStories = cityStories.ToDictionary(c => c.CityId, c => c.StoryId);
+        baYe.cityStories = cityStories.Where(c => c != null).ToDictionary(c => c.CityId, c => c.StoryId);
         //获取玩家等级可开启的事件点id列表
         //获取每个故事id的权重
         //根据权重随机故事事件(story)id
@@ -271,6 +271,7 @@ public class BaYeManager : MonoBehaviour
         baYe.lastStoryEventsRefreshHour = SystemTimer.instance.Now.Date.AddHours(SystemTimer.instance.Now.Hour);
         GamePref.SaveBaYe(baYe);
         UIManager.instance.storyEventUiController.ResetUi();
+        UIManager.instance.cityStoryEventUiController.ResetUi();
         if(GameSystem.CurrentScene == GameSystem.GameScene.MainScene)
         {
             SelectorUIMove(false, null);
@@ -465,18 +466,21 @@ public class BaYeManager : MonoBehaviour
     {
         if (cityStory.Type == CityStory.Types.DirectEvent)
         {
-            ResultAction(cityStory.DirectResult);
+            ResultAction(cityStory.DirectResult,cityStory.Intro);
+            return;
         }
         var window = UIManager.instance.baYeCityStoryWindowUi;
-        window.Set(cityStory, op => ResultAction(op.Results));
+        window.SetStory(cityStory, op => ResultAction(op.Results));
 
-        void ResultAction(CityStory.CityResult[] results)
+        void ResultAction(CityStory.CityResult[] results, string cityStoryIntro=null)
         {
-            var result = results.OrderBy(r => new WeightElement<CityStory.CityResult>
+            var result = results.Select(r => new WeightElement<CityStory.CityResult>
             {
                 Obj = r,
                 Weight = r.Weight
-            }).Pick();
+            }).Pick().Obj;
+            if (!string.IsNullOrWhiteSpace(cityStoryIntro)) 
+                result.Brief = $"{cityStoryIntro}\n{result.Brief}";
             OnBaYeCitySetStoryResult(result);
         }
     }
