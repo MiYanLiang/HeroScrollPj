@@ -22,7 +22,7 @@ public class StoryEventUIController : MonoBehaviour
             if (!b) return;
             b.gameObject.SetActive(false);
             if (b.content)
-                Destroy(b.content);
+                Destroy(b.content.gameObject);
         });
         var storyMap = PlayerDataForGame.instance.baYe.storyMap.Where(kv => kv.Value.Type != 0).ToDictionary(s=>s.Key,s=>s.Value);//类型0：无事件
         points = new Dictionary<int, StoryEventPoint>();

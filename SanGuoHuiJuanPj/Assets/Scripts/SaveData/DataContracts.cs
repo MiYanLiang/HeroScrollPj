@@ -224,6 +224,7 @@ public class BaYeDataClass
     /// </summary>
     public Dictionary<int, int> ExpData = new Dictionary<int, int>();
     public List<BaYeCityEvent> data = new List<BaYeCityEvent>();
+    public Dictionary<int, int> cityStories = new Dictionary<int, int>();
     /// <summary>
     /// 故事剧情映像表，key = eventPoint地点, value = storyEvent故事事件
     /// </summary>
