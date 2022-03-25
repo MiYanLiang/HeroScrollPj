@@ -316,7 +316,6 @@ public class UIManager : MonoBehaviour
             storyEventUiController.ResetUi();
             cityStoryEventUiController.ResetUi();
             baYeWindowUi.Init();
-            var baYe = PlayerDataForGame.instance.baYe;
             PlayerDataForGame.instance.selectedBaYeEventId = -1;
             PlayerDataForGame.instance.selectedCity = -1;
             //霸业经验条和宝箱初始化 
@@ -341,6 +340,7 @@ public class UIManager : MonoBehaviour
             if (cityFields != null && cityFields.Count > 0)
                 cityFields.ForEach(Destroy);
             cityFields = new List<BaYeCityField>();
+            var baYe = PlayerDataForGame.instance.baYe;
             for (int i = 0; i < baYeBattleEventController.eventList.Length; i++)
             {
                 int cityPoint = i;
@@ -351,7 +351,6 @@ public class UIManager : MonoBehaviour
                 cityField.button = ui.button;
                 cityFields.Add(cityField);
                 var baYeEvent = BaYeManager.instance.Map.Single(e => e.CityId == cityPoint);
-                var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityPoint);
                 var flagId = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagId; //旗帜id 
                 var flagName = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagText; //旗帜文字 
                 ui.button.interactable = cityList.Length > i;
@@ -372,18 +371,30 @@ public class UIManager : MonoBehaviour
                     ui.text.text = $"{cityLvlMap[i]}级开启";
                     ui.InactiveCityColor();
                 }
-
-                if (baYeRecord == null) continue;
-                cityField.boundWars = baYeRecord.WarIds;
-                var passCount = baYeRecord.PassedStages.Count(isPass => isPass);
-                ui.SetValue(passCount);
-                if (baYeRecord.PassedStages.Length == passCount) //如果玩家已经过关 
-                    ui.forceFlag.Hide();
+                var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityPoint);
+                if (baYeRecord != null) cityField.boundWars = baYeRecord.WarIds;
             }
+            UpdateCitiesProgress();
         }
         catch (Exception e)
         {
             bayeErrorPanel.gameObject.SetActive(true);
+        }
+    }
+
+    public void UpdateCitiesProgress()
+    {
+        var baYe = PlayerDataForGame.instance.baYe;
+        for (int i = 0; i < baYeBattleEventController.eventList.Length; i++)
+        {
+            var cityPoint = i;
+            var ui = baYeBattleEventController.eventList[i];
+            var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityPoint);
+            if (baYeRecord == null) continue;
+            var passCount = baYeRecord.PassedStages.Count(isPass => isPass);
+            ui.SetValue(passCount);
+            if (baYeRecord.PassedStages.Length == passCount) //如果玩家已经过关 
+                ui.forceFlag.Hide();
         }
     }
 

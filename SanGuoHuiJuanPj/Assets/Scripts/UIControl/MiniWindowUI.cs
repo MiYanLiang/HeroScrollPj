@@ -25,8 +25,9 @@ public class MiniWindowUI : MonoBehaviour
             if (set.Value == 0) continue;
             InstanceElement(ui =>
             {
+                var prefix = set.Value > 0 ? "+" : string.Empty;
                 ui.image.sprite = rewardImages[set.Key];
-                ui.text.text = $"+{set.Value}";
+                ui.text.text = $"{prefix}{set.Value}";
                 extraSetAction?.Invoke(ui);
             });
         }

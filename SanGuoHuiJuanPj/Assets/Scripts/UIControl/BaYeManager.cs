@@ -45,6 +45,7 @@ public class BaYeManager : MonoBehaviour
     public BaYeStoryEvent CachedStoryEvent { get; private set; }//当前缓存的故事事件
     private List<CityStory> CityStories { get; set; } = new List<CityStory>(); //城池故事事件
 
+    private CityStory CurrentCityStory { get; set; }
     void Awake()
     {
         if (instance == null)
@@ -209,7 +210,7 @@ public class BaYeManager : MonoBehaviour
         return arg.Select(a =>
         {
             var force = a[0];
-            if(a[0]<0) DataTable.Force.Keys.OrderBy(_ => SysTime.Random.Next(100)).First();
+            if(a[0]<0) force = DataTable.Force.Keys.OrderBy(_ => SysTime.Random.Next(100)).First();
 
             return new CityStory.ZhanLing(force, a[1]);
         }).ToArray();
@@ -464,32 +465,66 @@ public class BaYeManager : MonoBehaviour
     //当城池故事事件触发
     public void OnCityStoryClick(CityStory cityStory)
     {
+        CurrentCityStory = cityStory;
         if (cityStory.Type == CityStory.Types.DirectEvent)
         {
             ResultAction(cityStory.DirectResult,cityStory.Intro);
             return;
         }
         var window = UIManager.instance.baYeCityStoryWindowUi;
-        window.SetStory(cityStory, op => ResultAction(op.Results));
+        window.SetStory(cityStory, (op, isConsumeAd) =>
+        {
+            if (!isConsumeAd)
+            {
+                var result = OnOptionCost(op);
+                if(result.Item1!)
+                {
+                    PlayerDataForGame.instance.ShowStringTips(result.Item2);
+                    return;
+                }
+            }
+            ResultAction(op.Results);
+        });
 
-        void ResultAction(CityStory.CityResult[] results, string cityStoryIntro=null)
+        void ResultAction(CityStory.CityResult[] results, string cityStoryIntro = null)
         {
             var result = results.Select(r => new WeightElement<CityStory.CityResult>
             {
                 Obj = r,
                 Weight = r.Weight
             }).Pick().Obj;
-            if (!string.IsNullOrWhiteSpace(cityStoryIntro)) 
+            if (!string.IsNullOrWhiteSpace(cityStoryIntro))
                 result.Brief = $"{cityStoryIntro}\n{result.Brief}";
             OnBaYeCitySetStoryResult(result);
         }
     }
 
+    private (bool, string) OnOptionCost(CityStory.CityOption op)
+    {
+        var baYe = PlayerDataForGame.instance.baYe;
+        if (baYe.gold < op.Gold) return (false, "金币不足。");
+        foreach (var ling in op.Lings)
+            if (baYe.zhanLingMap[ling.ForceId] < ling.Amt)
+                return (false, "战令不足。");
+
+        if (op.Gold != 0) AddGold(-op.Gold);
+        foreach (var ling in op.Lings) AddZhanLing(ling.ForceId, -ling.Amt);
+        UIManager.instance.ResetBaYeProgressAndGold();
+        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+        return (true, string.Empty);
+    }
 
     private void OnBaYeCitySetStoryResult(CityStory.CityResult result)
     {
+        if (result.Gold != 0) AddGold(result.Gold);
+        if (result.BaYeExp != 0) AddExp(-2, result.BaYeExp);
+        if (result.CityProgress != 0) AddExp(CurrentCityStory.CityId, result.CityProgress);
+        foreach (var ling in result.Lings) AddZhanLing(ling.ForceId, ling.Amt);
         var window = UIManager.instance.baYeCityStoryWindowUi;
         window.SetResult(result);
+        UIManager.instance.UpdateCitiesProgress();
+        UIManager.instance.ResetBaYeProgressAndGold();
+        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
     }
 
     #region BaYeResources
@@ -498,6 +533,8 @@ public class BaYeManager : MonoBehaviour
         if (PlayerDataForGame.instance.baYe.ExpData.ContainsKey(expIndex))
             PlayerDataForGame.instance.baYe.ExpData[expIndex] += exp;
         else PlayerDataForGame.instance.baYe.ExpData.Add(expIndex, exp);
+        if (PlayerDataForGame.instance.baYe.ExpData[expIndex] < 0)
+            PlayerDataForGame.instance.baYe.ExpData[expIndex] = 0;
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
     }
 
@@ -512,6 +549,9 @@ public class BaYeManager : MonoBehaviour
         PlayerDataForGame.instance.baYe.gold += gold;
         if (PlayerDataForGame.instance.baYe.gold > BaYeMaxGold)
             PlayerDataForGame.instance.baYe.gold = BaYeMaxGold;
+        if (PlayerDataForGame.instance.baYe.gold < 0)
+            PlayerDataForGame.instance.baYe.gold = 0;
+
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
     }
 
@@ -524,6 +564,15 @@ public class BaYeManager : MonoBehaviour
         PlayerDataForGame.instance.baYe.zhanLingMap[forceId] += amount;
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
         return true;
+    }
+    public void AddZhanLing(int forceId, int amount)
+    {
+        if (!PlayerDataForGame.instance.baYe.zhanLingMap.ContainsKey(forceId))
+            PlayerDataForGame.instance.baYe.zhanLingMap.Add(forceId, 0);
+        PlayerDataForGame.instance.baYe.zhanLingMap[forceId] += amount;
+        if (PlayerDataForGame.instance.baYe.zhanLingMap[forceId] < 0)
+            PlayerDataForGame.instance.baYe.zhanLingMap[forceId] = 0;
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
     }
     public void SetExp(int expIndex,int exp)
     {

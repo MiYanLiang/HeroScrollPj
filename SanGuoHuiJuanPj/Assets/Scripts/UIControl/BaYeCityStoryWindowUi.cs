@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class BaYeCityStoryWindowUi : MiniWindowUI
 {
@@ -22,7 +23,7 @@ public class BaYeCityStoryWindowUi : MiniWindowUI
         CloseResult();
     }
 
-    public void SetStory(BaYeManager.CityStory story,UnityAction<BaYeManager.CityStory.CityOption> onCallbackOption)
+    public void SetStory(BaYeManager.CityStory story,UnityAction<BaYeManager.CityStory.CityOption,bool> onCallbackOption)
     {
         CloseResult();
         gameObject.SetActive(true);
@@ -38,14 +39,14 @@ public class BaYeCityStoryWindowUi : MiniWindowUI
     }
 
     private void SetOptions(BaYeManager.CityStory.CityOption[] options,
-        UnityAction<BaYeManager.CityStory.CityOption> optionCallback)
+        UnityAction<BaYeManager.CityStory.CityOption,bool> optionCallback)
     {
+        ClearOptionUiElements();
         foreach (var o in options)
         {
             var ui = Instantiate(OptionPrefab, OptionContent);
-            if (o.HasAdFree)
-                ui.Set(o.Title, o.HasAdFree, () => optionCallback.Invoke(o));
-            else ui.Set(o.Title, () => optionCallback.Invoke(o));
+
+            ui.Set(o, isConsumeAd => optionCallback.Invoke(o, isConsumeAd));
             baYeCityOptions.Add(ui);
         }
     }
@@ -58,6 +59,7 @@ public class BaYeCityStoryWindowUi : MiniWindowUI
         if (result.Gold != 0) rewardMap.Add(0, result.Gold);
         if (result.BaYeExp != 0) rewardMap.Add(1, result.BaYeExp);
         if (result.CityProgress != 0) rewardMap.Add(2, result.CityProgress);
+        
         Show(rewardMap, u =>
         {
             var ui = (CityStoryResultElementUI)u;
@@ -71,8 +73,9 @@ public class BaYeCityStoryWindowUi : MiniWindowUI
                 {
                     var ui = (CityStoryResultElementUI)obj;
                     ui.HideImage();
+                    var forceId = ling.ForceId;
                     ui.text.text = ling.Amt.ToString();
-                    ui.flag.Set(ling.ForceId);
+                    ui.flag.Set(forceId);
                 });
             }
         }
@@ -81,12 +84,16 @@ public class BaYeCityStoryWindowUi : MiniWindowUI
     private void CloseStory()
     {
         StoryWindow.Close();
+        ClearOptionUiElements();
+    }
+
+    private void ClearOptionUiElements()
+    {
         if (baYeCityOptions.Any())
             foreach (var ui in baYeCityOptions)
                 Destroy(ui.gameObject);
         baYeCityOptions.Clear();
     }
-
     private void CloseResult()
     {
         Close();
