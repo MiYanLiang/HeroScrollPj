@@ -29,7 +29,7 @@ public class CityStoryEventUIController : MonoBehaviour
             }
 
             var cityStory = mgr.InstanceCityStory(cityId, storyId);
-            ui.SetStory(() =>
+            ui.SetStory(cityStory.Title, () =>
             {
                 ui.CloseStory();
                 mgr.OnCityStoryClick(cityStory);

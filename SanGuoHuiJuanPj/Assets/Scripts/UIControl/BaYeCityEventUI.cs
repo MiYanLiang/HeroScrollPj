@@ -11,7 +11,7 @@ public class BaYeCityEventUI : MonoBehaviour
     public Color defaultColor;
     public Color activeColor;
     
-    //
+    //等级限制文字
     public Text text;
     public RectTransform contentLayout;
     public int space = 13;
@@ -21,6 +21,7 @@ public class BaYeCityEventUI : MonoBehaviour
     public Color defaultCityColor;
     public ForceFlagUI forceFlag;
     public Button storyButton;
+    public Text storyTitle;
     public void Init(int maxValue)
     {
         if (list != null && list.Count > 0) list.ForEach(f => Destroy(f.gameObject));
@@ -49,8 +50,9 @@ public class BaYeCityEventUI : MonoBehaviour
         }
     }
 
-    public void SetStory(UnityAction action)
+    public void SetStory(string title,UnityAction action)
     {
+        storyTitle.text = title;
         storyButton.gameObject.SetActive(true);
         storyButton.onClick.RemoveAllListeners();
         storyButton.onClick.AddListener(ClickAction);
