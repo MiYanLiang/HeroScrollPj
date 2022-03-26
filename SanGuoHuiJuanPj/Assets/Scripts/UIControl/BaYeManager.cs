@@ -334,16 +334,12 @@ public class BaYeManager : MonoBehaviour
     }
 
     //选择器UI
-    private void SelectorUIMove(bool display,Transform targetTransform)
+    private void SelectorUIMove(bool display, Transform targetTransform)
     {
         var selector = UIManager.instance.chooseBaYeEventImg;
         selector.SetActive(display);
-        if (!display)
-        {
-            selector.transform.position = Vector3.zero;
-            return;
-        }
-        selector.transform.position = targetTransform.position;
+        selector.transform.SetParent(targetTransform);
+        selector.transform.localPosition = Vector3.zero;
     }
 
     private BaYeCityEvent GetBaYeCityBattleEvent(int eventId,int cityId)
