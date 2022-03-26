@@ -223,8 +223,10 @@ public class BaYeManager : MonoBehaviour
     public void GenerateBaYeStoryEvents()
     {
         var baYe = PlayerDataForGame.instance.baYe;
-        //霸业城池故事事件
-        var cityStories = GenerateBaYeCityStories(map.Select(c=>c.CityId).ToArray());
+        var playerLevel = PlayerDataForGame.instance.pyData.Level;
+        var max = DataTable.PlayerLevelConfig[playerLevel].BaYeCityPoints.Max();
+        var cityStories =
+            GenerateBaYeCityStories(map.Where(m => m.CityId <= max).Select(m => m.CityId).ToArray());
         baYe.cityStories = cityStories.Where(c => c != null).ToDictionary(c => c.CityId, c => c.StoryId);
         //获取玩家等级可开启的事件点id列表
         //获取每个故事id的权重
@@ -332,16 +334,12 @@ public class BaYeManager : MonoBehaviour
     }
 
     //选择器UI
-    private void SelectorUIMove(bool display,Transform targetTransform)
+    private void SelectorUIMove(bool display, Transform targetTransform)
     {
         var selector = UIManager.instance.chooseBaYeEventImg;
         selector.SetActive(display);
-        if (!display)
-        {
-            selector.transform.position = Vector3.zero;
-            return;
-        }
-        selector.transform.position = targetTransform.position;
+        selector.transform.SetParent(targetTransform);
+        selector.transform.localPosition = Vector3.zero;
     }
 
     private BaYeCityEvent GetBaYeCityBattleEvent(int eventId,int cityId)
@@ -465,6 +463,10 @@ public class BaYeManager : MonoBehaviour
     //当城池故事事件触发
     public void OnCityStoryClick(CityStory cityStory)
     {
+        var baYe = PlayerDataForGame.instance.baYe;
+        baYe.cityStories.Remove(cityStory.CityId);//点击即判定事件消耗
+        GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);//存档
+
         CurrentCityStory = cityStory;
         if (cityStory.Type == CityStory.Types.DirectEvent)
         {

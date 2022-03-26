@@ -360,10 +360,9 @@ public class UIManager : MonoBehaviour
                     var city = BaYeManager.instance.Map.Single(c => c.CityId == i);
                     ui.Init(city.WarIds.Count);
                     ui.button.onClick.RemoveAllListeners();
-                    ui.button.onClick
-                        .AddListener(
-                            () => BaYeManager.instance.OnBaYeWarEventPointSelected(BaYeManager.EventTypes.City,
-                                baYeEvent.CityId));
+                    ui.button.onClick.AddListener(() =>
+                        BaYeManager.instance.OnBaYeWarEventPointSelected(BaYeManager.EventTypes.City,
+                            baYeEvent.CityId));
                     ui.text.text = DataTable.BaYeCity[cityPoint].Name; //城市名 
                 }
                 else
