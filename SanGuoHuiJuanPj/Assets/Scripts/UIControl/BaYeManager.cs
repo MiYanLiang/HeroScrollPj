@@ -477,7 +477,7 @@ public class BaYeManager : MonoBehaviour
             if (!isConsumeAd)
             {
                 var result = OnOptionCost(op);
-                if(result.Item1!)
+                if(!result.Item1)
                 {
                     PlayerDataForGame.instance.ShowStringTips(result.Item2);
                     return;
