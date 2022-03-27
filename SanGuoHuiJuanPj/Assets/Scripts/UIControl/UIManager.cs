@@ -115,6 +115,7 @@ public class UIManager : MonoBehaviour
     Text baYeGoldNumText;   //霸业金币数量 
 
     [SerializeField] private EventUiController EventUi;
+    [SerializeField] private BaYeStoryProgressWindow BaYeStoryProgressPanel;
 
     private void Awake()
     {
@@ -160,6 +161,7 @@ public class UIManager : MonoBehaviour
         ConfirmationWindowUi.Init();
         baYeCityStoryWindowUi.Init();
         EventUi.Init();
+        BaYeStoryProgressPanel.Hide();
         IsInit = true;
     }
 
@@ -1206,6 +1208,9 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public void ShowBaYeStoryProgressPanel(float secs, UnityAction callbackAction) =>
+        BaYeStoryProgressPanel.Show(secs, callbackAction);
+
     //重置退出游戏判断参数 
     private void StopWaitingForQuit() => isWaitingToExit = false;
 
@@ -1218,5 +1223,24 @@ public class UIManager : MonoBehaviour
 #if UNITY_ANDROID
             Application.Quit();
 #endif
+    }
+
+    [Serializable]private class BaYeStoryProgressWindow
+    {
+        public Slider slider;
+        public GameObject Window;
+
+        public void Show(float secs,UnityAction callbackAction)
+        {
+            slider.value = 0;
+            Window.SetActive(true);
+            slider.DOValue(1, secs).OnComplete(() =>
+            {
+                Hide();
+                callbackAction?.Invoke();
+            });
+        }
+
+        public void Hide() => Window.SetActive(false);
     }
 }

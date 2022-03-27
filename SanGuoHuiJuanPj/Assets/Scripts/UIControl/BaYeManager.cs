@@ -28,8 +28,9 @@ public class BaYeManager : MonoBehaviour
         战令
     }
 
-    public int BaYeGoldDefault = 30; //霸业初始金币
-    public int BaYeMaxGold = 75; //霸业金币上限
+    [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
+    [Header("霸业金币上限")]public int BaYeMaxGold = 75; //霸业金币上限
+    [Header("霸业故事执行时间(秒)")]public float BaYeCityStoryProgressSecs = 3f;//霸业故事执行秒数
     [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
     private Dictionary<int, int[]> eventPointAndStoriesMap;//数据表缓存
@@ -84,7 +85,6 @@ public class BaYeManager : MonoBehaviour
         foreach (var o in WarEventLevel.SelectMany(e=> e.Ids.Select(id=>new{warId=id,e.Level,e.Color})))
             StoryWarEventMap.Add(o.warId, (o.Level, o.Color));
     }
-
 
     private void InitBaYeMap()
     {
@@ -522,11 +522,17 @@ public class BaYeManager : MonoBehaviour
         if (result.BaYeExp != 0) AddExp(-2, result.BaYeExp);
         if (result.CityProgress != 0) AddExp(CurrentCityStory.CityId, result.CityProgress);
         foreach (var ling in result.Lings) AddZhanLing(ling.ForceId, ling.Amt);
-        var window = UIManager.instance.baYeCityStoryWindowUi;
-        window.SetResult(result);
-        UIManager.instance.UpdateCitiesProgress();
-        UIManager.instance.ResetBaYeProgressAndGold();
-        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+
+        UIManager.instance.ShowBaYeStoryProgressPanel(BaYeCityStoryProgressSecs, RefreshResult);
+
+        void RefreshResult()
+        {
+            var window = UIManager.instance.baYeCityStoryWindowUi;
+            window.SetResult(result);
+            UIManager.instance.UpdateCitiesProgress();
+            UIManager.instance.ResetBaYeProgressAndGold();
+            UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+        }
     }
 
     #region BaYeResources
