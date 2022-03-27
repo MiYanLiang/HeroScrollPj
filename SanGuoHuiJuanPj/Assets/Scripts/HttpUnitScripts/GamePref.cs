@@ -25,6 +25,16 @@ public static class GamePref
     public static int ClientLoginMethod => PlayerPrefs.GetInt(LoginMethod);
 
     public static bool IsUserAccountCompleted => PlayerPrefs.GetString(AccountCompleteUsername) == Username;
+    public const string BaYeSaveString = "BaYeSave";
+    private static string BaYeSave
+    {
+        get
+        {
+            var zone = SignalRClient.instance.Zone;
+            return zone == 0 ? BaYeSaveString : $"{BaYeSaveString}{zone}";
+        }
+    }
+
     public static BaYeDataClass GetBaYe
     {
         get
@@ -50,7 +60,6 @@ public static class GamePref
     public const string PhoneNumber = "Phone";
     public const string IsFirstPlayString = "IsFirstPlay";
     public const string AccountCompleteUsername = "IsUsersAccountComplete";
-    public const string BaYeSave = "BaYeSave";
     public const string LoginMethod = "LoginMethod";
 
     public static void SetUsername(string username) => PlayerPrefs.SetString(AccountIdString,username);
@@ -85,7 +94,11 @@ public static class GamePref
     public static void SetPrefWarSpeed(float speed) => PlayerPrefs.SetFloat(PlayerWarSpeedPrefs, speed);
     public static void SetPrefMusic(bool isPlay) => PlayerPrefs.SetInt(PlayerMusicOffPrefs, isPlay ? 0 : 1);
     public static void FlagDeviceReg(string username) => PlayerPrefs.SetString(AccountCompleteUsername, username);
-    public static void SaveBaYe(BaYeDataClass save) => PlayerPrefs.SetString(BaYeSave, Json.Serialize(save));
+    public static void SaveBaYe(BaYeDataClass save)
+    {
+        PlayerPrefs.SetString(BaYeSave, Json.Serialize(save));
+    }
+
     public static void FlagClientLoginMethod(bool isDeviceLogin) => PlayerPrefs.SetInt(LoginMethod, isDeviceLogin ? 1 : 0);
 
     public static string RoasterChickenRecord() => PlayerPrefs.GetString(RoasterChickenString);

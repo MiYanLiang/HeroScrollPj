@@ -44,8 +44,6 @@ public class BaYeManager : MonoBehaviour
     public EventTypes CurrentEventType { get; private set; }//当前事件类型
     public int CurrentEventPoint { get; private set; }//当前事件点
     public BaYeStoryEvent CachedStoryEvent { get; private set; }//当前缓存的故事事件
-    private List<CityStory> CityStories { get; set; } = new List<CityStory>(); //城池故事事件
-
     private CityStory CurrentCityStory { get; set; }
     void Awake()
     {
