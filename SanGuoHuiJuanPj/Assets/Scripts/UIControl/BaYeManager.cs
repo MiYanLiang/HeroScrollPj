@@ -306,8 +306,7 @@ public class BaYeManager : MonoBehaviour
                 var cEvent = map.Single(e => e.CityId == eventPoint);
                 PlayerDataForGame.instance.selectedCity = cEvent.CityId;
                 PlayerDataForGame.instance.selectedBaYeEventId = cEvent.EventId;
-                SelectorUIMove(cEvent.EventId == PlayerDataForGame.instance.selectedBaYeEventId,
-                    UIManager.instance.baYeBattleEventController.eventList[cEvent.CityId].transform);
+                SelectorUIMove(cEvent.EventId == PlayerDataForGame.instance.selectedBaYeEventId, UIManager.instance.baYeBattleEventController.eventList[cEvent.CityId].transform);
                 print(string.Join(",", cEvent.WarIds));
             }
                 break;
@@ -518,7 +517,7 @@ public class BaYeManager : MonoBehaviour
     {
         if (result.Gold != 0) AddGold(result.Gold);
         if (result.BaYeExp != 0) AddExp(-2, result.BaYeExp);
-        if (result.CityProgress != 0) AddExp(CurrentCityStory.CityId, result.CityProgress);
+        if (result.CityProgress != 0) AddProgress(CurrentCityStory.CityId, result.CityProgress);
         foreach (var ling in result.Lings) AddZhanLing(ling.ForceId, ling.Amt);
 
         UIManager.instance.ShowBaYeStoryProgressPanel(BaYeCityStoryProgressSecs, RefreshResult);
@@ -531,6 +530,33 @@ public class BaYeManager : MonoBehaviour
             UIManager.instance.ResetBaYeProgressAndGold();
             UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
         }
+    }
+
+    private void AddProgress(int cityId, int value)
+    {
+        var cityEvent = map.First(c => c.CityId == cityId);
+        var times = Mathf.Abs(value);
+        if (value < 0)
+        {
+            var passCount = cityEvent.PassedStages.Count(p => p);
+            var exp = cityEvent.ExpList.Take(passCount).Sum();
+            var pass = passCount - times;
+            if(pass<0)pass=0;
+            cityEvent.PassedStages = new bool[cityEvent.ExpList.Count].Select((_, i) => i < pass).ToArray();
+            AddExp(cityId, -exp);
+        }
+        else
+        {
+            for (var i = 0; i < cityEvent.ExpList.Count; i++)
+            {
+                if (cityEvent.PassedStages.Count(p => p) < i) continue;
+                if (times <= 0) break;
+                --times;
+                cityEvent.PassedStages = new bool[cityEvent.ExpList.Count].Select((_, index) => index <= i).ToArray();
+                AddExp(cityId, cityEvent.ExpList[i]);
+            }
+        }
+        PlayerDataForGame.instance.SaveBaYeWarEvent(cityId);
     }
 
     #region BaYeResources

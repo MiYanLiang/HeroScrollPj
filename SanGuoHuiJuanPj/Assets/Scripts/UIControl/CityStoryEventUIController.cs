@@ -21,7 +21,7 @@ public class CityStoryEventUIController : MonoBehaviour
         for (var i = 0; i < eventList.Length; i++)
         {
             var ui = eventList[i];
-            var cityId = i + 1;
+            var cityId = i;
             if (!baYe.cityStories.TryGetValue(cityId, out var storyId))
             {
                 ui.CloseStory();
