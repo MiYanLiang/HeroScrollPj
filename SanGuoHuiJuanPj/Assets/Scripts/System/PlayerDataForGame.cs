@@ -307,18 +307,29 @@ public class PlayerDataForGame : MonoBehaviour
         return false;
     }
 
-    public void SaveBaYeWarEvent()
+    public void SaveBaYeWarEvent(int cityId)
     {
-        if (baYe.data.Any(d => d.CityId == selectedCity)) return;
-        var city = BaYeManager.instance.Map.Single(e => e.CityId == selectedCity);
-        baYe.data.Add(new BaYeCityEvent
+        var city = BaYeManager.instance.Map.Single(e => e.CityId == cityId);
+        var index = baYe.data.FindIndex(d => d.CityId == cityId);
+        var passes = city.PassedStages.Count(p => p);
+        var pList = new bool[city.ExpList.Count].Select((_, i) => passes > i).ToArray();
+        if (index == -1)
+            baYe.data.Add(new BaYeCityEvent
+            {
+                CityId = cityId,
+                EventId = city.EventId,
+                WarIds = city.WarIds,
+                ExpList = city.ExpList,
+                PassedStages = pList
+            });
+        else
         {
-            CityId = selectedCity,
-            EventId = selectedBaYeEventId,
-            WarIds = city.WarIds,
-            ExpList = city.ExpList,
-            PassedStages = new bool[city.ExpList.Count]
-        });
+            var saved = baYe.data[index];
+            saved.ExpList = city.ExpList;
+            saved.PassedStages = pList;
+            saved.WarIds = city.WarIds;
+            saved.EventId = city.EventId;
+        }
         GamePref.SaveBaYe(baYe);
     }
 
