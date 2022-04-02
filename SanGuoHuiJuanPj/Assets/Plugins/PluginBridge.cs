@@ -69,7 +69,7 @@ namespace Plugins.AntiAddictionUIKit
     public static class AntiAddictionUIKit
     {
         // Game object is created to receive async messages
-        private const string UNITY_SDK_VERSION = "1.1.0";
+        private const string UNITY_SDK_VERSION = "1.2.0";
         private const string GAME_OBJECT_NAME = "PluginBridge";
         private static GameObject gameObject;
 
@@ -144,6 +144,11 @@ namespace Plugins.AntiAddictionUIKit
         [DllImport("__Internal")]
         #endif
         private static extern string getCurrentAntiToken();
+
+        #if UNITY_IOS
+        [DllImport("__Internal")]
+        #endif
+        private static extern bool standalone();
 
         #if UNITY_IOS
         [DllImport("__Internal")]
@@ -450,6 +455,21 @@ namespace Plugins.AntiAddictionUIKit
             }
         }
 
+        public static bool isStandalone() {
+            switch (Application.platform)
+            {
+                case RuntimePlatform.Android:
+                    return (PerformAndroidIsStandalone() == 1) ? true : false;
+                    break;
+                case RuntimePlatform.IPhonePlayer:
+                    return PerformiOSIsStandalone();
+                    break;
+                default:
+                    throw new PlatformNotSupportedException();
+
+            }
+        }
+
         /*
          * ------------------
          * Internal Metthods(Android)
@@ -493,6 +513,7 @@ namespace Plugins.AntiAddictionUIKit
 
         private static void PerformAndroidStartup(bool useTapLogin, string userIdentifier)
         {
+            Debug.Log("Android startup calling");
             AndroidJavaClass unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject unityActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity");
             androidJavaNativeAntiAddiction.Call("startup", unityActivity, useTapLogin, userIdentifier);
@@ -500,21 +521,25 @@ namespace Plugins.AntiAddictionUIKit
 
         private static string PerformAndroidGetCurrentToken()
         {
+            Debug.Log("Android getCurrrentToken calling");
             return androidJavaNativeAntiAddiction.Call<string>("getCurrentToken");
         }
 
         private static int PerformAndroidGetCurrentUserAgeLimit()
         {
+            Debug.Log("Android getCurrrentUserAgeLimit calling");
             return androidJavaNativeAntiAddiction.Call<int>("getCurrentUserAgeLimit");
         }
 
         private static int PerformAndroidGetCurrentUserRemainTime()
         {
+            Debug.Log("Android getCurrrentRemainTime calling");
             return androidJavaNativeAntiAddiction.Call<int>("getCurrentUserRemainTime");
         }
 
         private static void PerformAndroidLogout()
         {
+            Debug.Log("Android logout calling");
             androidJavaNativeAntiAddiction.Call("logout");
         }
 
@@ -548,6 +573,13 @@ namespace Plugins.AntiAddictionUIKit
         {
             Debug.Log("Android setUnityVersion calling");
             androidJavaNativeAntiAddiction.Call("setUnityVersion", version);
+        }
+
+        private static int PerformAndroidIsStandalone()
+        {
+            int result = androidJavaNativeAntiAddiction.Call<int>("isStandalone");
+            Debug.Log("Android PerformAndroidIsStandalone calling" + result.ToString());
+            return result;
         }
 
         /*
@@ -586,6 +618,7 @@ namespace Plugins.AntiAddictionUIKit
         private static string PerformiOSGetCurrentToken()
         {
             // to implement
+            Debug.Log("PerformiOSGetCurrentToken");
             return getCurrentAntiToken();
         }
 
@@ -629,6 +662,10 @@ namespace Plugins.AntiAddictionUIKit
         private static void PerformiOSSetUnityVersion(string version)
         {
             setUnityVersion(version);
+        }
+
+        private static Boolean PerformiOSIsStandalone() {
+            return standalone();
         }
     }
 }
