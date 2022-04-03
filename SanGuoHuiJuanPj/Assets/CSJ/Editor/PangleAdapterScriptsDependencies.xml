@@ -24,9 +24,12 @@
     -->
     <androidPackage spec="com.pangle.cn:ads-sdk-pro:4.2.1.0"/>
     <androidPackage spec="com.squareup.okhttp3:okhttp:3.12.1"/>
-    <androidPackage spec="com.android.support:appcompat-v7:28.0.0"/>    
-    <androidPackage spec="com.android.support:support-annotations:28.0.0"/>   
-    <androidPackage spec="com.android.support:support-v4:28.0.0"/>
+    <!--<androidPackage spec="com.android.support:appcompat-v7:28.0.0"/>-->    
+    <androidPackage spec="androidx.appcompat:appcompat:1.0.2"/>    
+    <!--<androidPackage spec="com.android.support:support-annotations:28.0.0"/>-->
+    <androidPackage spec="androidx.annotation:annotation:1.0.2"/>   
+    <!--<androidPackage spec="com.android.support:support-v4:28.0.0"/>-->
+    <androidPackage spec="androidx.legacy:legacy-support-v4:1.0.0"/>
   </androidPackages>
 
   <!-- iOS Cocoapod dependencies can be specified by each iosPod element. -->
