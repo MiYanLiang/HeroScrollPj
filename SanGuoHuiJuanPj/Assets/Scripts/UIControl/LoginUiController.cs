@@ -145,13 +145,13 @@ public class LoginUiController : MonoBehaviour
 
             async Task LoginZone()
             {
-                var result = await SignalRClient.instance.RequestToken(zone, 0);
+                var result = await SignalRClient.instance.NegoToken(zone, 0);
                 await UiResponse(result);
             }
 
             async Task CreateNewUserData()
             {
-                var result = await SignalRClient.instance.RequestToken(zone, 1);
+                var result = await SignalRClient.instance.NegoToken(zone, 1);
                 await UiResponse(result);
             }
 

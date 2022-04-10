@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Assets.Scripts.Utl;
+using BestHTTP.SignalRCore;
 using CorrelateLib;
-using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -63,7 +59,7 @@ public class ApiPanel : MonoBehaviour
         InvokeBag(successAction, failedAction, true, controller, method, args);
 
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller,string method,
-        params object[] args)
+        object[] args)
     {
         SetBusy(this);
 #if UNITY_EDITOR
@@ -73,14 +69,32 @@ public class ApiPanel : MonoBehaviour
             return;
         }
 #endif
-        var bag = DataBag.SerializeBag(method, args);
+        var bag = new ClientDataBag(method, args);
+        //bag.DataName = method;
+        //bag.Data = args;
+        //bag.Size = args.Length;
+        var serializeBag = Json.Serialize(bag); //DataBag.SerializeBag(method, args);
         Client.Invoke(controller, result =>
         {
             var dataBag = DataBag.DeserializeBag(result);
             if (!dataBag.IsValid()) failedAction?.Invoke(result);
             else successAction.Invoke(dataBag);
             if(closeBusyAfterInvoke) SetBusy(false);
-        }, bag);
+        }, serializeBag);
+
+    }
+    private class ClientDataBag : IDataBag
+    {
+        public string DataName { get; set; }
+        public object[] Data { get; set; }
+        public int Size { get; set; }
+
+        public ClientDataBag(string dataName, params object[] data)
+        {
+            DataName = dataName;
+            Data = data;
+            Size = data.Length;
+        }
     }
 
     public async void SyncSaved(UnityAction onCompleteAction)
@@ -112,11 +126,11 @@ public class ApiPanel : MonoBehaviour
         Client.ReconnectServer(CallBack);
     }
 
-    private void CallBack(HubConnectionState hubConnectionState)
+    private void CallBack(bool isSuccess)
     {
 #if UNITY_EDITOR
         XDebug.Log<ServerPanel>(
-            $"Connection Status = {hubConnectionState}");
+            $"Connection success = {isSuccess}");
 #endif
         SetBusy(false);
     }

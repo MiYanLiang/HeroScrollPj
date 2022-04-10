@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using Assets;
+using Newtonsoft.Json;
 
 public class PlayerDataForGame : MonoBehaviour
 {
@@ -398,10 +399,11 @@ public class PlayerDataForGame : MonoBehaviour
                 WarReward = new WarReward(string.Empty, selectedWarId, 0);
             }, EventStrings.Req_TroopToCampaign,
             ViewBag.Instance().TroopDto(new TroopDto
-            {
-                EnList = cards.GroupBy(c => c.Type, c => c.CardId).ToDictionary(c => c.Key, c => c.ToArray()),
-                ForceId = CurrentWarForceId
-            }).SetValues(selectedWarId, UIManager.instance.expedition.CurrentMode.Id));
+                {
+                    EnList = cards.GroupBy(c => c.Type, c => c.CardId).ToDictionary(c => c.Key, c => c.ToArray()),
+                    ForceId = CurrentWarForceId
+                }
+            ).SetValues(selectedWarId, UIManager.instance.expedition.CurrentMode.Id));
     }
 
     public void UpdateTroopEnlist(TroopDto troop)

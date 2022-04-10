@@ -8,6 +8,7 @@ using System.Linq;
 
 using Beebyte.Obfuscator;
 using CorrelateLib;
+using Newtonsoft.Json;
 using UnityEngine.Events;
 
 public class UIManager : MonoBehaviour

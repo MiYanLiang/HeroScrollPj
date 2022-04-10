@@ -1,7 +1,7 @@
 <linker>
     <assembly fullname="Microsoft.AspNetCore.Connections.Abstractions" preserve="all"/>
     <assembly fullname="Microsoft.AspNetCore.Http.Connections.Client" preserve="all"/>
-     <assembly fullname="Microsoft.AspNetCore.Http.Connections.Common" preserve="all"/>
+    <assembly fullname="Microsoft.AspNetCore.Http.Connections.Common" preserve="all"/>
     <assembly fullname="Microsoft.AspNetCore.Http.Features" preserve="all"/>
     <assembly fullname="Microsoft.AspNetCore.SignalR.Client.Core" preserve="all"/>
     <assembly fullname="Microsoft.AspNetCore.SignalR.Client" preserve="all"/>
@@ -23,4 +23,7 @@
     <assembly fullname="System.Text.Json" preserve="all"/>
     <assembly fullname="System.Threading.Channels" preserve="all"/>
     <assembly fullname="System.Threading.Tasks.Extensions" preserve="all"/>
+	<assembly fullname="CorrelateLib" preserve="all">
+		<method signature="System.Void .ctor()"/>
+	</assembly>
 </linker>

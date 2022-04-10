@@ -319,7 +319,6 @@ public class WarsUIManager : MonoBehaviour
             //通关不返还体力
             PlayerDataForGame.instance.WarReward.Stamina = 0;
         }
-
         //如果是霸业
         if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Baye)
         {

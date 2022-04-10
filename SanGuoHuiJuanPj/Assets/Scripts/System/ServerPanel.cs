@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BestHTTP.SignalRCore;
 using CorrelateLib;
-using Microsoft.AspNetCore.SignalR.Client;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -76,18 +76,18 @@ public class ServerPanel : MonoBehaviour
         SetException(code.ToString());
     }
 
-    private void OnStatusChanged(HubConnectionState state)
+    private void OnStatusChanged(ConnectionStates state)
     {
         StopAllCoroutines();
-        gameObject.SetActive(state != HubConnectionState.Connected);
+        gameObject.SetActive(state != ConnectionStates.Connected);
         UpdateReconnectBtn(state);
         switch (state)
         {
-            case HubConnectionState.Connecting:
-            case HubConnectionState.Reconnecting:
+            case ConnectionStates.Negotiating:
+            case ConnectionStates.Reconnecting:
                 StartCoroutine(Counting(state));
                 return;
-            case HubConnectionState.Disconnected:
+            case ConnectionStates.Closed:
                 Reconnect();
                 break;
         }
@@ -100,19 +100,19 @@ public class ServerPanel : MonoBehaviour
         exitButton.gameObject.SetActive(true);
         SignalR.Disconnect();
         StopAllCoroutines();
-        OnStatusChanged(HubConnectionState.Disconnected);
+        OnStatusChanged(ConnectionStates.Closed);
         var state = arg.IsNullArg() ? States.ServerMaintenance : States.Other;
         if (state == States.Other) Message.text = arg;
         UiShow(state);
     }
 
-    private void UpdateReconnectBtn(HubConnectionState status)
+    private void UpdateReconnectBtn(ConnectionStates status)
     {
-        reconnectButton.gameObject.SetActive(status != HubConnectionState.Connected);
-        reconnectButton.interactable = status == HubConnectionState.Disconnected;
+        reconnectButton.gameObject.SetActive(status != ConnectionStates.Connected);
+        reconnectButton.interactable = status == ConnectionStates.Closed;
     }
 
-    IEnumerator Counting(HubConnectionState state)
+    IEnumerator Counting(ConnectionStates state)
     {
         UpdateReconnectBtn(state);
         while (true)
@@ -126,7 +126,7 @@ public class ServerPanel : MonoBehaviour
     void OnApplicationFocus(bool isFocus)
     {
         if(!isFocus)return;
-        if(SignalR.Status == HubConnectionState.Disconnected) Reconnect();
+        if(SignalR.Status == ConnectionStates.Closed) Reconnect();
     }
 
     private void Reconnect()

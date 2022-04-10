@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
-
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 namespace Assets.System.WarModule
 {
     public class ChessOperatorManager<TCard> : ChessboardOperator where TCard : IChessman
