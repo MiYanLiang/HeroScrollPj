@@ -34,7 +34,11 @@ public class StoryEventUIController : MonoBehaviour
             if (!isContainEvent) continue;
             var sEvent = storyMap[i];
             var eventIndex = sEvent.Type - 1;//由于0为无事件，所以第一个是事件1的图标
-            point.content = Instantiate(eventTypePrefabs[eventIndex],point.transform);
+            if (sEvent.Type == 9)
+            {
+                point.content = Instantiate(eventTypePrefabs[4], point.transform);
+            }
+            else point.content = Instantiate(eventTypePrefabs[eventIndex],point.transform);
             if (sEvent.Type == 3) //如果是战斗事件
             {
                 InitWarEventUi(point.content,sEvent.WarId);

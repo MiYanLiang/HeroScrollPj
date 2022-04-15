@@ -316,12 +316,14 @@ public class UIManager : MonoBehaviour
         try
         {
 #endif
+            var baye = BaYeManager.instance;
             baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
             baYeWarButton.onClick.RemoveAllListeners();
             baYeWarButton.onClick.AddListener(StartBaYeFight);
             storyEventUiController.ResetUi();
             cityStoryEventUiController.ResetUi();
             baYeWindowUi.Init();
+            baYeTradeLingWindowUi.Init(baye.BaYeLingPrice,baye.OnTradeLing);
             PlayerDataForGame.instance.selectedBaYeEventId = -1;
             PlayerDataForGame.instance.selectedCity = -1;
             //霸业经验条和宝箱初始化 

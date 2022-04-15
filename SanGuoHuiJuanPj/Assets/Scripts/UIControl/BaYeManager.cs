@@ -25,7 +25,8 @@ public class BaYeManager : MonoBehaviour
         开箱子,
         答题,
         讨伐,
-        战令
+        战令,
+        交易战令 = 9
     }
 
     [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
