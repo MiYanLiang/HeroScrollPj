@@ -30,6 +30,7 @@ public class BaYeManager : MonoBehaviour
 
     [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
     [Header("霸业金币上限")]public int BaYeMaxGold = 75; //霸业金币上限
+    [Header("军团令价钱")]public int BaYeLingPrice = 1;
     [Header("霸业故事执行时间(秒)")]public float BaYeCityStoryProgressSecs = 3f;//霸业故事执行秒数
     [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
@@ -45,6 +46,7 @@ public class BaYeManager : MonoBehaviour
     public int CurrentEventPoint { get; private set; }//当前事件点
     public BaYeStoryEvent CachedStoryEvent { get; private set; }//当前缓存的故事事件
     private CityStory CurrentCityStory { get; set; }
+
     void Awake()
     {
         if (instance == null)
@@ -559,6 +561,21 @@ public class BaYeManager : MonoBehaviour
         PlayerDataForGame.instance.SaveBaYeWarEvent(cityId);
     }
 
+    /// <summary>
+    /// 当战令交易时
+    /// </summary>
+    /// <param name="forceId"></param>
+    /// <param name="price"></param>
+    public void OnTradeLing(int forceId, int price)
+    {
+        if (PlayerDataForGame.instance.baYe.gold < price)
+            return;
+        AddGold(-price);
+        AddZhanLing(forceId, 1);
+        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+        UIManager.instance.ResetBaYeProgressAndGold();
+    }
+
     #region BaYeResources
     public void AddExp(int expIndex,int exp)
     {
@@ -739,4 +756,5 @@ public class BaYeManager : MonoBehaviour
             }
         }
     }
+
 }

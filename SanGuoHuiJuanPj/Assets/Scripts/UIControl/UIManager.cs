@@ -81,6 +81,7 @@ public class UIManager : MonoBehaviour
     public CityStoryEventUIController cityStoryEventUiController;//霸业的故事事件控制器 
     public BaYeCityStoryWindowUi baYeCityStoryWindowUi;//霸业城池事件窗口
     public BaYeWindowUI baYeWindowUi;//霸业地图小弹窗 
+    public BaYeTradeLingWindowUi baYeTradeLingWindowUi;
     public Button baYeWarButton;//霸业开始战斗按键 
     public Image bayeBelowLevelPanel;//霸业等级不足挡板 
     public Image bayeErrorPanel;//霸业异常档板
