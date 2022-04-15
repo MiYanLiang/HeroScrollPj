@@ -6,12 +6,14 @@ public class BaYeTester : MonoBehaviour
 {
     [SerializeField] private BaYeTradeLingWindowUi TradeWindow;
 
-    private void Start() => TradeWindow.Init(2, (fId, price) => print($"测试战令[{fId}]+1, 价钱={price}"));
+#if UNITY_EDITOR
+    private void Start() => TradeWindow.Init((fId, price) => print($"测试战令[{fId}]+1, 价钱={price}"));
+#endif
     public void OnGenerateStoryEvents() => BaYeManager.instance.GenerateBaYeStoryEvents();
     public void AddExp(int exp = 10) => BaYeManager.instance.AddExp(-10, exp);
 
     public void ShowTradeZhanling()
     {
-        TradeWindow.SetTradeZhanLing(new[] { 1, 4 });
+        TradeWindow.SetTradeZhanLing(1);
     }
 }

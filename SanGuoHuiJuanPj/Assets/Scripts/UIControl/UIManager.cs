@@ -323,7 +323,7 @@ public class UIManager : MonoBehaviour
             storyEventUiController.ResetUi();
             cityStoryEventUiController.ResetUi();
             baYeWindowUi.Init();
-            baYeTradeLingWindowUi.Init(baye.BaYeLingPrice,baye.OnTradeLing);
+            baYeTradeLingWindowUi.Init(baye.OnTradeLing);
             PlayerDataForGame.instance.selectedBaYeEventId = -1;
             PlayerDataForGame.instance.selectedCity = -1;
             //霸业经验条和宝箱初始化 

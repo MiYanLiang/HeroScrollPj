@@ -9,59 +9,63 @@ using UnityEngine.UI;
 
 public class BaYeTradeLingWindowUi : MonoBehaviour
 {
-    [SerializeField] private ZhanLingSectUi[] Zhanlings;
+    [SerializeField] private ZhanLingSectUi ZhanLing;
     [SerializeField] private Button CloseButton;
+    [SerializeField] private Text BuyTimes;
     private event UnityAction<int,int> OnAddZhanLing;
-    private int ZhanLingPrice => basePrice * multiply;
-    private int basePrice;
-    private int multiply;
+    private int ZhanLingPrice => Prices[index];
+    private int[] Prices;
+    private int index;
     private bool IsConsumedAd { get; set; }
-    private int[] ForceIds { get; set; }
+    private int ForceId { get; set; }
 
-    public void Init(int basePrice,UnityAction<int,int> onAddZhanLing)
+    public void Init(UnityAction<int,int> onAddZhanLing)
     {
-        this.basePrice = basePrice;
+        Prices = BaYeManager.instance.BaYeLingPrices;
         OnAddZhanLing += onAddZhanLing;
-        foreach (var ui in Zhanlings) ui.Init();
+        ZhanLing.Init();
         Display(false);
     }
 
-    public void SetTradeZhanLing(int[] forceIds, bool reset = true)
+    public void SetTradeZhanLing(int forceId, bool reset = true)
     {
-        ForceIds = forceIds;
+        ForceId = forceId;
         if (reset)
         {
-            multiply = 1;
+            index = 0;
             IsConsumedAd = false;
         }
 
-        for (var i = 0; i < Zhanlings.Length; i++)
-        {
-            var ui = Zhanlings[i];
-            if (IsConsumedAd)
-                ui.Set(forceIds[i], ZhanLingPrice, OnBuyAction, OnConsumeAd);
-            else
-                ui.Set(forceIds[i], ZhanLingPrice, OnBuyAction, null);
-        }
+        BuyTimes.text = $"{(Prices.Length - index)}";
+        if (IsConsumedAd)
+            ZhanLing.Set(forceId, ZhanLingPrice, OnBuyAction, () => IncreasePriceUpdate(true));
+        else
+            ZhanLing.Set(forceId, ZhanLingPrice, OnBuyAction, null);
         Display(true);
     }
 
-    private void OnBuyAction(int forceId)
+    private void OnBuyAction()
     {
-        IncreasePrice(forceId);
+        var baye = PlayerDataForGame.instance.baYe;
+        if (baye.gold < ZhanLingPrice)
+        {
+            PlayerDataForGame.instance.ShowStringTips("金币不够！");
+            return;
+        }
+        IncreasePriceUpdate();
     }
 
-    private void OnConsumeAd(int forceId)
+    public void IncreasePriceUpdate(bool isConsumeAd = false)
     {
-        IsConsumedAd = true;
-        IncreasePrice(forceId);
-    }
-
-    private void IncreasePrice(int forceId)
-    {
-        multiply++;
-        OnAddZhanLing?.Invoke(forceId, ZhanLingPrice);
-        SetTradeZhanLing(ForceIds, false);
+        if (!IsConsumedAd) IsConsumedAd = isConsumeAd;
+        OnAddZhanLing?.Invoke(ForceId, ZhanLingPrice);
+        index++;
+        if (index >= Prices.Length)
+        {
+            Display(false);
+            return;
+        }
+        SetTradeZhanLing(ForceId, false);
     }
 
     private void Display(bool isDisplay) => gameObject.SetActive(isDisplay);
@@ -73,19 +77,18 @@ public class BaYeTradeLingWindowUi : MonoBehaviour
         [SerializeField] private Button BuyButton;
         [SerializeField] private Text Price;
 
-        public void Set(int forceId,int price, UnityAction<int> onBuyAction, UnityAction<int> onRewardLing)
+        public void Set(int forceId,int price, UnityAction onBuyAction, UnityAction onRewardLing)
         {
             Price.text = price.ToString();
             LingSelect.Set(forceId, 1);
             BuyButton.onClick.RemoveAllListeners();
-            BuyButton.onClick.AddListener(() => onBuyAction.Invoke(forceId));
+            BuyButton.onClick.AddListener(onBuyAction.Invoke);
 
             if (onRewardLing == null) return;
-            AdConsume.Init();
             AdConsume.SetCallBackAction(success =>
             {
-                if (success) onRewardLing.Invoke(forceId);
-            }, _ => onRewardLing.Invoke(forceId), ViewBag.Instance().SetValue(0), true);
+                if (success) onRewardLing.Invoke();
+            }, _ => onRewardLing.Invoke(), ViewBag.Instance().SetValue(0), true);
         }
 
         public void Init() => AdConsume.Init();

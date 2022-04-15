@@ -26,12 +26,12 @@ public class BaYeManager : MonoBehaviour
         答题,
         讨伐,
         战令,
-        交易战令 = 9
+        交易战令
     }
 
     [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
     [Header("霸业金币上限")]public int BaYeMaxGold = 75; //霸业金币上限
-    [Header("军团令价钱")]public int BaYeLingPrice = 1;
+    [Header("军团令价钱表")]public int[] BaYeLingPrices = new int[] { 5, 10, 15, 20, 25 };
     [Header("霸业故事执行时间(秒)")]public float BaYeCityStoryProgressSecs = 3f;//霸业故事执行秒数
     [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
@@ -428,6 +428,12 @@ public class BaYeManager : MonoBehaviour
                 });
                 break;
             }
+            case StoryEventTypes.交易战令:
+            {
+                var force = DataTable.Force.Keys.OrderBy(_ => Random.Range(0, 100)).First();
+                UIManager.instance.baYeTradeLingWindowUi.SetTradeZhanLing(force);
+                break;
+            }
             default:
                 XDebug.LogError<BaYeManager>($"未知故事事件类型={sEvent.Type}!");
                 throw new ArgumentOutOfRangeException();
@@ -569,10 +575,12 @@ public class BaYeManager : MonoBehaviour
     /// <param name="price"></param>
     public void OnTradeLing(int forceId, int price)
     {
-        if (PlayerDataForGame.instance.baYe.gold < price)
-            return;
-        AddGold(-price);
-        AddZhanLing(forceId, 1);
+        if (PlayerDataForGame.instance.baYe.gold >= price)
+        {
+            AddGold(-price);
+            AddZhanLing(forceId, 1);
+            PlayerDataForGame.instance.ShowStringTips($"获得[{DataTable.Force[forceId].Short}]战令");
+        }
         UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
         UIManager.instance.ResetBaYeProgressAndGold();
     }
