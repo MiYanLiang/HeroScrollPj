@@ -34,7 +34,7 @@ public class NewWarManager : MonoBehaviour, ILogger
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
 #if UNITY_EDITOR
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
-            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values ,this);
+            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values, this);
 #else
         ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
             DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values);

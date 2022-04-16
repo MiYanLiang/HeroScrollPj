@@ -8,6 +8,7 @@ using System.Linq;
 
 using Beebyte.Obfuscator;
 using CorrelateLib;
+using Newtonsoft.Json;
 using UnityEngine.Events;
 
 public class UIManager : MonoBehaviour
@@ -80,6 +81,7 @@ public class UIManager : MonoBehaviour
     public CityStoryEventUIController cityStoryEventUiController;//霸业的故事事件控制器 
     public BaYeCityStoryWindowUi baYeCityStoryWindowUi;//霸业城池事件窗口
     public BaYeWindowUI baYeWindowUi;//霸业地图小弹窗 
+    public BaYeTradeLingWindowUi baYeTradeLingWindowUi;
     public Button baYeWarButton;//霸业开始战斗按键 
     public Image bayeBelowLevelPanel;//霸业等级不足挡板 
     public Image bayeErrorPanel;//霸业异常档板
@@ -314,12 +316,14 @@ public class UIManager : MonoBehaviour
         try
         {
 #endif
+            var baye = BaYeManager.instance;
             baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
             baYeWarButton.onClick.RemoveAllListeners();
             baYeWarButton.onClick.AddListener(StartBaYeFight);
             storyEventUiController.ResetUi();
             cityStoryEventUiController.ResetUi();
             baYeWindowUi.Init();
+            baYeTradeLingWindowUi.Init(baye.OnTradeLing);
             PlayerDataForGame.instance.selectedBaYeEventId = -1;
             PlayerDataForGame.instance.selectedCity = -1;
             //霸业经验条和宝箱初始化 

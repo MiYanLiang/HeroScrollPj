@@ -35,7 +35,8 @@ public class AdConsumeController : MonoBehaviour
         ticketButton.interactable = value > 0;
     }
 
-    public void SetCallBackAction(UnityAction<bool> watchAction,UnityAction<ViewBag> onSuccessConsume,IViewBag viewBag,bool closeOnSuccess)
+    public void SetCallBackAction(UnityAction<bool> watchAction, UnityAction<ViewBag> onSuccessConsume,
+        IViewBag viewBag, bool closeOnSuccess)
     {
         requestVb = viewBag;
         watchAdAction = watchAction;

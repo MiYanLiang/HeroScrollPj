@@ -25,11 +25,13 @@ public class BaYeManager : MonoBehaviour
         开箱子,
         答题,
         讨伐,
-        战令
+        战令,
+        交易战令
     }
 
     [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
     [Header("霸业金币上限")]public int BaYeMaxGold = 75; //霸业金币上限
+    [Header("军团令价钱表")]public int[] BaYeLingPrices = new int[] { 5, 10, 15, 20, 25 };
     [Header("霸业故事执行时间(秒)")]public float BaYeCityStoryProgressSecs = 3f;//霸业故事执行秒数
     [SerializeField] private BaYeWarEventLevel[] WarEventLevel;
     private List<BaYeCityEvent> map;
@@ -45,6 +47,7 @@ public class BaYeManager : MonoBehaviour
     public int CurrentEventPoint { get; private set; }//当前事件点
     public BaYeStoryEvent CachedStoryEvent { get; private set; }//当前缓存的故事事件
     private CityStory CurrentCityStory { get; set; }
+
     void Awake()
     {
         if (instance == null)
@@ -425,6 +428,12 @@ public class BaYeManager : MonoBehaviour
                 });
                 break;
             }
+            case StoryEventTypes.交易战令:
+            {
+                var force = DataTable.Force.Keys.OrderBy(_ => Random.Range(0, 100)).First();
+                UIManager.instance.baYeTradeLingWindowUi.SetTradeZhanLing(force);
+                break;
+            }
             default:
                 XDebug.LogError<BaYeManager>($"未知故事事件类型={sEvent.Type}!");
                 throw new ArgumentOutOfRangeException();
@@ -557,6 +566,23 @@ public class BaYeManager : MonoBehaviour
             }
         }
         PlayerDataForGame.instance.SaveBaYeWarEvent(cityId);
+    }
+
+    /// <summary>
+    /// 当战令交易时
+    /// </summary>
+    /// <param name="forceId"></param>
+    /// <param name="price"></param>
+    public void OnTradeLing(int forceId, int price)
+    {
+        if (PlayerDataForGame.instance.baYe.gold >= price)
+        {
+            AddGold(-price);
+            AddZhanLing(forceId, 1);
+            PlayerDataForGame.instance.ShowStringTips($"获得[{DataTable.Force[forceId].Short}]战令");
+        }
+        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+        UIManager.instance.ResetBaYeProgressAndGold();
     }
 
     #region BaYeResources
@@ -739,4 +765,5 @@ public class BaYeManager : MonoBehaviour
             }
         }
     }
+
 }

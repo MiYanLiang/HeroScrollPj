@@ -76,17 +76,18 @@ public class JinNangUI: MonoBehaviour
                 gameObject.SetActive(false);
             });
             //点击广告双倍奖励
+
             AdConsume.SetCallBackAction(success =>
             {
-                if (success)
-                    ApiPanel.instance.InvokeVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
-                        EventStrings.Req_TokenResources, ViewBag.Instance().SetValue(token));
-            }, _ =>
+                if (success) SuccessAdConsume(null);
+                else PlayerDataForGame.instance.ShowStringTips("广告异常...");
+            }, SuccessAdConsume, ViewBag.Instance().SetValues(1, token), false);
+            AdConsume.ShowWithUpdate();
+            void SuccessAdConsume(ViewBag _)
             {
                 ApiPanel.instance.InvokeVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
                     EventStrings.Req_TokenResources, ViewBag.Instance().SetValue(token));
-            }, ViewBag.Instance().SetValues(1, token), false);
-            AdConsume.ShowWithUpdate();
+            }
         });
     }
 

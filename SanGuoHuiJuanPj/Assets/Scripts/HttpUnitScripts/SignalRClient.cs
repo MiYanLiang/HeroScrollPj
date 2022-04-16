@@ -3,15 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
 using Beebyte.Obfuscator;
+using BestHTTP.Examples;
+using BestHTTP.JSON.LitJson;
+using BestHTTP.PlatformSupport.Memory;
+using BestHTTP.SignalR;
+using BestHTTP.SignalR.Hubs;
+using BestHTTP.SignalRCore;
+using BestHTTP.SignalRCore.Authentication;
+using BestHTTP.SignalRCore.Encoders;
+using BestHTTP.SignalRCore.Messages;
 using CorrelateLib;
-using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
+using UnityEngine.Accessibility;
 using UnityEngine.Events;
+using ConnectionStates = BestHTTP.SignalRCore.ConnectionStates;
 using Json = CorrelateLib.Json;
+using TransportTypes = BestHTTP.SignalRCore.TransportTypes;
 
 [Skip]
 /// <summary>
@@ -22,14 +37,14 @@ public class SignalRClient : MonoBehaviour
     /// <summary>
     /// SignalR 网络状态
     /// </summary>
-    public HubConnectionState Status;
+    public ConnectionStates Status;
 
     public int ServerTimeOutMinutes = 10;
     public int KeeAliveIntervalSecs = 600;
     public int HandShakeTimeoutSecs = 10;
     public ServerPanel ServerPanel;
-    public event UnityAction<HubConnectionState> OnStatusChanged;
-    public event UnityAction OnConnected; 
+    public event UnityAction<ConnectionStates> OnStatusChanged;
+    public event UnityAction OnConnected;
     public static SignalRClient instance;
     private CancellationTokenSource cancellationTokenSource;
 
@@ -53,66 +68,25 @@ public class SignalRClient : MonoBehaviour
 #if UNITY_EDITOR
         OnStatusChanged += msg => DebugLog($"链接状态更变：{msg}");
 #endif
-        if(ServerPanel!=null) ServerPanel.Init(this);
-        SubscribeAction(EventStrings.SR_UploadPy, OnServerCalledUpload);
+        if (ServerPanel != null) ServerPanel.Init(this);
         ApiPanel.Init(this);
     }
 
 
     async void OnApplicationQuit()
     {
-        if (_hub == null)return;
-        await _hub.StopAsync();
-        await _hub.DisposeAsync();
+        if (_hub == null) return;
+        await _hub.CloseAsync();
     }
 
-    ///// <summary>
-    ///// login
-    ///// </summary>
-    ///// <param name="recallAction">( isSuccess, statusCode, arrangement )</param>
-    ///// <param name="username"></param>
-    ///// <param name="password"></param>
-    //public async void UserLogin(UnityAction<bool,int ,SignalRConnectionInfo> recallAction, string username,
-    //    string password)
-    //{
-    //    if (isBusy) return;
-    //    cancellationTokenSource = new CancellationTokenSource();
-    //    cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
-    //    var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API,
-    //        Json.Serialize(Server.GetUserInfo(username, password)), cancellationTokenSource.Token);
-    //    if (!response.IsSuccessStatusCode)
-    //    {
-    //        DebugLog($"连接失败！[{response.StatusCode}]");
-    //        var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-    //        switch (response.StatusCode)
-    //        {
-    //            case HttpStatusCode.Unauthorized:
-    //                severBackCode = ServerBackCode.ERR_PW_ERROR;
-    //                break;
-    //            case HttpStatusCode.HttpVersionNotSupported:
-    //                severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
-    //                break;
-    //        }
-
-    //        isBusy = false;
-    //        recallAction.Invoke(false, (int) severBackCode, null);
-    //        return;
-    //    }
-
-    //    var jsonString = await response.Content.ReadAsStringAsync();
-    //    var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
-    //    var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
-        
-    //    isBusy = false;
-    //    recallAction?.Invoke(result, (int) response.StatusCode, connectionInfo);
-    //}
-    public async Task<SigninResult> RequestToken(int zone, int createNew)
+    public async Task<SigninResult> NegoToken(int zone, int createNew)
     {
         try
         {
             Zone = zone;
-            var response = await Http.PostAsync(Server.TokenLogin,
-                Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew)));
+            var content =
+                Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew));
+            var response = await Http.PostAsync(Server.TokenLogin, content);
             return new SigninResult(response, await response.Content.ReadAsStringAsync());
         }
         catch (Exception)
@@ -130,49 +104,11 @@ public class SignalRClient : MonoBehaviour
             isBusy = false;
             return false;
         }
+
         var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
         isBusy = false;
         return result;
     }
-
-    //public async void DirectLogin(UnityAction<bool, int, SignalRConnectionInfo> recallAction)
-    //{
-    //    if (isBusy) return;
-    //    isBusy = true;
-    //    await DirectLoginTask();
-    //    isBusy = false;
-
-    //    async Task DirectLoginTask()
-    //    {
-    //        cancellationTokenSource = new CancellationTokenSource();
-    //        cancellationTokenSource.Token.Register(() => OnConnectionClose(XDebug.Throw<SignalRClient>("取消连接！")));
-    //        var response = await Http.PostAsync(Server.DEVICE_LOGIN_API,
-    //            Json.Serialize(Server.GetUserInfo(GamePref.Username, GamePref.Password)),
-    //            cancellationTokenSource.Token);
-    //        if (!response.IsSuccessStatusCode)
-    //        {
-    //            DebugLog($"连接失败！[{response.StatusCode}]");
-    //            var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-    //            switch (response.StatusCode)
-    //            {
-    //                case HttpStatusCode.Unauthorized:
-    //                    severBackCode = ServerBackCode.ERR_PW_ERROR;
-    //                    break;
-    //                case HttpStatusCode.HttpVersionNotSupported:
-    //                    severBackCode = ServerBackCode.ERR_SERVERSTATE_ZERO;
-    //                    break;
-    //            }
-
-    //            recallAction.Invoke(false, (int)severBackCode, null);
-    //            return;
-    //        }
-
-    //        var jsonString = await response.Content.ReadAsStringAsync();
-    //        var connectionInfo = JsonConvert.DeserializeObject<SignalRConnectionInfo>(jsonString);
-    //        var result = await ConnectSignalRAsync(connectionInfo, cancellationTokenSource.Token);
-    //        recallAction?.Invoke(result, (int)response.StatusCode, connectionInfo);
-    //    }
-    //}
 
     public async Task SynchronizeSaved()
     {
@@ -201,15 +137,16 @@ public class SignalRClient : MonoBehaviour
         LoadSaveData.instance.SaveGameData();
     }
 
-    private async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo,CancellationToken cancellationToken)
+    private async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo,
+        CancellationToken cancellationToken)
     {
         try
         {
             if (_hub != null)
             {
-                _hub.Closed -= OnConnectionClose;
-                _hub.Reconnected -= OnReconnected;
-                _hub.Reconnecting -= OnReconnecting;
+                _hub.OnClosed -= OnConnectionClose;
+                _hub.OnReconnected -= OnReconnected;
+                _hub.OnReconnecting -= OnReconnecting;
                 Application.quitting -= OnDisconnect;
                 _hub = null;
             }
@@ -220,46 +157,43 @@ public class SignalRClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            StatusChanged(_hub?.State ?? HubConnectionState.Disconnected, $"连接失败！{e}");
+            StatusChanged(_hub?.State ?? ConnectionStates.Closed, $"连接失败！{e}");
             return false;
         }
+
         return true;
     }
 
     private async Task OnHubStartAsync(CancellationToken cancellationToken)
     {
-        if (_hub.State == HubConnectionState.Connected) throw new InvalidOperationException("Hub is connected!");
-        await _hub.StartAsync(cancellationToken);
+        if (_hub.State == ConnectionStates.Connected) throw new InvalidOperationException("Hub is connected!");
+        await _hub.ConnectAsync();
         StatusChanged(_hub.State, "SignalRHost:连接成功！");
         cancellationTokenSource = null;
     }
 
-    private HubConnection InstanceHub(string url,string token,CancellationToken cancellationToken = default)
+    private HubConnection InstanceHub(string url, string token, CancellationToken cancellationToken = default)
     {
-        var hub = new HubConnectionBuilder()
-            .WithUrl(url, cfg =>
-                cfg.AccessTokenProvider = () => Task.Run(() => token, cancellationToken))
-            .WithAutomaticReconnect(new TimeSpan[]
-            {
-                TimeSpan.FromSeconds(1),
-                TimeSpan.FromSeconds(2),
-                TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(10),
-            })
-            .Build();
-        hub.ServerTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes);
-        hub.KeepAliveInterval = TimeSpan.FromSeconds(KeeAliveIntervalSecs);
-        hub.HandshakeTimeout = TimeSpan.FromSeconds(HandShakeTimeoutSecs);
-        hub.Closed += OnConnectionClose;
-        hub.Reconnected += OnReconnected;
-        hub.Reconnecting += OnReconnecting;
-        hub.On<string, string>(EventStrings.ServerCall, OnServerCall);
-        return hub;
+        var conn = new HubConnection(new Uri(url), new JsonProtocol(new JsonNetEncoder()), new HubOptions
+        {
+            ConnectTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes),
+            PingInterval = TimeSpan.FromMinutes(1),
+            SkipNegotiation = true,
+            PreferedTransport = TransportTypes.WebSocket
+        });
+        conn.CustomNegotiationResult(NegotiationResult.Instance(url, token));
+        conn.AuthenticationProvider = new AzureSignalRServiceAuthenticator(conn, token);
+        cancellationToken.Register(() => conn.CloseAsync());
+        conn.OnClosed += OnConnectionClose;
+        conn.OnReconnected += OnReconnected;
+        conn.OnReconnecting += OnReconnecting;
+        conn.On<string, string>(EventStrings.ServerCall, OnServerCall);
+        return conn;
     }
 
     private void OnDisconnect() => Disconnect();
 
-    public async void ReconnectServer(Action<HubConnectionState> callBackAction = null)
+    public async void ReconnectServer(Action<bool> callBackAction = null)
     {
         if (isBusy) return;
         isBusy = true;
@@ -267,17 +201,17 @@ public class SignalRClient : MonoBehaviour
         isBusy = false;
     }
 
-    private async Task HubReconnectTask(Action<HubConnectionState> callBackAction)
+    private async Task HubReconnectTask(Action<bool> callBackAction)
     {
-        if (_hub != null && _hub.State != HubConnectionState.Disconnected)
-            await _hub.StopAsync();
-        
+        if (_hub != null && _hub.State != ConnectionStates.Closed)
+            await _hub.CloseAsync();
+
         try
         {
             isBusy = true;
-            await RetryConnectToServer();
+            var isSuccess = await RetryConnectToServer();
             isBusy = false;
-            callBackAction?.Invoke(_hub.State);
+            callBackAction?.Invoke(isSuccess);
         }
         catch (Exception e)
         {
@@ -287,23 +221,25 @@ public class SignalRClient : MonoBehaviour
             PlayerDataForGame.instance.ShowStringTips("服务器尝试链接失败，请联系管理员！");
         }
 
-        async Task RetryConnectToServer()
+        async Task<bool> RetryConnectToServer()
         {
-            var result = await RequestToken(Zone, 0);
+            var result = await NegoToken(Zone, 0);
             if (result.State != SigninResult.SignInStates.Success)
             {
                 ReloginResult(false, result.Code);
-                return;
+                return false;
             }
+
             var connectionInfo = Json.Deserialize<SignalRConnectionInfo>(result.Content);
             if (connectionInfo == null)
             {
                 ReloginResult(false, -1);
-                return;
+                return false;
             }
 
-            var success = await TokenLogin(connectionInfo);
-            ReloginResult(success, 100);
+            var isSuccess = await TokenLogin(connectionInfo);
+            ReloginResult(isSuccess, 100);
+            return isSuccess;
         }
 
         void ReloginResult(bool success, int code)
@@ -334,37 +270,82 @@ public class SignalRClient : MonoBehaviour
     {
 #if UNITY_EDITOR
         DebugLog($"服务器请求{method}: {content}");
-        if(RejectServer)
+        if (RejectServer)
         {
             DebugLog($"已拒绝服务器调用：{method}: {content}");
             return;
         }
 #endif
-        if(! _actions.TryGetValue(method,out var action))return;
+        if (!_actions.TryGetValue(method, out var action)) return;
         action?.Invoke(content);
     }
 
-    public async void Invoke(string method, UnityAction<string> recallAction , IViewBag bag = default, CancellationTokenSource tokenSource = default)
+    public void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
+        CancellationTokenSource tokenSource = default)
     {
-        var result = await InvokeVb(method, bag, tokenSource);
-        UnityMainThread.thread.RunNextFrame(()=>recallAction?.Invoke(result));
-    }
-    public async void Invoke(string method, UnityAction<string> recallAction , string databagSerialized, CancellationTokenSource tokenSource = default)
-    {
-        var result = await InvokeBag(method, databagSerialized, tokenSource);
-        UnityMainThread.thread.RunNextFrame(()=>recallAction?.Invoke(result));
+        if (_hub.State == ConnectionStates.Connected)
+        {
+            InvokeRequest();
+            return;
+        }
+
+        ReconnectServer(isSuccess =>
+        {
+            if (isSuccess)
+            {
+                InvokeRequest();
+                return;
+            }
+
+            throw new InvalidOperationException("登录异常，请重新登录！");
+        });
+
+        async void InvokeRequest()
+        {
+            var result = await InvokeVb(method, bag, tokenSource);
+            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+        }
     }
 
-    private async Task<string> InvokeVb(string method, IViewBag bag = default, CancellationTokenSource tokenSource = default)
+
+    public void Invoke(string method, UnityAction<string> recallAction, string serializedBag,
+        CancellationTokenSource tokenSource = default)
+    {
+        if (_hub.State == ConnectionStates.Connected)
+        {
+            InvokeRequest();
+            return;
+        }
+
+        ReconnectServer(isSuccess =>
+        {
+            if (isSuccess)
+            {
+                InvokeRequest();
+                return;
+            }
+
+            throw new InvalidOperationException("登录异常，请重新登录！");
+        });
+
+        async void InvokeRequest()
+        {
+            var result = await InvokeBag(method, serializedBag, tokenSource);
+            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+        }
+
+    }
+
+    private async Task<string> InvokeVb(string method, IViewBag bag = default,
+        CancellationTokenSource tokenSource = default)
     {
         try
         {
             if (bag == default) bag = ViewBag.Instance();
             if (tokenSource == null) tokenSource = new CancellationTokenSource();
-            var result = await _hub.InvokeCoreAsync(method, _stringType,
-                bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) },
-                tokenSource.Token);
-            return result?.ToString();
+            var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
+                bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) });
+            return result;
         }
         catch (Exception e)
         {
@@ -376,15 +357,16 @@ public class SignalRClient : MonoBehaviour
             return $"请求服务器异常: {e}";
         }
     }
-    private async Task<string> InvokeBag(string method, string serialized, CancellationTokenSource tokenSource = default)
+
+    private async Task<string> InvokeBag(string method, string serialized,
+        CancellationTokenSource tokenSource = default)
     {
         try
         {
             if (tokenSource == null) tokenSource = new CancellationTokenSource();
-            var result = await _hub.InvokeCoreAsync(method, _stringType,
-                string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized },
-                tokenSource.Token);
-            return result?.ToString();
+            var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
+                string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
+            return result;
         }
         catch (Exception e)
         {
@@ -402,16 +384,17 @@ public class SignalRClient : MonoBehaviour
     /// </summary>
     public async void Disconnect(UnityAction onActionDone = null)
     {
-        if (_hub.State == HubConnectionState.Disconnected)
+        if (_hub.State == ConnectionStates.Closed || _hub.State == ConnectionStates.CloseInitiated)
             return;
 
-        if (cancellationTokenSource!=null && cancellationTokenSource.IsCancellationRequested == false)
+        if (cancellationTokenSource != null && cancellationTokenSource.IsCancellationRequested == false)
         {
             cancellationTokenSource.Cancel();
             return;
         }
-        if (_hub.State == HubConnectionState.Disconnected) return;
-        await _hub.StopAsync();
+
+        if (_hub.State == ConnectionStates.Closed || _hub.State == ConnectionStates.CloseInitiated) return;
+        await _hub.CloseAsync();
         onActionDone?.Invoke();
     }
 
@@ -423,20 +406,20 @@ public class SignalRClient : MonoBehaviour
         var saved = PlayerDataForGame.instance;
         var playerData = saved.pyData;
         var warChest = saved.gbocData.fightBoxs.ToArray();
-        var redeemedCodes = new string[0];//saved.gbocData.redemptionCodeGotList.ToArray();
+        var redeemedCodes = new string[0]; //saved.gbocData.redemptionCodeGotList.ToArray();
         var token = param[0];
         var campaign = saved.warsData.warUnlockSaveData.Select(w => new WarCampaignDto
-                {WarId = w.warId, IsFirstRewardTaken = w.isTakeReward, UnlockProgress = w.unLockCount})
+                { WarId = w.warId, IsFirstRewardTaken = w.isTakeReward, UnlockProgress = w.unLockCount })
             .Where(w => w.UnlockProgress > 0).ToArray();
         var cards = saved.hstData.heroSaveData
-            .Join(DataTable.Hero, c => c.id, h => h.Key, (c, h) => new {ForceId = h.Value.ForceTableId, c})
+            .Join(DataTable.Hero, c => c.id, h => h.Key, (c, h) => new { ForceId = h.Value.ForceTableId, c })
             .Concat(saved.hstData.towerSaveData.Join(DataTable.Tower, c => c.id, t => t.Key,
-                (c, t) => new {t.Value.ForceId, c})).Concat(saved.hstData.trapSaveData.Join(DataTable.Trap, c => c.id,
-                t => t.Key, (c, t) => new {t.Value.ForceId, c})).Where(c => c.c.chips > 0 || c.c.level > 0).ToList();
+                (c, t) => new { t.Value.ForceId, c })).Concat(saved.hstData.trapSaveData.Join(DataTable.Trap, c => c.id,
+                t => t.Key, (c, t) => new { t.Value.ForceId, c })).Where(c => c.c.chips > 0 || c.c.level > 0).ToList();
         var troops = cards.GroupBy(c => c.ForceId, c => c).Select(c =>
         {
             var list = c.GroupBy(o => o.c.typeIndex, o => o.c)
-                .ToDictionary(o => (GameCardType) o.Key, o => o.Select(a => a).ToArray());
+                .ToDictionary(o => (GameCardType)o.Key, o => o.Select(a => a).ToArray());
             return new TroopDto
             {
                 ForceId = c.Key,
@@ -463,40 +446,32 @@ public class SignalRClient : MonoBehaviour
     /// <summary>
     /// 当客户端尝试重新连接服务器
     /// </summary>
-    private Task OnReconnecting(Exception exception)
-    {
-        StatusChanged(_hub.State, exception.ToString());
-        return Task.CompletedTask;
-    }
+    private void OnReconnecting(HubConnection hub, string message) => StatusChanged(hub.State, message);
 
     /// <summary>
     /// 当客户端重新连线
     /// </summary>
-    private Task OnReconnected(string msg)
-    {
-        StatusChanged(_hub.State, msg);
-        return Task.CompletedTask;
-    }
+    private void OnReconnected(HubConnection hub) => StatusChanged(hub.State, hub.State.ToString());
 
     /// <summary>
     /// 当客户端断线的处理方法
     /// </summary>
-    private Task OnConnectionClose(Exception exception)
+    private void OnConnectionClose(HubConnection hub) => StatusChanged(hub.State, hub.State.ToString());
+
+    private void StatusChanged(ConnectionStates status, string message)
     {
-        StatusChanged(_hub.State, exception.ToString());
-        return Task.CompletedTask;
-    }
-    private void StatusChanged(HubConnectionState status, string message)
-    {
-        ApiPanel.SetBusy(status != HubConnectionState.Connected);
-        Status = status; 
+        ApiPanel.SetBusy(status != ConnectionStates.Connected);
+        Status = status;
         OnStatusChanged?.Invoke(status);
         DebugLog(message);
     }
+
     #endregion
 
     #region DebugLog
+
     private string DebugMsg(string message) => $"SignalR客户端: {message}";
+
     private void DebugLog(string message)
     {
 #if DEBUG
@@ -514,7 +489,8 @@ public class SignalRClient : MonoBehaviour
         public int IsNewRegistered { get; set; }
         public string Username { get; set; }
 
-        public SignalRConnectionInfo(string url, string accessToken, string username, int arrangement, int isNewRegistered)
+        public SignalRConnectionInfo(string url, string accessToken, string username, int arrangement,
+            int isNewRegistered)
         {
             Url = url;
             AccessToken = accessToken;
@@ -523,6 +499,7 @@ public class SignalRClient : MonoBehaviour
             Username = username;
         }
     }
+
     public class SigninResult
     {
         public enum SignInStates
@@ -531,6 +508,7 @@ public class SignalRClient : MonoBehaviour
             NoContent,
             Failed
         }
+
         public SignInStates State { get; set; }
         public int Code { get; set; }
         public string Message { get; set; }
@@ -544,7 +522,7 @@ public class SignalRClient : MonoBehaviour
             Content = content;
         }
 
-        public SigninResult(HttpResponseMessage response,string content)
+        public SigninResult(HttpResponseMessage response, string content)
         {
             if (!response.IsSuccess())
             {
@@ -553,7 +531,7 @@ public class SignalRClient : MonoBehaviour
                     ? "服务器维护中..."
                     : "登录失败。";
             }
-            else if(response.StatusCode == HttpStatusCode.NoContent)
+            else if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 State = SignInStates.NoContent;
                 Message = "该区并无数据，\n是否创建新角色";
@@ -563,6 +541,7 @@ public class SignalRClient : MonoBehaviour
                 State = SignInStates.Success;
                 Message = "登录成功!";
             }
+
             Code = (int)response.StatusCode;
             Content = content;
         }
@@ -582,5 +561,128 @@ public class SignalRClient : MonoBehaviour
             GameVersion = gameVersion;
             New = createNew;
         }
+    }
+
+    private sealed class AzureSignalRServiceAuthenticator : IAuthenticationProvider
+    {
+        public string AccessToken { get; set; }
+
+        /// <summary>
+        /// No pre-auth step required for this type of authentication
+        /// </summary>
+        public bool IsPreAuthRequired
+        {
+            get { return false; }
+        }
+
+#pragma warning disable 0067
+        /// <summary>
+        /// Not used event as IsPreAuthRequired is false
+        /// </summary>
+        public event OnAuthenticationSuccededDelegate OnAuthenticationSucceded;
+
+        /// <summary>
+        /// Not used event as IsPreAuthRequired is false
+        /// </summary>
+        public event OnAuthenticationFailedDelegate OnAuthenticationFailed;
+
+#pragma warning restore 0067
+
+        private HubConnection _connection;
+
+        public AzureSignalRServiceAuthenticator(HubConnection connection, string accessToken)
+        {
+            this._connection = connection;
+            AccessToken = accessToken;
+        }
+
+        /// <summary>
+        /// Not used as IsPreAuthRequired is false
+        /// </summary>
+        public void StartAuthentication()
+        {
+        }
+
+        /// <summary>
+        /// Prepares the request by adding two headers to it
+        /// </summary>
+        public void PrepareRequest(BestHTTP.HTTPRequest request)
+        {
+            if (this._connection.NegotiationResult == null)
+                return;
+
+            // Add Authorization header to http requests, add access_token param to the uri otherwise
+            if (BestHTTP.Connections.HTTPProtocolFactory.GetProtocolFromUri(request.CurrentUri) ==
+                BestHTTP.Connections.SupportedProtocols.HTTP)
+                request.SetHeader("Authorization", "Bearer " + AccessToken);
+            else
+                request.Uri = PrepareUriImpl(request.Uri);
+        }
+
+        public Uri PrepareUri(Uri uri)
+        {
+            if (uri.Query.StartsWith("??"))
+            {
+                UriBuilder builder = new UriBuilder(uri);
+                builder.Query = builder.Query.Substring(2);
+
+                return builder.Uri;
+            }
+
+            return uri;
+        }
+
+        public void Cancel() => _connection.StartClose();
+
+        private Uri PrepareUriImpl(Uri uri)
+        {
+            string query = string.IsNullOrEmpty(uri.Query) ? "" : uri.Query + "&";
+            UriBuilder uriBuilder = new UriBuilder(uri.Scheme, uri.Host, uri.Port, uri.AbsolutePath,
+                query + "access_token=" + AccessToken);
+            return uriBuilder.Uri;
+        }
+    }
+
+}
+
+public class JsonNetEncoder : IEncoder
+{
+    private Type StringType = typeof(string);
+    private Type ObjectArrayType = typeof(object[]);
+    public JsonNetEncoder()
+    {
+        JsonMapper.RegisterImporter<int, long>(input => input);
+        JsonMapper.RegisterImporter<long, int>(input => (int)input);
+        JsonMapper.RegisterImporter<double, int>(input => (int)(input + 0.5));
+        JsonMapper.RegisterImporter<string, DateTime>(input => Convert.ToDateTime(input).ToUniversalTime());
+        JsonMapper.RegisterImporter<double, float>(input => (float)input);
+        JsonMapper.RegisterImporter<string, byte[]>(Convert.FromBase64String);
+        JsonMapper.RegisterExporter<float>((f, writer) => writer.Write((double)f));
+    }
+    public BufferSegment Encode<T>(T value)
+    {
+        var json = Json.Serialize(value);
+        int len = Encoding.UTF8.GetByteCount(json);
+        byte[] buffer = BufferPool.Get(len + 1, true);
+        Encoding.UTF8.GetBytes(json, 0, json.Length, buffer, 0);
+        buffer[len] = (byte)JsonProtocol.Separator;
+        return new BufferSegment(buffer, 0, len + 1);
+    }
+
+    public T DecodeAs<T>(BufferSegment buffer)
+    {
+        var text = Encoding.UTF8.GetString(buffer.Data, buffer.Offset, buffer.Count);
+        return JsonConvert.DeserializeObject<T>(text);
+    }
+
+    public object ConvertTo(Type toType, object obj)
+    {
+        var token = JToken.FromObject(obj);
+        Debug.Log($"转码：{toType.Name}\n{obj}");
+        if (toType.IsPrimitive || toType == StringType)
+            return ((JValue)token).Value;
+        if (toType==ObjectArrayType)
+            return Json.DeserializeList<object>(token.ToString());
+        return JsonConvert.DeserializeObject(token.ToString(), toType);
     }
 }

@@ -27,12 +27,12 @@ buildscript {
         // Must be Android Gradle Plugin 3.6.0 or later. For a list of
         // compatible Gradle versions refer to:
         // https://developer.android.com/studio/releases/gradle-plugin
-        classpath 'com.android.tools.build:gradle:3.6.0'
+        //classpath 'com.android.tools.build:gradle:3.6.0'
 
         // Must be Android Gradle Plugin 4.0.1 or later. For a list of
         // compatible Gradle versions refer to:
         // https://developer.android.com/studio/releases/gradle-plugin
-        //classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath 'com.android.tools.build:gradle:4.0.1'
     }
 }
 
@@ -60,7 +60,6 @@ dependencies {
 // Android Resolver Exclusions Start
 android {
   packagingOptions {
-      exclude ('/lib/arm64-v8a/*' + '*')
       exclude ('/lib/armeabi/*' + '*')
       exclude ('/lib/mips/*' + '*')
       exclude ('/lib/mips64/*' + '*')

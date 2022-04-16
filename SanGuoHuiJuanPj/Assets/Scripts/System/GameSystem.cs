@@ -157,9 +157,14 @@ public class GameSystem : MonoBehaviour
         OnMainSceneInit?.RemoveAllListeners();
     }
 
-
+    private bool isFirstStartScene = true;
     private void OnStartSceneLoaded()
     {
+        if(isFirstStartScene)
+        {
+            AudioController0.instance.ForcePlayAudio(12);
+            isFirstStartScene = false;
+        }
         StartSceneUIManager.instance.Init();
         StartSceneToServerCS.instance.Init();
         loginUiController.Init();
