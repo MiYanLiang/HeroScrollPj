@@ -295,7 +295,7 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private int ComboRate => 50;
+        private int ComboRate => 40;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
@@ -1203,7 +1203,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int EaseShieldAddOn => StateDamage() * StateIntelligent() / 25;
+        private int EaseShieldAddOn => StateDamage() * StateIntelligent() / 30;
         private int CriticalRate => 50;
         private int RouseRate => 100;
         protected override void MilitaryPerforms(int skill = 1)
