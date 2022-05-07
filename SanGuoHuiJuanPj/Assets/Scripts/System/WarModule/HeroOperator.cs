@@ -728,7 +728,52 @@ namespace Assets.System.WarModule
             }
         }
     }
-
+    /// <summary>
+    /// 鬼兵
+    /// </summary>
+    public class GuiBingOperator : HeroOperator 
+    {
+        private int HealRatio() 
+        {
+            switch (Style.Military) 
+            {
+                case 98:return 20;
+                case 99:return 25;
+                case 100:return 30;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        public override void OnRoundStart()
+        {
+            var stat = Chessboard.GetStatus(this);
+            if (!stat.IsDeath && stat.HpRate < 1) 
+            {
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 2, CombatConduct.InstanceHeal(stat.MaxHp * HealRatio() * 0.01f, InstanceId));
+            }
+        }
+        private int GetHealRatio() 
+        {
+            switch (Style.Military) 
+            {
+                case 98: return 20;
+                case 99: return 20;
+                case 100: return 25;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        public override void OnSomebodyDie(ChessOperator death)
+        {
+            var stat = Chessboard.GetStatus(this);
+            if (stat.IsDeath || stat.HpRate == 1||death.Style.ArmedType<0||!Chessboard.IsRandomPass(GetHealRatio()))
+            {
+                return;
+            }
+            else
+            {
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 3, CombatConduct.InstanceHeal(stat.MaxHp, InstanceId));
+            }
+        }
+    }
     /// <summary>
     /// 59  长枪 - 手持长枪，攻击时，可穿刺攻击目标身后1个单位。
     /// </summary>

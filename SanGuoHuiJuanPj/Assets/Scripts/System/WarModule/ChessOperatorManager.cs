@@ -181,7 +181,7 @@ namespace Assets.System.WarModule
 
                 case 57: case 96: case 97: op = new TengJiaOperator(); break; //57  藤甲
 
-                                                                              //鬼兵 98|99|100
+                case 98: case 99: case 100: op = new GuiBingOperator();break;//鬼兵 98|99|100
 
                 case 59: case 14: case 101: op = new ChangQiangOperator(); break; //59  短枪
 
