@@ -879,9 +879,9 @@ public static class Effect
                     case 1://普通
                         return -1;
                     case 2://还魂
-                        return -1;
+                        return 315;
                     case 3://借尸
-                        return -1;
+                        return 308;
                 }
                 break;
 
@@ -1945,11 +1945,11 @@ public static class Effect
                 switch (skill)
                 {
                     case 1://普通
-                        audioId = -1; break;
+                        audioId = 0; break;
                     case 2://还魂
-                        audioId = -1; break;
+                        audioId = 56; break;
                     case 3://借尸
-                        audioId = -1; break;
+                        audioId = 56; break;
                 }
                 break;
 
