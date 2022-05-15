@@ -27,6 +27,7 @@ namespace Assets.System.WarModule
         //[JsonIgnore] 
         public float HpRate => 1f * Hp / MaxHp;
         public int LastEaseShieldDamage { get; set; }
+        public int EaseHp => GetBuff(CardState.Cons.EaseShield) + Hp;
         public int LastHeal { get; set; }
         private ChessStatus()
         {

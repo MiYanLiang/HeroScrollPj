@@ -61,6 +61,14 @@ public class StartSceneToServerCS : MonoBehaviour
         PlayerDataForGame.instance.acData.Username = GamePref.Username;
         PlayerDataForGame.instance.acData.Password = GamePref.Password;
         PlayerDataForGame.instance.acData.Phone = PlayerPrefs.GetString(GamePref.PhoneNumber);
+#if UNITY_EDITOR
+        if (GameSystem.Instance.ForcePlayStory)
+        {
+            GamePref.SetPrefWarSpeed(1.5f);
+            StartSceneUIManager.instance.StoryController.BeginStory();
+            return;
+        }
+#endif
         //LoginGameInfoFun();
         PromptLoginWindow();
     }
@@ -70,12 +78,6 @@ public class StartSceneToServerCS : MonoBehaviour
     /// </summary> 
     public void LoginGameInfoFun()
     {
-#if UNITY_EDITOR
-        if(GameSystem.Instance.ForcePlayStory)
-        {
-            GamePref.SetIsPlayedIntro(false);
-        }
-#endif
         //如果有存档或初始剧情已播或是用户名已注册，不播剧情
         var playedIntro = GamePref.IsPlayedIntro || GamePref.PrefWarSpeed > 1.5f;
         GameSystem.LoginUi.OnLoggedInAction += OnLoggedIn;

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Assets.System.WarModule;
 using CorrelateLib;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -237,10 +238,37 @@ public class WarBoardUi : MonoBehaviour
             card.IsLock = true;
         }
         IsFirstRound = false;
-        var round = NewWarManager.ChessOperator.StartRound();
-        StartCoroutine(PlayRound(round,true));
+        var co = NewWarManager.ChessOperator;
+        var rec = new ChessRoundRecord();
+        var round = co.StartRound(rec);
+        StartCoroutine(PlayRound(rec,true));
+        //StartCoroutine(PlayRound(round,true));
     }
+    private IEnumerator PlayRound(ChessRoundRecord round, bool invokeRoundPauseTrigger)
+    {
+        yield return ChessboardManager.AnimateRound(round, playRoundStartAudio: true);
+        var chess = NewWarManager.ChessOperator;
+        if (chess.IsGameOver)
+        {
+            OnGameSet.Invoke(chess.IsChallengerWin);
+            if (chess.IsChallengerWin)
+                yield return ChallengerWinAnimation();
+            //ClearStates();
+            IsGameOver = true;
+            IsBusy = false;
+            yield break;
+        }
 
+
+        yield return DOTween.Sequence().AppendCallback(() => ChessboardManager.FilterDeathChessman())
+            .AppendInterval(CardAnimator.instance.Misc.OnRoundEnd).WaitForCompletion();
+        IsBusy = false;
+        if (invokeRoundPauseTrigger)
+        {
+            Chessboard.DisplayStartButton(true);
+            OnRoundPause?.Invoke();
+        }
+    }
     private IEnumerator PlayRound(ChessRound round,bool invokeRoundPauseTrigger)
     {
         yield return ChessboardManager.AnimateRound(round, playRoundStartAudio: true);

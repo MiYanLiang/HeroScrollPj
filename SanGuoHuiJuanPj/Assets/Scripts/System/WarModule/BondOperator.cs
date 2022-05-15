@@ -61,6 +61,7 @@ namespace Assets.System.WarModule
             {
                 var result = RoundStartRivalConduct(ops, rival);
                 if (result == null) continue;
+                Chessboard.Record.AddJiBanActivity(BondId, first.IsChallenger, false);
                 if (Chessboard.IsRandomPass(result.PushBackRate))
                 {
                     var backPos = Chessboard.BackPos(Chessboard.GetChessPos(rival));
