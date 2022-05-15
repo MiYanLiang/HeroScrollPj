@@ -14281,7 +14281,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &924970853213344149
 RectTransform:
   m_ObjectHideFlags: 0
@@ -20867,8 +20867,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Status: 0
   ServerTimeOutMinutes: 3
-  KeeAliveIntervalSecs: 20
-  HandShakeTimeoutSecs: 20
   ServerPanel: {fileID: 8400260709990265795}
   ApiPanel: {fileID: 924970852762993537}
   RejectServer: 0
