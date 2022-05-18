@@ -48,10 +48,30 @@ namespace Assets.System.WarModule
                 isBuff ? ActivityRecord.Types.JiBanBuff : ActivityRecord.Types.JiBanAttack);
         }
 
-        public void AddFragment(ActivityFragment fragment) => CurrentActivity.AddFragment(fragment);
+        public void AddFragment(CardFragment fragment) => CurrentActivity.AddFragment(fragment);
 
-        public ActivityFragment GetLastCardFragment() =>
-            CurrentActivity.Data.LastOrDefault(c => c.Type == ActivityFragment.FragmentTypes.Chessman);
+        public void AddFragment(ChessboardFragment fragment)
+        {
+            var list = CurrentActivity.Data
+                .Where(f => f.Type == ActivityFragment.FragmentTypes.Chessboard)
+                .Cast<ChessboardFragment>().ToArray();
+            if (list.Length > 0 &&
+                list.Any(f => f.InstanceId == fragment.InstanceId &&
+                              f.ActId == fragment.ActId &&
+                              f.Type == fragment.Type &&
+                              f.IsChallenger == fragment.IsChallenger &&
+                              f.TargetId == fragment.TargetId &&
+                              f.Pos == fragment.Pos &&
+                              f.StandPoint == fragment.StandPoint &&
+                              f.Skill == fragment.Skill &&
+                              f.Value == fragment.Value))
+                return;
+            CurrentActivity.AddFragment(fragment);
+        }
+
+        public ActivityFragment GetLastCardFragment(int instanceId) =>
+            CurrentActivity.Data.LastOrDefault(c =>
+                c.Type == ActivityFragment.FragmentTypes.Chessman && c.InstanceId == instanceId);
 
         public int GetActId() => CurrentActivity.Index < 0 ? 0 : CurrentActivity.CurrentFragment.ActId;
 
@@ -137,17 +157,20 @@ namespace Assets.System.WarModule
         /// <see cref="FragmentTypes.Chessman"/>的行动Id,必须正数，每个卡牌行动里不可重复，
         /// </summary>
         public int ActId { get; set; }
+        public int InstanceId { get; set; }
 
     }
 
     public record ChessboardFragment : ActivityFragment
     {
-        public static ChessboardFragment Instance(Kinds kind, int skill, int actId, int pos, int targetId, int value,
+        public static ChessboardFragment Instance(int instanceId, Kinds kind, int skill, int actId, int pos,
+            int targetId, int value,
             bool isChallenger) =>
-            new(kind: kind, skill: skill, actId: actId, pos: pos, targetId: targetId, value: value,
+            new(instanceId, kind: kind, skill: skill, actId: actId, pos: pos, targetId: targetId, value: value,
                 isChallenger: isChallenger);
-        public ChessboardFragment(Kinds kind,int skill ,int actId,int pos, int targetId, int value, bool isChallenger) : base(FragmentTypes.Chessboard)
+        public ChessboardFragment(int instanceId,Kinds kind,int skill ,int actId,int pos, int targetId, int value, bool isChallenger) : base(FragmentTypes.Chessboard)
         {
+            InstanceId = instanceId;
             Kind = kind;
             Pos = pos;
             TargetId = targetId;
@@ -232,8 +255,6 @@ namespace Assets.System.WarModule
             ActId = actId;
         }
 
-        public int InstanceId { get; set; }
-        
         /// <summary>
         /// 每次攻击
         /// </summary>

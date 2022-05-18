@@ -251,7 +251,6 @@ namespace Assets.System.WarModule
             //为了确保可执行的卡牌都在棋盘上
             OnRecallOperatorPosition(currentOps);
             RefreshChessPosses();
-            RecordChessmenStatus();
             RecordSummaryActivity();
             InvokePreRoundTriggers();
             InvokeJiBanActivities();
@@ -298,12 +297,14 @@ namespace Assets.System.WarModule
                     Log(winner);
                 }
                 currentRound.IsEnd = true;
+                RecordChessmenStatus();
                 return currentRound;
             }
             RoundState = ProcessCondition.RoundEnd;
             RecordSummaryActivity();
             InvokeRoundEndTriggers();
             StateFlags.ForEach(s => s.State = default);
+            RecordChessmenStatus();
             currentRound.IsEnd = true;
             return currentRound;
         }
@@ -396,16 +397,24 @@ namespace Assets.System.WarModule
         public void RecordChessmenStatus() =>
             Record.AddChessmenStatus(StatusMap.ToDictionary(c => c.Key.InstanceId, c => GetFullCondition(c.Key)));
         public void RecordSummaryActivity() => Record.AddSummaryActivity();
-        public void RecordFragment(ActivityFragment fragment) => Record?.AddFragment(fragment);
+        public void RecordFragment(ChessboardFragment fragment) => Record?.AddFragment(fragment);
+        public void RecordFragment(CardFragment fragment) => Record?.AddFragment(fragment);
 
         public void RecordChessmanActivity(int instanceId, bool isChallenger) =>
             Record?.AddChessmanActivity(instanceId, isChallenger);
 
         private void RecordSpriteTrigger(PosSprite sprite,int skill ,int actId, bool isAdd)
         {
-            if (actId < 0) actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;
+            //if (actId < 0) actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;
+            switch (actId)
+            {
+                case -1:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;break;
+                case -2:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId+1; break;
+            }
+
             RecordFragment(
-                fragment: ChessboardFragment.Instance(kind: ChessboardFragment.Kinds.Sprite, skill: skill, actId: actId,
+                fragment: ChessboardFragment.Instance(sprite.IsChallenger ? -1 : -2,
+                    kind: ChessboardFragment.Kinds.Sprite, skill: skill, actId: actId,
                     pos: sprite.Pos, targetId: sprite.TypeId,
                     value: isAdd ? 1 : 0, isChallenger: sprite.IsChallenger));
         }
@@ -413,7 +422,8 @@ namespace Assets.System.WarModule
         private void ResourceTrigger(int resourceId,int value,bool isChallenger)
         {
             var kind = resourceId < 0 ? ChessboardFragment.Kinds.Gold : ChessboardFragment.Kinds.Chest;
-            RecordFragment(ChessboardFragment.Instance(kind, 0, 0, 0, 0, value, isChallenger));
+            RecordFragment(ChessboardFragment.Instance(isChallenger ? -1 : -2, kind, 0, 0, 0, resourceId, value,
+                isChallenger));
         }
 
         private void RecordSpriteRespond(Activity act,IChessOperator target)
@@ -435,7 +445,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         private ExecuteAct GetAttackFragment(Activity act, int actId)
         {
-            var lastFragment = Record.GetLastCardFragment();
+            var lastFragment = Record.GetLastCardFragment(act.From);
             CardFragment cardFragment = null;
             if (act.Intention == Activity.Intentions.Counter)
             {
@@ -500,9 +510,9 @@ namespace Assets.System.WarModule
                 GetFullCondition(target));
         }
 
-        private void SetChessRespond(int diff, int skill, IChessOperator target, ActivityResult result)
+        private void SetChessRespond(int instanceId,int diff, int skill, IChessOperator target, ActivityResult result)
         {
-            var chess = (ChessboardFragment)Record.GetLastCardFragment();
+            var chess = (ChessboardFragment)Record.GetLastCardFragment(instanceId);
             var respond = RespondAct.Responds.None;
             switch (result.Type)
             {
@@ -1062,7 +1072,7 @@ namespace Assets.System.WarModule
                 var diff = targetHp - targetStat.EaseHp;
                 if (attFrag != null)
                     SetAttackRespond(activity.From, attFrag, activity.Skill, diff, target, currentResult);
-                else SetChessRespond(diff, activity.Skill, target, currentResult);
+                else SetChessRespond(activity.From, diff, activity.Skill, target, currentResult);
             }
 
             if (target != null)
@@ -1384,11 +1394,10 @@ namespace Assets.System.WarModule
         /// <param name="pos"></param>
         public bool PosOperator(ChessOperator op, int pos)
         {
-            if (pos >= 0 && !Grid.GetScope(op)[pos].IsPostedAlive) return false;
+            if (pos >= 0 && Grid.GetScope(op)[pos].IsPostedAlive) return false;
 
             var oldPos = GetChessPos(op);
             if (oldPos != null) Grid.Remove(GetStatus(op).Pos, op.IsChallenger);
-            GetChessPos(op.IsChallenger, pos)?.SetPos(op);
             GetStatus(op).SetPos(pos);
             if (pos < 0) return true;
             var replace = Grid.Replace(pos, op);
