@@ -2362,7 +2362,6 @@ namespace Assets.System.WarModule
     {
         private int CounterRate()
         {
-            return 100;
             switch (Style.Military)
             {
                 case 13: return 70;

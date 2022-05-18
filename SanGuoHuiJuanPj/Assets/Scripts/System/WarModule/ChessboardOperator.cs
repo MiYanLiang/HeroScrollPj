@@ -251,7 +251,6 @@ namespace Assets.System.WarModule
             //为了确保可执行的卡牌都在棋盘上
             OnRecallOperatorPosition(currentOps);
             RefreshChessPosses();
-            RecordChessmenStatus();
             RecordSummaryActivity();
             InvokePreRoundTriggers();
             InvokeJiBanActivities();
@@ -304,6 +303,7 @@ namespace Assets.System.WarModule
             RecordSummaryActivity();
             InvokeRoundEndTriggers();
             StateFlags.ForEach(s => s.State = default);
+            RecordChessmenStatus();
             currentRound.IsEnd = true;
             return currentRound;
         }
@@ -403,7 +403,12 @@ namespace Assets.System.WarModule
 
         private void RecordSpriteTrigger(PosSprite sprite,int skill ,int actId, bool isAdd)
         {
-            if (actId < 0) actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;
+            if(actId<0)actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;
+            //switch (actId)
+            //{
+            //    case -1:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;break;
+            //    case -2:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId+1; break;
+            //}
             RecordFragment(
                 fragment: ChessboardFragment.Instance(kind: ChessboardFragment.Kinds.Sprite, skill: skill, actId: actId,
                     pos: sprite.Pos, targetId: sprite.TypeId,
@@ -413,7 +418,7 @@ namespace Assets.System.WarModule
         private void ResourceTrigger(int resourceId,int value,bool isChallenger)
         {
             var kind = resourceId < 0 ? ChessboardFragment.Kinds.Gold : ChessboardFragment.Kinds.Chest;
-            RecordFragment(ChessboardFragment.Instance(kind, 0, 0, 0, 0, value, isChallenger));
+            RecordFragment(ChessboardFragment.Instance(kind, 0, 0, 0, resourceId, value, isChallenger));
         }
 
         private void RecordSpriteRespond(Activity act,IChessOperator target)
@@ -1384,11 +1389,10 @@ namespace Assets.System.WarModule
         /// <param name="pos"></param>
         public bool PosOperator(ChessOperator op, int pos)
         {
-            if (pos >= 0 && !Grid.GetScope(op)[pos].IsPostedAlive) return false;
+            if (pos >= 0 && Grid.GetScope(op)[pos].IsPostedAlive) return false;
 
             var oldPos = GetChessPos(op);
             if (oldPos != null) Grid.Remove(GetStatus(op).Pos, op.IsChallenger);
-            GetChessPos(op.IsChallenger, pos)?.SetPos(op);
             GetStatus(op).SetPos(pos);
             if (pos < 0) return true;
             var replace = Grid.Replace(pos, op);
