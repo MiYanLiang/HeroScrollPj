@@ -6,7 +6,7 @@ public class WarGameCardUi : GameCardUiBase,IPoolObject
 {
     public GameCardWarUiOperation War;
     public DragController DragComponent;
-
+    private bool isLoseAnimated;
     public override void Init(GameCard card)
     {
         base.Init(card);
@@ -19,7 +19,12 @@ public class WarGameCardUi : GameCardUiBase,IPoolObject
 
     public void SetHighLight(bool on) => SetAnimateGameObject(War.Highlight, on);
 
-    public void SetLose(bool isLose) => SetAnimateGameObject(War.Lose,isLose);
+    public void SetLose(bool isLose)
+    {
+        if (isLose && isLoseAnimated)return;
+        SetAnimateGameObject(War.Lose, isLose);
+        isLoseAnimated = true;
+    }
 
     private void SetAnimateGameObject(Component obj,bool isActive)
     {

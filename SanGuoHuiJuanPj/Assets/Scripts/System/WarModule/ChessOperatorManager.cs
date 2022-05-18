@@ -100,7 +100,7 @@ namespace Assets.System.WarModule
             var op = InstanceOperator(card);
             StatusMap.Add(op, op.GenerateStatus());
             ops.Add(op.InstanceId,op);
-            op.SetPos(card.Pos);
+            PosOperator(op, card.Pos);
             NewPlaceList.Add(op);
             return card;
         }
@@ -419,30 +419,13 @@ namespace Assets.System.WarModule
                 sprite.RoundStart(pos.Operator,this);
             }
 
-            //羁绊触发器
-            //玩家方
-            OnRoundStartJiBan(Grid.Challenger.Where(p => p.Value.IsPostedAlive)
-                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
-            //对手方
-            OnRoundStartJiBan(Grid.Opposite.Where(p => p.Value.IsPostedAlive)
-                .Select(p => GetOperator(p.Value.Operator.InstanceId)).ToArray());
-
             //buff触发器
             foreach (var bo in GetBuffOperator(b => b.IsRoundStartTrigger))
             foreach (var op in StatusMap.Keys.Where(o => o != null && !GetStatus(o).IsDeath))
                 bo.RoundStart(op);
         }
 
-        private void OnRoundStartJiBan(ChessOperator[] chessOperators)
-        {
-            foreach (var jb in JiBan.Select(jb => 
-                             new { jb, list = jb.JiBanActivateList(chessOperators) })
-                         .Where(a => a.list != null))
-            {
-                RegJiBan(jb.jb,jb.list.Join(chessOperators,i=>i,o=>o.CardId,(_,c)=>c).ToArray());
-                jb.jb.OnRoundStart(chessOperators);
-            }
-        }
+        
 
         protected override ChessOperator GetOperator(int id) => ops.ContainsKey(id) ? ops[id] : null;
 

@@ -601,7 +601,7 @@ namespace Assets.System.WarModule
             for (var index = 0; index < burnPoses.Length; index++)
             {
                 var chessPos = burnPoses[index];
-                chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: -1, actId: -1);
+                chessboard.InstanceSprite<YeHuoSprite>(chessPos, lasting: 2, value: -1, actId: -1, skill);
                 if (chessPos.Operator == null || chessboard.GetStatus(chessPos.Operator).IsDeath) continue;
                 chessboard.AppendOpActivity(offender, chessPos, Activity.Intentions.Offensive, conducts, actId: 0, skill: 1);
             }

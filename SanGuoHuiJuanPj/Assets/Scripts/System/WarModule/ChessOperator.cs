@@ -92,7 +92,7 @@ namespace Assets.System.WarModule
                  result.Type == ActivityResult.Types.Assist ||
                  result.Type == ActivityResult.Types.Shield))
             {
-                if (!SetPos(activity.RePos)) activity.RePos = -1;
+                if (!Chessboard.PosOperator(this,activity.RePos)) activity.RePos = -1;
             }
             else activity.RePos = -1;
 
@@ -219,13 +219,11 @@ namespace Assets.System.WarModule
         /// <param name="activity"></param>
         protected virtual void OnSufferConduct(Activity activity, IChessOperator offender = null){}
 
-        public bool SetPos(int pos) => Chessboard.PosOperator(this, pos);
-
         /// <summary>
         /// 被击退后触发
         /// </summary>
         /// <param name="pos"></param>
-        public virtual void OnRePos(int pos){}
+        public virtual void OnRePosTrigger(int pos){}
 
         protected virtual void OnCounter(Activity activity, IChessOperator offender){}
 
