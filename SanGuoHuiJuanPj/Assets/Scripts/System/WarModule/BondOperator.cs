@@ -55,7 +55,7 @@ namespace Assets.System.WarModule
             }
 
             var rivals = Chessboard.GetRivals(first,
-                pos => pos.IsPostedAlive && pos.Operator.CardType != GameCardType.Base).Select(p => p.Operator);
+                pos => pos.IsPostedAlive && pos.Operator.CardType != GameCardType.Base).Select(p => p.Operator).ToList();
 
             foreach (var rival in rivals)
             {

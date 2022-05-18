@@ -82,9 +82,9 @@ public class ChessmanStyle : ChessUiStyle
 
     public virtual void ResultEffectTween(ActivityResult result, FightCardData card){}
 
-    public virtual Tween RespondAnim(FightCardData target, RespondAct respond) => DOTween.Sequence();
+    public virtual Tween RespondAnim(FightCardData ex, FightCardData target, RespondAct respond) => DOTween.Sequence();
 
-    public virtual Tween ExecutionEffect(ExecuteAct act, FightCardData op, int skill = 0) =>
+    public virtual Tween ExecutionEffect(FightCardData op, int skill = 0) =>
         DOTween.Sequence();
 
     /// <summary>
@@ -220,7 +220,7 @@ public abstract class CardStyle : ChessmanStyle
     protected abstract void ActivityVText(Activity activity, FightCardData offense);
     #endregion
 
-    public override Tween ExecutionEffect(ExecuteAct act, FightCardData op, int skill)
+    public override Tween ExecutionEffect(FightCardData op, int skill)
     {
         var tween = DOTween.Sequence();
         
@@ -231,9 +231,11 @@ public abstract class CardStyle : ChessmanStyle
         }
         return tween;
     }
-    public override Tween RespondAnim(FightCardData target, RespondAct respond)
+
+    public override Tween RespondAnim(FightCardData ex, FightCardData target, RespondAct respond)
     {
         var tween = DOTween.Sequence();
+
         switch (respond.Kind)
         {
             case RespondAct.Responds.Ease:
@@ -255,7 +257,8 @@ public abstract class CardStyle : ChessmanStyle
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        tween.AppendCallback(()=>
+
+        tween.AppendCallback(() =>
         {
             UpdateStatus(respond.Status, target);
             CardAnimator.instance.UpdateStateIcon(target); //更新状态(buff)

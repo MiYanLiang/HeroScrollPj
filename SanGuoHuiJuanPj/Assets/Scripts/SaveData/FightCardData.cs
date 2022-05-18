@@ -233,9 +233,12 @@ public class FightCardData : IChessman
     public void SetActed(bool isActed = true) => isActionDone = isActed;
     public void UpdateActivityStatus(ChessStatus stat)
     {
-        status = stat.CloneHp();
+        if (!status.IsDeath)
+        {
+            status = stat.CloneHp();
+            cardObj.War.UpdateHpUi(stat.HpRate);
+        }
         CardState.SetStates(stat.Buffs);
-        cardObj.War.UpdateHpUi(stat.HpRate);
         if(stat.IsDeath)
             cardObj.SetLose(true);
     }

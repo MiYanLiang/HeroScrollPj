@@ -187,7 +187,7 @@ public class CardAnimator : MonoBehaviour
     /// 被击退一格
     /// </summary>
     public Tween OnRePos(FightCardData target, ChessPos pos) =>
-        target.cardObj.transform.DOMove(pos.transform.position,Misc.RePos);
+        target.cardObj.transform.DOMove(pos.transform.position, Misc.RePos);
 
     static float chessboardShakeIntensity = 30f;
 
