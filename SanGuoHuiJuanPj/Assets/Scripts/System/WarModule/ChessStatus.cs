@@ -45,7 +45,7 @@ namespace Assets.System.WarModule
             LastEaseShieldDamage = lastEaseShield;
         }
 
-        public ChessStatus Clone() => Instance(this);
+        public ChessStatus CloneHp() => Instance(this);
 
         public void SubtractHp(int damage)
         {

@@ -230,6 +230,7 @@ namespace Assets.System.WarModule
             CurrentMajor = ChessMajor.UnDefined;
 
             var round = GetActiveRound();
+            rec.SetRound(round);
             OnPlaceInvocation();
 
             round.PreRoundStats = StatusMap.Where(s => !s.Value.IsDeath).ToDictionary(s => s.Key.InstanceId, s => GetFullCondition(s.Key));
@@ -250,6 +251,7 @@ namespace Assets.System.WarModule
             //为了确保可执行的卡牌都在棋盘上
             OnRecallOperatorPosition(currentOps);
             RefreshChessPosses();
+            RecordChessmenStatus();
             RecordSummaryActivity();
             InvokePreRoundTriggers();
             InvokeJiBanActivities();
@@ -391,8 +393,9 @@ namespace Assets.System.WarModule
         public void RecordJiBanActivity(int jiBanId, bool isChallenger, bool isBuff) =>
             Record?.AddJiBanActivity(jiBanId, isChallenger, isBuff);
 
-        public void RecordSummaryActivity()=> Record.AddSummaryActivity();
-
+        public void RecordChessmenStatus() =>
+            Record.AddChessmenStatus(StatusMap.ToDictionary(c => c.Key.InstanceId, c => GetFullCondition(c.Key)));
+        public void RecordSummaryActivity() => Record.AddSummaryActivity();
         public void RecordFragment(ActivityFragment fragment) => Record?.AddFragment(fragment);
 
         public void RecordChessmanActivity(int instanceId, bool isChallenger) =>
@@ -413,6 +416,17 @@ namespace Assets.System.WarModule
             RecordFragment(ChessboardFragment.Instance(kind, 0, 0, 0, 0, value, isChallenger));
         }
 
+        private void RecordSpriteRespond(Activity act,IChessOperator target)
+        {
+            if (Record.CurrentActivity.CurrentFragment.Type != ActivityFragment.FragmentTypes.Chessboard)
+                throw new NotImplementedException();
+            var sprite = (ChessboardFragment)Record.CurrentActivity.CurrentFragment;
+            if (sprite.Kind != ChessboardFragment.Kinds.Sprite)
+                throw new NotImplementedException();
+            var respond = RespondAct.Responds.None;
+            sprite.AddRespond(act.IsChallenger, target.InstanceId, act.Skill, respond, 0, GetChessPos(target).Pos,
+                GetFullCondition(target));
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -423,6 +437,12 @@ namespace Assets.System.WarModule
         {
             var lastFragment = Record.GetLastCardFragment();
             CardFragment cardFragment = null;
+            if (act.Intention == Activity.Intentions.Counter)
+            {
+                cardFragment = (CardFragment)lastFragment;
+                return cardFragment.GetCounter(Damage.GetType(act));
+            }
+
             switch (actId)
             {
                 case -1: //加入上一个卡牌执行
@@ -477,7 +497,7 @@ namespace Assets.System.WarModule
             }
 
             att.AddRespond(exeId, target.InstanceId, skill, respond, diff, GetChessPos(target).Pos,
-                GetStatus(target).Clone());
+                GetFullCondition(target));
         }
 
         private void SetChessRespond(int diff, int skill, IChessOperator target, ActivityResult result)
@@ -501,7 +521,7 @@ namespace Assets.System.WarModule
             }
 
             chess.AddRespond(-1, target.InstanceId, skill, respond, diff, GetChessPos(target).Pos,
-                GetStatus(target).Clone());
+                GetFullCondition(target));
         }
 
 
@@ -631,23 +651,22 @@ namespace Assets.System.WarModule
             ActivityResult ProcessActivity()
             {
                 Activity activity;
-                try
-                {
+                //try
+                //{
                     //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
                     activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
                         conducts, skill, rePos);
-                }
-                catch (Exception e)
-                {
-                    //todo 多数这个问题是位置上有卡牌，但是没有operator。
-                    var targetText = string.Empty;
-                    if (target.Operator == null)
-                    {
-                        targetText = $"位置[{target.Pos}]找不到卡牌！";
-                    }
-                    throw XDebug.Throw<ChessboardOperator>(targetText +
-                        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target.Operator}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
-                }
+                //}
+                //catch (Exception e)
+                //{
+                //    var targetText = string.Empty;
+                //    if (target.Operator == null)
+                //    {
+                //        targetText = $"位置[{target.Pos}]找不到卡牌！";
+                //    }
+                //    throw XDebug.Throw<ChessboardOperator>(targetText +
+                //        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target.Operator}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
+                //}
 
                 
                 if (target.Operator != null)
@@ -1031,6 +1050,7 @@ namespace Assets.System.WarModule
             {
                 target = GetChessPos(activity.IsChallenger > 0, activity.To).Operator;
                 currentResult = ActivityResult.Instance(ActivityResult.Types.ChessPos);
+                if (target != null) RecordSpriteRespond(activity, target);
             }
             else
             {
@@ -1357,7 +1377,8 @@ namespace Assets.System.WarModule
         #region Grid Proxy
         public int[] FrontRows => Grid.FrontRows;
         /// <summary>
-        /// 放置棋子到棋位上
+        /// 放置棋子到棋位上。
+        /// todo: 注意！仅用这个方法处理布置。
         /// </summary>
         /// <param name="op"></param>
         /// <param name="pos"></param>

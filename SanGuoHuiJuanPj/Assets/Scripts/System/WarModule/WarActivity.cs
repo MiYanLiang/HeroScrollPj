@@ -12,6 +12,7 @@ namespace Assets.System.WarModule
         public List<ActivityRecord> ActivityRecords { get; set; } = new List<ActivityRecord>();
         public int Index { get; set; } = -1;
         public ActivityRecord CurrentActivity => ActivityRecords[Index];
+        public Dictionary<int, ChessStatus> StatusMap { get; set; }
         public void SetRound(ChessRound round)
         {
             Round = round.InstanceId;
@@ -36,9 +37,16 @@ namespace Assets.System.WarModule
             Index++;
         }
 
-        public void AddJiBanActivity(int jiBanId, bool isChallenger, bool isBuff) =>
+        public void AddJiBanActivity(int jiBanId, bool isChallenger, bool isBuff)
+        {
+            if (((CurrentActivity.Type == ActivityRecord.Types.JiBanBuff && isBuff) ||
+                 (CurrentActivity.Type == ActivityRecord.Types.JiBanAttack && !isBuff)) &&
+                CurrentActivity.IsChallenger == isChallenger &&
+                CurrentActivity.InstanceId == jiBanId)
+                return;
             AddActivity(jiBanId, isChallenger,
                 isBuff ? ActivityRecord.Types.JiBanBuff : ActivityRecord.Types.JiBanAttack);
+        }
 
         public void AddFragment(ActivityFragment fragment) => CurrentActivity.AddFragment(fragment);
 
@@ -46,6 +54,8 @@ namespace Assets.System.WarModule
             CurrentActivity.Data.LastOrDefault(c => c.Type == ActivityFragment.FragmentTypes.Chessman);
 
         public int GetActId() => CurrentActivity.Index < 0 ? 0 : CurrentActivity.CurrentFragment.ActId;
+
+        public void AddChessmenStatus(Dictionary<int, ChessStatus> statusMap) => StatusMap = statusMap;
     }
 
     public record ActivityRecord
@@ -228,8 +238,9 @@ namespace Assets.System.WarModule
         /// 每次攻击
         /// </summary>
         public List<ExecuteAct> Executes { get; set; } = new List<ExecuteAct>();
-
+        public ExecuteAct Counter { get; set; }
         public override string ToString() => $"{InstanceId}.{Type},Act[{ActId}]Atts({Executes.Count})";
+        public ExecuteAct GetCounter(Damage.Types damageType) => Counter ??= new ExecuteAct(damageType);
 
         public ExecuteAct GetOrInstanceAttack(Damage.Types damageType)
         {
@@ -249,15 +260,13 @@ namespace Assets.System.WarModule
     {
         public List<RespondAct> Responds { get; set; } = new List<RespondAct>();
         public Damage.Types DamageType { get; set; }
-        public CardFragment Inner { get; set; }
 
         public ExecuteAct(Damage.Types damageType)
         {
             DamageType = damageType;
         }
 
-        public override string ToString() =>
-            $"{DamageType},Resp({Responds.Count})," + (Inner == null ? string.Empty : "+Inner");
+        public override string ToString() => $"{DamageType},Resp({Responds.Count})";
 
         public void AddRespond(int exeId, int targetId, int skill, RespondAct.Responds kind, int pop, int finalPos,
             ChessStatus status) =>

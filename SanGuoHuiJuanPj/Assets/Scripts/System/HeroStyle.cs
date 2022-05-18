@@ -86,16 +86,17 @@ public class ChessmanStyle : ChessUiStyle
 
     public virtual Tween ExecutionEffect(ExecuteAct act, FightCardData op, int skill = 0) =>
         DOTween.Sequence();
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="target"></param>
-    /// <param name="respond"></param>
+    /// <param name="pop"></param>
     /// <param name="dmgColor"></param>
     /// <param name="dmgType"></param>
     /// <param name="sparkId">-1 = 无闪花,0=普通闪花，正数等于兵种闪花</param>
     /// <param name="skill"></param>
-    public virtual void RespondUpdate(FightCardData target, RespondAct respond, DamageColor dmgColor, Damage.Types dmgType, int sparkId, int skill) {}
+    public virtual void RespondUpdate(FightCardData target, int pop, DamageColor dmgColor, Damage.Types dmgType, int sparkId, int skill) {}
 }
 public class InstantEffectStyle : CombatStyle
 {
@@ -262,17 +263,17 @@ public abstract class CardStyle : ChessmanStyle
         return tween;
     }
 
-    public override void RespondUpdate(FightCardData target,RespondAct respond,DamageColor dmgColor,Damage.Types dmgType,int sparkId,int skill)
+    public override void RespondUpdate(FightCardData target,int pop, DamageColor dmgColor,Damage.Types dmgType,int sparkId,int skill)
     {
-        if (respond.Pop > 0)
+        if (pop > 0)
         {
             var color = GetColor(dmgColor);
-            CardAnimator.instance.NumberEffectTween(target, respond.Pop, color, dmgType);
+            CardAnimator.instance.NumberEffectTween(target, pop, color, dmgType);
         }
         Spark(skill, target, sparkId, dmgType != Damage.Types.General);
     }
 
-    private Color GetColor(DamageColor color)
+    protected Color GetColor(DamageColor color)
     {
         switch (color)
         {
@@ -289,7 +290,7 @@ public abstract class CardStyle : ChessmanStyle
         }
     }
 
-    private void Spark(int skill, FightCardData target, int sparkId, bool enlarge)
+    protected void Spark(int skill, FightCardData target, int sparkId, bool enlarge)
     {
         if (sparkId < 0) return;
         GameObject effect;
@@ -351,6 +352,32 @@ public class TrapStyle : CardStyle
 {
     public override int GetMilitarySparkId(Activity activity) => Effect.GetTrapSparkId(Military, activity.Skill);
     public override int GetMilitarySparkId(int skill) => Effect.GetTrapSparkId(Military, skill);
-    protected override void ActivityVText(Activity activity, FightCardData offense) => CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, activity.Skill), offense.cardObj.transform);
-    protected override void ActivityVText(int skill, FightCardData offense) => CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, skill), offense.cardObj.transform);
+
+    protected override void ActivityVText(Activity activity, FightCardData offense) =>
+        CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, activity.Skill),
+            offense.cardObj.transform);
+
+    protected override void ActivityVText(int skill, FightCardData offense) =>
+        CardAnimator.instance.VTextEffect(Effect.TrapActivityVText(Military, skill), offense.cardObj.transform);
+
+    public override void RespondUpdate(FightCardData target, int pop, DamageColor dmgColor, Damage.Types dmgType,
+        int sparkId, int skill)
+    {
+        if (Military is 11 && target.Status.IsDeath)//如果是金币
+        {
+            CardAnimator.instance.NumberEffectTween(target, $"金币+{target.Level}",
+                CardAnimator.instance.Misc.TreasureChestTextColor,
+                Damage.Types.Rouse, false);
+        }
+        else
+        {
+            if (pop > 0)
+            {
+                var color = GetColor(dmgColor);
+                CardAnimator.instance.NumberEffectTween(target, pop, color, dmgType);
+            }
+        }
+
+        Spark(skill, target, sparkId, dmgType != Damage.Types.General);
+    }
 }

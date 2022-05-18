@@ -335,6 +335,6 @@ namespace Assets.System.WarModule
             return sb.ToString();
         }
 
-        public void SetStatus(ChessStatus status) => Status = status.Clone();
+        public void SetStatus(ChessStatus status) => Status = status.CloneHp();
     }
 }

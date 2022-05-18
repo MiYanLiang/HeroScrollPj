@@ -2317,7 +2317,7 @@ namespace Assets.System.WarModule
                 var target = targets[i];
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: i, skill: 1,
                     InstanceGenericDamage(addOnDmg)); //第1斩开始算技能连斩
-                if (!target.IsPostedAlive) break;
+                if (!IsAlive) break;
                 if (result is { IsDeath: false }) break;
                 addOnDmg += (int)(StateDamage() * DamageRate() * 0.01f);
             }
@@ -2362,6 +2362,7 @@ namespace Assets.System.WarModule
     {
         private int CounterRate()
         {
+            return 100;
             switch (Style.Military)
             {
                 case 13: return 70;
