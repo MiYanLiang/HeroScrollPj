@@ -1793,7 +1793,7 @@ public static class Effect
             case PosSprite.Kinds.Generic: return -1;
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                return -1;
         }
     }
     #endregion

@@ -500,7 +500,7 @@ namespace Assets.System.WarModule
         private IChessPos[] GetChained() => ChainSprite.GetChained(Chessboard, this, IsChainable).ToArray();
 
         public override void OnRoundStart() => UpdateChain();
-        public override void OnRePos(int pos) => UpdateChain();
+        public override void OnRePosTrigger(int pos) => UpdateChain();
 
         private void UpdateChain()
         {
@@ -617,7 +617,7 @@ namespace Assets.System.WarModule
             var buffRate = CountRate(combat, PerformRate(), CriticalRate, RouseRate);
             if(Chessboard.IsRandomPass(buffRate))
             {
-                Chessboard.InstanceSprite<ShadySprite>(Chessboard.GetChessPos(this), 1, 1, -1);
+                Chessboard.InstanceSprite<ShadySprite>(Chessboard.GetChessPos(this), 1, 1, -1, skill);
                 foreach (var langQi in langQiList)
                 {
                     OnPerformActivity(langQi, Activity.Intentions.Friendly, actId: 0, skill: 1,
@@ -2761,7 +2761,8 @@ namespace Assets.System.WarModule
         }
         public override void OnRoundStart()
         {
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: 1, CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, value: Shield()));
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: 1,
+                CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Shield, value: Shield()));
         }
 
         protected override void MilitaryPerforms(int skill = 1)

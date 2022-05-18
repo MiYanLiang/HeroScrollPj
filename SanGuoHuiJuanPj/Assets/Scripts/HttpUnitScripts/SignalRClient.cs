@@ -39,9 +39,9 @@ public class SignalRClient : MonoBehaviour
     /// </summary>
     public ConnectionStates Status;
 
-    public int ServerTimeOutMinutes = 10;
-    public int KeeAliveIntervalSecs = 600;
-    public int HandShakeTimeoutSecs = 10;
+    public int ServerTimeOutMinutes = 60;
+    //public int KeeAliveIntervalSecs = 600;
+    //public int HandShakeTimeoutSecs = 10;
     public ServerPanel ServerPanel;
     public event UnityAction<ConnectionStates> OnStatusChanged;
     public event UnityAction OnConnected;
@@ -177,7 +177,7 @@ public class SignalRClient : MonoBehaviour
         var conn = new HubConnection(new Uri(url), new JsonProtocol(new JsonNetEncoder()), new HubOptions
         {
             ConnectTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes),
-            PingInterval = TimeSpan.FromMinutes(1),
+            PingInterval = TimeSpan.FromMinutes(5),
             SkipNegotiation = true,
             PreferedTransport = TransportTypes.WebSocket
         });
