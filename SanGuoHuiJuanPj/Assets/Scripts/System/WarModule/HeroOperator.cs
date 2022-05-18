@@ -2317,8 +2317,8 @@ namespace Assets.System.WarModule
                 var target = targets[i];
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: i, skill: 1,
                     InstanceGenericDamage(addOnDmg)); //第1斩开始算技能连斩
-                if (result != null && !result.IsDeath)
-                    break;
+                if (!target.IsPostedAlive) break;
+                if (result is { IsDeath: false }) break;
                 addOnDmg += (int)(StateDamage() * DamageRate() * 0.01f);
             }
         }

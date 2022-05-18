@@ -231,13 +231,13 @@ namespace Assets.System.WarModule
 
         public override string ToString() => $"{InstanceId}.{Type},Act[{ActId}]Atts({Executes.Count})";
 
-        public ExecuteAct GetOrInstanceAttack(ExecuteAct.Actions kind, Damage.Types damageType)
+        public ExecuteAct GetOrInstanceAttack(Damage.Types damageType)
         {
             var at = Executes.FirstOrDefault();
             switch (at)
             {
                 case null:
-                    at = new ExecuteAct(kind, damageType);
+                    at = new ExecuteAct(damageType);
                     Executes.Add(at);
                     break;
             }
@@ -247,37 +247,21 @@ namespace Assets.System.WarModule
 
     public record ExecuteAct 
     {
-        public enum Actions
-        {
-            /// <summary>
-            /// 无，可以用于Attach类的非主攻击
-            /// </summary>
-            None,
-            /// <summary>
-            /// 基本攻击
-            /// </summary>
-            Basic,
-            /// <summary>
-            /// 兵种技能
-            /// </summary>
-            Perform,
-        }
-        public Actions Kind { get; set; }
         public List<RespondAct> Responds { get; set; } = new List<RespondAct>();
         public Damage.Types DamageType { get; set; }
         public CardFragment Inner { get; set; }
 
-        public ExecuteAct(Actions kind, Damage.Types damageType)
+        public ExecuteAct(Damage.Types damageType)
         {
-            Kind = kind;
             DamageType = damageType;
         }
 
         public override string ToString() =>
-            $"{Kind},{DamageType},Resp({Responds.Count})," + (Inner == null ? string.Empty : "+Inner");
+            $"{DamageType},Resp({Responds.Count})," + (Inner == null ? string.Empty : "+Inner");
 
         public void AddRespond(int exeId, int targetId, int skill, RespondAct.Responds kind, int pop, int finalPos,
-            ChessStatus status) => Responds.Add(new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status));
+            ChessStatus status) =>
+            Responds.Add(new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status));
     }
     public record RespondAct 
     {

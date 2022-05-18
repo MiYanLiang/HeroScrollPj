@@ -1035,7 +1035,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         int audioId = -1;
         switch (board.Kind)
         {
-            case ChessboardFragment.Kinds.Sprite:
+            case ChessboardFragment.Kinds.Sprite when (board.Value > 0)://仅在添加的时候会有声效
                 audioId = Effect.GetSpriteAudioId(PosSprite.GetKind(board.TargetId));
                     AddToSection();
                 break;
@@ -1044,8 +1044,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     audioId = Effect.GetPlayerResourceEffectId(board.TargetId);
                     AddToSection();
                 break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            default:break;
         }
         //if (conduct.Kind == CombatConduct.ElementDamageKind)
         //{

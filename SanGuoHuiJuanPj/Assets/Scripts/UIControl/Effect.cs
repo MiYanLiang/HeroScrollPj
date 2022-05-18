@@ -2239,6 +2239,8 @@ public static class Effect
             case 28:
             case 29:
             case 204://术士
+                if (skill == 3) //杀气没有音效
+                    audioId = -1;
                 break;
 
             case 205:
@@ -2269,6 +2271,8 @@ public static class Effect
             case 214:
             case 215:
             case 216://狂士
+                if (skill == 3) //杀气没有音效
+                    audioId = -1;
                 break;
 
             case 36:

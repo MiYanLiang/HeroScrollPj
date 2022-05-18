@@ -452,12 +452,8 @@ namespace Assets.System.WarModule
                     break;
             }
 
-            var action = ExecuteAct.Actions.Basic;
-
-            if (act.Skill > 0) action = ExecuteAct.Actions.Perform;
-
             var dmg = Damage.GetType(act);
-            var att = cardFragment.GetOrInstanceAttack(action, dmg);
+            var att = cardFragment.GetOrInstanceAttack(dmg);
             return att;
         }
 

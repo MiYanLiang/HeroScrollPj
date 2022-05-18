@@ -223,7 +223,7 @@ public abstract class CardStyle : ChessmanStyle
     {
         var tween = DOTween.Sequence();
         
-        if(act.Kind == ExecuteAct.Actions.Perform)
+        if(skill > 0)
         {
             //VText
             tween.AppendCallback(()=>ActivityVText(skill, op));
