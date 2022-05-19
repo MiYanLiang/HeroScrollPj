@@ -195,9 +195,9 @@ namespace Assets.System.WarModule
         {
             OnSufferConduct(activity, offender);
             if (offender == null || //没对象
-                !offender.IsAlive || //对象已死亡
                 offender.Style.ArmedType < 0 || //对象不是武将
                 offender.Style.Type == CombatStyle.Types.Range || //对方是远程
+                !Chessboard.GetChessPos(offender).IsPostedAlive || //对方不在位置或是死亡
                 activity.Intention != Activity.Intentions.Offensive) //对象并非主动攻击标签
                 return;
             OnReflectingConduct(activity, offender);
