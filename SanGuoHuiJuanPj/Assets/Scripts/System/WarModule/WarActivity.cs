@@ -72,6 +72,8 @@ namespace Assets.System.WarModule
         public ActivityFragment GetLastCardFragment(int instanceId) =>
             CurrentActivity.Data.LastOrDefault(c =>
                 c.Type == ActivityFragment.FragmentTypes.Chessman && c.InstanceId == instanceId);
+        public ActivityFragment GetLastCardFragment() =>
+            CurrentActivity.Data.LastOrDefault(c => c.Type == ActivityFragment.FragmentTypes.Chessman);
 
         public int GetActId() => CurrentActivity.Index < 0 ? 0 : CurrentActivity.CurrentFragment.ActId;
 

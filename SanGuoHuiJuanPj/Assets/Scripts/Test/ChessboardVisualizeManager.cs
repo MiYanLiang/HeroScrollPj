@@ -155,27 +155,35 @@ public class ChessboardVisualizeManager : MonoBehaviour
         return gridTween;
     }
 
-    private Tween OnUpdateSummary(ActivityRecord rec)
+    private IEnumerator OnUpdateSummary(ActivityRecord rec)
     {
         var tween = DOTween.Sequence().Pause();
         var section = new AudioSection();
         foreach (var fg in rec.Data)
             tween.Join(OnInstantFragmentUpdate(fg, section));
-        return tween.Play().AppendCallback(()=>PlayAudio(section));
+        yield return tween.Play().AppendCallback(() => PlayAudio(section)).WaitForCompletion();
     }
 
     private Tween OnInstantFragmentUpdate(ActivityFragment fg,AudioSection section)
     {
-        return fg.Type switch
+        var tween = DOTween.Sequence();
+        switch (fg.Type)
         {
-            ActivityFragment.FragmentTypes.Chessman => UpdateChessmanFragment((CardFragment)fg,section),
-            ActivityFragment.FragmentTypes.Chessboard => UpdateChessboardFragment((ChessboardFragment)fg, section),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            case ActivityFragment.FragmentTypes.Chessman:
+                tween.Join(UpdateChessmanFragment((CardFragment)fg, section));
+                break;
+            case ActivityFragment.FragmentTypes.Chessboard:
+                tween.Join(UpdateChessboardFragment((ChessboardFragment)fg, section));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return tween;
 
         Tween UpdateChessboardFragment(ChessboardFragment cf,AudioSection aud)
         {
-            var tween = DOTween.Sequence();
+            var tw = DOTween.Sequence();
             SetAudioSection(aud, cf);
             var dmgColor = cf.Kind == ChessboardFragment.Kinds.Sprite
                 ? ChessmanStyle.DamageColor.Red
@@ -184,23 +192,23 @@ public class ChessboardVisualizeManager : MonoBehaviour
             {
                 var op = TryGetCardMap(respond.ExeId); //获取执行者
                 if (op != null) 
-                    tween.Join(op.ChessmanStyle.ExecutionEffect(op, respond.Skill)); //加入棋子执行特效
-                tween.Join(TargetRespond(respond, Damage.Types.General, dmgColor, -1, true)); //加入目标反馈
+                    tw.Join(op.ChessmanStyle.ExecutionEffect(op, respond.Skill)); //加入棋子执行特效
+                tw.Join(TargetRespond(respond, Damage.Types.General, dmgColor, -1, true)); //加入目标反馈
                 SetAudioSection(section, respond); //设定音效
             }
 
             if (cf.Kind is ChessboardFragment.Kinds.Gold or ChessboardFragment.Kinds.Chest)
-                tween.PrependCallback(() => OnResourceUpdate.Invoke(cf.IsChallenger, cf.TargetId, cf.Value));
+                tw.PrependCallback(() => OnResourceUpdate.Invoke(cf.IsChallenger, cf.TargetId, cf.Value));
 
             var pos = Chessboard.GetChessPos(cf.Pos, cf.IsChallenger);
-            tween.PrependCallback(() => SpriteUpdate(pos, cf.TargetId, cf.Value == 1));
-            return tween;
+            tw.PrependCallback(() => SpriteUpdate(pos, cf.TargetId, cf.Value == 1));
+            return tw;
         }
 
         Tween UpdateChessmanFragment(CardFragment cfg,AudioSection aud)
         {
             var tween = DOTween.Sequence();
-            var rePosTween = DOTween.Sequence();
+            
             foreach (var act in cfg.Executes)
             {
                 foreach (var respond in act.Responds)
@@ -228,12 +236,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     }//加入目标反馈
                     SetAudioSection(aud, respond); //设定音效
                 }
-                rePosTween.Join(RePosRespond(act));
+                tween.Join(RePosRespond(act));
             }
 
             var op = TryGetCardMap(cfg.InstanceId);
             if (op != null) tween.Join(CardAnimator.instance.AssistEnlargeAnimation(op));
-            return rePosTween.Join(tween);
+            return tween;
         }
     }
 
@@ -316,7 +324,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             }).Join(ChessboardPreAnimation())
             .Join(DelayStart(CardAnimator.instance.Misc.OnRoundStart)).Play()
             .WaitForCompletion();
-        
+
         //yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundStart);
 
         //var cards = CardMap.Values.Where(c => !c.Status.IsDeath).ToList();
@@ -326,9 +334,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             switch (rec.Type)
             {
                 case ActivityRecord.Types.Summary:
-                    yield return OnUpdateSummary(rec).WaitForCompletion();
+                    yield return OnUpdateSummary(rec);
                     break;
-                case ActivityRecord.Types.Chessman: 
+                case ActivityRecord.Types.Chessman:
                     yield return OnChessmanAnimation(rec);
                     break;
                 case ActivityRecord.Types.JiBanBuff:
@@ -341,8 +349,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     throw new ArgumentOutOfRangeException();
             }
 
-            yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         }
+
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         UpdateChessmenStatus(round);
         var gridTween = DOTween.Sequence().Pause();
         foreach (var image in Chessboard.GridImages)
@@ -1363,4 +1372,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public class PlayerResourceEvent : UnityEvent<bool, int, int> { }
     
     public class CardDefeatedEvent : UnityEvent<FightCardData> { }
+}
+
+public record CardRespondAnim
+{
+    public bool Shake { get; set; }
+    public int RePos { get; set; } = -1;
+    public int Pop { get; set; }
+
 }
