@@ -445,14 +445,16 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         private ExecuteAct GetAttackFragment(Activity act, int actId)
         {
-            var lastFragment = Record.GetLastCardFragment(act.From);
             CardFragment cardFragment = null;
+            ActivityFragment lastFragment;
             if (act.Intention == Activity.Intentions.Counter)
             {
+                lastFragment = Record.GetLastCardFragment();
                 cardFragment = (CardFragment)lastFragment;
                 return cardFragment.GetCounter(Damage.GetType(act));
             }
 
+            lastFragment = Record.GetLastCardFragment(act.From);
             switch (actId)
             {
                 case -1: //加入上一个卡牌执行
