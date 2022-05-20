@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Assets.System.WarModule;
 using DG.Tweening;
 using UnityEngine;
@@ -199,7 +201,6 @@ public class CardAnimator : MonoBehaviour
         var trans = chessboard.transform;
         var origin = trans.position;
         return DOTween.Sequence().Join(trans.DOShakePosition(0.25f, chessboardShakeIntensity))
-            .AppendInterval(0.3f)
             .OnComplete(() => trans.DOMove(origin, 0));
     }
 
@@ -343,6 +344,98 @@ public class CardAnimator : MonoBehaviour
                 GetHTextEffect(23, target.cardObj.transform, color, scale);
             if (conduct.Rouse > 0)
                 GetHTextEffect(22, target.cardObj.transform, color, scale);
+        }
+    }
+
+    public void DisplayRespondTextEffect(FightCardData target,RespondAct.Responds kind, Damage.Types dmgType, bool isRePos, ChessStatus status)
+    {
+        if (isRePos)
+            GetHTextEffect(17, target.cardObj.transform, Color.red, 1);
+
+        var color = Color.red;
+
+        var dic = new Dictionary<int,int>();
+        target.Status.Buffs.Keys.Concat(status.Buffs.Keys)
+            .Distinct()
+            .ToList().ForEach(key =>
+            {
+                target.Status.Buffs.TryGetValue(key, out var before);
+                status.Buffs.TryGetValue(key, out var after);
+                var value = after - before;
+                if (value!=0) dic.Add(key, value);
+            });
+        var tableId = -1;
+        foreach (var o in dic.Where(o => o.Value != 0))
+        {
+            var con = (CardState.Cons)o.Key;
+            if (o.Value < 0)
+            {
+                switch (con)
+                {
+                    case CardState.Cons.Stunned:
+                        tableId = 14; //如果buff值是负数，判定为镇定效果(移除buff)
+                        break;
+                    case CardState.Cons.Poison:
+                        tableId = 12;
+                        break;
+                    case CardState.Cons.Burn:
+                        tableId = 20;
+                        break;
+                }
+            }
+            else //其余的只有添加buff的时候才有文字显示
+                switch (con)
+                {
+                    case CardState.Cons.Bleed:
+                        tableId = 16;
+                        break;
+                    case CardState.Cons.Imprisoned:
+                        tableId = 11;
+                        break;
+                    case CardState.Cons.Cowardly:
+                        tableId = 21;
+                        break;
+                }
+        }
+
+        switch (kind)
+        {
+            case RespondAct.Responds.None:
+                break;
+            case RespondAct.Responds.Buffing:
+                break;
+            case RespondAct.Responds.Suffer:
+                break;
+            case RespondAct.Responds.Heal:
+                color = ColorDataStatic.huiFu_green;
+                tableId = 15;
+                break;
+            case RespondAct.Responds.Dodge:
+                break;
+            case RespondAct.Responds.Shield:
+                break;
+            case RespondAct.Responds.Ease:
+                break;
+            case RespondAct.Responds.Kill:
+                tableId = 13;
+                break;
+            case RespondAct.Responds.Suicide:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        switch (dmgType)
+        {
+            case Damage.Types.General when (tableId >= 0):
+                GetHTextEffect(tableId, target.cardObj.transform, color, 1);
+                break;
+            case Damage.Types.Critical:
+                GetHTextEffect(23, target.cardObj.transform, color, 1.2f);
+                break;
+            case Damage.Types.Rouse:
+                GetHTextEffect(22, target.cardObj.transform, color, 1.3f);
+                break;
         }
     }
 

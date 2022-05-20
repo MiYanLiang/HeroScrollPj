@@ -263,15 +263,15 @@ namespace Assets.System.WarModule
         public List<ExecuteAct> Executes { get; set; } = new List<ExecuteAct>();
         public ExecuteAct Counter { get; set; }
         public override string ToString() => $"{InstanceId}.{Type},Act[{ActId}]Atts({Executes.Count})";
-        public ExecuteAct GetCounter(Damage.Types damageType) => Counter ??= new ExecuteAct(damageType);
+        public ExecuteAct GetCounter(Damage.Types damageType) => Counter ??= new ExecuteAct(damageType,ExecuteAct.Kinds.Chessman);
 
-        public ExecuteAct GetOrInstanceAttack(Damage.Types damageType)
+        public ExecuteAct GetOrInstanceAttack(Damage.Types damageType, ExecuteAct.Kinds kind)
         {
             var at = Executes.FirstOrDefault();
             switch (at)
             {
                 case null:
-                    at = new ExecuteAct(damageType);
+                    at = new ExecuteAct(damageType, kind);
                     Executes.Add(at);
                     break;
             }
@@ -281,12 +281,18 @@ namespace Assets.System.WarModule
 
     public record ExecuteAct 
     {
+        public enum Kinds
+        {
+            Chessman,
+            BuffDamage
+        }
         public List<RespondAct> Responds { get; set; } = new List<RespondAct>();
         public Damage.Types DamageType { get; set; }
-
-        public ExecuteAct(Damage.Types damageType)
+        public Kinds Kind { get; set; }
+        public ExecuteAct(Damage.Types damageType, Kinds kind)
         {
             DamageType = damageType;
+            Kind = kind;
         }
 
         public override string ToString() => $"{DamageType},Resp({Responds.Count})";
@@ -331,8 +337,15 @@ namespace Assets.System.WarModule
             /// <summary>
             /// 自杀
             /// </summary>
-            Suicide
+            Suicide,
+            /// <summary>
+            /// 无敌
+            /// </summary>
+            Invincible
         }
+        /// <summary>
+        /// 执行者Id,一般都是卡牌InstanceId，
+        /// </summary>
         public int ExeId { get; set; }
         public int TargetId { get; set; }
         public Responds Kind { get; set; }
@@ -341,6 +354,9 @@ namespace Assets.System.WarModule
         /// 最终棋格
         /// </summary>
         public int FinalPos { get; set; }
+        /// <summary>
+        /// 技能值，如果是<see cref="ExecuteAct.Kinds.BuffDamage"/>伤害,它代表buff类型
+        /// </summary>
         public int Skill { get; set; }
         public ChessStatus Status { get; set; }
 

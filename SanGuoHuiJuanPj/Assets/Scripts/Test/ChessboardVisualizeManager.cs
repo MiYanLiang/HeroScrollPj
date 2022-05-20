@@ -192,12 +192,16 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 : ChessmanStyle.DamageColor.Gold;
             foreach (var respond in cf.Responds)
             {
-                var op = TryGetCardMap(respond.ExeId); //获取执行者
-                if (op != null) 
-                    tw.Join(op.ChessmanStyle.ExecutionEffect(op, respond.Skill)); //加入棋子执行特效
-                
-                tw.Join(TargetRespond(respond, Damage.Types.General, dmgColor, -1, true)); //加入目标反馈
-                SetAudioSection(section, respond); //设定音效
+                //var op = TryGetCardMap(respond.ExeId); //获取执行者
+                //if (op != null)
+                //{
+                //    exKind = ExecuteAct.Kinds.Chessman;
+                //    tw.Join(op.ChessmanStyle.ExecutionEffect(op, exKind, respond.Skill)); //加入棋子执行特效
+                //}
+
+                var exKind = ExecuteAct.Kinds.BuffDamage;
+                CardRespond(respond, Damage.Types.General, dmgColor, exKind);
+                //SetAudioSection(section, respond); //设定音效
             }
 
             if (cf.Kind is ChessboardFragment.Kinds.Gold or ChessboardFragment.Kinds.Chest)
@@ -205,49 +209,33 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             var pos = Chessboard.GetChessPos(cf.Pos, cf.IsChallenger);
             tw.PrependCallback(() => SpriteUpdate(pos, cf.TargetId, cf.Value == 1));
-            return tw;
+            return tw.Join(GetCardResponds());
         }
 
         Tween UpdateChessmanFragment(CardFragment cfg,AudioSection aud)
         {
-            var tween = DOTween.Sequence();
+            var tw = DOTween.Sequence();
             
             foreach (var act in cfg.Executes)
             {
                 foreach (var respond in act.Responds)
                 {
-                    var o = TryGetCardMap(respond.ExeId); //获取执行者
-                    if (o != null)
+                    if (act.Kind == ExecuteAct.Kinds.Chessman)
                     {
-                        tween.Join(o.ChessmanStyle.ExecutionEffect(o, respond.Skill)); //加入棋子执行特效
+                        var o = TryGetCardMap(respond.ExeId); //获取执行者
+                        if (o != null) tw.Join(o.ChessmanStyle.ExecutionEffect(o, act.Kind, respond.Skill)); //加入棋子执行特效
                     }
 
-                    if (respond.Pop > 0)
-                    {
-                        var tg = TryGetCardMap(respond.TargetId);
-                        var exe = TryGetCardMap(respond.ExeId);
-                        if (tg == null) continue;
-                        tween.Join(tg.ChessmanStyle.RespondAnim(tg, respond));
-                        tween.AppendCallback(() =>
-                        {
-                            tg.ChessmanStyle.UpdateStatus(respond.Status, tg);
-                            tg.ChessmanStyle.RespondUpdate(tg, respond.Pop, GetDamageColor(respond.Kind),
-                                act.DamageType, respond.Skill);
-                            if (exe == null) return;
-                            var sparkId = exe.ChessmanStyle.GetMilitarySparkId(respond.Skill);
-                            tg.ChessmanStyle.RespondSpark(respond.Skill, tg, sparkId,
-                                act.DamageType != Damage.Types.General);
-                        });
-
-                    }//加入目标反馈
+                    //加入目标反馈
+                    CardRespond(respond, Damage.Types.General, GetDamageColor(respond.Kind),act.Kind);
                     SetAudioSection(aud, respond); //设定音效
                 }
-                tween.Join(RePosRespond(act));
+                tw.Join(RePosRespond(act));
             }
 
             var op = TryGetCardMap(cfg.InstanceId);
-            if (op != null) tween.Join(CardAnimator.instance.AssistEnlargeAnimation(op));
-            return tween;
+            if (op != null) tw.Join(CardAnimator.instance.AssistEnlargeAnimation(op));
+            return tw.Join(GetCardResponds());
         }
     }
 
@@ -354,7 +342,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
+            FilterDeathChessman();
         }
 
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
@@ -368,7 +356,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private Tween DelayStart(float delay) => DOTween.Sequence().AppendInterval(delay);
 
     //作为执行(攻击/释放技能)演示，传入已组合好的执行结果，根据不同卡牌演示结果
-    private IEnumerator ExecuteTween(FightCardData op, Tween exTween)
+    private IEnumerator ExecuteTween(FightCardData op, Sequence exTween)
     {
         if (op != null) //不是陷阱类都会演示行动效果
         {
@@ -377,8 +365,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 case CombatStyle.Types.None:
                     break;
                 case CombatStyle.Types.Melee:
-                    yield return CardAnimator.instance.StepBackAndHit(op).WaitForCompletion();
-                    yield return exTween.Play().WaitForCompletion();
+                    yield return exTween.Prepend(CardAnimator.instance.StepBackAndHit(op))
+                        .AppendInterval(0.2f).Play()
+                        .WaitForCompletion();
                     break;
                 case CombatStyle.Types.Range:
                     var origin = op.cardObj.transform.position;
@@ -433,12 +422,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             var isRouse = false;
             var dmgType = Damage.Types.General;
-            var rePosTween = DOTween.Sequence().Pause();
+            //var rePosTween = DOTween.Sequence().Pause();
             //收集棋子执行的反馈
             foreach (var ex in chessFrags.SelectMany(frag => frag.Executes))
             {
-                OnSetExecuteResponds(ex, exTween, section);
-                rePosTween.Join(RePosRespond(ex));
+                OnSetExeCardResponds(ex, exTween, section);
+                //rePosTween.Join(RePosRespond(ex));
                 //如果会心，调用棋盘摇晃效果
                 if (dmgType == Damage.Types.General)
                     dmgType = ex.DamageType;
@@ -488,9 +477,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     throw new ArgumentOutOfRangeException();
             }
 
+            exTween.Join(GetCardResponds());
             yield return preTween.Play().WaitForCompletion();
-
-            yield return ExecuteTween(major, exTween.Join(rePosTween).PrependCallback(() => PlayAudio(section)));
+            
+            yield return ExecuteTween(major, exTween.PrependCallback(() => PlayAudio(section)));
 
             var counter = chessFrags.Select(c => c.Counter).FirstOrDefault(c => c != null);
             if (counter == null) continue;
@@ -517,10 +507,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
             if (counterEx == null)
                 throw new NullReferenceException($"找不到反击单位id={counterRes}");
 
-            OnSetExecuteResponds(counter, counterTween, counterAudio);
+            OnSetExeCardResponds(counter, counterTween, counterAudio);
             counterTween.PrependCallback(() => PlayAudio(counterAudio));
             yield return CardAnimator.instance.CounterAnimation(counterEx).WaitForCompletion();
-            yield return counterTween.Play().WaitForCompletion();
+            yield return counterTween.Append(GetCardResponds()).Play().WaitForCompletion();
         }
 
         if (isShady)
@@ -539,52 +529,99 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
     }
 
-    private void OnSetExecuteResponds(ExecuteAct ex, Sequence exTween, AudioSection section)
+    private Tween GetCardResponds()
+    {
+        var tween = DOTween.Sequence();
+        foreach (var anim in RespondCards)
+        {
+            var tar = TryGetCardMap(anim.InstanceId);
+            var style = tar.ChessmanStyle;
+            var vText = Effect.ActivityResultVText(anim.RespondKind);
+            switch (anim.RespondKind)
+            {
+                case RespondAct.Responds.Ease:
+                case RespondAct.Responds.Suffer:
+                    tween.Join(CardAnimator.instance.SufferShakeAnimation(tar));
+                    break;
+                case RespondAct.Responds.Buffing:
+                case RespondAct.Responds.Heal:
+                case RespondAct.Responds.Shield:
+                    tween.Join(CardAnimator.instance.AssistEnlargeAnimation(tar));
+                    break;
+                case RespondAct.Responds.Dodge:
+                    tween.Join(CardAnimator.instance.SideDodgeAnimation(tar));
+                    break;
+                case RespondAct.Responds.None:
+                case RespondAct.Responds.Kill:
+                case RespondAct.Responds.Suicide:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var isRePos = anim.RePos >= 0;
+            tween.PrependCallback(() =>
+            {
+                if (vText >= 0)
+                    CardAnimator.instance.VTextEffect(vText, tar.cardObj.transform);
+                CardAnimator.instance.DisplayRespondTextEffect(tar, anim.RespondKind, anim.DmgType, isRePos,
+                    anim.Status);
+                style.RespondSpark(anim.Skill, tar, anim.SparkId, anim.DmgType != Damage.Types.General);
+                style.UpdateStatus(anim.Status, tar);
+                style.RespondPopUpdate(tar, anim.Pop, anim.PopColor, anim.DmgType);
+            });
+
+            if (isRePos) tween.Join(OnRePosTween(tar, anim.RePos));
+        }
+        RespondCards.Clear();
+        return tween;
+    }
+
+    #region ExecuteRespond
+
+    private void OnSetExeCardResponds(ExecuteAct ex, Sequence exTween, AudioSection section)
     {
         foreach (var respond in ex.Responds)
         {
             var op = TryGetCardMap(respond.ExeId); //获取执行者
-            if (op != null) exTween.Join(op.ChessmanStyle.ExecutionEffect(op, respond.Skill)); //加入棋子执行特效
-
-            if (respond.Pop > 0)
-                exTween.Join(TargetRespond(respond, ex.DamageType, GetDamageColor(respond.Kind), respond.Skill, false)); //加入目标反馈
+            if (op != null) exTween.Join(op.ChessmanStyle.ExecutionEffect(op, ex.Kind, respond.Skill)); //加入棋子执行特效
+            CardRespond(respond, ex.DamageType, GetDamageColor(respond.Kind), ex.Kind); //加入目标反馈
             SetAudioSection(section, respond); //设定音效
         }
     }
 
-    private Tween TargetRespond(RespondAct respond, Damage.Types dmgType, ChessmanStyle.DamageColor color, int skill,bool isSummary)
+    private void CardRespond(RespondAct respond, Damage.Types dmgType, ChessmanStyle.DamageColor color,
+        ExecuteAct.Kinds actKind)
     {
-        var tween = DOTween.Sequence().Pause();
         var tg = TryGetCardMap(respond.TargetId);
         var op = TryGetCardMap(respond.ExeId);
-        if (tg == null) return tween;
-        tween.Join(tg.ChessmanStyle.RespondAnim(tg, respond));
-        tween.PrependCallback(() => tg.ChessmanStyle.UpdateStatus(respond.Status, tg));
-            tg.ChessmanStyle.RespondUpdate(tg, respond.Pop, color, dmgType, skill);
-        if (isSummary || op == null) return tween;
-        tween.PrependCallback(() =>
+        if (tg == null) return;
+        var res = RespondCards.FirstOrDefault(r => r.InstanceId == respond.TargetId);
+        if (res == null)
         {
-            var sparkId = op.ChessmanStyle.GetMilitarySparkId(respond.Skill);
-            tg.ChessmanStyle.RespondSpark(skill, tg, sparkId, dmgType != Damage.Types.General);
-        });
-        return tween;
+            res = new CardRespondAnim(respond.TargetId);
+            RespondCards.Add(res);
+        }
+
+        res.SetRespond(respond.Kind);
+        res.SetPop(respond.Pop, dmgType, color);
+        res.SetStat(respond.Status);
+
+        var sparkId = -1;
+        switch (actKind)
+        {
+            case ExecuteAct.Kinds.Chessman when (op != null):
+                sparkId = op.ChessmanStyle.GetMilitarySparkId(respond.Skill);
+                break;
+            case ExecuteAct.Kinds.BuffDamage:
+                sparkId = Effect.GetBuffDamageSparkId(respond.Skill);
+                break;
+        }
+
+        res.SetSpark(sparkId, respond.Skill);
+        if (tg.Pos != respond.FinalPos) res.SetRePos(respond.FinalPos);
     }
 
-    //private void CardRespond(RespondAct respond, Damage.Types dmgType, ChessmanStyle.DamageColor color, int skill)
-    //{
-    //    var tg = TryGetCardMap(respond.TargetId);
-    //    var op = TryGetCardMap(respond.ExeId);
-    //    if (tg == null) return;
-    //    var res = RespondCards.FirstOrDefault(r => r.InstanceId == respond.TargetId) ??
-    //              new CardRespondAnim(respond.TargetId);
-    //    tg.ChessmanStyle.RespondAnim(tg, respond, res);
-    //    res.SetStat(respond.Status);
-    //    res.SetPop(respond.Pop, dmgType, color);
-    //    if (op == null) return;
-    //    var sparkId = op.ChessmanStyle.GetMilitarySparkId(respond.Skill);
-    //    res.SetSpark(sparkId);
-    //    tg.ChessmanStyle.RespondUpdate(tg, respond.Pop, color, dmgType, sparkId, skill);
-    //}
     private Tween RePosRespond(ExecuteAct ex)
     {
         var tween = DOTween.Sequence();
@@ -596,6 +633,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         return tween;
     }
+    #endregion
 
     public IEnumerator AnimateRound(ChessRound round, bool playRoundStartAudio)
     {
@@ -1387,33 +1425,27 @@ public class ChessboardVisualizeManager : MonoBehaviour
 public record CardRespondAnim(int InstanceId)
 {
     public int InstanceId { get; set; } = InstanceId;
-    public enum Anims
-    {
-        None,
-        Shake,
-        Dodge,
-        Enlarge
-    }
-    public Anims Anim { get; set; }
     public int RePos { get; set; } = -1;
     public int Pop { get; set; }
     public ChessmanStyle.DamageColor PopColor { get; set; }
     public Damage.Types DmgType { get; set; }
     public ChessStatus Status { get; set; }
     public int SparkId { get; set; } = -1;
-
-    public void SetAnim(Anims anim)
+    public int Skill { get; set; }
+    public RespondAct.Responds RespondKind { get; set; }
+    public void SetSpark(int sparkId, int respondSkill)
     {
-        if(anim != Anims.None) return;
-        Anim = anim;
+        SparkId = sparkId;
+        Skill = respondSkill;
     }
-    public void SetSpark(int sparkId)=>SparkId = sparkId;
 
     public void SetRePos(int pos)=> RePos = pos;
 
+    public void SetRespond(RespondAct.Responds kind) => RespondKind = kind;
+
     public void SetPop(int pop, Damage.Types dmgType, ChessmanStyle.DamageColor color)
     {
-        if (Pop <= 0) return;
+        if (pop <= 0) return;
         Pop = pop;
         PopColor = color;
         DmgType = dmgType;

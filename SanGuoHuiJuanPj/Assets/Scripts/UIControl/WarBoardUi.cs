@@ -259,9 +259,7 @@ public class WarBoardUi : MonoBehaviour
             yield break;
         }
 
-
-        yield return DOTween.Sequence().AppendCallback(() => ChessboardManager.FilterDeathChessman())
-            .AppendInterval(CardAnimator.instance.Misc.OnRoundEnd).WaitForCompletion();
+        yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         IsBusy = false;
         if (invokeRoundPauseTrigger)
         {

@@ -1504,6 +1504,24 @@ public static class Effect
 
         return -1;
     }
+    public static int ActivityResultVText(RespondAct.Responds responds)
+    {
+        switch (responds)
+        {
+            case RespondAct.Responds.Dodge: return 102;
+            case RespondAct.Responds.Shield: return 103;
+            case RespondAct.Responds.Invincible: return 101;
+            case RespondAct.Responds.None:
+            case RespondAct.Responds.Buffing:
+            case RespondAct.Responds.Suffer:
+            case RespondAct.Responds.Heal:
+            case RespondAct.Responds.Ease:
+            case RespondAct.Responds.Kill:
+            case RespondAct.Responds.Suicide: return -1;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(responds), responds, null);
+        }
+    }
 
     #endregion
 

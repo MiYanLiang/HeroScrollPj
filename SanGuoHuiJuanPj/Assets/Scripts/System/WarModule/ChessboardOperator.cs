@@ -485,7 +485,10 @@ namespace Assets.System.WarModule
             }
 
             var dmg = Damage.GetType(act);
-            var att = cardFragment.GetOrInstanceAttack(dmg);
+            var exKind = ExecuteAct.Kinds.Chessman;
+            if (act.Conducts.Any(c => c.Kind == CombatConduct.ElementDamageKind))
+                exKind = ExecuteAct.Kinds.BuffDamage;
+            var att = cardFragment.GetOrInstanceAttack(dmg, exKind);
             return att;
         }
 
@@ -499,7 +502,7 @@ namespace Assets.System.WarModule
                 case ActivityResult.Types.Assist: respond = RespondAct.Responds.Buffing; break;
                 case ActivityResult.Types.Heal: respond = RespondAct.Responds.Heal; break;
                 case ActivityResult.Types.Shield: respond = RespondAct.Responds.Shield; break;
-                case ActivityResult.Types.Invincible: respond = RespondAct.Responds.Shield; break;
+                case ActivityResult.Types.Invincible: respond = RespondAct.Responds.Invincible; break;
                 case ActivityResult.Types.EaseShield: respond = RespondAct.Responds.Ease; break;
                 case ActivityResult.Types.Kill: respond = RespondAct.Responds.Kill; break;
                 case ActivityResult.Types.Suicide: respond = RespondAct.Responds.Suicide; break;
@@ -507,7 +510,6 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
             att.AddRespond(exeId, target.InstanceId, skill, respond, diff, GetChessPos(target).Pos,
                 GetFullCondition(target));
         }
@@ -523,7 +525,7 @@ namespace Assets.System.WarModule
                 case ActivityResult.Types.Assist: respond = RespondAct.Responds.Buffing; break;
                 case ActivityResult.Types.Heal: respond = RespondAct.Responds.Heal; break;
                 case ActivityResult.Types.Shield: respond = RespondAct.Responds.Shield; break;
-                case ActivityResult.Types.Invincible: respond = RespondAct.Responds.Shield; break;
+                case ActivityResult.Types.Invincible: respond = RespondAct.Responds.Invincible; break;
                 case ActivityResult.Types.EaseShield: respond = RespondAct.Responds.Ease; break;
                 case ActivityResult.Types.Kill: respond = RespondAct.Responds.Kill; break;
                 case ActivityResult.Types.Suicide: respond = RespondAct.Responds.Suicide; break;
@@ -1071,7 +1073,7 @@ namespace Assets.System.WarModule
                 var targetStat = GetStatus(target);
                 var targetHp = targetStat.EaseHp;
                 currentResult = GetOperator(target.InstanceId).Respond(activity, offender);
-                var diff = targetHp - targetStat.EaseHp;
+                var diff = Math.Abs(targetHp - targetStat.EaseHp);
                 if (attFrag != null)
                     SetAttackRespond(activity.From, attFrag, activity.Skill, diff, target, currentResult);
                 else SetChessRespond(activity.From, diff, activity.Skill, target, currentResult);
