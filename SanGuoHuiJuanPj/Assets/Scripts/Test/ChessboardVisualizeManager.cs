@@ -342,7 +342,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            FilterDeathChessman();
+
+            yield return DOTween.Sequence().AppendCallback(FilterDeathChessman)
+                .AppendInterval(CardAnimator.instance.Misc.OnRoundEnd).WaitForCompletion();
         }
 
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
@@ -356,18 +358,17 @@ public class ChessboardVisualizeManager : MonoBehaviour
     private Tween DelayStart(float delay) => DOTween.Sequence().AppendInterval(delay);
 
     //作为执行(攻击/释放技能)演示，传入已组合好的执行结果，根据不同卡牌演示结果
-    private IEnumerator ExecuteTween(FightCardData op, Sequence exTween)
+    private IEnumerator ExecuteTween(int exeId, FightCardData op, Sequence exTween)
     {
-        if (op != null) //不是陷阱类都会演示行动效果
+        if (op != null && op.InstanceId == exeId) //不是陷阱类都会演示行动效果
         {
             switch (op.Style.Type)
             {
                 case CombatStyle.Types.None:
                     break;
                 case CombatStyle.Types.Melee:
-                    yield return exTween.Prepend(CardAnimator.instance.StepBackAndHit(op))
-                        .AppendInterval(0.2f).Play()
-                        .WaitForCompletion();
+                    yield return CardAnimator.instance.StepBackAndHit(op).WaitForCompletion();
+                    yield return exTween.Play().WaitForCompletion();
                     break;
                 case CombatStyle.Types.Range:
                     var origin = op.cardObj.transform.position;
@@ -395,6 +396,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .Cast<CardFragment>().ToList();
 
         major = TryGetCardMap(rec.InstanceId); //获取执行棋子
+
         for (var i = 0; i <= maxActId; i++)
         {
             var exTween = DOTween.Sequence().Pause();
@@ -402,6 +404,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var section = new AudioSection();
 
             var actId = i;
+            var exeId = -1;
             //棋盘演示段(一般都是远程发射精灵)
             var boardFrags = new List<ChessboardFragment>();
             chessboardFrags.Cast<ChessboardFragment>().Where(c => c.ActId == actId).ToList().ForEach(c =>
@@ -424,15 +427,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var dmgType = Damage.Types.General;
             //var rePosTween = DOTween.Sequence().Pause();
             //收集棋子执行的反馈
-            foreach (var ex in chessFrags.SelectMany(frag => frag.Executes))
+            foreach (var frag in chessFrags)
             {
-                OnSetExeCardResponds(ex, exTween, section);
-                //rePosTween.Join(RePosRespond(ex));
-                //如果会心，调用棋盘摇晃效果
-                if (dmgType == Damage.Types.General)
-                    dmgType = ex.DamageType;
-                if (dmgType == Damage.Types.Rouse)
-                    isRouse = true;
+                exeId = frag.InstanceId;
+                foreach (var ex in frag.Executes)
+                {
+                    OnSetExeCardResponds(ex, exTween, section);
+                    //rePosTween.Join(RePosRespond(ex));
+                    //如果会心，调用棋盘摇晃效果
+                    if (dmgType == Damage.Types.General)
+                        dmgType = ex.DamageType;
+                    if (dmgType == Damage.Types.Rouse)
+                        isRouse = true;
+                }
             }
 
             if (isRouse)
@@ -456,6 +463,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 }
             }
 
+
             switch (major.ChessmanStyle.Type)
             {
                 case CombatStyle.Types.Range:
@@ -470,6 +478,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                         var target = TryGetCardMap(tar.TargetId);
                         preTween.Append(CardAnimator.instance.PreActionTween(major, target));
                     }
+
                     break;
                 case CombatStyle.Types.None:
                     break;
@@ -479,8 +488,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
             exTween.Join(GetCardResponds());
             yield return preTween.Play().WaitForCompletion();
-            
-            yield return ExecuteTween(major, exTween.PrependCallback(() => PlayAudio(section)));
+
+            yield return ExecuteTween(exeId, major, exTween.PrependCallback(() => PlayAudio(section)));
 
             var counter = chessFrags.Select(c => c.Counter).FirstOrDefault(c => c != null);
             if (counter == null) continue;
