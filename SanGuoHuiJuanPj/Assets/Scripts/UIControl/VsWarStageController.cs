@@ -285,17 +285,26 @@ public class VsWarStageController : MonoBehaviour
     private void OnReportAction(int index)
     {
         Vs.PlayAttackCityAudio();
-        ApiPanel.instance.InvokeRk(OnCallBackResult, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV1, WarId, index);
+        //ApiPanel.instance.InvokeRk(OnCallBackResultV1, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV1, WarId, index);
+        ApiPanel.instance.InvokeRk(OnCallBackResultV2, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV2, WarId, index);
 #if UNITY_EDITOR
         //Versus.GetRkCheckPointWarResult(WarId, index, OnCallBackResult);
 #endif
 
-        void OnCallBackResult(DataBag bag)
+        void OnCallBackResultV1(DataBag bag)
         {
             var isChallengerWin = bag.Get<bool>(0);
             var rounds = bag.Get<List<ChessRound>>(1);
             var ops = bag.Get<List<Versus.WarResult.Operator>>(2).Cast<IOperatorInfo>().ToList();
             Vs.ReadyWarboard(isChallengerWin, rounds, ops);
+        }
+        
+        void OnCallBackResultV2(DataBag bag)
+        {
+            var isChallengerWin = bag.Get<bool>(0);
+            var records = bag.Get<List<ChessRoundRecord>>(1);
+            var ops = bag.Get<List<Versus.WarResult.Operator>>(2).Cast<IOperatorInfo>().ToList();
+            Vs.ReadyWarboard(isChallengerWin, records, ops);
         }
     }
 

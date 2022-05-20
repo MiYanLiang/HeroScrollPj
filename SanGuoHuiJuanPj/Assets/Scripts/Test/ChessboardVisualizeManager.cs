@@ -286,11 +286,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
             yield return JiBanManager.JiBanDisplay(jb.Id, rec.IsChallenger);
         }
         PlayAudio(Effect.GetJiBanAudioId((JiBanSkillName)jb.Id));
-        yield return JiBanManager.JiBanOffensive(jb.Id, rec.IsChallenger);
         var tween = DOTween.Sequence().Pause();
         foreach (var frag in rec.Data)
             tween.Join(OnInstantFragmentUpdate(frag, section));
+        var jbCo = StartCoroutine(JiBanManager.JiBanOffensive(jb.Id, rec.IsChallenger));
         yield return tween.Play().AppendCallback(() => PlayAudio(section)).WaitForCompletion();
+        yield return jbCo;
     }
 
     private void UpdateChessmenStatus(ChessRoundRecord rec)
@@ -396,7 +397,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .Cast<CardFragment>().ToList();
 
         major = TryGetCardMap(rec.InstanceId); //获取执行棋子
-
+        var exeId = -1;
         for (var i = 0; i <= maxActId; i++)
         {
             var exTween = DOTween.Sequence().Pause();
@@ -404,7 +405,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var section = new AudioSection();
 
             var actId = i;
-            var exeId = -1;
             //棋盘演示段(一般都是远程发射精灵)
             var boardFrags = new List<ChessboardFragment>();
             chessboardFrags.Cast<ChessboardFragment>().Where(c => c.ActId == actId).ToList().ForEach(c =>
@@ -429,7 +429,9 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //收集棋子执行的反馈
             foreach (var frag in chessFrags)
             {
-                exeId = frag.InstanceId;
+                //exeId将决定是否演示攻击动作
+                if(exeId != major.InstanceId) exeId = frag.InstanceId;
+
                 foreach (var ex in frag.Executes)
                 {
                     OnSetExeCardResponds(ex, exTween, section);

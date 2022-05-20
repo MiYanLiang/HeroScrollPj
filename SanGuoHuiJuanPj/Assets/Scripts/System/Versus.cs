@@ -45,6 +45,7 @@ public class Versus : MonoBehaviour
     public const string GetStageV1 = "GetStageV1";
     public const string GetGetFormationV1 = "GetFormationV1";
     public const string GetCheckPointResultV1 = "GetCheckPointResultV1";
+    public const string GetCheckPointResultV2 = "GetCheckPointResultV2";
     public const string StartChallengeV1 = "StartChallengeV1";
     public const string SubmitFormationV1 = "SubmitFormationV1";
     public const string CancelChallengeV1 = "CancelChallengeV1";
@@ -60,8 +61,8 @@ public class Versus : MonoBehaviour
             result => apiAction(OnProcessApi(result)), GetGetFormationV1);
 
     public static void GetRkCheckPointWarResult(int warId, int index, Action<DataBag> apiAction) =>
-        Http.Get($"{RkApi}/{GetCheckPointResultV1}?warId={warId}&index={index}&charId={TestCharId}", result => apiAction(OnProcessApi(result)),
-            GetCheckPointResultV1);
+        Http.Get($"{RkApi}/{GetCheckPointResultV2}?warId={warId}&index={index}&charId={TestCharId}", result => apiAction(OnProcessApi(result)),
+            GetCheckPointResultV2);
 
     public static void PostRkStartChallenge(int warId, int warIsd, int troopId, Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}&troopId={troopId}",
@@ -325,13 +326,49 @@ public class Versus : MonoBehaviour
         RoundCount = 0;
         StartCoroutine(currentChessAnimation);
     }
+    public void PlayResult(WarRecord data)
+    {
+        //Infoboard.transform.DOLocalMoveY(1440, 2);
+        WarBoard.InitNewGame(false, true);
+        foreach (var op in data.Chessmen)
+            WarBoard.SetCustomInstanceCardToBoard(op.Pos, 
+                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level),
+                op.IsChallenger,
+                op.InstanceId);
+
+        currentChessAnimation = ChessAnimation(data);
+        RoundCount = 0;
+        StartCoroutine(currentChessAnimation);
+    }
 
     private IEnumerator currentChessAnimation { get; set; }
 
-    public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds,
-        List<IOperatorInfo> ops)
+    public void ReadyWarboard(bool isChallengerWin, List<ChessRound> rounds, List<IOperatorInfo> ops)
     {
         var result = new WarResult(isChallengerWin, ops, rounds);
+        WarBoard.InitNewGame(true, true);
+        foreach (var op in result.Chessmen)
+        {
+            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
+            card.SetPos(op.Pos);
+            card.SetInstanceId(op.InstanceId);
+            card.isPlayerCard = op.IsChallenger;
+            ChessboardManager.InstanceChessman(card);
+        }
+        WarBoard.gameObject.SetActive(true);
+        WarBoard.Chessboard.RemoveAllStartClicks();
+        WarBoard.Chessboard.SetStartWarUi(() =>
+        {
+            WarBoard.Chessboard.DisplayStartButton(false);
+            PlayResult(result);
+            XButton.interactable = false;
+        });
+        XButton.interactable = true;
+    }
+    
+    public void ReadyWarboard(bool isChallengerWin, List<ChessRoundRecord> records, List<IOperatorInfo> ops)
+    {
+        var result = new WarRecord(isChallengerWin, ops, records);
         WarBoard.InitNewGame(true, true);
         foreach (var op in result.Chessmen)
         {
@@ -356,6 +393,15 @@ public class Versus : MonoBehaviour
     {
         Time.timeScale = GamePref.PrefWarSpeed;
         yield return WarBoard.AnimRounds(result.Rounds, false);
+        Time.timeScale = 1f;
+        if (result.IsChallengerWin)
+            yield return WarBoard.ChallengerWinAnimation();
+        _versusWindow.Open(result.IsChallengerWin, () => WarboardActive(false));
+    }
+    private IEnumerator ChessAnimation(WarRecord result)
+    {
+        Time.timeScale = GamePref.PrefWarSpeed;
+        yield return WarBoard.AnimRounds(result.Records, false);
         Time.timeScale = 1f;
         if (result.IsChallengerWin)
             yield return WarBoard.ChallengerWinAnimation();
@@ -482,6 +528,48 @@ public class Versus : MonoBehaviour
                 .Select(o => new Operator(o.InstanceId, o.Pos, o.IsChallenger, new Card(o.Card)))
                 .ToList();
             Rounds = rounds;
+        }
+
+        public class Operator : IOperatorInfo
+        {
+            public int InstanceId { get; set; }
+            public int Pos { get; set; }
+            public bool IsChallenger { get; set; }
+            public Card Card { get; set; }
+            IGameCard IOperatorInfo.Card => Card;
+
+            public Operator()
+            {
+                
+            }
+            public Operator(int instanceId, int pos, bool isChallenger, Card card)
+            {
+                InstanceId = instanceId;
+                Pos = pos;
+                IsChallenger = isChallenger;
+                Card = card;
+            }
+        }
+
+    }
+    public class WarRecord
+    {
+        public List<Operator> Chessmen { get; set; }
+
+        public List<ChessRoundRecord> Records { get; set; }
+        public bool IsChallengerWin { get; set; }
+
+        public WarRecord()
+        {
+            
+        }
+        public WarRecord(bool isChallengerWin, List<IOperatorInfo> chessmen, List<ChessRoundRecord> records)
+        {
+            IsChallengerWin = isChallengerWin;
+            Chessmen = chessmen
+                .Select(o => new Operator(o.InstanceId, o.Pos, o.IsChallenger, new Card(o.Card)))
+                .ToList();
+            Records = records;
         }
 
         public class Operator : IOperatorInfo

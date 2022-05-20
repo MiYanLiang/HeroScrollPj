@@ -499,9 +499,13 @@ public class WarBoardUi : MonoBehaviour
     public IEnumerator AnimRounds(List<ChessRound> rounds, bool playRoundStartAudio)
     {
         foreach (var round in rounds)
-        {
             yield return ChessboardManager.AnimateRound(round, playRoundStartAudio);
-        }
+    }
+    
+    public IEnumerator AnimRounds(List<ChessRoundRecord> records, bool playRoundStartAudio)
+    {
+        foreach (var round in records)
+            yield return ChessboardManager.AnimateRound(round, playRoundStartAudio);
     }
 
     private void Update()
