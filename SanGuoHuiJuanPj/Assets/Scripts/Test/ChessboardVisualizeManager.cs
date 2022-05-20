@@ -185,6 +185,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
 
         Tween UpdateChessboardFragment(ChessboardFragment cf,AudioSection aud)
         {
+
             var tw = DOTween.Sequence();
             SetAudioSection(aud, cf);
             var dmgColor = cf.Kind == ChessboardFragment.Kinds.Sprite
@@ -199,8 +200,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 //    tw.Join(op.ChessmanStyle.ExecutionEffect(op, exKind, respond.Skill)); //加入棋子执行特效
                 //}
 
-                var exKind = ExecuteAct.Kinds.BuffDamage;
-                CardRespond(respond, Damage.Types.General, dmgColor, exKind);
+                CardRespond(respond, Damage.Types.General, dmgColor, ExecuteAct.Conducts.Chessman);
                 //SetAudioSection(section, respond); //设定音效
             }
 
@@ -216,21 +216,22 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             var tw = DOTween.Sequence();
             
-            foreach (var act in cfg.Executes)
+            foreach (var ex in cfg.Executes)
             {
-                foreach (var respond in act.Responds)
+                foreach (var respond in ex.Responds)
                 {
-                    if (act.Kind == ExecuteAct.Kinds.Chessman)
+                    if (ex.Conduct == ExecuteAct.Conducts.Chessman)
                     {
                         var o = TryGetCardMap(respond.ExeId); //获取执行者
-                        if (o != null) tw.Join(o.ChessmanStyle.ExecutionEffect(o, act.Kind, respond.Skill)); //加入棋子执行特效
+                        if (o != null) tw.Join(o.ChessmanStyle.ExecutionEffect(o, ex.Conduct, respond.Skill)); //加入棋子执行特效
                     }
 
                     //加入目标反馈
-                    CardRespond(respond, Damage.Types.General, GetDamageColor(respond.Kind),act.Kind);
-                    SetAudioSection(aud, respond); //设定音效
+                    CardRespond(respond, Damage.Types.General, GetDamageColor(respond.Kind), ex.Conduct);
                 }
-                tw.Join(RePosRespond(act));
+
+                SetExeCardAudio(aud, ex); //设定音效
+                tw.Join(RePosRespond(ex));
             }
 
             var op = TryGetCardMap(cfg.InstanceId);
@@ -252,6 +253,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 return ChessmanStyle.DamageColor.Red;
             case RespondAct.Responds.Heal:
                 return ChessmanStyle.DamageColor.Green;
+            case RespondAct.Responds.Invincible:
             case RespondAct.Responds.Shield:
                 return ChessmanStyle.DamageColor.Gold;
             case RespondAct.Responds.Ease:
@@ -595,14 +597,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
         foreach (var respond in ex.Responds)
         {
             var op = TryGetCardMap(respond.ExeId); //获取执行者
-            if (op != null) exTween.Join(op.ChessmanStyle.ExecutionEffect(op, ex.Kind, respond.Skill)); //加入棋子执行特效
-            CardRespond(respond, ex.DamageType, GetDamageColor(respond.Kind), ex.Kind); //加入目标反馈
-            SetAudioSection(section, respond); //设定音效
+            if (op != null) exTween.Join(op.ChessmanStyle.ExecutionEffect(op, ex.Conduct, respond.Skill)); //加入棋子执行特效
+            CardRespond(respond, ex.DamageType, GetDamageColor(respond.Kind), ex.Conduct); //加入目标反馈
         }
+
+        SetExeCardAudio(section, ex);
     }
 
     private void CardRespond(RespondAct respond, Damage.Types dmgType, ChessmanStyle.DamageColor color,
-        ExecuteAct.Kinds actKind)
+        ExecuteAct.Conducts actConduct)
     {
         var tg = TryGetCardMap(respond.TargetId);
         var op = TryGetCardMap(respond.ExeId);
@@ -619,13 +622,19 @@ public class ChessboardVisualizeManager : MonoBehaviour
         res.SetStat(respond.Status);
 
         var sparkId = -1;
-        switch (actKind)
+        switch (actConduct)
         {
-            case ExecuteAct.Kinds.Chessman when (op != null):
+            case ExecuteAct.Conducts.Chessman when (op != null):
                 sparkId = op.ChessmanStyle.GetMilitarySparkId(respond.Skill);
                 break;
-            case ExecuteAct.Kinds.BuffDamage:
-                sparkId = Effect.GetBuffDamageSparkId(respond.Skill);
+            case ExecuteAct.Conducts.Burn:
+                sparkId = Effect.GetBuffDamageSparkId(CombatConduct.FireDmg);
+                break;
+            case ExecuteAct.Conducts.Poison:
+                sparkId = Effect.GetBuffDamageSparkId(CombatConduct.PoisonDmg);
+                break;
+            case ExecuteAct.Conducts.Chained:
+                sparkId = Effect.GetBuffDamageSparkId(CombatConduct.FixedDmg);
                 break;
         }
 
@@ -1172,35 +1181,59 @@ public class ChessboardVisualizeManager : MonoBehaviour
             });
     }
 
-    private void SetAudioSection(AudioSection section, RespondAct respond)
+
+    private void SetExeCardAudio(AudioSection section, ExecuteAct act)
     {
-        //棋子活动
-        int audioId = -1;
-        var op = TryGetCardMap(respond.ExeId);
-        if (op == null) return;
-        // 棋子伤害
-        var style = op.ChessmanStyle;
-        switch (style.ArmedType)
+        switch (act.Conduct)
         {
-            case -2:
-                audioId = Effect.GetTowerAudioId(style.Military, respond.Skill);
+            case ExecuteAct.Conducts.Chessman:
+                foreach (var respond in act.Responds)
+                    SetOffendAudioSection(section, respond); //设定音效
                 break;
-            case -3:
-                audioId = Effect.GetTrapAudioId(style.Military);
+            case ExecuteAct.Conducts.Poison:
+                AddToSection(section,Effect.GetBuffDamageAudioId(CardState.Cons.Poison));
                 break;
-            case >= 0:
-                audioId = Effect.GetHeroAudioId(style.Military, respond.Skill);
+            case ExecuteAct.Conducts.Burn:
+                AddToSection(section,Effect.GetBuffDamageAudioId(CardState.Cons.Burn));
                 break;
+            case ExecuteAct.Conducts.Chained:
+                AddToSection(section,Effect.GetBuffDamageAudioId(CardState.Cons.Chained));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        AddToSection();
-
-        void AddToSection()
+        void AddToSection(AudioSection sec,int id)
         {
-            if (audioId >= 0 && !section.Offensive.Contains(audioId))
-                section.Offensive.Add(audioId);
+            if (id >= 0 && !sec.Offensive.Contains(id))
+                sec.Offensive.Add(id);
+        }
+
+        void SetOffendAudioSection(AudioSection sec, RespondAct res)
+        {
+            //棋子活动
+            int auId = -1;
+            var op = TryGetCardMap(res.ExeId);
+            if (op == null) return;
+            // 棋子伤害
+            var style = op.ChessmanStyle;
+            switch (style.ArmedType)
+            {
+                case -2:
+                    auId = Effect.GetTowerAudioId(style.Military, res.Skill);
+                    break;
+                case -3:
+                    auId = Effect.GetTrapAudioId(style.Military);
+                    break;
+                case >= 0:
+                    auId = Effect.GetHeroAudioId(style.Military, res.Skill);
+                    break;
+            }
+
+            AddToSection(sec, auId);
         }
     }
+
     private void SetAudioSection(AudioSection section, ChessboardFragment board)
     {
         //棋子活动
@@ -1218,11 +1251,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 break;
             default:break;
         }
-        //if (conduct.Kind == CombatConduct.ElementDamageKind)
-        //{
-        //    audioId = Effect.GetBuffDamageAudioId((CardState.Cons)conduct.ReferenceId);
-        //    AddToSection();
-        //}
+
         void AddToSection()
         {
             if (audioId >= 0 && !section.Offensive.Contains(audioId))

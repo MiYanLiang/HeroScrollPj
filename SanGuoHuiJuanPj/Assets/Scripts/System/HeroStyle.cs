@@ -82,7 +82,7 @@ public class ChessmanStyle : ChessUiStyle
 
     public virtual void ResultEffectTween(ActivityResult result, FightCardData card){}
 
-    public virtual Tween ExecutionEffect(FightCardData op, ExecuteAct.Kinds exKind, int skill = 0) =>
+    public virtual Tween ExecutionEffect(FightCardData op, ExecuteAct.Conducts exConduct, int skill = 0) =>
         DOTween.Sequence();
 
     /// <summary>
@@ -219,10 +219,10 @@ public abstract class CardStyle : ChessmanStyle
     protected abstract void ActivityVText(Activity activity, FightCardData offense);
     #endregion
 
-    public override Tween ExecutionEffect(FightCardData op, ExecuteAct.Kinds exKind, int skill)
+    public override Tween ExecutionEffect(FightCardData op, ExecuteAct.Conducts exConduct, int skill)
     {
         var tween = DOTween.Sequence();
-        if (exKind == ExecuteAct.Kinds.Chessman && skill > 0)
+        if (exConduct == ExecuteAct.Conducts.Chessman && skill > 0)
             tween.AppendCallback(() => ActivityVText(skill, op));//VText
 
         return tween;

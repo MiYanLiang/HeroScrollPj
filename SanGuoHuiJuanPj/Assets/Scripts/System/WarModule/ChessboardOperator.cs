@@ -485,9 +485,19 @@ namespace Assets.System.WarModule
             }
 
             var dmg = Damage.GetType(act);
-            var exKind = ExecuteAct.Kinds.Chessman;
+            var exKind = ExecuteAct.Conducts.Chessman;
             if (act.Conducts.Any(c => c.Kind == CombatConduct.ElementDamageKind))
-                exKind = ExecuteAct.Kinds.BuffDamage;
+            {
+                var refId = act.Conducts.FirstOrDefault()?.ReferenceId ?? 0;
+                switch ((CardState.Cons)refId)
+                {
+                    case CardState.Cons.Burn: exKind = ExecuteAct.Conducts.Poison;break;
+                    case CardState.Cons.Poison: exKind = ExecuteAct.Conducts.Poison;break;
+                    case CardState.Cons.Chained: exKind = ExecuteAct.Conducts.Chained;break;
+                    default:
+                        break;
+                }
+            }
             var att = cardFragment.GetOrInstanceAttack(dmg, exKind);
             return att;
         }

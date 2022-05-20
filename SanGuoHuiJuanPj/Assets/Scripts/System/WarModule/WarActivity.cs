@@ -163,12 +163,11 @@ namespace Assets.System.WarModule
 
     public record ChessboardFragment : ActivityFragment
     {
-        public static ChessboardFragment Instance(int instanceId, Kinds kind, int skill, int actId, int pos,
-            int targetId, int value,
-            bool isChallenger) =>
-            new(instanceId, kind: kind, skill: skill, actId: actId, pos: pos, targetId: targetId, value: value,
-                isChallenger: isChallenger);
-        public ChessboardFragment(int instanceId,Kinds kind,int skill ,int actId,int pos, int targetId, int value, bool isChallenger) : base(FragmentTypes.Chessboard)
+        public static ChessboardFragment Instance(int instanceId, Kinds kind, 
+            int skill, int actId, int pos, int targetId, int value, bool isChallenger) =>
+            new(instanceId, kind: kind, skill: skill, actId: actId, pos: pos, 
+                targetId: targetId, value: value, isChallenger: isChallenger);
+        public ChessboardFragment(int instanceId,Kinds kind,int skill,int actId, int pos, int targetId, int value, bool isChallenger) : base(FragmentTypes.Chessboard)
         {
             InstanceId = instanceId;
             Kind = kind;
@@ -206,7 +205,6 @@ namespace Assets.System.WarModule
         /// 1 = challenger, else = opponent
         /// </summary>
         public int StandPoint { get; set; }
-
         public int Skill { get; set; }
         public bool IsChallenger => StandPoint == 1;
         /// <summary>
@@ -261,15 +259,15 @@ namespace Assets.System.WarModule
         public List<ExecuteAct> Executes { get; set; } = new List<ExecuteAct>();
         public ExecuteAct Counter { get; set; }
         public override string ToString() => $"{InstanceId}.{Type},Act[{ActId}]Atts({Executes.Count})";
-        public ExecuteAct GetCounter(Damage.Types damageType) => Counter ??= new ExecuteAct(damageType,ExecuteAct.Kinds.Chessman);
+        public ExecuteAct GetCounter(Damage.Types damageType) => Counter ??= new ExecuteAct(damageType,ExecuteAct.Conducts.Chessman);
 
-        public ExecuteAct GetOrInstanceAttack(Damage.Types damageType, ExecuteAct.Kinds kind)
+        public ExecuteAct GetOrInstanceAttack(Damage.Types damageType, ExecuteAct.Conducts conduct)
         {
-            var at = Executes.FirstOrDefault();
+            var at = Executes.FirstOrDefault(e => e.Conduct == conduct);
             switch (at)
             {
                 case null:
-                    at = new ExecuteAct(damageType, kind);
+                    at = new ExecuteAct(damageType, conduct);
                     Executes.Add(at);
                     break;
             }
@@ -279,18 +277,29 @@ namespace Assets.System.WarModule
 
     public record ExecuteAct 
     {
-        public enum Kinds
+        public enum Conducts
         {
             Chessman,
-            BuffDamage
+            /// <summary>
+            /// 毒伤害
+            /// </summary>
+            Poison,
+            /// <summary>
+            /// 灼烧伤害
+            /// </summary>
+            Burn,
+            /// <summary>
+            /// 连环分担伤害
+            /// </summary>
+            Chained
         }
+        public Conducts Conduct { get; set; }
         public List<RespondAct> Responds { get; set; } = new List<RespondAct>();
         public Damage.Types DamageType { get; set; }
-        public Kinds Kind { get; set; }
-        public ExecuteAct(Damage.Types damageType, Kinds kind)
+        public ExecuteAct(Damage.Types damageType, Conducts conduct)
         {
             DamageType = damageType;
-            Kind = kind;
+            Conduct = conduct;
         }
 
         public override string ToString() => $"{DamageType},Resp({Responds.Count})";
@@ -353,7 +362,7 @@ namespace Assets.System.WarModule
         /// </summary>
         public int FinalPos { get; set; }
         /// <summary>
-        /// 技能值，如果是<see cref="ExecuteAct.Kinds.BuffDamage"/>伤害,它代表buff类型
+        /// 技能值，如果是<see cref="ExecuteAct.Conducts.BuffDamage"/>伤害,它代表buff类型
         /// </summary>
         public int Skill { get; set; }
         public ChessStatus Status { get; set; }

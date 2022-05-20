@@ -372,7 +372,7 @@ public class CardAnimator : MonoBehaviour
             {
                 switch (con)
                 {
-                    case CardState.Cons.Stunned:
+                    case CardState.Cons.Stunned when (status.GetBuff(CardState.Cons.Stunned) <= 0):
                         tableId = 14; //如果buff值是负数，判定为镇定效果(移除buff)
                         break;
                     case CardState.Cons.Poison:
