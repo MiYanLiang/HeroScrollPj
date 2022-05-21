@@ -559,6 +559,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 case RespondAct.Responds.Buffing:
                 case RespondAct.Responds.Heal:
                 case RespondAct.Responds.Shield:
+                case RespondAct.Responds.Invincible:
                     tween.Join(CardAnimator.instance.AssistEnlargeAnimation(tar));
                     break;
                 case RespondAct.Responds.Dodge:
