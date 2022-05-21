@@ -12,7 +12,7 @@ public class JiBanAnimationManager : MonoBehaviour
 {
     [SerializeField]private JiBanController Player;
     [SerializeField]private JiBanController Opposite;
-    [SerializeField]private JiBanOffensiveField[] JiBanOffensiveFields;
+    [SerializeField]private JiBanAnimField[] JiBanAnimFields;
     public List<KeyValuePair<int, (int CardId, GameCardType CardType)[]>> JiBanMap;
     public void Init()
     {
@@ -56,6 +56,32 @@ public class JiBanAnimationManager : MonoBehaviour
         }
     }
 
+    public IEnumerator BuffJiBanDisplay(int jbId, bool isChallenger)
+    {
+        var con = GetController(isChallenger);
+        var img = GameResources.Instance.JiBanBg[jbId];
+        var title = GameResources.Instance.JiBanHText[jbId];
+        con.JiBanImageObj.transform.localPosition = Vector3.zero;
+        con.JiBanImageObj.SetActive(true);
+        yield return con.ImageFading(img, title).WaitForCompletion();
+        con.JiBanImageObj.SetActive(false);
+        var anim = GetField(jbId);
+        if (anim == null || anim.IsOffensive) yield break;
+        yield return AnimEffectField(jbId, isChallenger);
+    }
+
+    public IEnumerator AnimEffectField(int jbId,bool isChallenger)
+    {
+        var field = GetField(jbId);
+        if (field == null)
+            XDebug.LogError<JiBanAnimationManager>($"找不到羁绊Id={jbId}的攻击动画，请确保动画已经设置好。");
+        var con = GetController(field.IsOffensive ? !isChallenger : isChallenger);
+        field.OffensiveAnim.transform.SetParent(con.AnimTransform);
+        field.OffensiveAnim.transform.localPosition = Vector3.zero;
+        field.OffensiveAnim.SetActive(true);
+        yield return new WaitForSeconds(field.AnimSecs);
+        field.OffensiveAnim.SetActive(false);
+    }
     public IEnumerator JiBanDisplay(int jbId, bool isChallenger)
     {
         var con = GetController(isChallenger);
@@ -69,6 +95,8 @@ public class JiBanAnimationManager : MonoBehaviour
     public IEnumerator JiBanOffensive(int jbId,bool isChallenger)
     {
         var field = GetField(jbId);
+        if (field == null)
+            XDebug.LogError<JiBanAnimationManager>($"找不到羁绊Id={jbId}的攻击动画，请确保动画已经设置好。");
         var con = GetController(field.IsOffensive ? !isChallenger : isChallenger);
         field.OffensiveAnim.transform.SetParent(con.AnimTransform);
         field.OffensiveAnim.transform.localPosition = Vector3.zero;
@@ -78,11 +106,9 @@ public class JiBanAnimationManager : MonoBehaviour
     }
 
     private JiBanController GetController(bool isChallenger) => isChallenger ? Player : Opposite;
-    private JiBanOffensiveField GetField(int jbId)
+    private JiBanAnimField GetField(int jbId)
     {
-        var field = JiBanOffensiveFields.FirstOrDefault(f => f.JiBanId == jbId);
-        if(field==null)
-            XDebug.LogError<JiBanAnimationManager>($"找不到羁绊Id={jbId}的攻击动画，请确保动画已经设置好。");
+        var field = JiBanAnimFields.FirstOrDefault(f => f.JiBanId == jbId);
         return field;
     }
     /// <summary>
@@ -130,13 +156,13 @@ public class JiBanAnimationManager : MonoBehaviour
     /// 羁绊进攻动画演示
     /// </summary>
     [Serializable]
-    public class JiBanOffensiveField
+    public class JiBanAnimField
     {
         public int JiBanId;
         public bool IsOffensive;
         public GameObject OffensiveAnim;
         public float AnimSecs = 1.5f;
     }
-
-    public bool IsOffensiveJiBan(int jbId) => JiBanOffensiveFields.Any(j => j.JiBanId == jbId);
+    [Obsolete("方法实现错误。仅留给演示结构用")]
+    public bool IsOffensiveJiBan(int jbId) => JiBanAnimFields.Any(j => j.JiBanId == jbId);
 }

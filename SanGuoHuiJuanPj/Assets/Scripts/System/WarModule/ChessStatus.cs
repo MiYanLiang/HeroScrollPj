@@ -101,5 +101,9 @@ namespace Assets.System.WarModule
         }
 
         public void SetHp(int hp) => Hp = hp;
+
+        public bool UnAvailable => GetBuff(CardState.Cons.Stunned) > 0 ||
+                                   GetBuff(CardState.Cons.Imprisoned) > 0 ||
+                                   IsDeath;
     }
 }

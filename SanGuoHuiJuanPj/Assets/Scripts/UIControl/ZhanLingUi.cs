@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class ZhanLingUi : MonoBehaviour
 {
-    public int MaxValue = 90;
+    public int MaxValue = 100;
     public Color HightColor = new Color(170, 0, 0);
     public Color NormalColor = Color.black;
     private int _value;

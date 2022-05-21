@@ -306,6 +306,7 @@ namespace Assets.System.WarModule
             {
                 OnPerformActivity(target, Activity.Intentions.Offensive, i, 1, InstanceGenericDamage());
                 if (Chessboard.GetStatus(this).IsDeath) break;
+                if (Chessboard.GetStatus(this).UnAvailable) break;
                 if (Chessboard.GetStatus(target.Operator).IsDeath) break;
             }
         }
@@ -343,6 +344,7 @@ namespace Assets.System.WarModule
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId, 1, hit);
                 if (result == null || result.IsDeath) break;
                 if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
+                if (Chessboard.GetStatus(this).UnAvailable) break;
                 if (hit.IsRouseDamage())
                     comboRate += RouseAddOn;
                 if (hit.IsCriticalDamage())
@@ -398,6 +400,7 @@ namespace Assets.System.WarModule
                 if (result == null) break;
                 if (!target.IsAliveHero) break;//目标死亡
                 if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
+                if (Chessboard.GetStatus(this).UnAvailable) break;//自身死亡
                 if (hit.IsRouseDamage())
                     comboRate += RouseAddOn;
                 if (hit.IsCriticalDamage())
@@ -745,7 +748,7 @@ namespace Assets.System.WarModule
         public override void OnRoundStart()
         {
             var stat = Chessboard.GetStatus(this);
-            if (!stat.IsDeath && stat.HpRate < 1) 
+            if (!stat.UnAvailable && stat.HpRate < 1) 
             {
                 OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, -1, 2, CombatConduct.InstanceHeal(stat.MaxHp * HealRatio() * 0.01f, InstanceId));
             }
@@ -763,7 +766,7 @@ namespace Assets.System.WarModule
         public override void OnSomebodyDie(ChessOperator death)
         {
             var stat = Chessboard.GetStatus(this);
-            if (stat.IsDeath || stat.HpRate == 1||death.Style.ArmedType<0||!Chessboard.IsRandomPass(GetHealRatio()))
+            if (stat.UnAvailable || stat.HpRate == 1||death.Style.ArmedType<0||!Chessboard.IsRandomPass(GetHealRatio()))
             {
                 return;
             }
@@ -1179,7 +1182,7 @@ namespace Assets.System.WarModule
 
         protected override void OnAfterSubtractHp(CombatConduct conduct)
         {
-            if (Chessboard.GetStatus(this).IsDeath ||
+            if (Chessboard.GetStatus(this).UnAvailable ||
                 Chessboard.GetStatus(this).HpRate > TriggerRate * 0.01f ||
                 Chessboard.GetCondition(this, CardState.Cons.DeathFight) > 0 ||
                 restTimes > 0) return;
@@ -2692,7 +2695,7 @@ namespace Assets.System.WarModule
             {
                 //不攻击的判断
                 if ((i > 0 && stat.HpRate >= 1) || //第二击开始，血量满了
-                    stat.IsDeath) break;
+                    stat.UnAvailable) break;
 
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: i, skill: 1,
                     InstanceGenericDamage());//伤害活动
