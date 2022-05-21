@@ -5,9 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using UnityEditor.XR;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -397,7 +394,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
         var chessmanFrags = rec.Data
             .Where(f => f.Type == ActivityFragment.FragmentTypes.Chessman)
             .Cast<CardFragment>().ToList();
-
+        var execs = chessmanFrags.GroupBy(c => c.ActId, c => c.Executes.SelectMany(e => e.Responds))
+            .ToDictionary(c => c.Key, c => c.SelectMany(o=>o.ToArray()).ToArray());
         major = TryGetCardMap(rec.InstanceId); //获取执行棋子
         var exeId = -1;
         for (var i = 0; i <= maxActId; i++)
@@ -407,6 +405,15 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var section = new AudioSection();
 
             var actId = i;
+
+            //找出执行者, exeId将决定是否演示攻击动作
+            if (execs.TryGetValue(actId, out var res))
+            {
+                if (res.Where(r=>r.Mode == RespondAct.Modes.Major).Any(r => r.ExeId == major.InstanceId))
+                    exeId = major.InstanceId;
+                else exeId = res.FirstOrDefault()?.ExeId ?? exeId;
+            }
+
             //棋盘演示段(一般都是远程发射精灵)
             var boardFrags = new List<ChessboardFragment>();
             chessboardFrags.Cast<ChessboardFragment>().Where(c => c.ActId == actId).ToList().ForEach(c =>
@@ -431,9 +438,8 @@ public class ChessboardVisualizeManager : MonoBehaviour
             //收集棋子执行的反馈
             foreach (var frag in chessFrags)
             {
-                //exeId将决定是否演示攻击动作
-                if(exeId != major.InstanceId) exeId = frag.InstanceId;
-
+                //if (exeId != major.InstanceId)
+                //    exeId = frag.InstanceId;
                 foreach (var ex in frag.Executes)
                 {
                     OnSetExeCardResponds(ex, exTween, section);
@@ -475,7 +481,13 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     break;
                 case CombatStyle.Types.Melee:
                     var tar = chessFrags.SelectMany(f => f.Executes
-                            .SelectMany(e => e.Responds.Where(r => r.ExeId == major.InstanceId)))
+                            .Where(e=>e.Conduct == ExecuteAct.Conducts.Chessman)
+                            .SelectMany(e => e.Responds
+                                .Where(r => r.Mode == RespondAct.Modes.Major &&
+                                            r.ExeId == major.InstanceId &&
+                                            r.Kind is not (RespondAct.Responds.Buffing or 
+                                                RespondAct.Responds.Heal or 
+                                                RespondAct.Responds.Suicide))))
                         .FirstOrDefault(e => e.TargetId != rec.InstanceId);
                     if (tar != null)
                     {
@@ -625,7 +637,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         var sparkId = -1;
         switch (actConduct)
         {
-            case ExecuteAct.Conducts.Chessman when (op != null):
+            case ExecuteAct.Conducts.Chessman when (op != null && respond.Kind != RespondAct.Responds.None):
                 sparkId = op.ChessmanStyle.GetMilitarySparkId(respond.Skill);
                 break;
             case ExecuteAct.Conducts.Burn:

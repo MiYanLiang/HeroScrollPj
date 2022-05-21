@@ -240,7 +240,8 @@ namespace Assets.System.WarModule
 
         public void AddRespond(int exeId, int targetId, int skill, RespondAct.Responds kind, int pop, int finalPos,
             ChessStatus status) =>
-            Responds.Add(new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status));
+            Responds.Insert(0,
+                new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status, RespondAct.Modes.Attach));
     }
 
     public record CardFragment : ActivityFragment
@@ -304,9 +305,10 @@ namespace Assets.System.WarModule
 
         public override string ToString() => $"{DamageType},Resp({Responds.Count})";
 
-        public void AddRespond(int exeId, int targetId, int skill, RespondAct.Responds kind, int pop, int finalPos,
+        public void AddRespond(int exeId, int targetId, RespondAct.Modes mode, int skill, RespondAct.Responds kind,
+            int pop, int finalPos,
             ChessStatus status) =>
-            Responds.Add(new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status));
+            Responds.Insert(0, new RespondAct(exeId, targetId, skill, kind, pop, finalPos, status, mode));
     }
     public record RespondAct 
     {
@@ -350,12 +352,19 @@ namespace Assets.System.WarModule
             /// </summary>
             Invincible
         }
+
+        public enum Modes
+        {
+            Major,
+            Attach
+        }
         /// <summary>
         /// 执行者Id,一般都是卡牌InstanceId，
         /// </summary>
         public int ExeId { get; set; }
         public int TargetId { get; set; }
         public Responds Kind { get; set; }
+        public Modes Mode { get; set; }
         public int Pop { get; set; }
         /// <summary>
         /// 最终棋格
@@ -367,7 +376,7 @@ namespace Assets.System.WarModule
         public int Skill { get; set; }
         public ChessStatus Status { get; set; }
 
-        public RespondAct(int exeId, int targetId, int skill, Responds kind, int pop, int finalPos, ChessStatus status)
+        public RespondAct(int exeId, int targetId, int skill, Responds kind, int pop, int finalPos, ChessStatus status, Modes mode)
         {
             ExeId = exeId;
             TargetId = targetId;
@@ -375,6 +384,7 @@ namespace Assets.System.WarModule
             Pop = pop;
             FinalPos = finalPos;
             Status = status;
+            Mode = mode;
             Skill = skill;
         }
 
