@@ -18,7 +18,7 @@ public class PlayerDataForGame : MonoBehaviour
 
     public int staminaMax = 500;
     public int secsPerStamina = 600;
-    private int staminaIncreaseLimit = 90;
+    private int staminaIncreaseLimit = 100;
     //修复v1.89无限刷霸业宝箱3的Bug 
     [Serializable]
     public enum WarTypes

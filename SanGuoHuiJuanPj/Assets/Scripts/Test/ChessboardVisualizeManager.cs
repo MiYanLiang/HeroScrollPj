@@ -266,7 +266,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         PlayedList.Add((rec.IsChallenger, jb.Id));
         var section = new AudioSection();
         PlayAudio(Effect.GetChessboardAudioId(Effect.ChessboardEvent.Rouse));
-        yield return JiBanManager.JiBanDisplay(jb.Id, rec.IsChallenger);
+        yield return JiBanManager.BuffJiBanDisplay(jb.Id, rec.IsChallenger);
         var tween = DOTween.Sequence().Pause();
         foreach (var frag in rec.Data)
             tween.Join(OnInstantFragmentUpdate(frag, section));
@@ -288,7 +288,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         var tween = DOTween.Sequence().Pause();
         foreach (var frag in rec.Data)
             tween.Join(OnInstantFragmentUpdate(frag, section));
-        var jbCo = StartCoroutine(JiBanManager.JiBanOffensive(jb.Id, rec.IsChallenger));
+        var jbCo = StartCoroutine(JiBanManager.AnimEffectField(jb.Id, rec.IsChallenger));
         yield return tween.Play().AppendCallback(() => PlayAudio(section)).WaitForCompletion();
         yield return jbCo;
     }
