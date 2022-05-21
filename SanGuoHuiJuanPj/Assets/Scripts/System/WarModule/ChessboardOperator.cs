@@ -502,7 +502,7 @@ namespace Assets.System.WarModule
             return att;
         }
 
-        private void SetAttackRespond(int exeId,ExecuteAct att,int skill ,int diff, IChessOperator target, ActivityResult result)
+        private void SetAttackRespond(int exeId,ExecuteAct att,RespondAct.Modes mode,int skill ,int diff, IChessOperator target, ActivityResult result)
         {
             var respond = RespondAct.Responds.None;
             switch (result.Type)
@@ -520,7 +520,8 @@ namespace Assets.System.WarModule
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            att.AddRespond(exeId, target.InstanceId, skill, respond, diff, GetChessPos(target).Pos,
+
+            att.AddRespond(exeId, target.InstanceId, mode, skill, respond, diff, GetChessPos(target).Pos,
                 GetFullCondition(target));
         }
 
@@ -1085,7 +1086,28 @@ namespace Assets.System.WarModule
                 currentResult = GetOperator(target.InstanceId).Respond(activity, offender);
                 var diff = Math.Abs(targetHp - targetStat.EaseHp);
                 if (attFrag != null)
-                    SetAttackRespond(activity.From, attFrag, activity.Skill, diff, target, currentResult);
+                {
+                    var mode = RespondAct.Modes.Major;
+                    switch (activity.Intention)
+                    {
+                        case Activity.Intentions.ChessboardBuffing:
+                        case Activity.Intentions.PlayerResource:
+                        case Activity.Intentions.Reflect:
+                        case Activity.Intentions.Attach:
+                        case Activity.Intentions.Sprite:
+                            mode = RespondAct.Modes.Attach;break;
+                        case Activity.Intentions.Offensive:
+                        case Activity.Intentions.Counter:
+                        case Activity.Intentions.Friendly:
+                        case Activity.Intentions.Self:
+                        case Activity.Intentions.Inevitable:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    SetAttackRespond(activity.From, attFrag, mode, activity.Skill, diff, target, currentResult);
+                }
                 else SetChessRespond(activity.From, diff, activity.Skill, target, currentResult);
             }
 

@@ -341,8 +341,7 @@ namespace Assets.System.WarModule
                 int comboRate = ComboRatio();
                 var hit = InstanceGenericDamage();
                 var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId, 1, hit);
-                if (result == null) break;
-                if (!target.IsAliveHero) break;//目标死亡
+                if (result == null || result.IsDeath) break;
                 if (Chessboard.GetStatus(this).IsDeath) break;//自身死亡
                 if (hit.IsRouseDamage())
                     comboRate += RouseAddOn;
