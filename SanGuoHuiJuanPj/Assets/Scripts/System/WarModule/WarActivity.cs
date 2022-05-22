@@ -48,24 +48,7 @@ namespace Assets.System.WarModule
 
         public void AddFragment(CardFragment fragment) => CurrentActivity.AddFragment(fragment);
 
-        public void AddFragment(ChessboardFragment fragment)
-        {
-            var list = CurrentActivity.Data
-                .Where(f => f.Type == ActivityFragment.FragmentTypes.Chessboard)
-                .Cast<ChessboardFragment>().ToArray();
-            if (list.Length > 0 &&
-                list.Any(f => f.InstanceId == fragment.InstanceId &&
-                              f.ActId == fragment.ActId &&
-                              f.Type == fragment.Type &&
-                              f.IsChallenger == fragment.IsChallenger &&
-                              f.TargetId == fragment.TargetId &&
-                              f.Pos == fragment.Pos &&
-                              f.StandPoint == fragment.StandPoint &&
-                              f.Skill == fragment.Skill &&
-                              f.Value == fragment.Value))
-                return;
-            CurrentActivity.AddFragment(fragment);
-        }
+        public void AddFragment(ChessboardFragment fragment) => CurrentActivity.AddFragment(fragment);
 
         public ActivityFragment GetLastCardFragment(int instanceId) =>
             CurrentActivity.Data.LastOrDefault(c =>
