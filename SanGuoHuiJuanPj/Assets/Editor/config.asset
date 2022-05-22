@@ -27,6 +27,7 @@ MonoBehaviour:
   GetStageV1: GetStageV1
   GetGetFormationV1: GetFormationV1
   GetCheckPointResultV1: GetCheckPointResultV1
+  GetCheckPointResultV2: GetCheckPointResultV2
   StartChallengeV1: StartChallengeV1
   SubmitFormationV1: SubmitFormationV1
   CancelChallengeV1: CancelChallengeV1
