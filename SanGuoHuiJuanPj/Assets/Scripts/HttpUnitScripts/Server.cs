@@ -78,6 +78,7 @@ public static class Server
         Versus.GetStageV1 = fields.GetStageV1;
         Versus.GetGetFormationV1 = fields.GetGetFormationV1;
         Versus.GetCheckPointResultV1 = fields.GetCheckPointResultV1;
+        Versus.GetCheckPointResultV2 = fields.GetCheckPointResultV2;
         Versus.StartChallengeV1 = fields.StartChallengeV1;
         Versus.SubmitFormationV1 = fields.SubmitFormationV1;
         Versus.CancelChallengeV1 = fields.CancelChallengeV1;

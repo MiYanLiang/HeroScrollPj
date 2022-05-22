@@ -39,6 +39,7 @@ public class ServerFields
         GetStageV1 = configAsset.GetStageV1;
         GetGetFormationV1 = configAsset.GetGetFormationV1;
         GetCheckPointResultV1 = configAsset.GetCheckPointResultV1;
+        GetCheckPointResultV2 = configAsset.GetCheckPointResultV2;
         StartChallengeV1 = configAsset.StartChallengeV1;
         SubmitFormationV1 = configAsset.SubmitFormationV1;
         CancelChallengeV1 = configAsset.CancelChallengeV1;
@@ -63,6 +64,7 @@ public class ServerFields
     public string SubmitFormationV1 { get; set; }
     public string StartChallengeV1 { get; set; }
     public string GetCheckPointResultV1 { get; set; }
+    public string GetCheckPointResultV2 { get; set; }
     public string GetGetFormationV1 { get; set; }
     public string GetStageV1 { get; set; }
     public string GetWarsV1 { get; set; }
