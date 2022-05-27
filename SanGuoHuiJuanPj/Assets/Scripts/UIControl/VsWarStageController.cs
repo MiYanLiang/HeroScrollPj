@@ -286,8 +286,8 @@ public class VsWarStageController : MonoBehaviour
     {
         Vs.PlayAttackCityAudio();
         //ApiPanel.instance.InvokeRk(OnCallBackResultV1, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV1, WarId, index);
-#if UNITY_EDITOR
         ApiPanel.instance.InvokeRk(OnCallBackResultV2, Vs.GetBackToWarListPage, Versus.GetCheckPointResultV2, WarId, index);
+#if UNITY_EDITOR
         //Versus.GetRkCheckPointWarResult(WarId, index, OnCallBackResult);
 #endif
 

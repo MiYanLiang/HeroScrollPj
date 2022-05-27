@@ -112,8 +112,21 @@ public class SignalRClient : MonoBehaviour
 
     public async Task SynchronizeSaved()
     {
+        RecursiveSynSaveCount++;
         var jData = await InvokeVb(EventStrings.Req_Saved);
         var bag = Json.Deserialize<ViewBag>(jData);
+        if (bag == null)
+        {
+            if(RecursiveSynSaveCount>5)
+            {
+                PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录游戏。");
+                return;
+            }
+            ReconnectServer(TryReconnectSynchronizeSave);
+            return;
+        }
+
+        RecursiveSynSaveCount = 0;
         var playerData = bag.GetPlayerDataDto();
         var character = bag.GetPlayerCharacterDto();
         var warChestList = bag.GetPlayerWarChests();
@@ -135,6 +148,17 @@ public class SignalRClient : MonoBehaviour
         PlayerDataForGame.instance.gbocData.fightBoxs = warChestList.ToList();
         PlayerDataForGame.instance.isNeedSaveData = true;
         LoadSaveData.instance.SaveGameData();
+    }
+
+    private int RecursiveSynSaveCount = 0;
+    private async void TryReconnectSynchronizeSave(bool connected)
+    {
+        if (!connected)
+        {
+            PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录游戏。");
+            return;
+        }
+        await SynchronizeSaved();
     }
 
     private async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo,

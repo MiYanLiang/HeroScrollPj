@@ -83,6 +83,7 @@ public class Versus : MonoBehaviour
     public static string GetStageV1 { get; set; }
     public static string GetGetFormationV1 { get; set; }
     public static string GetCheckPointResultV1 { get; set; }
+    public static string GetCheckPointResultV2 { get; set; }
     public static string StartChallengeV1 { get; set; }
     public static string SubmitFormationV1 { get; set; }
     public static string CancelChallengeV1 { get; set; }

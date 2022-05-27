@@ -349,6 +349,7 @@ public class PlayerDataForGame : MonoBehaviour
         if (pyData.Stamina < 0)
         {
             ApiPanel.instance.SyncSaved(null);
+            ShowStringTips("体力不够了吗？，请确保有足够的体力执行。");
             return false;
             //throw new InvalidOperationException($"体力小于0! stamina = ({stamina})");
         }
