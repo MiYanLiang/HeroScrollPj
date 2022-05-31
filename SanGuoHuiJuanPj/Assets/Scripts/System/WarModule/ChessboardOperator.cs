@@ -396,7 +396,12 @@ namespace Assets.System.WarModule
         public void RecordChessmenStatus() =>
             Record.AddChessmenStatus(StatusMap.ToDictionary(c => c.Key.InstanceId, c => GetFullCondition(c.Key)));
         public void RecordSummaryActivity() => Record.AddSummaryActivity();
-        public void RecordFragment(ChessboardFragment fragment) => Record?.AddFragment(fragment);
+        public void RecordFragment(ChessboardFragment fragment)
+        {
+            if (Record.Index < 0) Record.AddSummaryActivity();
+            Record?.AddFragment(fragment);
+        }
+
         public void RecordFragment(CardFragment fragment) => Record?.AddFragment(fragment);
 
         public void RecordChessmanActivity(int instanceId, bool isChallenger) =>
@@ -409,6 +414,11 @@ namespace Assets.System.WarModule
             {
                 case -1:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId;break;
                 case -2:actId = Record.CurrentActivity.Index < 0 ? 0 : Record.CurrentActivity.CurrentFragment.ActId+1; break;
+                default:
+                {
+                    if (Record.CurrentActivity.Index < 0) actId = 0;
+                    break;
+                }
             }
 
             RecordFragment(
