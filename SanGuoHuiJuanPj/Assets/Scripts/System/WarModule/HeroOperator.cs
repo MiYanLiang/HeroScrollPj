@@ -2593,22 +2593,22 @@ namespace Assets.System.WarModule
                 case 8:
                     switch (type)
                     {
-                        case Damage.Types.Critical: return 40;
-                        case Damage.Types.Rouse: return 50;
+                        case Damage.Types.Critical: return 100;
+                        case Damage.Types.Rouse: return 150;
                     }
                     break;
                 case 174:
                     switch (type)
                     {
-                        case Damage.Types.Critical: return 60;
-                        case Damage.Types.Rouse: return 70;
+                        case Damage.Types.Critical: return 125;
+                        case Damage.Types.Rouse: return 175;
                     }
                     break;
                 case 175:
                     switch (type)
                     {
-                        case Damage.Types.Critical: return 80;
-                        case Damage.Types.Rouse: return 100;
+                        case Damage.Types.Critical: return 150;
+                        case Damage.Types.Rouse: return 200;
                     }
                     break;
                 default: throw MilitaryNotValidError(this);
