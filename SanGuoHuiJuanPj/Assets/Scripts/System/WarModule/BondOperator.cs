@@ -189,7 +189,31 @@ namespace Assets.System.WarModule
             return list.ToArray();
         }
     }
+    /// <summary>
+    /// 黄天当立
+    /// </summary>
+    public class HuangTianDangLi : BondOperator
+    {
+        private int ShenZhuRatio { get; } = 30;
+        private int DamageAdditionRatio { get; } = 10;
+        private int TroopId { get; } = 6; //张角军
 
+        public HuangTianDangLi(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
+        {
+        }
+
+        protected override ConductResult RoundStartRivalConduct(ChessOperator[] chessOperators, IChessOperator rival) =>
+            null;
+
+        protected override CombatConduct[] RoundStartFriendlyConducts(ChessOperator op)
+        {
+            var list = new List<CombatConduct>();
+            list.AddRange(GetBuffIfInBondList(op, CardState.Cons.ShenZhu, ShenZhuRatio)); //给羁绊列表里的武将添加状态
+            if (op.CardType == GameCardType.Hero && op.Style.Troop == TroopId) //同军团
+                InstanceJiBanSprite<JiBanStrengthSprite>(op, DamageAdditionRatio);
+            return list.ToArray();
+        }
+    }
     /// <summary>
     /// 五虎上将
     /// </summary>
