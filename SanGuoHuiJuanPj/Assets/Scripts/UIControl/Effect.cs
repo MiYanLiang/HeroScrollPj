@@ -2643,6 +2643,7 @@ public static class Effect
             case JiBanSkillName.WeiZhenXiLiang:
             case JiBanSkillName.TanLangZhiXin:
             case JiBanSkillName.BuShiZhiGong:
+            case JiBanSkillName.HuangTianDangLi:
                 return -1;
             default:
                 throw new ArgumentOutOfRangeException(nameof(jiBan), jiBan, null);
@@ -2804,4 +2805,8 @@ public enum JiBanSkillName
     /// 苍龙皓月
     /// </summary>
     CangLongHaoYue=17,
+    /// <summary>
+    /// 黄天当立
+    /// </summary>
+    HuangTianDangLi=18,
 }

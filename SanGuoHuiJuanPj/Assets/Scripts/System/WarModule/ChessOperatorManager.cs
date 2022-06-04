@@ -83,6 +83,7 @@ namespace Assets.System.WarModule
                 case 15: return new TanLangZhiXin(jb, this);
                 case 16: return new BuShiZhiGong(jb, this);
                 case 17:return new CangLongHaoYue(jb, this);
+                case 18:return new HuangTianDangLi(jb, this);
                 default: return null;
             }
         }
