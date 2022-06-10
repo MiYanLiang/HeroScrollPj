@@ -126,7 +126,7 @@ public class ServerPanel : MonoBehaviour
     void OnApplicationFocus(bool isFocus)
     {
         if(!isFocus)return;
-        if(SignalR.Status == ConnectionStates.Closed) Reconnect();
+        if(SignalR.Status != ConnectionStates.Connected) Reconnect();
     }
 
     private void Reconnect()
