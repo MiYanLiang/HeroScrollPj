@@ -443,8 +443,7 @@ public class PlayerDataForGame : MonoBehaviour
 
     public void GenerateLocalStamina()
     {
-        stamina = new LocalStamina(pyData.Stamina, secsPerStamina, staminaIncreaseLimit,
-            staminaMax);
+        stamina = new LocalStamina(pyData.Stamina, secsPerStamina, staminaIncreaseLimit, staminaMax);
     }
 
     public IEnumerable<GameCard> GetCards(bool isAllForces)

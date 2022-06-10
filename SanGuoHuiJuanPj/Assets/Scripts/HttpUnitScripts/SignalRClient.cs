@@ -39,22 +39,18 @@ public class SignalRClient : MonoBehaviour
     /// </summary>
     public ConnectionStates Status;
 
-    public int ServerTimeOutMinutes = 60;
-    //public int KeeAliveIntervalSecs = 600;
-    //public int HandShakeTimeoutSecs = 10;
     public ServerPanel ServerPanel;
     public event UnityAction<ConnectionStates> OnStatusChanged;
-    public event UnityAction OnConnected;
     public static SignalRClient instance;
     private CancellationTokenSource cancellationTokenSource;
 
     private static HubConnection _hub;
     private Dictionary<string, UnityAction<string>> _actions;
-    private static readonly Type _stringType = typeof(string);
     private bool isBusy;
     public ApiPanel ApiPanel;
     public string LoginToken { get; set; }
     public int Zone { get; private set; } = -1;
+    [SerializeField]private int ServerRetried = 2;
 
     private void Awake()
     {
@@ -71,7 +67,7 @@ public class SignalRClient : MonoBehaviour
         if (ServerPanel != null) ServerPanel.Init(this);
         ApiPanel.Init(this);
     }
-
+    
 
     async void OnApplicationQuit()
     {
@@ -126,28 +122,31 @@ public class SignalRClient : MonoBehaviour
             return;
         }
 
-        RecursiveSynSaveCount = 0;
-        var playerData = bag.GetPlayerDataDto();
-        var character = bag.GetPlayerCharacterDto();
-        var warChestList = bag.GetPlayerWarChests();
-        var redeemedList = bag.GetPlayerRedeemedCodes();
-        var warCampaignList = bag.GetPlayerWarCampaignDtos();
-        var gameCardList = bag.GetPlayerGameCardDtos();
-        var troops = bag.GetPlayerTroopDtos();
-        PlayerDataForGame.instance.pyData = PlayerData.Instance(playerData);
-        PlayerDataForGame.instance.UpdateCharacter(character);
-        PlayerDataForGame.instance.GenerateLocalStamina();
-        PlayerDataForGame.instance.warsData.warUnlockSaveData = warCampaignList.Select(w => new UnlockWarCount
+        UnityMainThread.thread.RunNextFrame(() =>
         {
-            warId = w.WarId,
-            isTakeReward = w.IsFirstRewardTaken,
-            unLockCount = w.UnlockProgress
-        }).ToList();
-        PlayerDataForGame.instance.UpdateGameCards(troops, gameCardList);
-        PlayerDataForGame.instance.gbocData.redemptionCodeGotList = redeemedList.ToList();
-        PlayerDataForGame.instance.gbocData.fightBoxs = warChestList.ToList();
-        PlayerDataForGame.instance.isNeedSaveData = true;
-        LoadSaveData.instance.SaveGameData();
+            RecursiveSynSaveCount = 0;
+            var playerData = bag.GetPlayerDataDto();
+            var character = bag.GetPlayerCharacterDto();
+            var warChestList = bag.GetPlayerWarChests();
+            var redeemedList = bag.GetPlayerRedeemedCodes();
+            var warCampaignList = bag.GetPlayerWarCampaignDtos();
+            var gameCardList = bag.GetPlayerGameCardDtos();
+            var troops = bag.GetPlayerTroopDtos();
+            PlayerDataForGame.instance.pyData = PlayerData.Instance(playerData);
+            PlayerDataForGame.instance.UpdateCharacter(character);
+            PlayerDataForGame.instance.GenerateLocalStamina();
+            PlayerDataForGame.instance.warsData.warUnlockSaveData = warCampaignList.Select(w => new UnlockWarCount
+            {
+                warId = w.WarId,
+                isTakeReward = w.IsFirstRewardTaken,
+                unLockCount = w.UnlockProgress
+            }).ToList();
+            PlayerDataForGame.instance.UpdateGameCards(troops, gameCardList);
+            PlayerDataForGame.instance.gbocData.redemptionCodeGotList = redeemedList.ToList();
+            PlayerDataForGame.instance.gbocData.fightBoxs = warChestList.ToList();
+            PlayerDataForGame.instance.isNeedSaveData = true;
+            LoadSaveData.instance.SaveGameData();
+        });
     }
 
     private int RecursiveSynSaveCount = 0;
@@ -200,8 +199,8 @@ public class SignalRClient : MonoBehaviour
     {
         var conn = new HubConnection(new Uri(url), new JsonProtocol(new JsonNetEncoder()), new HubOptions
         {
-            ConnectTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes),
-            PingInterval = TimeSpan.FromMinutes(5),
+            //ConnectTimeout = TimeSpan.FromMinutes(ServerTimeOutMinutes),
+            //PingInterval = TimeSpan.FromMinutes(5),
             SkipNegotiation = true,
             PreferedTransport = TransportTypes.WebSocket
         });
@@ -326,7 +325,8 @@ public class SignalRClient : MonoBehaviour
 
         async void InvokeRequest()
         {
-            var result = await InvokeVb(method, bag, tokenSource);
+            var task = InvokeVb(method, bag, tokenSource);
+            var result = await DoubleTryTask(task, method, tokenSource);
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
     }
@@ -348,16 +348,49 @@ public class SignalRClient : MonoBehaviour
                 InvokeRequest();
                 return;
             }
-
             throw new InvalidOperationException("登录异常，请重新登录！");
         });
 
         async void InvokeRequest()
         {
-            var result = await InvokeBag(method, serializedBag, tokenSource);
-            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+            var task = InvokeBag(method, serializedBag, tokenSource);
+            var result = await DoubleTryTask(task, method, tokenSource);
+                UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
+    }
 
+    async Task<T> DoubleTryTask<T>(Task<T> task, string method, CancellationTokenSource tokenSource)
+    {
+        var retries = 0;
+        do
+        {
+            try
+            {
+                return await task;
+            }
+            catch (Exception e)
+            {
+                if (retries < ServerRetried)
+                {
+                    retries++;
+                    continue;
+                }
+#if UNITY_EDITOR
+                XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e.Message}");
+#endif
+                var now = SysTime.Now;
+                var timeText = $"{now.Year - 2000}.{now.Month}.{now.Day}";
+                var username = GamePref.Username;
+                var filtered = username.Split("yx").LastOrDefault();
+                filtered = filtered?.Split("hj").LastOrDefault();
+                var userid = int.TryParse(filtered, out var id) ? id - 10000 : 0;
+                GameSystem.ServerRequestException(method,
+                    $"v{Application.version}.{timeText}.{userid}.Retried:{retries}\n{e.Message}");
+                if (!tokenSource.IsCancellationRequested) tokenSource.Cancel();
+                //return $"请求服务器异常: {e}";
+            }
+        } while (retries > 0);
+        throw new NotImplementedException($"{method}. Error after retried: {retries}");
     }
 
     private async Task<string> InvokeVb(string method, IViewBag bag = default,
@@ -374,7 +407,7 @@ public class SignalRClient : MonoBehaviour
         catch (Exception e)
         {
 #if UNITY_EDITOR
-            XDebug.LogError<SignalRClient>($"Error on interpretation {method}:{e.Message}");
+            XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e.Message}");
 #endif
             GameSystem.ServerRequestException(method, e.Message);
             if (!tokenSource.IsCancellationRequested) tokenSource.Cancel();
@@ -385,22 +418,10 @@ public class SignalRClient : MonoBehaviour
     private async Task<string> InvokeBag(string method, string serialized,
         CancellationTokenSource tokenSource = default)
     {
-        try
-        {
             if (tokenSource == null) tokenSource = new CancellationTokenSource();
             var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
                 string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
             return result;
-        }
-        catch (Exception e)
-        {
-#if UNITY_EDITOR
-            XDebug.LogError<SignalRClient>($"Error on interpretation {method}:{e.Message}");
-#endif
-            GameSystem.ServerRequestException(method, e.Message);
-            if (!tokenSource.IsCancellationRequested) tokenSource.Cancel();
-            return $"请求服务器异常: {e}";
-        }
     }
 
     /// <summary>

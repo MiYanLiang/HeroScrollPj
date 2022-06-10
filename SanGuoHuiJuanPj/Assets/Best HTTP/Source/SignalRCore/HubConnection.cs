@@ -588,7 +588,7 @@ namespace BestHTTP.SignalRCore
             return InvokeAsync<TResult>(target, default(CancellationToken), args);
         }
 
-        public Task<TResult> InvokeAsync<TResult>(string target, CancellationToken cancellationToken , object[] args)
+        public Task<TResult> InvokeAsync<TResult>(string target, CancellationToken cancellationToken = default, params object[] args)
         {
             TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
             long id = InvokeImp(target,
