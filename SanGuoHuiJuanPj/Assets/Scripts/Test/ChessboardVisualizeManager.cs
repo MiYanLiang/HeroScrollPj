@@ -545,14 +545,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
             isShady = false;
         }
 
-        if (major != null && !major.Status.IsDeath)
-            //后摇
+        if (major != null && !major.Status.IsDeath) //后摇
         {
             yield return CardAnimator.instance.FinalizeAnimation(major, Chessboard.GetChessPos(major).transform.position)
                 .WaitForCompletion();
             Chessboard.PlaceCard(major.PosIndex, major);
         }
-
     }
 
     private Tween GetCardResponds()
@@ -1186,11 +1184,11 @@ public class ChessboardVisualizeManager : MonoBehaviour
             .OnRePos(target, Chessboard.GetScope(target.IsPlayer)[pos])
             .OnComplete(() =>
             {
-                if (CardMap.Any(c =>
-                        c.Value.Pos == pos && c.Value.isPlayerCard == target.isPlayerCard &&
-                        c.Value != target))
-                    XDebug.LogError<ChessboardVisualizeManager>(
-                        $"目标单位棋格[{target.Pos}]移位[{pos}]异常！请检查是否该棋格上有其它单位。");
+                //if (CardMap.Any(c =>
+                //        c.Value.Pos == pos && c.Value.isPlayerCard == target.isPlayerCard &&
+                //        c.Value != target))
+                //    XDebug.LogError<ChessboardVisualizeManager>(
+                //        $"目标单位棋格[{target.Pos}]移位[{pos}]异常！请检查是否该棋格上有其它单位。");
                 Chessboard.PlaceCard(pos, target);
             });
     }
