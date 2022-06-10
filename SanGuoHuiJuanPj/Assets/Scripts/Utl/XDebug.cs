@@ -14,9 +14,7 @@ public static class XDebug
     public static void Init()
     {
         if (isInit)return;
-#if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
-#endif
         //打印log附加代码 
         AppDebugClass.DeleteOldAppLog();   //删除原先DebugFile 
     }
