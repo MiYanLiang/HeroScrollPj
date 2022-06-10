@@ -61,11 +61,6 @@ public class PangleAdController : AdControllerBase
             //.SetMediaExtra("media_extra") // 附加参数，可选
             .SetOrientation(AdOrientation.Vertical) // 必填参数，期望视频的播放方向
             .SetAdLoadType(AdLoadType.Load)
-            .SetDownloadType(
-                //showDownloadConfirmDialog?
-                DownloadType.DownloadTypePopup
-                //:DownloadType.DownloadTypeNoPopup
-            )
             .Build();
 
         var directCallback = new RewardVideoCallback();
@@ -90,23 +85,37 @@ public class PangleAdController : AdControllerBase
     {
         public UnityAction<bool,string> CallbackAction;
         private bool isInvokeCallback = false;
+        /// <summary>
+        /// 广告是否成功!
+        /// </summary>
+        private bool isAdValid = false;
         public void OnAdShow() {}
 
         public void OnAdVideoBarClick() {}
 
-        public void OnAdClose(){ }
+        public void OnAdClose() => OnVerify();
 
-        public void OnVideoComplete() => OnCallback(true, string.Empty);
+        public void OnVideoComplete() => OnVerify();
 
-        public void OnVideoSkip() => OnCallback(true, string.Empty);
+        public void OnVideoSkip() => OnVerify();
 
-        public void OnVideoError() => OnCallback(false, "广告视频异常。");
+        public void OnVideoError() => OnCallBack(false, "广告视频异常。");
 
-        public void OnRewardVerify(bool rewardVerify, int rewardAmount, string rewardName) =>
-            OnCallback(rewardVerify, string.Empty);
-        public void OnCallback(bool success,string message)
+        public void OnRewardVerify(bool rewardVerify, int rewardAmount, string rewardName, int rewardType = -1,
+            float rewardPropose = -1) => isAdValid = rewardVerify;
+
+        public void OnRewardArrived(bool isRewardValid, int rewardType, IRewardBundleModel extraInfo) =>
+            isAdValid = isRewardValid;
+
+        private void OnVerify()
         {
-            if (isInvokeCallback) return;
+            var message = isAdValid ? string.Empty : "广告无效。";
+            OnCallBack(isAdValid, message);
+        }
+
+        private void OnCallBack(bool success,string message)
+        {
+            if (isInvokeCallback) return;//避免重复执行
             isInvokeCallback = true;
             var action = CallbackAction;
             CallbackAction = null;
@@ -160,13 +169,6 @@ public class PangleAdController : AdControllerBase
             //.SetMediaExtra("media_extra") // 附加参数，可选
             .SetOrientation(AdOrientation.Vertical) // 必填参数，期望视频的播放方向
             .SetAdLoadType(AdLoadType.PreLoad)
-#if UNITY_ANDROID
-            .SetDownloadType(
-                //showDownloadConfirmDialog?
-                DownloadType.DownloadTypePopup
-                //:DownloadType.DownloadTypeNoPopup
-            )
-#endif
             .Build();
         var adListener = new RewardVideoCallback();
         adListener.CallbackAction += CallbackAction;

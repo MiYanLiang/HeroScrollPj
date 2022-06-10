@@ -150,6 +150,10 @@ namespace ByteDance.Union
             {
                 UnityDispatcher.PostTask(() => this.listener.OnRewardVerify(rewardVerify, rewardAmount, rewardName),callbackOnMainThread);
             }
+            public void onRewardArrived( bool isRewardValid, int rewardType, AndroidJavaObject extraInfo)
+            {
+                UnityDispatcher.PostTask(() => this.listener.OnRewardArrived(isRewardValid, rewardType, RewardBundleModel.Create(extraInfo)),callbackOnMainThread);
+            }
 
             void onSkippedVideo()
             {

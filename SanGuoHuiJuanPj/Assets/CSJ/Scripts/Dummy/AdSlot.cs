@@ -127,26 +127,6 @@ namespace ByteDance.Union
                 return this;
             }
             
-            /// <summary>
-            /// Set the splash ButtonType
-            /// </summary>
-            /// <param name="type">SplashButton Type</param>
-            /// <returns></returns>
-            public Builder SetSplashButtonType(SplashButtonType type)
-            {
-                return this;
-            }
-
-            /// <summary>
-            /// set download type
-            /// </summary>
-            /// <param name="downloadType"></param>
-            /// <returns></returns>
-            public Builder SetDownloadType(DownloadType downloadType)
-            {
-                return this;
-            }
-
             public Builder SetAdLoadType(AdLoadType adLoadType)
             {
                 return this;
