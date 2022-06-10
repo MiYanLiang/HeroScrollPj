@@ -54,21 +54,6 @@ namespace ByteDance.Union
         
         UNKOWN
     }
-    /// <summary>
-    /// SplashView Button Type
-    /// config the type in AdSlot,define which area will action when click the splash ad
-    /// </summary>
-    public enum SplashButtonType :int {
-        /// <summary>
-        /// Full Screen will response to click
-        /// </summary>
-        FullScreen = 1,
-
-        /// <summary>
-        /// The area of download bar will response to click
-        /// </summary>
-        DownloadBar = 2
-    }
 
     public enum AdLoadType : int
     {
@@ -86,11 +71,5 @@ namespace ByteDance.Union
         /// Load resources in real time
         /// </summary>
         Load = 3
-    }
-    
-    public enum DownloadType
-    {
-        DownloadTypeNoPopup=0,
-        DownloadTypePopup=1
     }
 }
