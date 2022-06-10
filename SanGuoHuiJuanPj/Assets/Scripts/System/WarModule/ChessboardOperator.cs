@@ -249,8 +249,8 @@ namespace Assets.System.WarModule
             var currentOps = StatusMap.Where(o => !o.Value.IsDeath).Select(o => o.Key).ToList();
             //为了确保可执行的卡牌都在棋盘上
             OnRecallOperatorPosition(currentOps);
-            RefreshChessPosses();
             RecordSummaryActivity();
+            RefreshChessPosses();
             InvokePreRoundTriggers();
             InvokeJiBanActivities();
             RoundState = ProcessCondition.Chessman;
