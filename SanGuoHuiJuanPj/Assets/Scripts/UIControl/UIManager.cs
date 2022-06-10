@@ -130,11 +130,12 @@ public class UIManager : MonoBehaviour
         rewardManager = gameObject.AddComponent<RewardManager>();
     }
 
-    // Start is called before the first frame update 
-    public void Init()
+    public void Init() => StartCoroutine(LateInit());
+    public IEnumerator LateInit()
     {
-        if (IsInit) return;
+        if (IsInit) yield break;
         AudioController1.instance.FadeEndMusic();
+        yield return new WaitUntil(() => PlayerDataForGame.instance.Stamina != null);
 
         TimeSystemControl.instance.InitStaminaCount(PlayerDataForGame.instance.Stamina.Value <
                                                     TimeSystemControl.instance.MaxStamina);
