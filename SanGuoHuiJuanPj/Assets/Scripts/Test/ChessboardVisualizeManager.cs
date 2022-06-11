@@ -305,6 +305,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             var card = CardMap[gc.Key];
             card.ChessmanStyle.UpdateStatus(stat, card);
         }
+        FilterDeathChessman();
     }
     //演示回合
     public IEnumerator AnimateRound(ChessRoundRecord round, bool playRoundStartAudio)
