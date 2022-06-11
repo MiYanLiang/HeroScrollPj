@@ -106,25 +106,19 @@ public class SignalRClient : MonoBehaviour
         return result;
     }
 
-    public async Task SynchronizeSaved()
+    public void SynchronizeSaved(UnityAction onCompleteAction)
     {
-        RecursiveSynSaveCount++;
-        var jData = await InvokeVb(EventStrings.Req_Saved);
-        var bag = Json.Deserialize<ViewBag>(jData);
-        if (bag == null)
+        var cancelToken = new CancellationTokenSource();
+        //var jData = await HubRequestByViewBag(EventStrings.Req_Saved);
+        Invoke(EventStrings.Req_Saved, jData =>
         {
-            if(RecursiveSynSaveCount>5)
+            var bag = Json.Deserialize<ViewBag>(jData);
+            if (bag == null)
             {
-                PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录游戏。");
+                Failed();
                 return;
             }
-            ReconnectServer(TryReconnectSynchronizeSave);
-            return;
-        }
 
-        UnityMainThread.thread.RunNextFrame(() =>
-        {
-            RecursiveSynSaveCount = 0;
             var playerData = bag.GetPlayerDataDto();
             var character = bag.GetPlayerCharacterDto();
             var warChestList = bag.GetPlayerWarChests();
@@ -146,18 +140,13 @@ public class SignalRClient : MonoBehaviour
             PlayerDataForGame.instance.gbocData.fightBoxs = warChestList.ToList();
             PlayerDataForGame.instance.isNeedSaveData = true;
             LoadSaveData.instance.SaveGameData();
-        });
-    }
+            onCompleteAction?.Invoke();
+        }, ViewBag.Instance(), cancelToken);
 
-    private int RecursiveSynSaveCount = 0;
-    private async void TryReconnectSynchronizeSave(bool connected)
-    {
-        if (!connected)
+        void Failed()
         {
             PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录游戏。");
-            return;
         }
-        await SynchronizeSaved();
     }
 
     private async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo,
@@ -325,7 +314,7 @@ public class SignalRClient : MonoBehaviour
 
         async void InvokeRequest()
         {
-            var task = InvokeVb(method, bag, tokenSource);
+            var task = HubRequestByViewBag(method, bag, tokenSource);
             var result = await DoubleTryTask(task, method, tokenSource);
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
@@ -353,7 +342,7 @@ public class SignalRClient : MonoBehaviour
 
         async void InvokeRequest()
         {
-            var task = InvokeBag(method, serializedBag, tokenSource);
+            var task = HubRequestByDataBag(method, serializedBag, tokenSource);
             var result = await DoubleTryTask(task, method, tokenSource);
                 UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
@@ -393,35 +382,23 @@ public class SignalRClient : MonoBehaviour
         throw new NotImplementedException($"{method}. Error after retried: {retries}");
     }
 
-    private async Task<string> InvokeVb(string method, IViewBag bag = default,
+    private async Task<string> HubRequestByViewBag(string method, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
     {
-        try
-        {
-            if (bag == default) bag = ViewBag.Instance();
-            if (tokenSource == null) tokenSource = new CancellationTokenSource();
-            var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
-                bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) });
-            return result;
-        }
-        catch (Exception e)
-        {
-#if UNITY_EDITOR
-            XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e.Message}");
-#endif
-            GameSystem.ServerRequestException(method, e.Message);
-            if (!tokenSource.IsCancellationRequested) tokenSource.Cancel();
-            return $"请求服务器异常: {e}";
-        }
+        if (bag == default) bag = ViewBag.Instance();
+        if (tokenSource == null) tokenSource = new CancellationTokenSource();
+        var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
+            bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) });
+        return result;
     }
 
-    private async Task<string> InvokeBag(string method, string serialized,
+    private async Task<string> HubRequestByDataBag(string method, string serialized,
         CancellationTokenSource tokenSource = default)
     {
-            if (tokenSource == null) tokenSource = new CancellationTokenSource();
-            var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
-                string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
-            return result;
+        if (tokenSource == null) tokenSource = new CancellationTokenSource();
+        var result = await _hub.InvokeAsync<string>(method, tokenSource.Token,
+            string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
+        return result;
     }
 
     /// <summary>
@@ -481,7 +458,7 @@ public class SignalRClient : MonoBehaviour
             .PlayerWarCampaignDtos(campaign)
             .PlayerGameCardDtos(cards.Select(c => c.c.ToDto()).ToArray())
             .PlayerTroopDtos(troops);
-        await InvokeVb(EventStrings.Req_UploadPy, viewBag);
+        await HubRequestByViewBag(EventStrings.Req_UploadPy, viewBag);
     }
 
     #endregion

@@ -97,12 +97,14 @@ public class ApiPanel : MonoBehaviour
         }
     }
 
-    public async void SyncSaved(UnityAction onCompleteAction)
+    public void SyncSaved(UnityAction onCompleteAction)
     {
         SetBusy(this);
-        await Client.SynchronizeSaved();
-        onCompleteAction?.Invoke();
-        SetBusy(false);
+        Client.SynchronizeSaved(() =>
+        {
+            onCompleteAction?.Invoke();
+            SetBusy(false);
+        });
     }
 
     public void SetBusy(bool busy)

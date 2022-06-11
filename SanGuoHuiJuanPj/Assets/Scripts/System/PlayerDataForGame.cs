@@ -441,10 +441,8 @@ public class PlayerDataForGame : MonoBehaviour
         fightTrapId = hstData.trapSaveData.Enlist(forceId).Select(t => t.id).ToList();
     }
 
-    public void GenerateLocalStamina()
-    {
+    public void GenerateLocalStamina() =>
         stamina = new LocalStamina(pyData.Stamina, secsPerStamina, staminaIncreaseLimit, staminaMax);
-    }
 
     public IEnumerable<GameCard> GetCards(bool isAllForces)
     {

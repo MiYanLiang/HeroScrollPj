@@ -130,12 +130,10 @@ public class UIManager : MonoBehaviour
         rewardManager = gameObject.AddComponent<RewardManager>();
     }
 
-    public void Init() => StartCoroutine(LateInit());
-    public IEnumerator LateInit()
+    public void Init()
     {
-        if (IsInit) yield break;
+        if (IsInit) return;
         AudioController1.instance.FadeEndMusic();
-        yield return new WaitUntil(() => PlayerDataForGame.instance.Stamina != null);
 
         TimeSystemControl.instance.InitStaminaCount(PlayerDataForGame.instance.Stamina.Value <
                                                     TimeSystemControl.instance.MaxStamina);
