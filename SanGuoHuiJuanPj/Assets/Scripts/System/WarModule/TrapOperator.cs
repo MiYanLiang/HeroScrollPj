@@ -76,7 +76,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class GunMuOperator : TrapOperator
     {
-        private int StunningRate => 100;
+        private int StunningRate => 80;
         protected override void OnDeadTrigger(ChessOperator offender, int conduct)
         {
             var scope = Chessboard.GetRivals(this, _ => true).OrderBy(pos => pos.Pos).ToArray();
@@ -100,7 +100,7 @@ namespace Assets.System.WarModule
                 return new[]
                 {
                     basicDmg,
-                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1, rate: StunningRate)
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 2, rate: StunningRate)
                 };
             }
         }
@@ -113,7 +113,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 眩晕几率
         /// </summary>
-        private int StunningRate => 100;
+        private int StunningRate => 80;
         protected override void OnDeadTrigger(ChessOperator offender, int damage)
         {
             var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//最上一排
@@ -132,7 +132,7 @@ namespace Assets.System.WarModule
                 return new[]
                 {
                     basicDmg,
-                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 1, rate: StunningRate)
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Stunned, value: 2, rate: StunningRate)
                 };
             }
         }
@@ -158,7 +158,7 @@ namespace Assets.System.WarModule
     {
         private int StunnedRate => 60;
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Stunned, value: 1, rate: StunnedRate));
+            CardState.Cons.Stunned, value: 2, rate: StunnedRate));
     }
     /// <summary>
     /// 金锁阵
@@ -167,7 +167,7 @@ namespace Assets.System.WarModule
     {
         private int ImprisonRate => 75;
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Imprisoned, value: 1, rate: ImprisonRate));
+            CardState.Cons.Imprisoned, value: 2, rate: ImprisonRate));
     }
     /// <summary>
     /// 鬼兵阵
@@ -177,7 +177,7 @@ namespace Assets.System.WarModule
         private int CowardlyRate => 90;
 
         protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId,
-            CardState.Cons.Cowardly, value: 1, rate: CowardlyRate));
+            CardState.Cons.Cowardly, value: 2, rate: CowardlyRate));
     }
     /// <summary>
     /// 火墙
@@ -194,8 +194,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class PoisonSpringOperator : ReflexiveTrapOperator
     {
-        private int PoisonRate => 75;
-        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 1, rate: PoisonRate));
+        private int PoisonRate => 60;
+        protected override CombatConduct[] CounterConducts => Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 2, rate: PoisonRate));
     }
     /// <summary>
     /// 刀墙
@@ -205,7 +205,7 @@ namespace Assets.System.WarModule
         private int BleedRate => 75;
 
         protected override CombatConduct[] CounterConducts =>
-            Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, value: 1, rate: BleedRate));
+            Helper.Singular(CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Bleed, value: 2, rate: BleedRate));
     }
     /// <summary>
     /// 金币宝箱

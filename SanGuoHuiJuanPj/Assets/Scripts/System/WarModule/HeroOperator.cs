@@ -2395,7 +2395,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private const int RecursiveLimit = 15;//武魂：上限
+        private const int RecursiveLimit = 20;//武魂：上限
         private static int loopCount = 0;
         protected override void MilitaryPerforms(int skill = 1)
         {
