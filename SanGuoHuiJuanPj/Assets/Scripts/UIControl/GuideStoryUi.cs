@@ -338,9 +338,9 @@ public class GuideStoryUi : MonoBehaviour
             var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star))
             {
                 IsLock = true,
-                posIndex = chessman.Key,
                 isPlayerCard = true
             };
+            card.SetPos(chessman.Key);
             warBoard.SetPlayerChessman(card);
         }
 

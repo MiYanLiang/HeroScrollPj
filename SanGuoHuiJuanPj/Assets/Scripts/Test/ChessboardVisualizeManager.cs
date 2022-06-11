@@ -98,7 +98,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         }
         _cardData.Clear();
         Chessboard.ResetChessboard();
-        RouseEffectObj.gameObject.gameObject.SetActive(false);
+        RouseEffectObj.gameObject.SetActive(false);
         Chessboard.winningEffect.Reset();
     }
 
@@ -343,11 +343,10 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            yield return DOTween.Sequence().AppendCallback(FilterDeathChessman)
-                .AppendInterval(CardAnimator.instance.Misc.OnRoundEnd).WaitForCompletion();
+            FilterDeathChessman();
+            yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         }
-
+        FilterDeathChessman();
         yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
         UpdateChessmenStatus(round);
         var gridTween = DOTween.Sequence().Pause();
@@ -549,7 +548,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             yield return CardAnimator.instance.FinalizeAnimation(major, Chessboard.GetChessPos(major).transform.position)
                 .WaitForCompletion();
-            Chessboard.PlaceCard(major.PosIndex, major);
+            Chessboard.PlaceCard(major.Pos, major);
         }
     }
 
@@ -722,12 +721,12 @@ public class ChessboardVisualizeManager : MonoBehaviour
     public void FilterDeathChessman()
     {
         //更新棋位和棋子状态(提取死亡棋子)
-        foreach (var tmp in CardMap.ToDictionary(c => c.Key, c => c.Value))
+        foreach (var (key, card) in CardMap.ToDictionary(c => c.Key, c => c.Value))
         {
-            Chessboard.ResetPos(tmp.Value);
-            if (tmp.Value.CardType == GameCardType.Base) continue;
-            if (!tmp.Value.Status.IsDeath) continue;
-            RemoveCard(tmp.Key);
+            Chessboard.PlaceCard(card.Pos, card);
+            if (card.CardType == GameCardType.Base) continue;
+            if (!card.Status.IsDeath) continue;
+            RemoveCard(key);
         }
     }
 
@@ -1161,7 +1160,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
         {
             yield return CardAnimator.instance.FinalizeAnimation(majorCard, chessPos.transform.position)
                 .WaitForCompletion();
-            Chessboard.PlaceCard(majorCard.PosIndex, majorCard);
+            Chessboard.PlaceCard(majorCard.Pos, majorCard);
         }
     }
 

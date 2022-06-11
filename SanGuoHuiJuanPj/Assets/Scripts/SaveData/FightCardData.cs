@@ -43,7 +43,7 @@ public class FightCardData : IChessman
     //战斗状态
     [JsonIgnore]public CardState CardState = new CardState();
     //摆放位置记录
-    public int posIndex = -1;
+    private int posIndex = -1;
 
     //此回合是否行动
     public bool isActionDone;
@@ -159,7 +159,6 @@ public class FightCardData : IChessman
     }
 
     public GameCard Card { get; }
-    public int PosIndex => posIndex;
     public int CardId => cardId;
     public GameCardType CardType => (GameCardType) cardType;
     public int HitPoint => status.Hp;
@@ -226,7 +225,7 @@ public class FightCardData : IChessman
     }
     public int InstanceId => instanceId;
 
-    public int Pos => PosIndex;
+    public int Pos => posIndex;
     public bool IsPlayer => isPlayerCard;
     public bool IsActed => isActionDone;
     public ChessStatus Status => status;
