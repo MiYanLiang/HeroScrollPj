@@ -1774,6 +1774,40 @@ namespace Assets.System.WarModule
             }
         }
     }
+    /// <summary>
+    /// 道士
+    /// </summary>
+    public class DaoShiOperator : HeroOperator 
+    {
+        private int BasicKillRate => 5;
+        private int CriticalAddRate => 2;
+        private int RouseAddRate => 5;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetRivals(this)
+                .Where(p => p.Operator.CardType == GameCardType.Hero && p.Operator.IsAlive)
+                .OrderBy(p => Chessboard.GetStatus(p.Operator).Hp).FirstOrDefault();
+            if (target == null)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
+
+            var baseDamage = InstanceGenericDamage();
+            baseDamage.Element = CombatConduct.WindDmg;
+
+            var kill = CombatConduct.InstanceKilling(InstanceId);
+            var killingBasicAddDiffRate = BasicKillRate + StateIntelligentDiff(target.Operator) / 5;
+            var killingRate = CountRate(baseDamage, killingBasicAddDiffRate, CriticalAddRate, RouseAddRate);
+            if (Chessboard.IsRandomPass(killingRate))
+            {
+                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, kill);
+                return;
+            }
+            OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, baseDamage);
+        }
+    }
 
     /// <summary>
     /// 25  刺客 - 深入敌方，选择远程单位中攻击最高的目标进行攻击。造成伤害，并为其添加【流血】效果。
