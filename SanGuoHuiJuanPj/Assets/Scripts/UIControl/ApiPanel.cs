@@ -111,8 +111,8 @@ public class ApiPanel : MonoBehaviour
     {
         UnityMainThread.thread.RunNextFrame(() =>
         {
-            gameObject.SetActive(busy);
             IsBusy = busy;
+            gameObject.SetActive(busy);
         });
     }
 

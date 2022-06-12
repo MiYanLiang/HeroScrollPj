@@ -70,13 +70,7 @@ public class ServerPanel : MonoBehaviour
         }
     }
 
-    private void OnConnectAction(bool isConnected, int code, SignalRClient.SignalRConnectionInfo info)
-    {
-        gameObject.SetActive(!isConnected);
-        SetException(code.ToString());
-    }
-
-    private void OnStatusChanged(ConnectionStates state)
+    private void OnStatusChanged(ConnectionStates state, string message)
     {
         StopAllCoroutines();
         gameObject.SetActive(state != ConnectionStates.Connected);
@@ -94,17 +88,21 @@ public class ServerPanel : MonoBehaviour
     }
 
     //当服务器强制离线
-    private void ServerCallDisconnect(string arg)
+    private void ServerCallDisconnect(string message)
     {
         isDisconnectRequested = true;
         exitButton.gameObject.SetActive(true);
-        SignalR.Disconnect();
+        SignalR.Disconnect(Disconnected);
         StopAllCoroutines();
-        OnStatusChanged(ConnectionStates.Closed);
-        var state = arg.IsNullArg() ? States.ServerMaintenance : States.Other;
-        if (state == States.Other) Message.text = arg;
-        UiShow(state);
+
+        void Disconnected()
+        {
+            var state = message.IsNullArg() ? States.ServerMaintenance : States.Other;
+            if (state == States.Other) Message.text = message;
+            UiShow(state);
+        }
     }
+
 
     private void UpdateReconnectBtn(ConnectionStates status)
     {
@@ -121,12 +119,6 @@ public class ServerPanel : MonoBehaviour
             yield return new WaitForSeconds(1);
             count++;
         }
-    }
-
-    void OnApplicationFocus(bool isFocus)
-    {
-        if(!isFocus)return;
-        if(SignalR.Status != ConnectionStates.Connected) Reconnect();
     }
 
     private void Reconnect()
