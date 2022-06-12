@@ -602,7 +602,7 @@ public static class Effect
 
             case 245:
             case 246:
-            case 247://修真
+            case 247://道士
                 value = 104;break;
         }
         return value;
@@ -1299,7 +1299,7 @@ public static class Effect
 
             case 245:
             case 246:
-            case 247://修真
+            case 247://道士
                 return 316;
         }
         return -1;
@@ -2371,8 +2371,8 @@ public static class Effect
 
             case 245:
             case 246:
-            case 247://修真
-                audioId = 0; break;
+            case 247://道士
+                audioId = 26; break;
         }
 
         return audioId;
