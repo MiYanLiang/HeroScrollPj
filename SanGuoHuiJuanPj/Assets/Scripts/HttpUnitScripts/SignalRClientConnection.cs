@@ -8,11 +8,12 @@ using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class SignalRClientHub
+public class SignalRClientConnection
 {
     public event UnityAction<ConnectionStates,string> OnStatusChanged;
     public event Action<string, string> OnServerCall;
-    private HubConnection _hub;
+    public event Action OnRequestError;
+    private HubConnection _conn;
     /// <summary>
     /// SignalR 网络状态
     /// </summary>
@@ -21,7 +22,7 @@ public class SignalRClientHub
     private readonly int _hubInvokeRetries;
     private readonly int _retryIntervalMilliseconds;
 
-    public SignalRClientHub(int hubInvokeRetries, int retryIntervalMilliseconds = 1000)
+    public SignalRClientConnection(int hubInvokeRetries, int retryIntervalMilliseconds = 1000)
     {
         _hubInvokeRetries = hubInvokeRetries;
         _retryIntervalMilliseconds = retryIntervalMilliseconds;
@@ -39,51 +40,54 @@ public class SignalRClientHub
         });
         conn.CustomNegotiationResult(NegotiationResult.Instance(url, token));
         conn.AuthenticationProvider = new AzureSignalRServiceAuthenticator(conn, token);
-        conn.OnClosed += OnConnectionClose;
-        conn.OnReconnected += OnReconnected;
-        conn.OnReconnecting += OnReconnecting;
-        conn.On(EventStrings.ServerCall, OnServerCall);
         return conn;
     }
     //Hub connection
     public async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo)
     {
-        if (_hub != null && _hub.State != ConnectionStates.Closed)
+        if (_conn != null && _conn.State != ConnectionStates.Closed)
             await CloseConnectionAsync();
 
+        ConnectionInfo = connectionInfo;
         var cancellationToken = new CancellationTokenSource(30);
         try
         {
-            if (_hub != null)
-            {
-                _hub.OnClosed -= OnConnectionClose;
-                _hub.OnReconnected -= OnReconnected;
-                _hub.OnReconnecting -= OnReconnecting;
-                Application.quitting -= OnDisconnect;
-                _hub = null;
-            }
-
-            _hub = InstanceHub(connectionInfo.Url, connectionInfo.AccessToken);
-            await OnHubStartAsync();
+            await HubConnectAsync();
         }
         catch (Exception e)
         {
-            StatusChanged(_hub?.State ?? ConnectionStates.Closed, $"连接失败！{e}");
+            StatusChanged(_conn?.State ?? ConnectionStates.Closed, $"连接失败！{e}");
             if (!cancellationToken.IsCancellationRequested)
                 cancellationToken.Cancel();
             return false;
         }
 
-        ConnectionInfo = connectionInfo;
         return true;
     }
-    private async Task OnHubStartAsync()
+
+    private async Task HubConnectAsync()
     {
-        if (_hub.State == ConnectionStates.Connected) throw new InvalidOperationException("Hub is connected!");
-        await _hub.ConnectAsync();
-        StatusChanged(_hub.State, "SignalRHost:连接成功！");
+        if (_conn != null)
+        {
+            _conn.OnClosed -= OnConnectionClose;
+            _conn.OnReconnected -= OnReconnected;
+            _conn.OnReconnecting -= OnReconnecting;
+            Application.quitting -= OnDisconnect;
+            CloseConn();//不用await，因为这个链接有可能释放不了而导致永远等待。
+        }
+        _conn = InstanceHub(ConnectionInfo.Url, ConnectionInfo.AccessToken);
+        _conn.OnClosed += OnConnectionClose;
+        _conn.OnReconnected += OnReconnected;
+        _conn.OnReconnecting += OnReconnecting;
+
+        await _conn.ConnectAsync();
+        _conn.On(EventStrings.ServerCall, OnServerCall);
+        StatusChanged(_conn.State, "连接成功！");
+
+        async void CloseConn() => await _conn.CloseAsync();
     }
-    
+
+
     public async Task<bool> HubReconnectTask()
     {
         try
@@ -91,8 +95,8 @@ public class SignalRClientHub
             if (ConnectionInfo == null)
                 throw new NullReferenceException("ConnectionInfo = null!");
             Status = ConnectionStates.Reconnecting;
-            var isSuccess = await ConnectSignalRAsync(ConnectionInfo);
-            return isSuccess;
+            await HubConnectAsync();
+            return true;
         }
         catch (Exception)
         {
@@ -116,15 +120,16 @@ public class SignalRClientHub
             try
             {
                 retries = i;
-                var result = await _hub.InvokeAsync<TResult>(method, cancellationToken, args);
+                var result = await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
                 return result;
             }
             catch (Exception e)
             {
                 if (i < _hubInvokeRetries)
                 {
-                    await HubReconnectTask();
+                    OnRequestError?.Invoke();
                     await Task.Delay(i * _retryIntervalMilliseconds, cancellationToken);
+                    await ReconnectScheme(); 
                     continue;
                 }
 #if UNITY_EDITOR
@@ -142,7 +147,24 @@ public class SignalRClientHub
         }
 
         return null;
+        async Task ReconnectScheme()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    PlayerDataForGame.instance.ShowStringTips($"网络状态不稳定，重试中...{i}");
+                    await HubConnectAsync();
+                    return;
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(i * 1000, cancellationToken);
+                }
+            }
+        }
     }
+
 
     #region Event
 
@@ -165,7 +187,7 @@ public class SignalRClientHub
     private void OnDisconnect() => Disconnect();
     private async void Disconnect(UnityAction onActionDone = null)
     {
-        if (_hub.State == ConnectionStates.Closed || _hub.State == ConnectionStates.CloseInitiated) return;
+        if (_conn.State == ConnectionStates.Closed || _conn.State == ConnectionStates.CloseInitiated) return;
         await CloseConnectionAsync();
         onActionDone?.Invoke();
     }
@@ -173,7 +195,7 @@ public class SignalRClientHub
 
     public async void CloseConnection(UnityAction callbackAction)
     {
-        if (_hub?.State is ConnectionStates.Closed or ConnectionStates.CloseInitiated)
+        if (_conn?.State is ConnectionStates.Closed or ConnectionStates.CloseInitiated)
         {
             callbackAction?.Invoke();
             return;
@@ -188,7 +210,7 @@ public class SignalRClientHub
     {
         if(_isClosing) return;
         _isClosing = true;
-        await _hub.CloseAsync();
+        await _conn.CloseAsync();
         _isClosing = false;
     }
     private sealed class AzureSignalRServiceAuthenticator : IAuthenticationProvider

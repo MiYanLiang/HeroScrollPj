@@ -47,7 +47,7 @@ public class SignalRClient : MonoBehaviour
     [SerializeField] private GameObject _signalRRequestPanel;
 
     private void DisplayPanel(bool display) => _signalRRequestPanel.SetActive(display);
-    private SignalRClientHub SignalRClientHub { get; set; }
+    private SignalRClientConnection SignalRClientConnection { get; set; }
 
     private void Awake()
     {
@@ -58,12 +58,13 @@ public class SignalRClient : MonoBehaviour
     {
         //Login();
         _actions = new Dictionary<string, UnityAction<string>>();
-        if (SignalRClientHub == null)
+        if (SignalRClientConnection == null)
         {
-            SignalRClientHub = new SignalRClientHub(_signalRRequestRetries);
-            SignalRClientHub.OnStatusChanged += OnStatusChange;
-            SignalRClientHub.OnStatusChanged += OnStatusChanged;
-            SignalRClientHub.OnServerCall += OnServerCall;
+            SignalRClientConnection = new SignalRClientConnection(_signalRRequestRetries);
+            SignalRClientConnection.OnStatusChanged += OnStatusChange;
+            SignalRClientConnection.OnStatusChanged += OnStatusChanged;
+            SignalRClientConnection.OnServerCall += OnServerCall;
+            SignalRClientConnection.OnRequestError += () => PlayerDataForGame.instance.ShowStringTips("请求失败，请确保网络稳定。重试中...");
         }
 
         if (ServerPanel != null) ServerPanel.Init(this);
@@ -82,13 +83,13 @@ public class SignalRClient : MonoBehaviour
     void OnApplicationQuit()
     {
         if (!IsLogged) return;
-        SignalRClientHub.CloseConnection(null);
+        SignalRClientConnection.CloseConnection(null);
     }
 
     void OnApplicationFocus(bool isFocus)
     {
         if (!IsLogged || !isFocus) return;
-        if (SignalRClientHub.Status != ConnectionStates.Connected) ReconnectServer();
+        if (SignalRClientConnection.Status != ConnectionStates.Connected) ReconnectServer();
     }
 
     public async Task<SigninResult> NegoToken(int zone, int createNew)
@@ -116,7 +117,7 @@ public class SignalRClient : MonoBehaviour
             return false;
         }
 
-        var result = await SignalRClientHub.ConnectSignalRAsync(connectionInfo);
+        var result = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
         isBusy = false;
         return result;
     }
@@ -164,13 +165,13 @@ public class SignalRClient : MonoBehaviour
         }
     }
 
-    public void Disconnect(UnityAction callbackAction) => SignalRClientHub.CloseConnection(callbackAction);
+    public void Disconnect(UnityAction callbackAction) => SignalRClientConnection.CloseConnection(callbackAction);
 
     public async void ReconnectServer(Action<bool> callBackAction = null)
     {
         if (isBusy) return;
         isBusy = true;
-        var success = await SignalRClientHub.HubReconnectTask();
+        var success = await SignalRClientConnection.HubReconnectTask();
         callBackAction?.Invoke(success);
         IsLogged = success;
         var msg = success ? "重连成功！" : "重连失败，请重新登录。";
@@ -214,7 +215,7 @@ public class SignalRClient : MonoBehaviour
     public void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
     {
-        if (SignalRClientHub.Status == ConnectionStates.Connected)
+        if (SignalRClientConnection.Status == ConnectionStates.Connected)
         {
             InvokeRequest();
             return;
@@ -242,7 +243,7 @@ public class SignalRClient : MonoBehaviour
     public void Invoke(string method, UnityAction<string> recallAction, string serializedBag,
         CancellationTokenSource tokenSource = default)
     {
-        if (SignalRClientHub.Status == ConnectionStates.Connected)
+        if (SignalRClientConnection.Status == ConnectionStates.Connected)
         {
             InvokeRequest();
             return;
@@ -271,7 +272,7 @@ public class SignalRClient : MonoBehaviour
         DisplayPanel(true);
         if (bag == default) bag = ViewBag.Instance();
         if (tokenSource == null) tokenSource = new CancellationTokenSource();
-        var result = await SignalRClientHub.HubInvokeAsync<string>(method, tokenSource.Token,
+        var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
             bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) });
         DisplayPanel(false);
         return result;
@@ -282,7 +283,7 @@ public class SignalRClient : MonoBehaviour
     {
         DisplayPanel(true);
         if (tokenSource == null) tokenSource = new CancellationTokenSource();
-        var result = await SignalRClientHub.HubInvokeAsync<string>(method, tokenSource.Token,
+        var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
             string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
         DisplayPanel(false);
         return result;
