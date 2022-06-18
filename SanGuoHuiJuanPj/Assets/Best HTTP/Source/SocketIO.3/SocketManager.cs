@@ -207,6 +207,9 @@ namespace BestHTTP.SocketIO3
         {
             this.Context = new LoggingContext(this);
 
+            if (uri.Scheme.StartsWith("ws"))
+                options.ConnectWith = TransportTypes.WebSocket;
+
             string path = uri.PathAndQuery;
             if (path.Length <= 1)
             {

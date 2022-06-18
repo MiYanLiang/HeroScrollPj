@@ -217,7 +217,7 @@ public class WarBoardUi : MonoBehaviour
         var ui = card.cardObj;
         card.UpdateHpUi();
         ui.DragComponent.Init(card);
-        if (card.posIndex == -1)
+        if (card.Pos == -1)
             ui.DragComponent.SetController(Rack);
         else ui.DragComponent.SetController(ChessboardInputControl);
     }

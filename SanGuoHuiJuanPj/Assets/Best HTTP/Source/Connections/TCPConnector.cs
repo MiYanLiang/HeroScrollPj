@@ -263,7 +263,7 @@ namespace BestHTTP.Connections
                         SslStream sslStream = null;
 
                         if (HTTPManager.ClientCertificationProvider == null)
-                            new SslStream(Client.GetStream(), false, (sender, cert, chain, errors) =>
+                            sslStream = new SslStream(Client.GetStream(), false, (sender, cert, chain, errors) =>
                             {
                                 if (HTTPManager.DefaultCertificationValidator != null)
                                     return HTTPManager.DefaultCertificationValidator(request, cert, chain, errors);

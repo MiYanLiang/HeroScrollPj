@@ -166,7 +166,7 @@ public class LoginUiController : MonoBehaviour
                         serverList.OpenConfirmWindow(result.Message, () => AsyncInvoke(CreateNewUserData));
                         return;
                     case SignalRClient.SigninResult.SignInStates.Success:
-                        var info = Json.Deserialize<SignalRClient.SignalRConnectionInfo>(result.Content);
+                        var info = Json.Deserialize<SignalRConnectionInfo>(result.Content);
                         if (info == null)
                         {
                             serverList.SetMessage("客户端请求异常，请联系管理员。");
@@ -463,7 +463,7 @@ public class LoginUiController : MonoBehaviour
         UnityMainThread.thread.RunNextFrame(()=> busyPanel.gameObject.SetActive(false));
     }
 
-    private void LoginAction(bool success, int code, SignalRClient.SignalRConnectionInfo info, string password)
+    private void LoginAction(bool success, int code, SignalRConnectionInfo info, string password)
     {
         isDeviceLogin = password == Undefined;
         GamePref.FlagClientLoginMethod(isDeviceLogin);

@@ -153,28 +153,6 @@ namespace ByteDance.Union
                 return this;
             }
 
-            /// <summary>
-            /// set splash button type
-            /// </summary>
-            /// <param name="splashButtonType"></param>
-            /// <returns></returns>
-            public Builder SetSplashButtonType(SplashButtonType splashButtonType)
-            {
-                this.builder.Call<AndroidJavaObject>("setSplashButtonType", (int)splashButtonType);
-                return this;
-            }
-
-            /// <summary>
-            /// set download type
-            /// </summary>
-            /// <param name="downloadType"></param>
-            /// <returns></returns>
-            public Builder SetDownloadType(DownloadType downloadType)
-            {
-                this.builder.Call<AndroidJavaObject>("setDownloadType", (int)downloadType);
-                return this;
-            }
-
             public Builder SetAdLoadType(AdLoadType adLoadType)
             {
                 var ajc= new AndroidJavaClass("com.bytedance.sdk.openadsdk.TTAdLoadType");

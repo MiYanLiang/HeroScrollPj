@@ -130,7 +130,6 @@ public class UIManager : MonoBehaviour
         rewardManager = gameObject.AddComponent<RewardManager>();
     }
 
-    // Start is called before the first frame update 
     public void Init()
     {
         if (IsInit) return;
@@ -312,10 +311,10 @@ public class UIManager : MonoBehaviour
     //初始化霸业界面内容 
     private void InitBaYeFun()
     {
-#if !UNITY_EDITOR
+
         try
         {
-#endif
+
             var baye = BaYeManager.instance;
             baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
             baYeWarButton.onClick.RemoveAllListeners();
@@ -382,13 +381,12 @@ public class UIManager : MonoBehaviour
                 if (baYeRecord != null) cityField.boundWars = baYeRecord.WarIds;
             }
             UpdateCitiesProgress();
-#if !UNITY_EDITOR
         }
         catch (Exception e)
         {
             bayeErrorPanel.gameObject.SetActive(true);
         }
-#endif
+
     }
 
     public void UpdateCitiesProgress()

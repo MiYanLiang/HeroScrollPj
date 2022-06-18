@@ -142,16 +142,16 @@ public class GameSystem : MonoBehaviour
         OnWarSceneInit?.RemoveAllListeners();
     }
 
-    public bool ShowStaminaEffect { get; set; }
+    public bool DisplayStaminaUiChangeEffect { get; set; }
 
 
     private void OnMainSceneLoaded()
     {
         UIManager.instance.Init();
-        if (ShowStaminaEffect)
+        if (DisplayStaminaUiChangeEffect)
         {
             UIManager.instance.DelayInvokeReturnStaminaUi();
-            ShowStaminaEffect = false;
+            DisplayStaminaUiChangeEffect = false;
         }
         OnMainSceneInit.Invoke();
         OnMainSceneInit?.RemoveAllListeners();

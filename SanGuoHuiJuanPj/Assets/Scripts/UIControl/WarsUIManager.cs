@@ -384,7 +384,7 @@ public class WarsUIManager : MonoBehaviour
                 }, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Req_WarReward, viewBag);
 
-            GameSystem.Instance.ShowStaminaEffect = true;
+            GameSystem.Instance.DisplayStaminaUiChangeEffect = true;
         }
 
         gameOverWindow.Show(reward, PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Baye);

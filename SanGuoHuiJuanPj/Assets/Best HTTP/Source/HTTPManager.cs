@@ -258,7 +258,7 @@ namespace BestHTTP
         /// <summary>
         /// User-agent string that will be sent with each requests.
         /// </summary>
-        public static string UserAgent = "BestHTTP/2 v2.6.0";
+        public static string UserAgent = "BestHTTP/2 v2.6.2";
 
         /// <summary>
         /// It's true if the application is quitting and the plugin is shutting down itself.

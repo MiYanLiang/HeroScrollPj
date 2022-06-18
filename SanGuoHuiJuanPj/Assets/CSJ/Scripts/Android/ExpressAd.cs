@@ -60,7 +60,7 @@ namespace ByteDance.Union
 
         /// <inheritdoc/>
         public void Dispose () { 
-            this.javaObject.Call("destroy");
+            NativeAdManager.Instance().DestoryExpressAd(javaObject);
         }
 
         /// <summary>

@@ -80,12 +80,6 @@ public class Chessboard : MonoBehaviour
         trans.SetAsLastSibling();
     }
 
-    public void ResetPos(FightCardData card)
-    {
-        //注意这里是获取状态里的位置而不是原始位置。
-        PlaceCard(card.Pos , card);
-    }
-
     public ChessPos[] GetScope(bool isPlayer) => isPlayer ? PlayerScope : EnemyScope;
     public ChessPos GetChessPos(int index, bool isPlayer) => GetScope(isPlayer)[index];
     public ChessPos GetChessPos(FightCardData card) => GetScope(card.IsPlayer)[card.Pos];
@@ -142,9 +136,9 @@ public class Chessboard : MonoBehaviour
     public void DestroyCard(FightCardData card)
     {
         var scope = GetScope(card.isPlayerCard);
-        if (card.PosIndex >= 0)
+        if (card.Pos >= 0)
         {
-            var pos = scope[card.PosIndex];
+            var pos = scope[card.Pos];
             pos.RemoveCard();
         }
 
