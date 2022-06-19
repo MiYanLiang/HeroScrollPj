@@ -288,6 +288,8 @@ namespace Assets.System.WarModule
 
                 case 244: op = new DuanNuOperator(); break;//短弩
                 case 245: case 246: case 247: op = new DaoShiOperator(); break;//道士
+                case 248: case 249: case 250: op = new FangShiOperator(); break;//方士
+
             }
 
             CheckNull(op, card);
