@@ -1808,7 +1808,46 @@ namespace Assets.System.WarModule
             OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, baseDamage);
         }
     }
-
+    /// <summary>
+    /// 方士
+    /// </summary>
+    public class FangShiOperator : HeroOperator
+    {
+        private int GetTargets() 
+        {
+            switch (Style.Military) 
+            {
+                case 248:return 3;
+                case 249:return 5;
+                case 250:return 7;
+                default:throw MilitaryNotValidError(this);
+            }
+        }
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
+                .Select(p => new { ChessPos = p, Random = Chessboard.Randomize(5) })
+                .OrderBy(p => p.Random)
+                .Take(GetTargets()).ToArray();
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
+            var baseDamage = InstanceGenericDamage();
+            for (var i = 0; i < targets.Length; i++)
+            {
+                CombatConduct damage = baseDamage;
+                var target = targets[i].ChessPos;
+                var IntelligentDiff = StateIntelligentDiff(target.Operator);
+                if (IntelligentDiff > 0)
+                {
+                    damage = baseDamage.Clone(1 + IntelligentDiff / 50f);
+                }
+                OnPerformActivity(target, Activity.Intentions.Offensive, 0, 1, damage);
+            }
+        }
+    }
     /// <summary>
     /// 25  刺客 - 深入敌方，选择远程单位中攻击最高的目标进行攻击。造成伤害，并为其添加【流血】效果。
     /// </summary>
