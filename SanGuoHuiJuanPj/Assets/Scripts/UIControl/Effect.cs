@@ -668,6 +668,14 @@ public static class Effect
                 return -1;
             case 10://滚木
                 return -1;
+            case 13://火滚石
+                return -1;
+            case 14://毒滚石
+                return -1;
+            case 15://火滚木
+                return -1;
+            case 16://毒滚木
+                return -1;
             default:
                 return 001;
         }
@@ -1471,6 +1479,14 @@ public static class Effect
                 return 260;
 
             case 10://滚木
+                return 261;
+            case 13://火滚石
+                return 260;
+            case 14://毒滚石
+                return 260;
+            case 15://火滚木
+                return 261;
+            case 16://毒滚木
                 return 261;
         }
 
@@ -2448,9 +2464,11 @@ public static class Effect
             case 8://刀墙
             case 9://滚石
             case 10://滚木
+            case 13://火滚石
+            case 14://毒滚石
+            case 15://火滚木
+            case 16://毒滚木
                 return -1;
-
-
             case 11://金币宝箱
             case 12://宝箱
                 return  98;

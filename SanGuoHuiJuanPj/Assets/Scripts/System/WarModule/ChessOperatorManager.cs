@@ -321,6 +321,11 @@ namespace Assets.System.WarModule
                 case 10: op = new GunMuOperator(); break;
                 case 11: op = new TreasureOperator(); break;
                 case 12: op = new WarChestOperator(); break;
+                case 13: op = new HuoGunShiOperator(); break;
+                case 14: op = new DuGunShiOperator(); break;
+                case 15: op = new HuoGunMuOperator(); break;
+                case 16: op = new DuGunMuOperator(); break;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(card), card, $"未能识别的陷阱类型 = {card.CardId}");
             }
