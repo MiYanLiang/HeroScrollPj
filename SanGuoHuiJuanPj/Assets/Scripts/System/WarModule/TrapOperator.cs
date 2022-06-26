@@ -84,7 +84,7 @@ namespace Assets.System.WarModule
             var lastRow = -1;
             foreach (var pos in scope)
             {
-                var column = pos.Pos % 5; //获取直线排数
+                var column = pos.Pos % 5; //一排
                 var row = pos.Pos / 5;
                 if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
                 Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, pos, InstanceConduct(),
@@ -106,6 +106,74 @@ namespace Assets.System.WarModule
         }
     }
     /// <summary>
+    /// 火滚木处理器
+    /// </summary>
+    public class HuoGunMuOperator : TrapOperator
+    {
+        private int burnRate => 80;
+        protected override void OnDeadTrigger(ChessOperator offender, int conduct)
+        {
+            var scope = Chessboard.GetRivals(this, _ => true).OrderBy(pos => pos.Pos).ToArray();
+            var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
+            var lastRow = -1;
+            foreach (var pos in scope)
+            {
+                var column = pos.Pos % 5; //一排
+                var row = pos.Pos / 5;
+                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
+                Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, pos, InstanceConduct(),
+                    actId: lastRow != row ? -2 : -1,
+                    skill: 1);
+                lastRow = row;
+                mapper[column] = pos.IsPostedAlive;
+            }
+            CombatConduct[] InstanceConduct()
+            {
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
+                //根据比率给出是否灼烧
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 5, rate: burnRate)
+                };
+            }
+        }
+    }
+    /// <summary>
+    /// 毒滚木处理器
+    /// </summary>
+    public class DuGunMuOperator : TrapOperator
+    {
+        private int poisonRate => 80;
+        protected override void OnDeadTrigger(ChessOperator offender, int conduct)
+        {
+            var scope = Chessboard.GetRivals(this, _ => true).OrderBy(pos => pos.Pos).ToArray();
+            var mapper = Chessboard.FrontRows.ToDictionary(i => i, _ => false); //init mapper
+            var lastRow = -1;
+            foreach (var pos in scope)
+            {
+                var column = pos.Pos % 5; //一排
+                var row = pos.Pos / 5;
+                if (mapper[column]) continue; //如果当前排已有伤害目标，不记录后排
+                Chessboard.DelegateSpriteActivity<RollingWoodSprite>(this, pos, InstanceConduct(),
+                    actId: lastRow != row ? -2 : -1,
+                    skill: 1);
+                lastRow = row;
+                mapper[column] = pos.IsPostedAlive;
+            }
+            CombatConduct[] InstanceConduct()
+            {
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
+                //根据比率给出是否中毒
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 3, rate: poisonRate)
+                };
+            }
+        }
+    }
+    /// <summary>
     /// 滚石处理器
     /// </summary>
     public class GunShiOperator : TrapOperator
@@ -116,7 +184,7 @@ namespace Assets.System.WarModule
         private int StunningRate => 80;
         protected override void OnDeadTrigger(ChessOperator offender, int damage)
         {
-            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//最上一排
+            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//一列
             var targets = Chessboard.GetRivals(this, p => p.Pos % 5 == verticalIndex)
                 .OrderBy(p => p.Pos).ToList();
             for (var i = 0; i < targets.Count; i++)
@@ -138,11 +206,75 @@ namespace Assets.System.WarModule
         }
     }
     /// <summary>
+    /// 火滚石
+    /// </summary>
+    public class HuoGunShiOperator : TrapOperator
+    {
+        /// <summary>
+        /// 灼烧几率
+        /// </summary>
+        private int BurnRate => 80;
+        protected override void OnDeadTrigger(ChessOperator offender, int damage)
+        {
+            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//一列
+            var targets = Chessboard.GetRivals(this, p => p.Pos % 5 == verticalIndex)
+                .OrderBy(p => p.Pos).ToList();
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var pos = targets[i];
+                Chessboard.DelegateSpriteActivity<RollingStoneSprite>(this, pos, InstanceConduct(), -2, 1);
+            }
+
+            CombatConduct[] InstanceConduct()
+            {
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
+                //根据比率给出是否灼烧
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, value: 5, rate: BurnRate)
+                };
+            }
+        }
+    }
+    /// <summary>
+    /// 毒滚石
+    /// </summary>
+    public class DuGunShiOperator : TrapOperator
+    {
+        /// <summary>
+        /// 中毒几率
+        /// </summary>
+        private int PoisonRate => 80;
+        protected override void OnDeadTrigger(ChessOperator offender, int damage)
+        {
+            var verticalIndex = Chessboard.GetStatus(this).Pos % 5;//一列
+            var targets = Chessboard.GetRivals(this, p => p.Pos % 5 == verticalIndex)
+                .OrderBy(p => p.Pos).ToList();
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var pos = targets[i];
+                Chessboard.DelegateSpriteActivity<RollingStoneSprite>(this, pos, InstanceConduct(), -2, 1);
+            }
+
+            CombatConduct[] InstanceConduct()
+            {
+                var basicDmg = InstanceMechanicalDamage(StateDamage());
+                //根据比率给出是否中毒
+                return new[]
+                {
+                    basicDmg,
+                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Poison, value: 3, rate: PoisonRate)
+                };
+            }
+        }
+    }
+    /// <summary>
     /// 地雷
     /// </summary>
     public class DiLeiOperator : ReflexiveTrapOperator
     {
-        private float DamageRate => 6;
+        private float DamageRate => 8;
 
         protected override CombatConduct[] CounterConducts =>
             Helper.Singular(InstanceMechanicalDamage(StateDamage() * DamageRate));
