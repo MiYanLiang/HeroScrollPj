@@ -1097,7 +1097,50 @@ namespace Assets.System.WarModule
             }
         }
     }
+    /// <summary>
+    /// 44  飞熊骑
+    /// </summary>
+    public class FeiXiongQiOperator : HeroOperator
+    {
+        private int QieZhanRate()
+        {
+            switch (Style.Military)
+            {
+                case 166: return 50;
+                case 167: return 70;
+                case 168: return 90;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
 
+        private int CriticalAddOn => 15;
+        private int RouseAddOn => 30;
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            if (!target.IsAliveHero)
+            {
+                base.MilitaryPerforms(1);
+                return;
+            }
+
+            var conduct = InstanceGenericDamage();
+            var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 2, conduct);
+            if (IsHit(result))
+            {
+                //如果对目标造成怯战，将再次进行一次攻击
+                //这一段不理想的代码
+                var disarmedRate = CountRate(conduct, QieZhanRate(), CriticalAddOn, RouseAddOn);
+                if (Chessboard.IsRandomPass(disarmedRate))
+                {
+                    OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1,
+                        CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Cowardly, value: 1, rate: 100));
+                    OnPerformActivity(target, Activity.Intentions.Offensive, actId: 1, 2, InstanceGenericDamage());
+                }
+            }
+        }
+    }
     /// <summary>
     /// 42  医士 - 分发草药，治疗1个友方武将。
     /// </summary>
