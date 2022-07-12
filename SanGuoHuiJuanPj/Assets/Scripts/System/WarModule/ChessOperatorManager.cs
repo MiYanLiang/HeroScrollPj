@@ -230,6 +230,8 @@ namespace Assets.System.WarModule
 
                 case 163: case 164: case 165: op = new FuQiOperator(); break;//斧骑
 
+                case 166: case 167: case 168: op = new FeiXiongQiOperator(); break;//飞熊骑
+
                 case 22: case 172: case 173: op = new ZhanCheOperator(); break; //22  战车
 
                 case 8: case 174: case 175: op = new ZhanXiangOperator(); break; //8   象兵

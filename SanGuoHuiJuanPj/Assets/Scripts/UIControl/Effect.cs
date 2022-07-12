@@ -376,7 +376,14 @@ public static class Effect
             case 166:
             case 167:
             case 168://飞熊骑
-                value = 179;break;
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        value = 001; break;
+                    case 2://攻击武将士兵
+                        value = 179; break;
+                }
+                break;
 
             case 169:
             case 170:
@@ -1089,7 +1096,14 @@ public static class Effect
             case 166:
             case 167:
             case 168://飞熊骑
-                return 248;
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        return -1;
+                    case 2://攻击武将士兵
+                        return 248;
+                }
+                break;
 
             case 169:
             case 170:
@@ -2184,7 +2198,14 @@ public static class Effect
             case 166:
             case 167:
             case 168://飞熊骑
-                audioId = 29; break;
+                switch (skill)
+                {
+                    case 1://攻击建筑或陷阱
+                        audioId = 0; break;
+                    case 2://攻击武将士兵
+                        audioId = 29; break;
+                }
+                break;
 
             case 169:
             case 170:
