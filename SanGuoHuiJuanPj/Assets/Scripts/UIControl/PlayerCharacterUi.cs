@@ -63,7 +63,6 @@ public class PlayerCharacterUi : MonoBehaviour
 
     public void Show()
     {
-
         Character = PlayerDataForGame.instance.Character;
         state = Character == null ? States.NewCharacter : States.Registered;
 
@@ -164,8 +163,16 @@ public class PlayerCharacterUi : MonoBehaviour
 
     private void OnCreateCharacterSuccess(ViewBag vb)
     {
-        PlayerDataForGame.instance.NotifyDataUpdate();
-        Show();
+        SignalRClient.instance.ReconnectServer(success =>
+        {
+            if(success)
+            {
+                PlayerDataForGame.instance.NotifyDataUpdate();
+                Show();
+                return;
+            }
+            PlayerDataForGame.instance.ShowStringTips("角色创建了！但网络似乎有问题，请重登游戏。");
+        });
     }
 }
 

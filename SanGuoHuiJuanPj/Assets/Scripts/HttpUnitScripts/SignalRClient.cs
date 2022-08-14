@@ -265,13 +265,13 @@ public class SignalRClient : MonoBehaviour
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
     }
-
+    private readonly TimeSpan _requestTimeOut = TimeSpan.FromMinutes(1);
     private async Task<string> HubRequestByViewBag(string method, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
     {
         DisplayPanel(true);
         if (bag == default) bag = ViewBag.Instance();
-        if (tokenSource == null) tokenSource = new CancellationTokenSource();
+        if (tokenSource == null) tokenSource = new CancellationTokenSource(_requestTimeOut);
         var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
             bag == null ? Array.Empty<object>() : new object[] { Json.Serialize(bag) });
         DisplayPanel(false);
@@ -282,7 +282,7 @@ public class SignalRClient : MonoBehaviour
         CancellationTokenSource tokenSource = default)
     {
         DisplayPanel(true);
-        if (tokenSource == null) tokenSource = new CancellationTokenSource();
+        if (tokenSource == null) tokenSource = new CancellationTokenSource(_requestTimeOut);
         var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
             string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
         DisplayPanel(false);
