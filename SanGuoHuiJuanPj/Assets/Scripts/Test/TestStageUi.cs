@@ -32,10 +32,18 @@ public class TestStageUi : MonoBehaviour
         public int Level { get; set; }
         public int Chips { get; set; }
         public int Type { get; set; }
+        public int Arouse { get; set; }
+        public int Deputy1Id { get; set; }
+        public int Deputy1Level { get; set; }
+        public int Deputy2Id { get; set; }
+        public int Deputy2Level { get; set; }
+        public int Deputy3Id { get; set; }
+        public int Deputy3Level { get; set; }
+        public int Deputy4Id { get; set; }
+        public int Deputy4Level { get; set; }
 
         public Card()
         {
-
         }
 
         public Card(IGameCard c)
@@ -44,6 +52,15 @@ public class TestStageUi : MonoBehaviour
             Level = c.Level;
             Chips = c.Chips;
             Type = c.Type;
+            Arouse = c.Arouse;
+            Deputy1Id = c.Deputy1Id;
+            Deputy1Level = c.Deputy1Level;
+            Deputy2Id = c.Deputy2Id;
+            Deputy2Level = c.Deputy2Level;
+            Deputy3Id = c.Deputy3Id;
+            Deputy3Level = c.Deputy3Level;
+            Deputy4Id = c.Deputy4Id;
+            Deputy4Level = c.Deputy4Level;
         }
     }
     public class SimpleFormation

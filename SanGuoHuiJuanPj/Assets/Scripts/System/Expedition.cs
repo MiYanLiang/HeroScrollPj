@@ -276,7 +276,7 @@ public class Expedition : MonoBehaviour
                     }
 
                     var card = list.GetOrInstance(reCard.CardId, reCard.Type, reCard.Level);
-                    card.chips += reCard.Chips;
+                    card.Chips += reCard.Chips;
                 }
                 playerUnlockProgress.isTakeReward = true;
                 ConsumeManager.instance.SaveChangeUpdatePlayerData(py, 0);

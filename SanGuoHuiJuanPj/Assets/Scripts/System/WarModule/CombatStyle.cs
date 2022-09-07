@@ -35,11 +35,16 @@ namespace Assets.System.WarModule
         /// <param name="hitPoint"></param>
         /// <param name="intelligent"></param>
         /// <param name="recovery"></param>
+        /// <param name="rare"></param>
+        /// <param name="magicResist"></param>
+        /// <param name="armor"></param>
+        /// <param name="dodge"></param>
         /// <returns></returns>
         public static CombatStyle Instance(int military, int armedType, int combat, int element,
-            int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery, int rare) =>
-            new CombatStyle(military, armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent,
-                recovery, rare);
+            int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery, int rare,
+            int magicResist, int armor, int dodge) =>
+            new(military, armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent,
+                recovery, rare, magicResist, armor, dodge);
 
         /// <summary>
         /// 攻击分类
@@ -74,15 +79,19 @@ namespace Assets.System.WarModule
         public int Intelligent { get; set; }
         public int HitPoint { get; set; }
         public int Recovery { get; set; }
+        public int MagicResist { get; set; }
+        public int Armor { get; set; }
+        public int Dodge { get; set; }
+
         public int Rare { get; set; }
 
         [JsonConstructor]
         protected CombatStyle()
         {
         }
-        
+
         protected CombatStyle(int military, int armedType, int combatStyle, int element, int strength, int level,
-            int hitPoint, int speed, int troop, int intelligent, int recovery, int rare)
+            int hitPoint, int speed, int troop, int intelligent, int recovery, int rare,int magicResist,int armor,int dodge)
         {
             Element = element;
             Type = (Types)combatStyle;
@@ -96,7 +105,11 @@ namespace Assets.System.WarModule
             Rare = rare;
             Speed = speed;
             HitPoint = hitPoint;
+            MagicResist = magicResist;
+            Armor = armor;
+            Dodge = dodge;
         }
+
         protected CombatStyle(CombatStyle s)
         {
             Rare = s.Rare;
@@ -111,6 +124,9 @@ namespace Assets.System.WarModule
             Strength = s.Strength;
             Level = s.Level;
             Troop = s.Troop;
+            MagicResist = s.MagicResist;
+            Armor = s.Armor;
+            Dodge = s.Dodge;
         }
 
         public override string ToString() => $"Combat({Type}).Armed[{ArmedType}] MId({Military}):E[{Element}]";

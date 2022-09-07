@@ -472,11 +472,11 @@ public class LoadSaveData : MonoBehaviour
                 switch (cardType)
                 {
                     case GameCardType.Hero:
-                        return DataTable.Hero[card.id].IsProduce > 0;
+                        return DataTable.Hero[card.CardId].IsProduce > 0;
                     case GameCardType.Tower:
-                        return DataTable.Tower[card.id].IsProduce > 0;
+                        return DataTable.Tower[card.CardId].IsProduce > 0;
                     case GameCardType.Trap:
-                        return DataTable.Trap[card.id].IsProduce > 0;
+                        return DataTable.Trap[card.CardId].IsProduce > 0;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(cardType), cardType, null);
                 }
@@ -554,12 +554,12 @@ public class LoadSaveData : MonoBehaviour
         DataTable.PlayerInitialConfig[pySaveData.ForceId].InitialHero.ToList().ForEach(id =>
         {
             var card = hstSaveData.heroSaveData.GetOrInstance(id, GameCardType.Hero, 1);
-            card.isFight = id == 0 || id == 1 ? 1 : 0;
+            card.IsFight = id == 0 || id == 1 ? 1 : 0;
         });
         DataTable.PlayerInitialConfig[pySaveData.ForceId].InitialTower.ToList().ForEach(id =>
         {
             var card = hstSaveData.towerSaveData.GetOrInstance(id, GameCardType.Tower, 1);
-            card.isFight = id == 0 ? 1 : 0;
+            card.IsFight = id == 0 ? 1 : 0;
         });
         SaveByJson(hstSaveData);
         /////////////////////////////////////////////////////////////////////////////////////////// 

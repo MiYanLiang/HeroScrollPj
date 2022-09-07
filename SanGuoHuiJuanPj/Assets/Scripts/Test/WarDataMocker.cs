@@ -2,10 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Assets.Editor;
 using CorrelateLib;
-using DG.Tweening;
 using UnityEngine;
 
 public class WarDataMocker : MonoBehaviour
@@ -54,15 +51,15 @@ public class WarDataMocker : MonoBehaviour
         var forceId = -2; //客制化阵容
         if (isCustomCard)
         {
-            PlayerDataForGame.instance.hstData.heroSaveData = ConvertCard(heroes,0);
-            PlayerDataForGame.instance.hstData.towerSaveData = ConvertCard(towers,(int)GameCardType.Tower);
-            PlayerDataForGame.instance.hstData.trapSaveData = ConvertCard(traps,(int)GameCardType.Trap);
-
-            List<GameCard> ConvertCard(IList<MyCard> list,int ti) =>
-                list.Select(c => new GameCard { id = c.CardId, level = c.Level, typeIndex = ti, isFight = 1}).ToList();
+            PlayerDataForGame.instance.hstData.heroSaveData = heroes
+                .Select(h => GameCard.InstanceHero(h.CardId, h.Level, 0, 0, 0, 0, 0, 0, 0, 0, 0)).ToList();
+            PlayerDataForGame.instance.hstData.towerSaveData =
+                towers.Select(t => GameCard.InstanceTower(t.CardId, t.Level)).ToList();
+            PlayerDataForGame.instance.hstData.trapSaveData = 
+                traps.Select(t => GameCard.InstanceTrap(t.CardId, t.Level)).ToList();
 
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
-                .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
+                .GroupBy(c => c.Type, c => c.CardId, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
                 .ToDictionary(c => c.type, c => c.ids.ToList()); //根据卡牌类型写入字典
         }
         else
@@ -73,8 +70,8 @@ public class WarDataMocker : MonoBehaviour
             hst = PlayerDataForGame.instance.hstData;
             forceId = (int)force;
             cards = hst.heroSaveData.Concat(hst.trapSaveData.Concat(hst.towerSaveData)) //合并所有卡牌
-                .Where(c => hfMap[c.id] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
-                .GroupBy(c => c.typeIndex, c => c.id, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
+                .Where(c => hfMap[c.CardId] == forceId && c.IsEnlistAble()) //过滤选中势力，并符合出战条件
+                .GroupBy(c => c.Type, c => c.CardId, (type, ids) => new { type, ids }) //把卡牌再根据卡牌类型分类组合
                 .ToDictionary(c => c.type, c => c.ids.ToList()); //根据卡牌类型写入字典
         }
 

@@ -16,8 +16,8 @@ public class ChessUiStyle : CombatStyle
     }
 
     protected ChessUiStyle(int military, int armedType, int combat, int element,
-        int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery,int rare) : base(military,
-        armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent, recovery,rare)
+        int strength, int level, int hitPoint, int speed, int troop, int intelligent, int recovery,int rare,int magicResist,int armor,int dodge) : base(military,
+        armedType, combat, element, strength, level, hitPoint, speed, troop, intelligent, recovery,rare,magicResist,armor,dodge)
     {
     }
 
