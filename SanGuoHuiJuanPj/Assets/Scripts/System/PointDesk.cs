@@ -159,7 +159,7 @@ public class PointDesk : MonoBehaviour
 
     private void UpdateInfoTags(GameCard gameCard)
     {
-        var major = "主副将";
+        var major = "副将效果";
         ResetTag(About, "典故");
         ResetTag(Military, "兵种");
         ResetTag(Armed, "系数");
