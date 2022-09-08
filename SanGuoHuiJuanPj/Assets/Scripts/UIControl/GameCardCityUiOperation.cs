@@ -50,7 +50,7 @@ public class GameCardCityUiOperation : MonoBehaviour
         Chips.text = $"{ui.Card.Chips}/{max}";
         Chips.color = ui.Card.Chips >= max ? HighlightColor : NormalColor;
         Button.image.sprite = ui.Image.sprite;
-        Enlisted.gameObject.SetActive(ui.Card.isFight > 0);
+        Enlisted.gameObject.SetActive(ui.Card.IsFight > 0);
     }
 
     public void OffEnlisted() => Enlisted.gameObject.SetActive(false);

@@ -504,22 +504,37 @@ namespace Assets.System.WarModule
             var hitpoint = 0;
             var gameSetRecover = 0;
             var rare = 1;
+            var magicResist = 0;
+            var armor = 0;
+            var dodge = 0;
             switch ((GameCardType)chessman.Type)
             {
                 case GameCardType.Hero:
                     {
                         var hero = heroTable[chessman.CardId];
                         var m = militaryTable[hero.MilitaryUnitTableId];
-                        strength = hero.Strength;
+                        strength = hero.GetArousedStrength(chessman.Arouse) +
+                                   heroTable.GetDeputyStrength(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
                         force = hero.ForceTableId;
-                        speed = hero.Speed;
-                        intelligent = hero.Intelligent;
+                        speed = hero.GetArousedSpeed(chessman.Arouse) +
+                                   heroTable.GetDeputySpeed(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                        intelligent = hero.GetArousedIntelligent(chessman.Arouse) +
+                                   heroTable.GetDeputyIntelligent(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
                         //CombatStyle.IntelligentFormula(hero.Intelligent, level);
                         military = m.Id;
                         armedType = m.ArmedType;
                         combatType = m.CombatStyle;
                         element = m.Element;
-                        hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level);
+                        hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level)
+                                   + hero.GetArousedHitPointAddOn(chessman.Arouse) +
+                                   heroTable.GetDeputyHitPoint(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                        magicResist = hero.GetArousedMagicRest(chessman.Arouse) + 
+                                   heroTable.GetDeputyMagicRest(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                        armor = hero.GetArousedArmor(chessman.Arouse) +
+                                   heroTable.GetDeputyArmor(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                        dodge = hero.GetArousedDodge(chessman.Arouse) +
+                                heroTable.GetDeputyDodge(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                                    chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
                         gameSetRecover = hero.GameSetRecovery;
                         rare = hero.Rarity;
                         break;
@@ -578,43 +593,9 @@ namespace Assets.System.WarModule
             }
 
             var damage = CombatStyle.DamageFormula(strength, chessman.Level);
-            return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint, speed, force,
-                intelligent, gameSetRecover, rare);
-        }
 
-        public IEnumerable<IOperatorInfo> GetOperators() =>
-            ops.Select(o => new OperatorInfo(o.Value.CardId, (int)o.Value.CardType, o.Value.Level, o.Key,
-                GetStatus(o.Value).Pos, o.Value.IsChallenger));
-
-        private class OperatorInfo : IOperatorInfo
-        {
-            public int InstanceId { get; }
-            public int Pos { get; }
-            public bool IsChallenger { get; }
-            public IGameCard Card { get; }
-
-            public OperatorInfo(int cardId, int cardType, int level, int instanceId, int pos, bool isChallenger)
-            {
-                Card = new GameCard(cardId, cardType, level);
-                InstanceId = instanceId;
-                Pos = pos;
-                IsChallenger = isChallenger;
-            }
-            private class GameCard : IGameCard
-            {
-                public int CardId { get; }
-                public int Level { get; set; }
-                public int Chips { get; set; }
-                public int Type { get; }
-
-                public GameCard(int cardId, int type, int level)
-                {
-                    CardId = cardId;
-                    Level = level;
-                    Type = type;
-                    Chips = 0;
-                }
-            }
+            return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint,
+                speed, force, intelligent, gameSetRecover, rare, magicResist, armor, dodge);
         }
     }
 }

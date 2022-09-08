@@ -21,5 +21,11 @@ public static class GameDataExtension
             LastGameVersion = playerData.LastGameVersion
         };
     }
-    public static GameCardDto ToDto(this GameCard chip) => new GameCardDto(chip.id, chip.typeIndex, chip.level, chip.chips);
+
+    public static GameCardDto ToDto(this GameCard chip) =>
+        new(chip.CardId, type: chip.Type, level: chip.Level, chips: chip.Chips, arouse: chip.Arouse,
+            chip.Deputy1Id, chip.Deputy1Level,
+            chip.Deputy2Id, chip.Deputy2Level,
+            chip.Deputy3Id, chip.Deputy3Level,
+            chip.Deputy4Id, chip.Deputy4Level);
 }

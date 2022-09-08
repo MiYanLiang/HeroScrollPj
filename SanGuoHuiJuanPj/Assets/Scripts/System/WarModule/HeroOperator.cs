@@ -35,18 +35,6 @@ namespace Assets.System.WarModule
         protected static int HpDepletedRatioWithGap(ChessStatus status, int basicValue, int gap, int gapValue) =>
             HpDepletedRatioWithGap(status.Hp, status.MaxHp, basicValue, gap, gapValue);
 
-        protected int MagicResist { get; private set; }
-        protected int Armor { get; private set; }
-        protected int Dodge { get; private set; }
-        public override void Init(IChessman card, ChessboardOperator chessboardOp)
-        {
-            var combatInfo = HeroCombatInfo.GetInfo(chessboardOp.HeroTable[card.CardId]);
-            MagicResist = combatInfo.MagicResist;
-            Armor = combatInfo.Armor;
-            Dodge = combatInfo.DodgeRatio;
-            base.Init(card, chessboardOp);
-        }
-
         protected override void StartActions()
         {
             if (!Chessboard.OnHeroPerformAvailable(this))
@@ -128,13 +116,13 @@ namespace Assets.System.WarModule
         /// 法术免伤
         /// </summary>
         /// <returns></returns>
-        public override int GetMagicArmor() => MagicResist;
+        public override int GetMagicArmor() => Style.MagicResist;
 
         /// <summary>
         /// 物理免伤
         /// </summary>
         /// <returns></returns>
-        public override int GetPhysicArmor() => Armor;
+        public override int GetPhysicArmor() => Style.Armor;
 
         /// <summary>
         /// 根据通用伤害，根据几率暴击和会心
@@ -181,7 +169,7 @@ namespace Assets.System.WarModule
         /// </summary>
         /// <returns></returns>
         private float CriticalAddOn() => StateDamage() * 0.5f;
-        public override int GetDodgeRate() => Dodge;
+        public override int GetDodgeRate() => Style.Dodge;
 
         protected int CountRate(CombatConduct conduct, int basic, int critical = 0, int rouse = 0) =>
             CountRate(Damage.GetType(conduct), basic, critical, rouse);
@@ -708,7 +696,7 @@ namespace Assets.System.WarModule
     {
         private int PhysicArmorAddedValue() 
         {
-            switch (Style .Military) 
+            switch (Style.Military) 
             {
                 case 57:return 20;
                 case 96:return 30;
@@ -718,7 +706,7 @@ namespace Assets.System.WarModule
         }
         public override int GetPhysicArmor()
         {
-            var armor = Armor;
+            var armor = Style.Armor;
             armor += PhysicArmorAddedValue();
             return armor;
         }
@@ -2579,7 +2567,7 @@ namespace Assets.System.WarModule
         }
 
         public override int GetDodgeRate() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeGapRate());
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Dodge, 10, DodgeGapRate());
 
         protected override int StateDamage() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), base.StateDamage(), 10, DamageGapRate());
     }
@@ -2610,9 +2598,9 @@ namespace Assets.System.WarModule
         }
 
         public override int GetMagicArmor() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), MagicResist, 10, DamageResistGapRate());
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.MagicResist, 10, DamageResistGapRate());
         public override int GetPhysicArmor() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Armor, 10, DamageResistGapRate());
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Armor, 10, DamageResistGapRate());
 
         protected override int StateDamage() => HpDepletedRatioWithGap(Chessboard.GetStatus(this),base.StateDamage() , 10, DamageGapRate());
     }
@@ -2661,7 +2649,7 @@ namespace Assets.System.WarModule
         }
 
         public override int GetDodgeRate() =>
-            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge, 10, DodgeAddingRate);
+            HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Dodge, 10, DodgeAddingRate);
     }
 
     /// <summary>
@@ -2914,7 +2902,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Dodge,
+        public override int GetDodgeRate() => HpDepletedRatioWithGap(Chessboard.GetStatus(this), Style.Dodge,
             10, DodgeRate());
     }
 
@@ -2935,7 +2923,7 @@ namespace Assets.System.WarModule
         }
         public override int GetPhysicArmor()
         {
-            var armor = Armor;
+            var armor = Style.Armor;
             var status = Chessboard.GetStatus(this);
             return HpDepletedRatioWithGap(status, armor, 10, ArmorRate());
         }

@@ -88,8 +88,8 @@ public class Barrack : MonoBehaviour
         var ui = GetCardFromPool();
         ui.Init(card);
         ui.Set(GameCardUi.CardModes.Desk);
-        var state = card.level == 0 ? GameCardCityUiOperation.States.Disable :
-            card.isFight > 0 ? GameCardCityUiOperation.States.Enlisted : GameCardCityUiOperation.States.None;
+        var state = card.Level == 0 ? GameCardCityUiOperation.States.Disable :
+            card.IsFight > 0 ? GameCardCityUiOperation.States.Enlisted : GameCardCityUiOperation.States.None;
         ui.CityOperation.SetState(state);
         //列表中取消碎片数量显示
         ui.CityOperation.Chips.gameObject.SetActive(false);

@@ -118,71 +118,99 @@ public class RCode
     public bool isGot;  //是否领取过
 }
 [Skip]
-public class GameCard : IGameCard,IComparable<GameCard>
+public class GameCard : IGameCard
 {
-    public static GameCard Instance(GameCardDto dto) => Instance(dto.CardId,(int)dto.Type,dto.Level,dto.Chips);
-    public static GameCard Instance(int cardId,int type,int level,int chips = 0)
+    public static GameCard InstanceHero(int cardId, int level, int arouse, int deputy1Id,
+        int deputy1Level,
+        int deputy2Id, int deputy2Level,
+        int deputy3Id, int deputy3Level,
+        int deputy4Id, int deputy4Level,
+        int chips = 0) => Instance(cardId, GameCardType.Hero, level, arouse, deputy1Id, deputy1Level,
+        deputy2Id, deputy2Level,
+        deputy3Id, deputy3Level,
+        deputy4Id, deputy4Level,
+        chips);
+    public static GameCard InstanceTower(int cardId, int level) =>
+        Instance(cardId, GameCardType.Tower, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static GameCard InstanceTrap(int cardId, int level) =>
+        Instance(cardId, GameCardType.Trap, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static GameCard Instance(GameCardDto dto) =>
+        Instance(dto.CardId, (int)dto.Type, dto.Level, dto.Arouse, dto.Chips, 
+            dto.Deputy1Id, dto.Deputy1Level, 
+            dto.Deputy2Id, dto.Deputy2Level, 
+            dto.Deputy3Id, dto.Deputy3Level, 
+            dto.Deputy4Id, dto.Deputy4Level);
+    public static GameCard Instance(IGameCard card)
     {
-        return new GameCard
+        return Instance(card.CardId, card.Type, card.Level, card.Arouse, card.Chips,
+            card.Deputy1Id, card.Deputy1Level,
+            card.Deputy2Id, card.Deputy2Level,
+            card.Deputy3Id, card.Deputy3Level,
+            card.Deputy4Id, card.Deputy4Level);
+    }
+
+    public static GameCard Instance(int cardId, GameCardType type, int level, int arouse, int deputy1Id,
+        int deputy1Level,
+        int deputy2Id, int deputy2Level,
+        int deputy3Id, int deputy3Level,
+        int deputy4Id, int deputy4Level,
+        int chips = 0) => Instance(cardId, (int)type, level, arouse, deputy1Id, deputy1Level,
+        deputy2Id, deputy2Level,
+        deputy3Id, deputy3Level,
+        deputy4Id, deputy4Level,
+        chips);
+
+    public static GameCard Instance(int cardId, int type, int level, int arouse, int deputy1Id, int deputy1Level,
+        int deputy2Id, int deputy2Level,
+        int deputy3Id, int deputy3Level,
+        int deputy4Id, int deputy4Level,
+        int chips = 0)
+    {
+        return new GameCard(cardId,type,level,chips,0,arouse,
+            deputy1Id,deputy1Level,
+            deputy2Id,deputy2Level,
+            deputy3Id,deputy3Level,
+            deputy4Id,deputy4Level)
         {
-            id = cardId,
-            chips = chips, 
-            level = level, 
-            typeIndex = type
+            CardId = cardId,
+            Chips = chips, 
+            Level = level, 
+            Type = type,
+            Arouse = arouse
         };
     }
-    public int id;          //id
-    public int level = 1;   //当前等级
-    public int chips;       //拥有碎片
-    public int isFight;     //是否出战
-    public int typeIndex;   //单位类型0武将1士兵2塔3陷阱4技能
 
-    public int CardId => id;
-    public int Level
+    public int IsFight { get; set; }
+    public int CardId { get; set; }
+    public int Level { get; set; } = 1;
+    public int Chips { get; set; }
+    public int Type { get; set; }
+    public int Arouse { get; private set; }
+    public int Deputy1Id { get; set; }
+    public int Deputy1Level { get; set; }
+    public int Deputy2Id { get; set; }
+    public int Deputy2Level { get; set; }
+    public int Deputy3Id { get; set; }
+    public int Deputy3Level { get; set; }
+    public int Deputy4Id { get; set; }
+    public int Deputy4Level { get; set; }
+    [JsonConstructor]
+    private GameCard(int id, int type, int level, int chips, int isFight, int arouse, int deputy1Id, int deputy1Level, int deputy2Id, int deputy2Level, int deputy3Id, int deputy3Level, int deputy4Id, int deputy4Level)
     {
-        get => level;
-        set => level = value;
-    }
-    public int Chips
-    {
-        get => chips;
-        set => chips = value;
-    }
-    public int Type => typeIndex;
-
-    public int CompareTo(GameCard other)
-    {
-        if (ReferenceEquals(this, other)) return 0;
-        if (ReferenceEquals(null, other)) return 1;
-        var isFightComparison = isFight.CompareTo(other.isFight);
-        if (isFightComparison != 0) return -isFightComparison;
-        var isEnlistable = (level > 0).CompareTo(other.level > 0);
-        if (isEnlistable != 0) return -isEnlistable;
-        var levelComparison = level.CompareTo(other.level);
-        if (levelComparison != 0) return -levelComparison;
-        var rareComparison = GetRare(this).CompareTo(GetRare(other));
-        if (rareComparison != 0) return -rareComparison;
-        var typeIndexComparison = typeIndex.CompareTo(other.typeIndex);
-        if (typeIndexComparison != 0) return typeIndexComparison;
-        var chipsComparison = chips.CompareTo(other.chips);
-        if (chipsComparison != 0) return -chipsComparison;
-        return id.CompareTo(other.id);
-
-        int GetRare(GameCard c)
-        {
-            switch ((GameCardType) c.typeIndex)
-            {
-                case GameCardType.Hero:
-                    return DataTable.Hero[c.id].Rarity;
-                case GameCardType.Tower:
-                    return DataTable.Tower[c.id].Rarity;
-                case GameCardType.Trap:
-                    return DataTable.Trap[c.id].Rarity;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
+        CardId = id;
+        Level = level;
+        Chips = chips;
+        IsFight = isFight;
+        Type = type;
+        Arouse = arouse;
+        Deputy1Id = deputy1Id;
+        Deputy1Level = deputy1Level;
+        Deputy2Id = deputy2Id;
+        Deputy2Level = deputy2Level;
+        Deputy3Id = deputy3Id;
+        Deputy3Level = deputy3Level;
+        Deputy4Id = deputy4Id;
+        Deputy4Level = deputy4Level;
     }
 }
 /// <summary>

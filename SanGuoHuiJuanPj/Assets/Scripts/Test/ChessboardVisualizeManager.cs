@@ -116,7 +116,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
     /// <param name="card"></param>
     public void InstanceChessman(FightCardData card)
     {
-        var gc = GameCard.Instance(card.cardId, card.cardType, card.Level);
+        var gc = GameCard.Instance(card.cardId, card.cardType, card.Level, card.Arouse, 0, 0, 0, 0, 0, 0, 0, 0);
         var ui = card.CardType == GameCardType.Base 
             ? Instantiate(HomePrefab) 
             : Instantiate(PrefabUi);

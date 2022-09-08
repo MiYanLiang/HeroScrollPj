@@ -61,6 +61,7 @@ public class DataTable : MonoBehaviour
         public static IReadOnlyDictionary<int,BaYeCityStoryTable> BaYeCityStory { get;set;}
         public static IReadOnlyDictionary<int,BaYeCityOptionTable> BaYeCityOption { get; set; }
         public static IReadOnlyDictionary<int,BaYeCityResultTable> BaYeCityResult { get; set; }
+        public static IReadOnlyDictionary<int,ArouseConfigTable> ArouseConfig { get; set; }
 
         public TextAsset PlayerInitialConfigTable;
         public TextAsset ResourceConfigTable;
@@ -83,7 +84,6 @@ public class DataTable : MonoBehaviour
         public TextAsset GameModeTable;
         public TextAsset GuideTable;
         public TextAsset TipsTable;
-        public TextAsset RCodeTable;
         public TextAsset ChickenTable;
         public TextAsset StaticArrangementTable;
         public TextAsset TextTable;
@@ -106,9 +106,9 @@ public class DataTable : MonoBehaviour
         public TextAsset BaYeCityStoryTable;
         public TextAsset BaYeCityOptionTable;
         public TextAsset BaYeCityResultTable;
+        public TextAsset ArouseConfigTable;
 
-
-    //private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
+        //private static Dictionary<string, Dictionary<int, IReadOnlyList<string>>> data;
     private void Awake()
         {
             if (instance != null && instance != this)
@@ -167,6 +167,7 @@ public class DataTable : MonoBehaviour
             BaYeCityStory= NewConvert(BaYeCityStoryTable.text, l => new BaYeCityStoryTable(l));
             BaYeCityOption= NewConvert(BaYeCityOptionTable.text, l => new BaYeCityOptionTable(l));
             BaYeCityResult= NewConvert(BaYeCityResultTable.text, l => new BaYeCityResultTable(l));
+            ArouseConfig = NewConvert(ArouseConfigTable.text, l => new ArouseConfigTable(l));
         }
 
         private static Dictionary<int, T> NewConvert<T>(string text,Func<IList<string>,T> func)

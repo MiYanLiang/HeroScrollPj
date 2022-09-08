@@ -33,8 +33,11 @@ public class RewardWindowUi : MonoBehaviour
         if(reward.AdPass > 0) GetUiFromPool().SetAdPass(reward.AdPass);
         foreach (var card in reward.Cards)
         {
-            GetUiFromPool().SetCard(new GameCard
-                {chips = card.cardChips, id = card.cardId, typeIndex = card.cardType});
+            GetUiFromPool().SetCard(GameCard.Instance(
+                card.cardId, 
+                card.cardType, 
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                card.cardChips));
         }
     }
 

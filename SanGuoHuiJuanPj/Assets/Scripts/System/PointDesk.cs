@@ -175,7 +175,7 @@ public class PointDesk : MonoBehaviour
         WuLiText.text = isHero ? "武力：" : "威力：";
         if (isHero)
         {
-            var c = DataTable.Hero[card.Card.id];
+            var c = DataTable.Hero[card.Card.CardId];
             var m = DataTable.Military[c.MilitaryUnitTableId];
             switch (m.ArmedType)
             {
@@ -354,15 +354,15 @@ public class PointDesk : MonoBehaviour
     /// </summary> 
     private void EnlistSwitch()
     {
-        SelectedCard.Card.isFight++;
-        if (SelectedCard.Card.isFight > 1)
-            SelectedCard.Card.isFight = 0;
+        SelectedCard.Card.IsFight++;
+        if (SelectedCard.Card.IsFight > 1)
+            SelectedCard.Card.IsFight = 0;
         OnEnlistCall.Invoke(SelectedCard.Card);
     }
 
     private void UpdateEnlist()
     {
-        EnlistBtnLabel.text = DataTable.GetStringText(SelectedCard.Card.isFight > 0 ? 30 : 31);
+        EnlistBtnLabel.text = DataTable.GetStringText(SelectedCard.Card.IsFight > 0 ? 30 : 31);
         EnlistBtn.gameObject.SetActive(SelectedCard.Card.Level > 0);
         EnlistText.text =
             $"{PlayerDataForGame.instance.TotalCardsEnlisted}/{DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].CardLimit}";

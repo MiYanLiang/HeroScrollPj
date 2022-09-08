@@ -318,8 +318,12 @@ public class Versus : MonoBehaviour
         //Infoboard.transform.DOLocalMoveY(1440, 2);
         WarBoard.InitNewGame(false, true);
         foreach (var op in data.Chessmen)
-            WarBoard.SetCustomInstanceCardToBoard(op.Pos, 
-                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level),
+            WarBoard.SetCustomInstanceCardToBoard(op.Pos,
+                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level, op.Card.Arouse,
+                    op.Card.Deputy1Id,op.Card.Deputy1Level,
+                    op.Card.Deputy2Id,op.Card.Deputy2Level,
+                    op.Card.Deputy3Id,op.Card.Deputy3Level,
+                    op.Card.Deputy4Id,op.Card.Deputy4Level),
                 op.IsChallenger,
                 op.InstanceId);
 
@@ -333,7 +337,11 @@ public class Versus : MonoBehaviour
         WarBoard.InitNewGame(false, true);
         foreach (var op in data.Chessmen)
             WarBoard.SetCustomInstanceCardToBoard(op.Pos, 
-                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level),
+                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level, op.Card.Arouse, 
+                    op.Card.Deputy1Id, op.Card.Deputy1Level,
+                    op.Card.Deputy2Id, op.Card.Deputy2Level,
+                    op.Card.Deputy3Id, op.Card.Deputy3Level,
+                    op.Card.Deputy4Id, op.Card.Deputy4Level),
                 op.IsChallenger,
                 op.InstanceId);
 
@@ -350,7 +358,11 @@ public class Versus : MonoBehaviour
         WarBoard.InitNewGame(true, true);
         foreach (var op in result.Chessmen)
         {
-            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
+            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level, op.Card.Arouse,
+                op.Card.Deputy1Id, op.Card.Deputy1Level,
+                op.Card.Deputy2Id, op.Card.Deputy2Level,
+                op.Card.Deputy3Id, op.Card.Deputy3Level,
+                op.Card.Deputy4Id, op.Card.Deputy4Level));
             card.SetPos(op.Pos);
             card.SetInstanceId(op.InstanceId);
             card.isPlayerCard = op.IsChallenger;
@@ -373,7 +385,13 @@ public class Versus : MonoBehaviour
         WarBoard.InitNewGame(true, true);
         foreach (var op in result.Chessmen)
         {
-            var card = new FightCardData(GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level));
+            var card = new FightCardData(
+                GameCard.Instance(op.Card.CardId, op.Card.Type, op.Card.Level, op.Card.Arouse,
+                    op.Card.Deputy1Id, op.Card.Deputy1Level,
+                    op.Card.Deputy2Id, op.Card.Deputy2Level,
+                    op.Card.Deputy3Id, op.Card.Deputy3Level,
+                    op.Card.Deputy4Id, op.Card.Deputy4Level
+                ));
             card.SetPos(op.Pos);
             card.SetInstanceId(op.InstanceId);
             card.isPlayerCard = op.IsChallenger;
@@ -429,7 +447,8 @@ public class Versus : MonoBehaviour
     public void StartNewGame()
     {
         WarBoard.InitNewGame(true, true);
-        var card = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, CityLevel));
+        var card = new FightCardData(
+            GameCard.Instance(0, (int)GameCardType.Base, CityLevel, 0, 0, 0, 0, 0, 0, 0, 0, 0));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);
         WarBoard.Chessboard.UpdateWarSpeed();
@@ -438,7 +457,11 @@ public class Versus : MonoBehaviour
     public void SetEnemyFormation(Dictionary<int, IGameCard> formation)
     {
         var b = formation[17];
-        var enemyBase = new FightCardData(GameCard.Instance(b.CardId, b.Type, b.Level));
+        var enemyBase = new FightCardData(GameCard.Instance(b.CardId, b.Type, b.Level, b.Arouse,
+            b.Deputy1Id, b.Deputy1Level,
+            b.Deputy2Id, b.Deputy2Level,
+            b.Deputy3Id, b.Deputy3Level,
+            b.Deputy4Id, b.Deputy4Level));
         enemyBase.SetPos(17);
         var list = new List<ChessCard>();
         foreach (var o in formation)
@@ -451,7 +474,7 @@ public class Versus : MonoBehaviour
 
         WarBoard.SetEnemiesIncludeUis(enemyBase, list);
 
-        ChessCard InstanceCard(IGameCard c, int p) => ChessCard.Instance(c.CardId, c.Type, c.Level, p);
+        ChessCard InstanceCard(IGameCard c, int p) => ChessCard.Instance(c.CardId, c.Type, c.Level, arouse: c.Arouse, pos: p);
     }
 
     #endregion
@@ -496,10 +519,18 @@ public class Versus : MonoBehaviour
         public int Level { get; set; }
         public int Chips { get; set; }
         public int Type { get; set; }
+        public int Arouse { get; set; }
+        public int Deputy1Id { get; set; }
+        public int Deputy1Level { get; set; }
+        public int Deputy2Id { get; set; }
+        public int Deputy2Level { get; set;  }
+        public int Deputy3Id { get; set; }
+        public int Deputy3Level { get; set; }
+        public int Deputy4Id { get; set; }
+        public int Deputy4Level { get; set; }
 
         public Card()
         {
-
         }
 
         public Card(IGameCard c)
@@ -508,6 +539,15 @@ public class Versus : MonoBehaviour
             Level = c.Level;
             Chips = c.Chips;
             Type = c.Type;
+            Arouse = c.Arouse;
+            Deputy1Id = c.Deputy1Id;
+            Deputy1Level = c.Deputy1Level;
+            Deputy2Id = c.Deputy2Id;
+            Deputy2Level = c.Deputy2Level;
+            Deputy3Id = c.Deputy3Id;
+            Deputy3Level = c.Deputy3Level;
+            Deputy4Id = c.Deputy4Id;
+            Deputy4Level = c.Deputy4Level;
         }
 
     }

@@ -5,12 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
-using Assets;
-using Newtonsoft.Json;
 
 public class PlayerDataForGame : MonoBehaviour
 {
@@ -242,7 +238,7 @@ public class PlayerDataForGame : MonoBehaviour
     /// </summary> 
     public bool EnlistCard(GameCard card, bool isAdd)
     {
-        var cardType = (GameCardType) card.typeIndex;
+        var cardType = (GameCardType) card.Type;
         var cardLimit = DataTable.PlayerLevelConfig[pyData.Level].CardLimit;
         List<int> cardList = null;
         switch (cardType)
@@ -268,12 +264,12 @@ public class PlayerDataForGame : MonoBehaviour
                 return false;
             }
 
-            if (!cardList.Contains(card.id))
-                cardList.Add(card.id);
+            if (!cardList.Contains(card.CardId))
+                cardList.Add(card.CardId);
         }
-        else if (cardList.Contains(card.id)) cardList.Remove(card.id);
+        else if (cardList.Contains(card.CardId)) cardList.Remove(card.CardId);
 
-        card.isFight = isAdd ? 1 : 0;
+        card.IsFight = isAdd ? 1 : 0;
         return true;
     }
 
@@ -362,14 +358,14 @@ public class PlayerDataForGame : MonoBehaviour
     {
         var cards = gameCardList.Select(GameCard.Instance)
             .Where(c => c.IsOwning())
-            .GroupBy(c => (GameCardType) c.typeIndex, c => c)
+            .GroupBy(c => (GameCardType) c.Type, c => c)
             .ToDictionary(c => c.Key, c => c.ToList());
         if (troops != null)
         {
             var enlisted = troops.SelectMany(t => t.EnList).ToList();
             foreach (var chip in enlisted.SelectMany(set =>
                 cards[set.Key].Join(set.Value, c => c.CardId, i => i, (c, _) => c)))
-                chip.isFight = 1;
+                chip.IsFight = 1;
         }
         if (!cards.TryGetValue(GameCardType.Hero, out hstData.heroSaveData))
             hstData.heroSaveData = new List<GameCard>();
@@ -414,21 +410,21 @@ public class PlayerDataForGame : MonoBehaviour
         var isContainTrap = troop.EnList.ContainsKey(GameCardType.Trap);
         foreach (var h in hstData.heroSaveData.Where(h => h.GetForceId() == troop.ForceId))
         {
-            h.isFight = isContainHero
-                ? troop.EnList[GameCardType.Hero].Any(id => h.id == id) ? 1 : 0
+            h.IsFight = isContainHero
+                ? troop.EnList[GameCardType.Hero].Any(id => h.CardId == id) ? 1 : 0
                 : 0;
         }
         foreach (var t in hstData.towerSaveData.Where(h => h.GetForceId() == troop.ForceId))
         {
-            t.isFight = isContainTower
-                ? troop.EnList[GameCardType.Tower].Any(id => t.id == id) ? 1 : 0
+            t.IsFight = isContainTower
+                ? troop.EnList[GameCardType.Tower].Any(id => t.CardId == id) ? 1 : 0
                 : 0;
         }
 
         foreach (var t in hstData.trapSaveData.Where(h => h.GetForceId() == troop.ForceId))
         {
-            t.isFight = isContainTrap
-                ? troop.EnList[GameCardType.Trap].Any(id => t.id == id) ? 1 : 0
+            t.IsFight = isContainTrap
+                ? troop.EnList[GameCardType.Trap].Any(id => t.CardId == id) ? 1 : 0
                 : 0;
         }
         RefreshEnlisted(troop.ForceId);
@@ -436,9 +432,9 @@ public class PlayerDataForGame : MonoBehaviour
 
     public void RefreshEnlisted(int forceId)
     {
-        fightHeroId = hstData.heroSaveData.Enlist(forceId).Select(h=>h.id).ToList();
-        fightTowerId = hstData.towerSaveData.Enlist(forceId).Select(t => t.id).ToList();
-        fightTrapId = hstData.trapSaveData.Enlist(forceId).Select(t => t.id).ToList();
+        fightHeroId = hstData.heroSaveData.Enlist(forceId).Select(h=>h.CardId).ToList();
+        fightTowerId = hstData.towerSaveData.Enlist(forceId).Select(t => t.CardId).ToList();
+        fightTrapId = hstData.trapSaveData.Enlist(forceId).Select(t => t.CardId).ToList();
     }
 
     public void GenerateLocalStamina() =>
@@ -459,7 +455,11 @@ public class PlayerDataForGame : MonoBehaviour
             .Concat(GenerateDtoList(hstData.trapSaveData)).ToArray();
 
         IEnumerable<GameCardDto> GenerateDtoList(IEnumerable<GameCard> list) => list
-            .Where(c => c.IsOwning()).Select(c => new GameCardDto(c.CardId, c.Type, c.Level, c.Chips));
+            .Where(c => c.IsOwning()).Select(c => new GameCardDto(c.CardId, c.Type, c.Level, c.Chips, c.Arouse,
+                c.Deputy1Id, c.Deputy1Level,
+                c.Deputy2Id, c.Deputy2Level,
+                c.Deputy3Id, c.Deputy3Level,
+                c.Deputy4Id, c.Deputy4Level));
 
     }
 

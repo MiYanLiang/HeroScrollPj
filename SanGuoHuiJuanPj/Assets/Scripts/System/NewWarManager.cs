@@ -50,7 +50,8 @@ public class NewWarManager : MonoBehaviour, ILogger
 
     public FightCardData RegChessCard(ChessCard chessCard, bool isChallenger, int customHp = 0)
     {
-        var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level));
+        var card = new FightCardData(GameCard.Instance(chessCard.Id, (int)chessCard.Type, chessCard.Level,
+            chessCard.Arouse, 0, 0, 0, 0, 0, 0, 0, 0));
         card.SetPos(chessCard.Pos);
         card.isPlayerCard = isChallenger;
         if (customHp > 0) card.ResetHp(customHp);
@@ -104,12 +105,13 @@ public class NewWarManager : MonoBehaviour, ILogger
 [Serializable]
 public class ChessCard
 {
-    public static ChessCard Instance(int id, int type, int level, int pos) =>
-        Instance(id, (GameCardType)type, level, pos);
-    public static ChessCard Instance(int id, GameCardType type, int level, int pos) =>
-        new ChessCard { Id = id, Level = level, Type = type, Pos = pos };
+    public static ChessCard Instance(int id, int type, int level, int arouse, int pos) =>
+        Instance(id, (GameCardType)type, level, arouse, pos);
+    public static ChessCard Instance(int id, GameCardType type, int level, int arouse,int pos) =>
+        new ChessCard { Id = id, Level = level, Type = type, Arouse = arouse, Pos = pos};
     public int Id;
     public int Pos;
     public GameCardType Type;
     public int Level = 1;
+    public int Arouse;
 }

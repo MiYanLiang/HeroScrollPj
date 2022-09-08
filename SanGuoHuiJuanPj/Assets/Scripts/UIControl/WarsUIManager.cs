@@ -7,7 +7,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -547,7 +546,7 @@ public class WarsUIManager : MonoBehaviour
                         $"卡牌初始化异常，[{chessman.CardId}.{chessman.CardType}]等级为{chessman.Star}!");
                 //var card = CreateEnemyFightUnit(i,1, true, chessman);
                 //PlaceCardOnBoard(card, i, false);
-                enemyCards.Add(ChessCard.Instance(chessman.CardId, chessman.CardType, chessman.Star, i));
+                enemyCards.Add(ChessCard.Instance(chessman.CardId, chessman.CardType, chessman.Star, arouse: 0, pos: i));
             }
         }
         else
@@ -565,12 +564,12 @@ public class WarsUIManager : MonoBehaviour
                 {
                     var card = GameCardInfo.RandomPick((GameCardType)enemyUnit.CardType, enemyUnit.Rarity);
                     var level = enemyUnit.Star;
-                    chessCard = ChessCard.Instance(card.Id, cardType, level, i);
+                    chessCard = ChessCard.Instance(card.Id, cardType, level, arouse: 0, pos: i);
                 }
                 else//宝箱类
                 {
                     var trap = DataTable.Trap[enemyUnit.Rarity];
-                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemyUnit.Star, i);
+                    chessCard = ChessCard.Instance(trap.Id, GameCardType.Trap, enemyUnit.Star, arouse: 0, pos: i);
                 }
                 enemyCards.Add(chessCard);
             }
@@ -775,33 +774,33 @@ public class WarsUIManager : MonoBehaviour
             var mercenary = DataTable.Mercenary[pick];
             int btnIndex = i;
             var ui = sanXuan.GameCards[i];
-            var info = GenerateCard(i, ui, mercenary);
+            var info = GenerateGiftCard(i, ui, mercenary);
             //广告概率
             if (Random.Range(0, 100) < 25)
             {
                 ui.SetAd(success =>
                 {
                     if (!success) return;
-                    GetOrBuyCards(true, 0, ui.Card, info, btnIndex);
+                    GetOrBuyCards(true, 0, ui.Card, btnIndex);
                     PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(57));
                 });
                 continue;
             }
 
             ui.SetPrice(mercenary.Cost, () =>
-                GetOrBuyCards(true, mercenary.Cost, ui.Card, info, btnIndex));
+                GetOrBuyCards(true, mercenary.Cost, ui.Card, btnIndex));
         }
 
         return true;
     }
 
-    private GameCardInfo GenerateCard(int index, TradableGameCardUi ui, MercenaryTable mercenary)
+    private GameCardInfo GenerateGiftCard(int index, TradableGameCardUi ui, MercenaryTable mercenary)
     {
         var cardType = (GameCardType)mercenary.Produce.CardType;
         var cardRarity = mercenary.Produce.Rarity;
         var cardLevel = mercenary.Produce.Star;
         var card = RandomPickFromRareClass(cardType, cardRarity);
-        ui.SetGameCard(GameCard.Instance(card.Id, mercenary.Produce.CardType, cardLevel));
+        ui.SetGameCard(GameCard.Instance(card.Id, mercenary.Produce.CardType, cardLevel, 0, 0, 0, 0, 0, 0, 0, 0, 0));
         ui.OnClickAction.RemoveAllListeners();
         ui.OnClickAction.AddListener(() => OnClickToShowShopInfo(index, card.About));
         return card;
@@ -818,8 +817,8 @@ public class WarsUIManager : MonoBehaviour
         {
             var index = i;
             var ui = sanXuan.GameCards[i];
-            var info = GenerateCard(i, ui, mercenary);
-            ui.SetPrice(0, () => GetOrBuyCards(false, 0, ui.Card, info, index));
+            var info = GenerateGiftCard(i, ui, mercenary);
+            ui.SetPrice(0, () => GetOrBuyCards(false, 0, ui.Card, index));
         }
     }
 
@@ -858,7 +857,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //获得或购买三选物品
-    private void GetOrBuyCards(bool isBuy, int cost, GameCard card, GameCardInfo info, int btnIndex)
+    private void GetOrBuyCards(bool isBuy, int cost, GameCard card, int btnIndex)
     {
         var sanXuan = SanXuanWindow;
         var ui = sanXuan.GameCards[btnIndex];
@@ -896,7 +895,7 @@ public class WarsUIManager : MonoBehaviour
             var reward = DataTable.QuestReward[pick].Produce;
 
             var info = RandomPickFromRareClass((GameCardType)reward.CardType, reward.Rarity);
-            var card = new GameCard().Instance(info.Type, info.Id, reward.Star);
+            var card = GameCard.Instance(info.Id, info.Type, reward.Star, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             WarBoard.CreateCardToRack(card);
         }
         else
@@ -924,12 +923,12 @@ public class WarsUIManager : MonoBehaviour
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
             var hst = PlayerDataForGame.instance.hstData;
-            PlayerDataForGame.instance.fightHeroId.Select(id =>
-                    new GameCard().Instance(GameCardType.Hero, id, GetLevel(hst.heroSaveData, id)))
+            PlayerDataForGame.instance.fightHeroId
+                .Select(id => GameCard.Instance(hst.heroSaveData.First(h => h.CardId == id)))
                 .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
-                    new GameCard().Instance(GameCardType.Tower, id, GetLevel(hst.towerSaveData, id))))
+                    GameCard.InstanceTower(id, GetLevel(hst.towerSaveData, id))))
                 .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
-                    new GameCard().Instance(GameCardType.Trap, id, GetLevel(hst.trapSaveData, id))))
+                    GameCard.InstanceTrap(id, GetLevel(hst.trapSaveData, id))))
                 .ToList().ForEach(c => WarBoard.CreateCardToRack(c));
             return;
         }

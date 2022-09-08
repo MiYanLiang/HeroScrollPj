@@ -27,46 +27,34 @@ public static class GameSystemExtension
     /// <returns></returns>
     public static IEnumerable<GameCard> Enlist(this IEnumerable<GameCard> cards, int forceId, bool isFight = true) =>
         isFight
-            ? cards.Where(card => GetForceId(card) == forceId && card.level > 0 && card.isFight > 0)
-            : cards.Where(card => GetForceId(card) == forceId && card.level > 0);
+            ? cards.Where(card => GetForceId(card) == forceId && card.Level > 0 && card.IsFight > 0)
+            : cards.Where(card => GetForceId(card) == forceId && card.Level > 0);
     public static bool IsEnlistAble(this GameCard card) => card.Level > 0;
     public static int GetForceId(this GameCard card)
     {
         //单位类型0武将 1士兵 2塔 3陷阱 4技能
         int force = -1;
-        switch (card.typeIndex)
+        switch (card.Type)
         {
             case 0 : 
-                force = DataTable.Hero[card.id].ForceTableId;
+                force = DataTable.Hero[card.CardId].ForceTableId;
                 break;
             case 2 :
-                force = DataTable.Tower[card.id].ForceId;
+                force = DataTable.Tower[card.CardId].ForceId;
                 break;
             case 3 :
-                force = DataTable.Trap[card.id].ForceId;
+                force = DataTable.Trap[card.CardId].ForceId;
                 break;
         }
         return force;
     }
 
-    public static GameCard GetOrInstance(this List<GameCard> cards, int cardId, int cardType, int level) =>
-        cards.GetOrInstance(cardId, (GameCardType) cardType,level);
-
-    public static GameCard GetOrInstance(this List<GameCard> cards, int cardId,
-        GameCardType cardType, int level)
+    public static GameCard GetOrInstance(this List<GameCard> cards, int cardId, GameCardType cardType, int level)
     {
-        var card = cards.SingleOrDefault(c => c.id == cardId);
+        var card = cards.SingleOrDefault(c => c.CardId == cardId);
         if (card != null) return card;
-        card = new GameCard().Instance(cardType, cardId, level);
+        card = GameCard.Instance(cardId, cardType, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         cards.Add(card);
-        return card;
-    }
-
-    public static GameCard Instance(this GameCard card, GameCardType type, int cardId, int cardLevel)
-    {
-        card.id = cardId;
-        card.level = cardLevel;
-        card.typeIndex = (int) type;
         return card;
     }
 
@@ -127,7 +115,7 @@ public static class GameSystemExtension
     public static int GetValue(this GameCard card)
     {
         var info = card.GetInfo();
-        int chips = card.chips + DataTable.CardLevel.Where(lv => lv.Key <= card.level).Sum(kv => kv.Value.ChipsConsume);
+        int chips = card.Chips + DataTable.CardLevel.Where(lv => lv.Key <= card.Level).Sum(kv => kv.Value.ChipsConsume);
         int golds = 0;
         switch (info.Rare)
         {
@@ -169,7 +157,7 @@ public enum GuideProps
 /// </summary>
 public class GameCardInfo
 {
-    public static GameCardInfo GetInfo(GameCard card) => GetInfo((GameCardType) card.typeIndex, card.id);
+    public static GameCardInfo GetInfo(GameCard card) => GetInfo((GameCardType) card.Type, card.CardId);
     public static GameCardInfo GetInfo(IChessman card) => GetInfo(card.CardType, card.CardId);
 
     public static GameCardInfo GetInfo(GameCardType type,int id)
@@ -181,7 +169,9 @@ public class GameCardInfo
                 var c = DataTable.Hero[id];
                 var military = DataTable.Military[c.MilitaryUnitTableId];
                 return new GameCardInfo(id, GameCardType.Hero, c.Name, military.Short, c.Intro, military.About,
-                    c.ImageId, c.Rarity, c.HitPoint, c.Strength, c.Intelligent,c.Speed,c.DodgeRatio,c.ArmorResist,c.MagicResist,c.CriticalRatio,c.RouseRatio,military.CombatStyle, military.Element, c.ForceTableId,
+                    c.ImageId, c.Rarity, c.HitPoint, c.Strength, c.Intelligent, c.Speed, c.DodgeRatio, c.ArmorResist,
+                    c.MagicResist, c.CriticalRatio, c.RouseRatio, military.CombatStyle, military.Element,
+                    c.ForceTableId,
                     c.IsProduce > 0, c.GameSetRecovery);
             }
             case GameCardType.Tower:

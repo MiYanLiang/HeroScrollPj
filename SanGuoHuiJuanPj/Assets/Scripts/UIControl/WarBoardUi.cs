@@ -525,7 +525,11 @@ public class WarBoardUi : MonoBehaviour
 
     public void SetCustomInstanceCardToBoard(int pos, GameCard c, bool isChallenger, int instanceId)
     {
-        var card = new FightCardData(GameCard.Instance(c.CardId, c.Type, c.Level));
+        var card = new FightCardData(GameCard.Instance(c.CardId, c.Type, c.Level, c.Arouse, 
+            c.Deputy1Id,c.Deputy1Level,
+            c.Deputy2Id,c.Deputy2Level,
+            c.Deputy3Id,c.Deputy3Level,
+            c.Deputy4Id,c.Deputy4Level));
         card.SetPos(pos);
         card.SetInstanceId(instanceId);
         card.isPlayerCard = isChallenger;

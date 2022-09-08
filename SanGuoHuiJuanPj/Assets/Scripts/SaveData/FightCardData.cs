@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
 using Newtonsoft.Json;
@@ -20,7 +17,8 @@ public class FightCardData : IChessman
 
     public static FightCardData BaseCard(bool isPlayer, int hp,int level)
     {
-        var baseCard = new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level)); //GetCard(17, true);
+        var baseCard =
+            new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level, 0, 0, 0, 0, 0, 0, 0, 0, 0)); //GetCard(17, true);
         baseCard.isPlayerCard = isPlayer;
         baseCard.IsLock = true;
         baseCard.SetPos(17);
@@ -37,9 +35,10 @@ public class FightCardData : IChessman
     public int cardId;
     //等级
     public int level;
+    //觉醒
+    public int Arouse;
     //伤害
     public int Damage { get; }
-
     //战斗状态
     [JsonIgnore]public CardState CardState = new CardState();
     //摆放位置记录
@@ -60,17 +59,14 @@ public class FightCardData : IChessman
 
     private GameCardInfo info;
 
-    public FightCardData()
-    {
-    }
-
     public FightCardData(GameCard card)
     {
         Card = card;
         info = card.GetInfo();
-        cardType = card.typeIndex;
+        cardType = card.Type;
         cardId = card.CardId;
         level = card.Level;
+        Arouse = card.Arouse;
         this.element = info.Element;
         var strength = 0;
         var force = -1;
@@ -81,27 +77,52 @@ public class FightCardData : IChessman
         var combatType = -1;
         var element = 0;
         var hitpoint = 0;
+        var magicResist = 0;
+        var armor = 0;
+        var dodge = 0;
+        var gameSetRecover = 0;
+        var rare = 0;
         switch (info.Type)
         {
             case GameCardType.Hero:
             {
-                var hero = DataTable.Hero[card.id];
+                var chessman = card;
+                var heroTable = DataTable.Hero;
+                var hero = DataTable.Hero[card.CardId];
                 var m = DataTable.Military[hero.MilitaryUnitTableId];
-                strength = hero.Strength;
+                strength = hero.GetArousedStrength(chessman.Arouse) +
+                           heroTable.GetDeputyStrength(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                               chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
                 force = hero.ForceTableId;
-                speed = hero.Speed;
-                intelligent = hero.Intelligent;
-                    //CombatStyle.IntelligentFormula(hero.Intelligent, level);
+                speed = hero.GetArousedSpeed(chessman.Arouse) +
+                        heroTable.GetDeputySpeed(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                            chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                intelligent = hero.GetArousedIntelligent(chessman.Arouse) +
+                              heroTable.GetDeputyIntelligent(chessman.Deputy1Id, chessman.Deputy1Level,
+                                  chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                //CombatStyle.IntelligentFormula(hero.Intelligent, level);
                 military = m.Id;
                 armedType = m.ArmedType;
                 combatType = m.CombatStyle;
                 element = m.Element;
-                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, level);
-                    break;
+                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level)
+                           + hero.GetArousedHitPointAddOn(chessman.Arouse) +
+                           heroTable.GetDeputyHitPoint(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                               chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                magicResist = hero.GetArousedMagicRest(chessman.Arouse) +
+                              heroTable.GetDeputyMagicRest(chessman.Deputy1Id, chessman.Deputy1Level,
+                                  chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                armor = hero.GetArousedArmor(chessman.Arouse) +
+                        heroTable.GetDeputyArmor(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                            chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                dodge = hero.GetArousedDodge(chessman.Arouse) +
+                        heroTable.GetDeputyDodge(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
+                            chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                break;
             }
             case GameCardType.Tower:
             {
-                var tower = DataTable.Tower[card.id];
+                var tower = DataTable.Tower[card.CardId];
                 force = tower.ForceId;
                 strength = tower.Strength;
                 speed = tower.Speed;
@@ -115,7 +136,7 @@ public class FightCardData : IChessman
                 break;
             case GameCardType.Trap:
             {
-                var trap = DataTable.Trap[card.id];
+                var trap = DataTable.Trap[card.CardId];
                 strength = trap.Strength;
                 force = trap.ForceId;
                 speed = 0;
@@ -155,7 +176,7 @@ public class FightCardData : IChessman
         StatesUi = new Dictionary<int, EffectStateUi>();
         status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
         Style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
-            intelligent, info.GameSetRecovery, info.Rare);
+            intelligent, info.GameSetRecovery, info.Rare, magicResist, armor, dodge);
     }
 
     public GameCard Card { get; }

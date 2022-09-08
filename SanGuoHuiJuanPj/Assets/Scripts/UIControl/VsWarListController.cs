@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Assets;
 using CorrelateLib;
-using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -128,6 +126,15 @@ public class VsWarListController : MonoBehaviour
             public int Level { get; set; }
             public int Chips { get; set; }
             public int Type { get; set; }
+            public int Arouse { get; set; }
+            public int Deputy1Id { get; set; }
+            public int Deputy1Level { get; set; }
+            public int Deputy2Id { get; set; }
+            public int Deputy2Level { get; set; }
+            public int Deputy3Id { get; set; }
+            public int Deputy3Level { get; set; }
+            public int Deputy4Id { get; set; }
+            public int Deputy4Level { get; set; }
         }
     }
 

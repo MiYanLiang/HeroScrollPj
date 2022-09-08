@@ -569,8 +569,8 @@ public class UIManager : MonoBehaviour
     /// </summary> 
     private void MergeCard(GameCard card)
     {
-        var nextLevel = DataTable.CardLevel[card.level + 1];
-        var isChipsEnough = card.chips >= nextLevel.ChipsConsume;
+        var nextLevel = DataTable.CardLevel[card.Level + 1];
+        var isChipsEnough = card.Chips >= nextLevel.ChipsConsume;
         var isYanBaoEnough = PlayerDataForGame.instance.pyData.YuanBao >= nextLevel.YuanBaoConsume;
 
         if (!isChipsEnough || !isYanBaoEnough || !ConsumeManager.instance.DeductYuanBao(nextLevel.YuanBaoConsume))
@@ -591,20 +591,20 @@ public class UIManager : MonoBehaviour
                 switch (dto.Type)
                 {
                     case GameCardType.Hero:
-                        ca = hst.heroSaveData.First(c => c.id == dto.CardId);
+                        ca = hst.heroSaveData.First(c => c.CardId == dto.CardId);
                         break;
                     case GameCardType.Tower:
-                        ca = hst.towerSaveData.First(c => c.id == dto.CardId);
+                        ca = hst.towerSaveData.First(c => c.CardId == dto.CardId);
                         break;
                     case GameCardType.Trap:
-                        ca = hst.trapSaveData.First(c => c.id == dto.CardId);
+                        ca = hst.trapSaveData.First(c => c.CardId == dto.CardId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
-                ca.chips = dto.Chips;
-                ca.level = dto.Level;
+                ca.Chips = dto.Chips;
+                ca.Level = dto.Level;
                 ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 7);
                 Barrack.RefreshCardList();
                 Barrack.PointDesk.PlayUpgradeEffect();
@@ -621,7 +621,7 @@ public class UIManager : MonoBehaviour
                 PlayerDataForGame.instance.ShowStringTips(message);
             },
             EventStrings.Req_CardMerge,
-            ViewBag.Instance().SetValues(new object[] {card.id, card.typeIndex}));
+            ViewBag.Instance().SetValues(new object[] {card.CardId, card.Type}));
     }
 
     private void OnCardEnlist(GameCard card)
@@ -634,7 +634,7 @@ public class UIManager : MonoBehaviour
             }, PlayerDataForGame.instance.ShowStringTips,
             EventStrings.Req_TroopEnlist,
             ViewBag.Instance()
-                .SetValues(Barrack.SelectedForce, card.isFight > 0)
+                .SetValues(Barrack.SelectedForce, card.IsFight > 0)
                 .GameCardDto(card.ToDto()));
     }
 
@@ -662,16 +662,16 @@ public class UIManager : MonoBehaviour
                     RefreshList();
                 },
                 EventStrings.Req_CardSell,
-                ViewBag.Instance().SetValues(new object[] {gameCard.id, gameCard.typeIndex}));
+                ViewBag.Instance().SetValues(new object[] {gameCard.CardId, gameCard.Type}));
         });
         queRenWindows.SetActive(true);
 
         //刷新主城列表 
         void RefreshList()
         {
-            gameCard.chips = 0;
-            gameCard.level = 0;
-            gameCard.isFight = 0;
+            gameCard.Chips = 0;
+            gameCard.Level = 0;
+            gameCard.IsFight = 0;
             PlayerDataForGame.instance.EnlistCard(gameCard, false);
             Barrack.RefreshCardList();
             queRenWindows.SetActive(false);
@@ -711,14 +711,14 @@ public class UIManager : MonoBehaviour
     {
         dataList.Sort((c1, c2) =>
         {
-            if (c2.isFight.CompareTo(c1.isFight) != 0)
+            if (c2.IsFight.CompareTo(c1.IsFight) != 0)
             {
-                return c2.isFight.CompareTo(c1.isFight);
+                return c2.IsFight.CompareTo(c1.IsFight);
             }
 
-            if (c2.level.CompareTo(c1.level) != 0)
+            if (c2.Level.CompareTo(c1.Level) != 0)
             {
-                return c2.level.CompareTo(c1.level);
+                return c2.Level.CompareTo(c1.Level);
             }
 
             return GetRare(c2).CompareTo(GetRare(c1));
@@ -726,14 +726,14 @@ public class UIManager : MonoBehaviour
 
         int GetRare(GameCard c)
         {
-            switch ((GameCardType)c.typeIndex)
+            switch ((GameCardType)c.Type)
             {
                 case GameCardType.Hero:
-                    return DataTable.Hero[c.id].Rarity;
+                    return DataTable.Hero[c.CardId].Rarity;
                 case GameCardType.Tower:
-                    return DataTable.Tower[c.id].Rarity;
+                    return DataTable.Tower[c.CardId].Rarity;
                 case GameCardType.Trap:
-                    return DataTable.Trap[c.id].Rarity;
+                    return DataTable.Trap[c.CardId].Rarity;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

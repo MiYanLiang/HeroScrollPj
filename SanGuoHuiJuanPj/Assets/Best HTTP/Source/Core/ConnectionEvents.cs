@@ -131,7 +131,7 @@ namespace BestHTTP.Core
 
                 if (connectionEvent.Source.LastProcessedUri == null)
                 {
-                    HTTPManager.Logger.Warning("ConnectionEventHelper", String.Format("Ignoring ConnectionEventInfo({0}) because its LastProcessedUri is null!", connectionEvent.ToString()));
+                    HTTPManager.Logger.Information("ConnectionEventHelper", String.Format("Ignoring ConnectionEventInfo({0}) because its LastProcessedUri is null!", connectionEvent.ToString()));
                     return;
                 }
 
