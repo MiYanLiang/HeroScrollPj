@@ -66,7 +66,7 @@ public class PointDesk : MonoBehaviour
     public void Init()
     {
         arouseWindow.Init();
-        pointDeskDeputyView.Init();
+        //pointDeskDeputyView.Init();
         cardUpgradeWindow.Init(() => OnCardSell.Invoke(SelectedCard.Card), () => OnMergeCard.Invoke(SelectedCard.Card));
         EnlistBtn.onClick.AddListener(EnlistSwitch);
         if(TagSelectionPointer)
