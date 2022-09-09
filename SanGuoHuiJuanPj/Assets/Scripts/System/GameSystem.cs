@@ -147,7 +147,7 @@ public class GameSystem : MonoBehaviour
 
     private void OnMainSceneLoaded()
     {
-        UIManager.instance.Init();
+        UIManager.instance.Init(true);
         if (DisplayStaminaUiChangeEffect)
         {
             UIManager.instance.DelayInvokeReturnStaminaUi();

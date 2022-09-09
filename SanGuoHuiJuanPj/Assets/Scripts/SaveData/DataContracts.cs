@@ -117,36 +117,44 @@ public class RCode
     public int id;      //兑换码id
     public bool isGot;  //是否领取过
 }
+
 [Skip]
-public class GameCard : IGameCard
+public class GameCard : IGameCard,IComparable<GameCard>
 {
     public static GameCard InstanceHero(int cardId, int level, int arouse, int deputy1Id,
         int deputy1Level,
         int deputy2Id, int deputy2Level,
         int deputy3Id, int deputy3Level,
         int deputy4Id, int deputy4Level,
-        int chips = 0) => Instance(cardId, GameCardType.Hero, level, arouse, deputy1Id, deputy1Level,
-        deputy2Id, deputy2Level,
-        deputy3Id, deputy3Level,
-        deputy4Id, deputy4Level,
-        chips);
+        int chips = 0) => Instance(cardId: cardId, type: GameCardType.Hero, level: level, 
+        arouse: arouse, 
+        deputy1Id: deputy1Id, deputy1Level: deputy1Level,
+        deputy2Id: deputy2Id, deputy2Level: deputy2Level,
+        deputy3Id: deputy3Id, deputy3Level: deputy3Level,
+        deputy4Id: deputy4Id, deputy4Level: deputy4Level,
+        chips: chips);
+
     public static GameCard InstanceTower(int cardId, int level) =>
         Instance(cardId, GameCardType.Tower, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
     public static GameCard InstanceTrap(int cardId, int level) =>
         Instance(cardId, GameCardType.Trap, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
     public static GameCard Instance(GameCardDto dto) =>
-        Instance(dto.CardId, (int)dto.Type, dto.Level, dto.Arouse, dto.Chips, 
-            dto.Deputy1Id, dto.Deputy1Level, 
-            dto.Deputy2Id, dto.Deputy2Level, 
-            dto.Deputy3Id, dto.Deputy3Level, 
-            dto.Deputy4Id, dto.Deputy4Level);
+        Instance(cardId: dto.CardId, type: (int)dto.Type, level: dto.Level, arouse: dto.Arouse, deputy1Id: dto.Deputy1Id,
+            deputy1Level: dto.Deputy1Level, deputy2Id: dto.Deputy2Id,
+            deputy2Level: dto.Deputy2Level, deputy3Id: dto.Deputy3Id,
+            deputy3Level: dto.Deputy3Level, deputy4Id: dto.Deputy4Id,
+            deputy4Level: dto.Deputy4Level, chips: dto.Chips);
+
     public static GameCard Instance(IGameCard card)
     {
-        return Instance(card.CardId, card.Type, card.Level, card.Arouse, card.Chips,
-            card.Deputy1Id, card.Deputy1Level,
-            card.Deputy2Id, card.Deputy2Level,
-            card.Deputy3Id, card.Deputy3Level,
-            card.Deputy4Id, card.Deputy4Level);
+        return Instance(cardId: card.CardId, type: card.Type, level: card.Level, 
+            arouse: card.Arouse, deputy1Id: card.Deputy1Id,
+            deputy1Level: card.Deputy1Level, deputy2Id: card.Deputy2Id,
+            deputy2Level: card.Deputy2Level, deputy3Id: card.Deputy3Id,
+            deputy3Level: card.Deputy3Level, deputy4Id: card.Deputy4Id,
+            deputy4Level: card.Deputy4Level, chips: card.Chips);
     }
 
     public static GameCard Instance(int cardId, GameCardType type, int level, int arouse, int deputy1Id,
@@ -154,11 +162,11 @@ public class GameCard : IGameCard
         int deputy2Id, int deputy2Level,
         int deputy3Id, int deputy3Level,
         int deputy4Id, int deputy4Level,
-        int chips = 0) => Instance(cardId, (int)type, level, arouse, deputy1Id, deputy1Level,
-        deputy2Id, deputy2Level,
-        deputy3Id, deputy3Level,
-        deputy4Id, deputy4Level,
-        chips);
+        int chips = 0) => Instance(cardId: cardId, type: (int)type, level: level, arouse: arouse, deputy1Id: deputy1Id, deputy1Level: deputy1Level,
+        deputy2Id: deputy2Id, deputy2Level: deputy2Level,
+        deputy3Id: deputy3Id, deputy3Level: deputy3Level,
+        deputy4Id: deputy4Id, deputy4Level: deputy4Level,
+        chips: chips);
 
     public static GameCard Instance(int cardId, int type, int level, int arouse, int deputy1Id, int deputy1Level,
         int deputy2Id, int deputy2Level,
@@ -166,18 +174,11 @@ public class GameCard : IGameCard
         int deputy4Id, int deputy4Level,
         int chips = 0)
     {
-        return new GameCard(cardId,type,level,chips,0,arouse,
-            deputy1Id,deputy1Level,
-            deputy2Id,deputy2Level,
-            deputy3Id,deputy3Level,
-            deputy4Id,deputy4Level)
-        {
-            CardId = cardId,
-            Chips = chips, 
-            Level = level, 
-            Type = type,
-            Arouse = arouse
-        };
+        return new GameCard(id: cardId, type: type, level: level, chips: chips, isFight: 0, arouse: arouse,
+            deputy1Id: deputy1Id, deputy1Level: deputy1Level,
+            deputy2Id: deputy2Id, deputy2Level: deputy2Level,
+            deputy3Id: deputy3Id, deputy3Level: deputy3Level,
+            deputy4Id: deputy4Id, deputy4Level: deputy4Level);
     }
 
     public int IsFight { get; set; }
@@ -185,7 +186,7 @@ public class GameCard : IGameCard
     public int Level { get; set; } = 1;
     public int Chips { get; set; }
     public int Type { get; set; }
-    public int Arouse { get; private set; }
+    public int Arouse { get; set; }
     public int Deputy1Id { get; set; }
     public int Deputy1Level { get; set; }
     public int Deputy2Id { get; set; }
@@ -194,8 +195,14 @@ public class GameCard : IGameCard
     public int Deputy3Level { get; set; }
     public int Deputy4Id { get; set; }
     public int Deputy4Level { get; set; }
+
     [JsonConstructor]
-    private GameCard(int id, int type, int level, int chips, int isFight, int arouse, int deputy1Id, int deputy1Level, int deputy2Id, int deputy2Level, int deputy3Id, int deputy3Level, int deputy4Id, int deputy4Level)
+    private GameCard()
+    {
+    }
+
+    private GameCard(int id, int type, int level, int isFight, int arouse, int deputy1Id, int deputy1Level, int deputy2Id,
+        int deputy2Level, int deputy3Id, int deputy3Level, int deputy4Id, int deputy4Level, int chips)
     {
         CardId = id;
         Level = level;
@@ -212,23 +219,66 @@ public class GameCard : IGameCard
         Deputy4Id = deputy4Id;
         Deputy4Level = deputy4Level;
     }
+    //用于卡牌排列顺序
+    public int CompareTo(GameCard other)
+    {
+        if (ReferenceEquals(objA: this, objB: other)) return 0;
+        if (ReferenceEquals(objA: null, objB: other)) return 1;
+        var isFightComparison = IsFight.CompareTo(value: other.IsFight);
+        if (isFightComparison != 0) return -isFightComparison;
+        var arouse = Arouse.CompareTo(value: other.Arouse);
+        if (arouse != 0) return -arouse;
+        var isEnlistable = (Level > 0).CompareTo(value: other.Level > 0);
+        if (isEnlistable != 0) return -isEnlistable;
+        var levelComparison = Level.CompareTo(value: other.Level);
+        if (levelComparison != 0) return -levelComparison;
+        var rareComparison = GetRare(c: this).CompareTo(value: GetRare(c: other));
+        if (rareComparison != 0) return -rareComparison;
+        var typeIndexComparison = Type.CompareTo(value: other.Type);
+        if (typeIndexComparison != 0) return typeIndexComparison;
+        var chipsComparison = Chips.CompareTo(value: other.Chips);
+        if (chipsComparison != 0) return -chipsComparison;
+        return CardId.CompareTo(value: other.CardId);
+    }
+    int GetRare(GameCard c)
+    {
+        switch ((GameCardType)c.Type)
+        {
+            case GameCardType.Hero:
+                return DataTable.Hero[key: c.CardId].Rarity;
+            case GameCardType.Tower:
+                return DataTable.Tower[key: c.CardId].Rarity;
+            case GameCardType.Trap:
+                return DataTable.Trap[key: c.CardId].Rarity;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 }
+
 /// <summary>
 /// 武将，士兵，塔等 信息存档数据类
 /// </summary>
 [Skip]
 public class HSTDataClass
 {
+    private List<GameCard> _heroSaveData;
+
     //武将
-    public List<GameCard> heroSaveData;
+    public List<GameCard> heroSaveData
+    {
+        get => _heroSaveData;
+        set => _heroSaveData = value;
+    }
+
     //士兵
-    public List<GameCard> soldierSaveData;
+    public List<GameCard> soldierSaveData { get; set; }
     //塔
-    public List<GameCard> towerSaveData;
+    public List<GameCard> towerSaveData { get; set; }
     //陷阱
-    public List<GameCard> trapSaveData;
+    public List<GameCard> trapSaveData { get; set; }
     //技能
-    public List<GameCard> spellSaveData;
+    public List<GameCard> spellSaveData { get; set; }
 }
 [Skip]
 public class UnlockWarCount

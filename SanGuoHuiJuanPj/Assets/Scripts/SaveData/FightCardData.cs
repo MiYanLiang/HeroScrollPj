@@ -18,7 +18,7 @@ public class FightCardData : IChessman
     public static FightCardData BaseCard(bool isPlayer, int hp,int level)
     {
         var baseCard =
-            new FightCardData(GameCard.Instance(0, (int)GameCardType.Base, level, 0, 0, 0, 0, 0, 0, 0, 0, 0)); //GetCard(17, true);
+            new FightCardData(GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: level, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0)); //GetCard(17, true);
         baseCard.isPlayerCard = isPlayer;
         baseCard.IsLock = true;
         baseCard.SetPos(17);

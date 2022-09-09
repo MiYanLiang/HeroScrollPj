@@ -367,12 +367,10 @@ public class PlayerDataForGame : MonoBehaviour
                 cards[set.Key].Join(set.Value, c => c.CardId, i => i, (c, _) => c)))
                 chip.IsFight = 1;
         }
-        if (!cards.TryGetValue(GameCardType.Hero, out hstData.heroSaveData))
-            hstData.heroSaveData = new List<GameCard>();
-        if (!cards.TryGetValue(GameCardType.Tower, out hstData.towerSaveData))
-            hstData.towerSaveData = new List<GameCard>();
-        if (!cards.TryGetValue(GameCardType.Trap, out hstData.trapSaveData))
-            hstData.trapSaveData = new List<GameCard>();
+
+        hstData.heroSaveData = cards.TryGetValue(GameCardType.Hero, out var heroCards) ? heroCards : new List<GameCard>();
+        hstData.towerSaveData = cards.TryGetValue(GameCardType.Tower, out var towerCards) ? towerCards : new List<GameCard>();
+        hstData.trapSaveData = cards.TryGetValue(GameCardType.Trap, out var trapCards) ? trapCards : new List<GameCard>();
     }
 
     public void SendTroopToWarApi()

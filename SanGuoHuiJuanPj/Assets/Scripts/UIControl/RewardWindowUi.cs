@@ -34,10 +34,10 @@ public class RewardWindowUi : MonoBehaviour
         foreach (var card in reward.Cards)
         {
             GetUiFromPool().SetCard(GameCard.Instance(
-                card.cardId, 
-                card.cardType, 
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                card.cardChips));
+                cardId: card.cardId, 
+                type: card.cardType, 
+                level: 0, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0, 
+                chips: card.cardChips));
         }
     }
 

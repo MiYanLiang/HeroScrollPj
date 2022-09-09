@@ -278,8 +278,4 @@ public class GameCardInfo
         Name = name;
         Intro = $"字 【{nickname}】\n {sign}";
     }
-
-    public int GetStrength(int level) => CombatStyle.DamageFormula(Strength, level);
-
-    public int GetHp(int level) => CombatStyle.HitPointFormula(HitPoint, level);
 }

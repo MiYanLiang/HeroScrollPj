@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using CorrelateLib;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 
 public class GameCardUi : GameCardUiBase
