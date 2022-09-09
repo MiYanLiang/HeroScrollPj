@@ -329,13 +329,13 @@ public class GuideStoryUi : MonoBehaviour
         warBoard.MaxCards = 20;
         warBoard.UpdateHeroEnlistText();
         foreach (var c in racks.Values.Where(c => c != null))
-            warBoard.CreateCardToRack(GameCard.Instance(c.CardId, c.CardType, c.Star, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+            warBoard.CreateCardToRack(GameCard.Instance(cardId: c.CardId, type: c.CardType, level: c.Star, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0));
 
         foreach (var chessman in players)
         {
             var c = chessman.Value;
             if (c == null) continue;
-            var card = new FightCardData(GameCard.Instance(c.CardId, c.CardType, c.Star, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+            var card = new FightCardData(GameCard.Instance(cardId: c.CardId, type: c.CardType, level: c.Star, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0))
             {
                 IsLock = true,
                 isPlayerCard = true

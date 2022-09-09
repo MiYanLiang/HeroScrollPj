@@ -17,7 +17,10 @@ public class Barrack : MonoBehaviour
     public Transform InventoryContent;
     private List<GameCardUi> _cardPool = new List<GameCardUi>();
 
-    public void Init(UnityAction<GameCard> onCardMerge,UnityAction<GameCard> onCardSell,UnityAction<GameCard> onCardEnlist)
+    public void Init(UnityAction<GameCard> onCardMerge,
+        UnityAction<GameCard> onCardSell,
+        UnityAction<GameCard> onCardEnlist,
+        UnityAction<GameCard> onArouseCall)
     {
         ChangeTroop.onClick.AddListener(() =>
         {
@@ -28,6 +31,7 @@ public class Barrack : MonoBehaviour
         PointDesk.OnMergeCard.AddListener(onCardMerge);
         PointDesk.OnCardSell.AddListener(onCardSell);
         PointDesk.OnEnlistCall.AddListener(onCardEnlist);//出战
+        PointDesk.OnArouseCall.AddListener(onArouseCall);
     }
     private void RefreshTroopName(int troop) => TroopName.text = $"{DataTable.Force[troop].Short}";
 

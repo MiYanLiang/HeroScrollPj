@@ -83,8 +83,8 @@ public class TestServerSimpleApi : MonoBehaviour
         var f = selectedFormation;
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new ChallengeSet.Card(c.Card));
         challengerFormation.Add(17,
-            new ChallengeSet.Card(GameCard.Instance(0, (int)GameCardType.Base, Versus.CityLevel, arouse: 0, deputy1Id:
-                0, 0, 0, 0, 0, 0, 0, 0)));
+            new ChallengeSet.Card(GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: Versus.CityLevel, arouse: 0, deputy1Id:
+                0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0)));
         var set = new ChallengeSet
         {
             CharacterId = 123,
