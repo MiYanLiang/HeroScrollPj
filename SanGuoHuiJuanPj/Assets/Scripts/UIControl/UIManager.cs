@@ -130,7 +130,7 @@ public class UIManager : MonoBehaviour
         rewardManager = gameObject.AddComponent<RewardManager>();
     }
 
-    public void Init()
+    public void Init(bool initBaYe)
     {
         if (IsInit) return;
         AudioController1.instance.FadeEndMusic();
@@ -144,13 +144,13 @@ public class UIManager : MonoBehaviour
             PlayerDataForGame.instance.BaYeManager = PlayerDataForGame.instance.gameObject.AddComponent<BaYeManager>();
         }
 
-        PlayerDataForGame.instance.BaYeManager.InitBaYe();
+        if(initBaYe) PlayerDataForGame.instance.BaYeManager.InitBaYe();
 
         taoYuan.Init();
 
         InitializationPlayerInfo();
         expedition.Init();
-        Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist);
+        Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist, OnArouseAction);
         Versus.Init(this);
         InitChickenOpenTs();
         //chickenWindow.Init();
@@ -164,6 +164,12 @@ public class UIManager : MonoBehaviour
         EventUi.Init();
         BaYeStoryProgressPanel.Hide();
         IsInit = true;
+    }
+
+    private void OnArouseAction(GameCard card)
+    {
+        card.Arouse++;
+        Barrack.RefreshCardList();
     }
 
     public void UpdateMainSceneUi()

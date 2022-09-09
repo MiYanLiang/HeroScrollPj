@@ -62,7 +62,7 @@ public class GameCardUiBase : MonoBehaviour
         Set();
         SetName(CardInfo);
         SetLevel(Card.Level);
-        ShowFrame(false);
+        SetFrame(PrefabManager.Instance.GetFrame(card.Arouse));
     }
     
     public void Display(bool isShow)
@@ -91,7 +91,17 @@ public class GameCardUiBase : MonoBehaviour
     }
 
     public void SetSize(Vector3 size) => transform.localScale = size;
-    public void ShowFrame(bool on) => Frame.gameObject.SetActive(on);
+    public void SetFrame(Sprite sprite)
+    {
+        if (sprite == null)
+        {
+            Frame.gameObject.SetActive(false);
+            return;
+        }
+        Frame.sprite = sprite;
+        Frame.gameObject.SetActive(true);
+    }
+
     public void SetName(GameCardInfo info)
     {
         NameTextSizeAlignment(Name, info.Name);

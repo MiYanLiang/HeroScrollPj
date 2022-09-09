@@ -14294,7 +14294,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u670D\u52A1\u5668\u5C1D\u8BD5\u94FE\u63A5\u5931\u8D25\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458\uFF01"
+  m_Text: "\u8BF7\u6C42\u5931\u8D25\uFF0C\u8BF7\u786E\u4FDD\u7F51\u7EDC\u7A33\u5B9A\u3002\u91CD\u8BD5\u4E2D..."
 --- !u!222 &924970853213344145
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14357,7 +14357,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &924970853213344149
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16370,6 +16370,10 @@ MonoBehaviour:
     type: 3}
   warGameCardUi: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
     type: 3}
+  ArouseSprites:
+  - {fileID: 21300000, guid: da386eb2e7ffd5e40b4151d4d5e0d07e, type: 3}
+  - {fileID: 21300000, guid: 5864c5e2c9f51194b8f64c69d7734023, type: 3}
+  - {fileID: 21300000, guid: 8f60b5cdf0bc7d24baa1e27bcad0c779, type: 3}
 --- !u!1 &2216348060977985285
 GameObject:
   m_ObjectHideFlags: 0
@@ -21786,7 +21790,6 @@ MonoBehaviour:
   GameModeTable: {fileID: 4900000, guid: 6542e5b3540585746a93d396f2f26fc5, type: 3}
   GuideTable: {fileID: 4900000, guid: 938d9842f8ebbb24e89ffd019278dcb4, type: 3}
   TipsTable: {fileID: 4900000, guid: fc503ce46fba40c4fabc2c82a2983eaa, type: 3}
-  RCodeTable: {fileID: 4900000, guid: 43415751529165640be625efba298618, type: 3}
   ChickenTable: {fileID: 4900000, guid: f3fb523de6aacca42b6945bb9f6ee240, type: 3}
   StaticArrangementTable: {fileID: 4900000, guid: 8346230bab0e0214da7d65281b0006d0,
     type: 3}
@@ -21812,6 +21815,7 @@ MonoBehaviour:
   BaYeCityStoryTable: {fileID: 4900000, guid: 9e8ba866ed993a0438ce3f81244a70e5, type: 3}
   BaYeCityOptionTable: {fileID: 4900000, guid: adbbd05ee1662f24eb0f9cce6a9876f6, type: 3}
   BaYeCityResultTable: {fileID: 4900000, guid: 1866bc3c9263fcc4aa1ea7849285ddc6, type: 3}
+  ArouseConfigTable: {fileID: 4900000, guid: 35ba3f9343530884dbec637d2458590d, type: 3}
 --- !u!1 &7010308187707866901
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,7 +14,7 @@ public class GameSystemMock : GameSystem
     IEnumerator MockInit()
     {
         yield return new WaitUntil(() => IsInit);
-        if(UIManager.instance!=null) UIManager.instance.Init();
+        if(UIManager.instance!=null) UIManager.instance.Init(false);
         //EffectsPoolingControl.instance.Init();
         StartEvent.Invoke();
     }
