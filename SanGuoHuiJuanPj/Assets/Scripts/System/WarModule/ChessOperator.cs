@@ -20,6 +20,7 @@ namespace Assets.System.WarModule
 
         GameCardType CardType { get; }
         int CardId { get; }
+        int Arouse { get; }
         int Level { get; }
         bool IsChallenger { get; }
         bool IsMeleeHero { get; }
@@ -35,6 +36,7 @@ namespace Assets.System.WarModule
         public bool IsAlive => !Chessboard.GetStatus(this).IsDeath;
         public abstract GameCardType CardType { get; }
         public abstract int CardId { get; }
+        public abstract int Arouse { get; }
         public abstract int Level { get; }
         public abstract bool IsChallenger { get; }
         public bool IsMeleeHero => Style!=null && Style.ArmedType >= 0 && Style.Type == CombatStyle.Types.Melee;       
@@ -384,6 +386,7 @@ namespace Assets.System.WarModule
         public override int CardId => chessman.CardId;
         public override bool IsChallenger => chessman.IsPlayer;
         public override int Level => chessman.Level;
+        public override int Arouse => chessman.Arouse;
         protected override int StateDamage() => Style.Strength;
         protected override int StateIntelligent() => Style.Intelligent;
         protected override int StateSpeed() => Style.Speed;

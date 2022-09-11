@@ -624,5 +624,52 @@ namespace Assets.System.WarModule
             return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint,
                 speed, force, intelligent, gameSetRecover, rare, magicResist, armor, dodge);
         }
+
+        public IEnumerable<IOperatorInfo> GetOperators() =>
+            ops.Select(o => new OperatorInfo(o.Value.CardId, (int)o.Value.CardType, 
+                o.Value.Level, o.Value.Arouse,
+                o.Key, GetStatus(o.Value).Pos, o.Value.IsChallenger));
+
+        private class OperatorInfo : IOperatorInfo
+        {
+            public int InstanceId { get; }
+            public int Pos { get; }
+            public bool IsChallenger { get; }
+            public IGameCard Card { get; }
+
+            public OperatorInfo(int cardId, int cardType, int level, int arouse, int instanceId, int pos, bool isChallenger)
+            {
+                Card = new GameCard(cardId, cardType, level, arouse);
+                InstanceId = instanceId;
+                Pos = pos;
+                IsChallenger = isChallenger;
+            }
+
+            private class GameCard : IGameCard
+            {
+                public int CardId { get; }
+                public int Level { get; set; }
+                public int Chips { get; set; }
+                public int Type { get; }
+                public int Arouse { get; }
+                public int Deputy1Id { get; } = -1;
+                public int Deputy1Level { get; }
+                public int Deputy2Id { get; } = -1;
+                public int Deputy2Level { get; }
+                public int Deputy3Id { get; } = -1;
+                public int Deputy3Level { get; }
+                public int Deputy4Id { get; } = -1;
+                public int Deputy4Level { get; }
+
+                public GameCard(int cardId, int type, int level, int arouse)
+                {
+                    CardId = cardId;
+                    Level = level;
+                    Type = type;
+                    Arouse = arouse;
+                    Chips = 0;
+                }
+            }
+        }
     }
 }

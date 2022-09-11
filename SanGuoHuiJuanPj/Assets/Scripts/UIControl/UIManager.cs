@@ -150,7 +150,12 @@ public class UIManager : MonoBehaviour
 
         InitializationPlayerInfo();
         expedition.Init();
-        Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist, OnArouseAction, OnDeputySubmitAction, OnDeputyRecallAction);
+        Barrack.Init(MergeCard,
+            OnClickForSellCard,
+            OnCardEnlist,
+            OnArouseAction,
+            OnDeputySubmitAction,
+            OnDeputyRecallAction);
         Versus.Init(this);
         InitChickenOpenTs();
         //chickenWindow.Init();
@@ -662,7 +667,7 @@ public class UIManager : MonoBehaviour
                 AudioController0.instance.ChangeAudioClip(16);
                 AudioController0.instance.PlayAudioSource(0);
                 //UpdateLevelCardUi();
-                UIManager.instance.ShowOrHideGuideObj(2, false);
+                ShowOrHideGuideObj(2, false);
             }, msg =>
             {
                 var message = "失败。";

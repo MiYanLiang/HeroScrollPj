@@ -144,14 +144,6 @@ public static class GameSystemExtension
     }
 
     private const int HeroType = (int)GameCardType.Hero;
-    public static int[] GetDeputyIds(this IEnumerable<IGameCard> list)
-    {
-        var assignedList = list
-            .Where(h => h.Type == HeroType && h.Arouse > 1)
-            .SelectMany(h => new[] { h.Deputy1Id, h.Deputy2Id, h.Deputy3Id, h.Deputy4Id })
-            .Distinct().Where(id => id >= 0).ToArray();
-        return assignedList;
-    }
     public static void UnlockDeputies(this IEnumerable<GameCard> list,int heroId)
     {
         var deputy = list.FirstOrDefault(c => c.Type == HeroType && c.CardId == heroId);

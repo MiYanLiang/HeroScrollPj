@@ -16371,9 +16371,11 @@ MonoBehaviour:
   warGameCardUi: {fileID: 8622520267163155556, guid: e5dd9f6091b711f4ea534128f9df6cfb,
     type: 3}
   ArouseSprites:
-  - {fileID: 21300000, guid: da386eb2e7ffd5e40b4151d4d5e0d07e, type: 3}
-  - {fileID: 21300000, guid: 5864c5e2c9f51194b8f64c69d7734023, type: 3}
   - {fileID: 21300000, guid: 8f60b5cdf0bc7d24baa1e27bcad0c779, type: 3}
+  - {fileID: 21300000, guid: 5864c5e2c9f51194b8f64c69d7734023, type: 3}
+  - {fileID: 21300000, guid: da386eb2e7ffd5e40b4151d4d5e0d07e, type: 3}
+  - {fileID: 21300000, guid: cd566f6d6f7e7ca419808bd1b5833e2a, type: 3}
+  - {fileID: 21300000, guid: 73e6361f9f0fbf646b10d78ad80074c6, type: 3}
 --- !u!1 &2216348060977985285
 GameObject:
   m_ObjectHideFlags: 0

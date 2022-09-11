@@ -36,7 +36,7 @@ public class FightCardData : IChessman
     //等级
     public int level;
     //觉醒
-    public int Arouse;
+    public int Arouse { get; }
     //伤害
     public int Damage { get; }
     //战斗状态

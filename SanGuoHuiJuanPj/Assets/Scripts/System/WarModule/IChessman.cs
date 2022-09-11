@@ -17,6 +17,7 @@ namespace Assets.System.WarModule
         int HitPoint { get; }
         int MaxHitPoint { get; }
         int Level { get; }
+        int Arouse { get; }
         int Speed { get; }
         int Troop { get; }
         ChessStatus Status { get; }
