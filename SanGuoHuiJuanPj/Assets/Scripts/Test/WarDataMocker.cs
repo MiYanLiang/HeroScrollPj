@@ -52,7 +52,7 @@ public class WarDataMocker : MonoBehaviour
         if (isCustomCard)
         {
             PlayerDataForGame.instance.hstData.heroSaveData = heroes
-                .Select(h => GameCard.InstanceHero(h.CardId, h.Level, 0, 0, 0, 0, 0, 0, 0, 0, 0)).ToList();
+                .Select(h => GameCard.InstanceHero(h.CardId, h.Level)).ToList();
             PlayerDataForGame.instance.hstData.towerSaveData =
                 towers.Select(t => GameCard.InstanceTower(t.CardId, t.Level)).ToList();
             PlayerDataForGame.instance.hstData.trapSaveData = 

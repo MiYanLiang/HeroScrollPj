@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
@@ -27,17 +28,16 @@ public class PointDesk : MonoBehaviour
     [SerializeField] Text rougeRatio;
 
     [SerializeField]Text Info;
-    [SerializeField]Button EnlistBtn;
     [SerializeField]Text CardCapability;
     [SerializeField]Text CardCapabilityTxt;
 
-    [SerializeField]Text EnlistBtnLabel;
     [SerializeField]GameObject UpLevelEffect; //升星特效 
     [SerializeField] private CardUpgradeWindow cardUpgradeWindow;
     [SerializeField] private ArouseWindow arouseWindow;
     [SerializeField] private Button arouseButton;
     [SerializeField] private Button upgradeButton;
     [SerializeField] private PointDeskDeputyView pointDeskDeputyView;
+    [SerializeField] private DeputySelectionView deputySelectionView;
 
     [Header("为武将把威力->改写成武力的文字控件")][SerializeField]Text WuLiText;
     [SerializeField]TextImageUi PowerUi;
@@ -62,16 +62,100 @@ public class PointDesk : MonoBehaviour
     public CardEvent OnCardSell = new CardEvent();
     public CardEvent OnEnlistCall = new CardEvent();
     public CardEvent OnArouseCall = new CardEvent();
+    public CardEvent OnCancelDeputy = new CardEvent();
+    public IndexCardEvent OnDeputySubmit = new IndexCardEvent();
 
     public void Init()
     {
         arouseWindow.Init();
-        //pointDeskDeputyView.Init();
+        pointDeskDeputyView.Init(OnClickDeputyAction, SelectedCardEnlistSwitch, c => OnCancelDeputy.Invoke(c));
+        deputySelectionView.Init();
         cardUpgradeWindow.Init(() => OnCardSell.Invoke(SelectedCard.Card), () => OnMergeCard.Invoke(SelectedCard.Card));
-        EnlistBtn.onClick.AddListener(EnlistSwitch);
         if(TagSelectionPointer)
             TagSelectionPointer.SetActive(false);
     }
+
+    private void OnClickDeputyAction(int index, GameCard deputyCard)
+    {
+        var debuties = GetAvailableDeputy(SelectedCard.Card);
+        var selectedIndex = index;
+        deputySelectionView.Set(debuties, deputy =>
+        {
+            var card = SelectedCard.Card;
+            PlayerDataForGame.instance.hstData.heroSaveData.UnlockDeputies(deputy.CardId);
+            switch (selectedIndex)
+            {
+                case 0 :
+                {
+                    card.Deputy1Id = deputy.CardId;
+                    card.Deputy1Level = deputy.Level;
+                    break;
+                }
+                case 1 :
+                {
+                    card.Deputy2Id = deputy.CardId;
+                    card.Deputy2Level = deputy.Level;
+                    break;
+                }
+                case 2 :
+                {
+                    card.Deputy3Id = deputy.CardId;
+                    card.Deputy3Level = deputy.Level;
+                    break;
+                }
+                case 3 :
+                {
+                    card.Deputy4Id = deputy.CardId;
+                    card.Deputy4Level = deputy.Level;
+                    break;
+                }
+            }
+
+            OnDeputySubmit.Invoke(card, index, deputy.CardId);
+        } , () =>
+        {
+            var card = SelectedCard.Card;
+            switch (selectedIndex)
+            {
+                case 0:
+                {
+                    card.Deputy1Id = -1;
+                    card.Deputy1Level = 0;
+                    break;
+                }
+                case 1:
+                {
+                    card.Deputy2Id = -1;
+                    card.Deputy2Level = 0;
+                    break;
+                }
+                case 2:
+                {
+                    card.Deputy3Id = -1;
+                    card.Deputy3Level = 0;
+                    break;
+                }
+                case 3:
+                {
+                    card.Deputy4Id = -1;
+                    card.Deputy4Level = 0;
+                    break;
+                }
+            }
+            OnDeputySubmit.Invoke(card, index, -1);
+        }, deputyCard);
+    }
+
+    private GameCard[] GetAvailableDeputy(GameCard general)
+    {
+        var heroes = PlayerDataForGame.instance.hstData.heroSaveData
+            .Where(c => c.GetForceId() == general.GetForceId())
+            .ToArray();
+        var deputies = heroes.GetDeputyIds().ToList();
+        deputies.Add(general.CardId);//不包括主将
+        return heroes.Where(c=>!deputies.Contains(c.CardId)).ToArray();
+    }
+
 
     private void UpdateAttributes()
     {
@@ -116,12 +200,15 @@ public class PointDesk : MonoBehaviour
         var isCardEnlistAble = card.IsEnlistAble();
         CardCapability.gameObject.SetActive(isCardEnlistAble);
         CardCapabilityTxt.text = isCardEnlistAble ? card.Power().ToString() : string.Empty;
+        EnlistText.text =
+            $"{PlayerDataForGame.instance.TotalCardsEnlisted}/{DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].CardLimit}";
+
         UpdateUpgradeWindow(card);
-        UpdateEnlist();
         UpdateAttributes();
         UpdateInfoTags(card);
         TagSelectionPointer.SetActive(false);
         arouseWindow.Display(false);
+        pointDeskDeputyView.UpdateCardUi(card);
     }
 
     private void UpdateInfoTags(GameCard gameCard)
@@ -316,7 +403,7 @@ public class PointDesk : MonoBehaviour
     /// <summary> 
     /// 出战或回城设置方法 
     /// </summary> 
-    private void EnlistSwitch()
+    private void SelectedCardEnlistSwitch()
     {
         SelectedCard.Card.IsFight++;
         if (SelectedCard.Card.IsFight > 1)
@@ -324,13 +411,6 @@ public class PointDesk : MonoBehaviour
         OnEnlistCall.Invoke(SelectedCard.Card);
     }
 
-    private void UpdateEnlist()
-    {
-        EnlistBtnLabel.text = DataTable.GetStringText(SelectedCard.Card.IsFight > 0 ? 30 : 31);
-        EnlistBtn.gameObject.SetActive(SelectedCard.Card.Level > 0);
-        EnlistText.text =
-            $"{PlayerDataForGame.instance.TotalCardsEnlisted}/{DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].CardLimit}";
-    }
-
     public class CardEvent : UnityEvent<GameCard> { }
+    public class IndexCardEvent : UnityEvent<GameCard,int,int> { }
 }

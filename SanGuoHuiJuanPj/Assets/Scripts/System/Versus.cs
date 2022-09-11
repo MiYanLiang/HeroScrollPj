@@ -448,7 +448,7 @@ public class Versus : MonoBehaviour
     {
         WarBoard.InitNewGame(true, true);
         var card = new FightCardData(
-            GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: CityLevel, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0));
+            GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: CityLevel));
         card.SetPos(17);
         WarBoard.SetPlayerBase(card);
         WarBoard.Chessboard.UpdateWarSpeed();
@@ -520,13 +520,13 @@ public class Versus : MonoBehaviour
         public int Chips { get; set; }
         public int Type { get; set; }
         public int Arouse { get; set; }
-        public int Deputy1Id { get; set; }
+        public int Deputy1Id { get; set; } = -1;
         public int Deputy1Level { get; set; }
-        public int Deputy2Id { get; set; }
+        public int Deputy2Id { get; set; } = -1;
         public int Deputy2Level { get; set;  }
-        public int Deputy3Id { get; set; }
+        public int Deputy3Id { get; set; } = -1;
         public int Deputy3Level { get; set; }
-        public int Deputy4Id { get; set; }
+        public int Deputy4Id { get; set; } = -1;
         public int Deputy4Level { get; set; }
 
         public Card()

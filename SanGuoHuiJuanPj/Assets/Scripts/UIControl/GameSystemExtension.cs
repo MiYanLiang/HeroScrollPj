@@ -53,7 +53,7 @@ public static class GameSystemExtension
     {
         var card = cards.SingleOrDefault(c => c.CardId == cardId);
         if (card != null) return card;
-        card = GameCard.Instance(cardId, cardType, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        card = GameCard.Instance(cardId, cardType, level);
         cards.Add(card);
         return card;
     }
@@ -143,6 +143,28 @@ public static class GameSystemExtension
         return golds * chips;
     }
 
+    private const int HeroType = (int)GameCardType.Hero;
+    public static int[] GetDeputyIds(this IEnumerable<IGameCard> list)
+    {
+        var assignedList = list
+            .Where(h => h.Type == HeroType && h.Arouse > 1)
+            .SelectMany(h => new[] { h.Deputy1Id, h.Deputy2Id, h.Deputy3Id, h.Deputy4Id })
+            .Distinct().Where(id => id >= 0).ToArray();
+        return assignedList;
+    }
+    public static void UnlockDeputies(this IEnumerable<GameCard> list,int heroId)
+    {
+        var deputy = list.FirstOrDefault(c => c.Type == HeroType && c.CardId == heroId);
+        if (deputy == null) return;
+        deputy.Deputy1Id = -1;
+        deputy.Deputy1Level = 0;
+        deputy.Deputy2Id = -1;
+        deputy.Deputy2Level = 0;
+        deputy.Deputy3Id = -1;
+        deputy.Deputy3Level = 0;
+        deputy.Deputy4Id = -1;
+        deputy.Deputy4Level = 0;
+    }
 }
 
 public enum GuideProps

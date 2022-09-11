@@ -121,11 +121,12 @@ public class RCode
 [Skip]
 public class GameCard : IGameCard,IComparable<GameCard>
 {
-    public static GameCard InstanceHero(int cardId, int level, int arouse, int deputy1Id,
-        int deputy1Level,
-        int deputy2Id, int deputy2Level,
-        int deputy3Id, int deputy3Level,
-        int deputy4Id, int deputy4Level,
+    public static GameCard InstanceHero(int cardId, int level, 
+        int arouse = 0, 
+        int deputy1Id = -1, int deputy1Level = -1,
+        int deputy2Id = -1, int deputy2Level = -1,
+        int deputy3Id = -1, int deputy3Level = -1,
+        int deputy4Id = -1, int deputy4Level = -1,
         int chips = 0) => Instance(cardId: cardId, type: GameCardType.Hero, level: level, 
         arouse: arouse, 
         deputy1Id: deputy1Id, deputy1Level: deputy1Level,
@@ -135,17 +136,18 @@ public class GameCard : IGameCard,IComparable<GameCard>
         chips: chips);
 
     public static GameCard InstanceTower(int cardId, int level) =>
-        Instance(cardId, GameCardType.Tower, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        Instance(cardId, GameCardType.Tower, level);
 
     public static GameCard InstanceTrap(int cardId, int level) =>
-        Instance(cardId, GameCardType.Trap, level, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        Instance(cardId, GameCardType.Trap, level);
 
     public static GameCard Instance(GameCardDto dto) =>
-        Instance(cardId: dto.CardId, type: (int)dto.Type, level: dto.Level, arouse: dto.Arouse, deputy1Id: dto.Deputy1Id,
-            deputy1Level: dto.Deputy1Level, deputy2Id: dto.Deputy2Id,
-            deputy2Level: dto.Deputy2Level, deputy3Id: dto.Deputy3Id,
-            deputy3Level: dto.Deputy3Level, deputy4Id: dto.Deputy4Id,
-            deputy4Level: dto.Deputy4Level, chips: dto.Chips);
+        Instance(cardId: dto.CardId, type: (int)dto.Type, level: dto.Level, arouse: dto.Arouse, 
+            deputy1Id: dto.Deputy1Id, deputy1Level: dto.Deputy1Level, 
+            deputy2Id: dto.Deputy2Id, deputy2Level: dto.Deputy2Level, 
+            deputy3Id: dto.Deputy3Id, deputy3Level: dto.Deputy3Level, 
+            deputy4Id: dto.Deputy4Id, deputy4Level: dto.Deputy4Level, 
+            chips: dto.Chips);
 
     public static GameCard Instance(IGameCard card)
     {
@@ -157,21 +159,23 @@ public class GameCard : IGameCard,IComparable<GameCard>
             deputy4Level: card.Deputy4Level, chips: card.Chips);
     }
 
-    public static GameCard Instance(int cardId, GameCardType type, int level, int arouse, int deputy1Id,
-        int deputy1Level,
-        int deputy2Id, int deputy2Level,
-        int deputy3Id, int deputy3Level,
-        int deputy4Id, int deputy4Level,
+    public static GameCard Instance(int cardId, GameCardType type, int level, 
+        int arouse = 0, 
+        int deputy1Id = -1, int deputy1Level = -1,
+        int deputy2Id = -1, int deputy2Level = -1,
+        int deputy3Id = -1, int deputy3Level = -1,
+        int deputy4Id = -1, int deputy4Level = -1,
         int chips = 0) => Instance(cardId: cardId, type: (int)type, level: level, arouse: arouse, deputy1Id: deputy1Id, deputy1Level: deputy1Level,
         deputy2Id: deputy2Id, deputy2Level: deputy2Level,
         deputy3Id: deputy3Id, deputy3Level: deputy3Level,
         deputy4Id: deputy4Id, deputy4Level: deputy4Level,
         chips: chips);
 
-    public static GameCard Instance(int cardId, int type, int level, int arouse, int deputy1Id, int deputy1Level,
-        int deputy2Id, int deputy2Level,
-        int deputy3Id, int deputy3Level,
-        int deputy4Id, int deputy4Level,
+    public static GameCard Instance(int cardId, int type, int level, int arouse = 0, 
+        int deputy1Id = -1, int deputy1Level = -1,
+        int deputy2Id = -1, int deputy2Level = -1,
+        int deputy3Id = -1, int deputy3Level = -1,
+        int deputy4Id = -1, int deputy4Level = -1,
         int chips = 0)
     {
         return new GameCard(id: cardId, type: type, level: level, chips: chips, isFight: 0, arouse: arouse,
@@ -187,13 +191,14 @@ public class GameCard : IGameCard,IComparable<GameCard>
     public int Chips { get; set; }
     public int Type { get; set; }
     public int Arouse { get; set; }
-    public int Deputy1Id { get; set; }
+
+    public int Deputy1Id { get; set; } = -1;
     public int Deputy1Level { get; set; }
-    public int Deputy2Id { get; set; }
+    public int Deputy2Id { get; set; } = -1;
     public int Deputy2Level { get; set; }
-    public int Deputy3Id { get; set; }
+    public int Deputy3Id { get; set; } = -1;
     public int Deputy3Level { get; set; }
-    public int Deputy4Id { get; set; }
+    public int Deputy4Id { get; set; } = -1;
     public int Deputy4Level { get; set; }
 
     [JsonConstructor]
@@ -253,6 +258,23 @@ public class GameCard : IGameCard,IComparable<GameCard>
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    public void Clone(GameCard c)
+    {
+        CardId = c.CardId;
+        Chips = c.Level;
+        IsFight = c.IsFight;
+        Type = c.Type;
+        Arouse = c.Arouse;
+        Deputy1Id = c.Deputy1Id;
+        Deputy1Level = c.Deputy1Level;
+        Deputy2Id = c.Deputy2Id;
+        Deputy2Level = c.Deputy2Level;
+        Deputy3Id = c.Deputy3Id;
+        Deputy3Level = c.Deputy3Level;
+        Deputy4Id = c.Deputy4Id;
+        Deputy4Level = c.Deputy4Level;
     }
 }
 

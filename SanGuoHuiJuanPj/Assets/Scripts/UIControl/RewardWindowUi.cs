@@ -36,7 +36,11 @@ public class RewardWindowUi : MonoBehaviour
             GetUiFromPool().SetCard(GameCard.Instance(
                 cardId: card.cardId, 
                 type: card.cardType, 
-                level: 0, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0, 
+                level: 0, arouse: 0, 
+                deputy1Id: -1, deputy1Level: -1, 
+                deputy2Id: -1, deputy2Level: -1, 
+                deputy3Id: -1, deputy3Level: -1, 
+                deputy4Id: -1, deputy4Level: -1, 
                 chips: card.cardChips));
         }
     }

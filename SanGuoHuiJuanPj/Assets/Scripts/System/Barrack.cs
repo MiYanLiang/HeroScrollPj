@@ -20,19 +20,24 @@ public class Barrack : MonoBehaviour
     public void Init(UnityAction<GameCard> onCardMerge,
         UnityAction<GameCard> onCardSell,
         UnityAction<GameCard> onCardEnlist,
-        UnityAction<GameCard> onArouseCall)
+        UnityAction<GameCard> onArouseCall,
+        UnityAction<GameCard,int,int> onDeputySubmit,
+        UnityAction<GameCard> onCancelDeputy)
     {
         ChangeTroop.onClick.AddListener(() =>
         {
             RefreshCardList(SelectedForce + 1);
-            AudioController0.instance.RandomPlayGuZhengAudio();//随机播放古筝声音
+            AudioController0.instance.RandomPlayGuZhengAudio(); //随机播放古筝声音
         });
         PointDesk.Init();
         PointDesk.OnMergeCard.AddListener(onCardMerge);
         PointDesk.OnCardSell.AddListener(onCardSell);
-        PointDesk.OnEnlistCall.AddListener(onCardEnlist);//出战
+        PointDesk.OnEnlistCall.AddListener(onCardEnlist); //出战
         PointDesk.OnArouseCall.AddListener(onArouseCall);
+        PointDesk.OnDeputySubmit.AddListener(onDeputySubmit);
+        PointDesk.OnCancelDeputy.AddListener(onCancelDeputy);
     }
+
     private void RefreshTroopName(int troop) => TroopName.text = $"{DataTable.Force[troop].Short}";
 
     /// <summary> 
@@ -76,23 +81,27 @@ public class Barrack : MonoBehaviour
         _cardPool.ForEach(c => c.Selected(c.Card.CardId == card.CardId && c.Card.Type == card.Type));
     private void ResetCardPool()
     {
+        const int heroType = (int)GameCardType.Hero;
         _cardPool.ForEach(c => c.Off());
-        var cards = PlayerDataForGame.instance.hstData.heroSaveData
-            .Concat(PlayerDataForGame.instance.hstData.towerSaveData)
+        var heroList = PlayerDataForGame.instance.hstData.heroSaveData;
+        var cards = heroList.Concat(PlayerDataForGame.instance.hstData.towerSaveData)
             .Concat(PlayerDataForGame.instance.hstData.trapSaveData).Where(c => c.IsOwning())
             .Select(c => new {Card = c, Info = c.GetInfo()}).Where(c => c.Info.ForceId == SelectedForce)
             .Select(c => c.Card)
             .ToList();
         cards.Sort();
-        cards.ForEach(InstanceGameCardUi);
+        var deputies = cards.GetDeputyIds();
+        cards.ForEach(c => InstanceGameCardUi(c, c.Type == heroType && deputies.Contains(c.CardId)));
     }
 
-    private void InstanceGameCardUi(GameCard card)
+    private void InstanceGameCardUi(GameCard card, bool isDeputy)
     {
         var ui = GetCardFromPool();
         ui.Init(card);
         ui.Set(GameCardUi.CardModes.Desk);
-        var state = card.Level == 0 ? GameCardCityUiOperation.States.Disable :
+        var state = 
+            card.Level == 0 ? GameCardCityUiOperation.States.Disable :
+            isDeputy ? GameCardCityUiOperation.States.Deputy :
             card.IsFight > 0 ? GameCardCityUiOperation.States.Enlisted : GameCardCityUiOperation.States.None;
         ui.CityOperation.SetState(state);
         //列表中取消碎片数量显示

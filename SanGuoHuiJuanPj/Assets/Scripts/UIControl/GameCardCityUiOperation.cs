@@ -13,6 +13,7 @@ public class GameCardCityUiOperation : MonoBehaviour
     public Image Enlisted;
     public Image Disabled;
     public Image Selected;
+    public Image Deputy;
     public UnityEvent OnclickAction;
     public bool IsSelected { get; private set; }
     private Dictionary<States,GameObject> StateObjs
@@ -23,8 +24,9 @@ public class GameCardCityUiOperation : MonoBehaviour
             {
                 _stateObjs = new Dictionary<States, GameObject>
                 {
-                    {States.Enlisted,Enlisted.gameObject},
-                    {States.Disable,Disabled.gameObject},
+                    { States.Enlisted, Enlisted.gameObject },
+                    { States.Disable, Disabled.gameObject },
+                    { States.Deputy, Deputy.gameObject }
                 };
             }
             return _stateObjs;
@@ -39,6 +41,7 @@ public class GameCardCityUiOperation : MonoBehaviour
     {
         None,
         Enlisted,
+        Deputy,
         Disable
     }
 

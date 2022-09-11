@@ -31,7 +31,7 @@ public class JiBanWindowUi : MonoBehaviour
             .Join(cards, g => (g.CardId, g.Type), c => (c.CardId, c.CardType), (g, _) => g).ToArray();
         foreach (var element in cards)
         {
-            var card = GameCard.Instance(cardId: element.CardId, type: element.CardType, level: 0, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0);
+            var card = GameCard.Instance(cardId: element.CardId, type: element.CardType, level: 0);
             var ui = Instantiate(GameCardUiPrefab,content);
             ui.Init(card);
             ui.Set(GameCardUi.CardModes.Desk);

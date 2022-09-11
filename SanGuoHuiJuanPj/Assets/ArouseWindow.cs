@@ -32,7 +32,7 @@ public class ArouseWindow : MonoBehaviour
         arousesCard.Arouse++;
         InitCardUi(arousesCard, toUi);
 
-        var costCard = GameCard.InstanceHero(consume.CardId, consume.CardLevel, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        var costCard = GameCard.InstanceHero(consume.CardId, consume.CardLevel);
         InitCardUi(costCard, costUi);
         var ownCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(h => h.CardId == consume.CardId);
         var hasCard = (ownCard?.Level ?? -1) >= consume.CardLevel;

@@ -514,12 +514,24 @@ namespace Assets.System.WarModule
                         var hero = heroTable[chessman.CardId];
                         var m = militaryTable[hero.MilitaryUnitTableId];
                         strength = hero.GetArousedStrength(chessman.Arouse) +
-                                   heroTable.GetDeputyStrength(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputyStrength(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         force = hero.ForceTableId;
                         speed = hero.GetArousedSpeed(chessman.Arouse) +
-                                   heroTable.GetDeputySpeed(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputySpeed(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         intelligent = hero.GetArousedIntelligent(chessman.Arouse) +
-                                   heroTable.GetDeputyIntelligent(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputyIntelligent(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         //CombatStyle.IntelligentFormula(hero.Intelligent, level);
                         military = m.Id;
                         armedType = m.ArmedType;
@@ -527,14 +539,29 @@ namespace Assets.System.WarModule
                         element = m.Element;
                         hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level)
                                    + hero.GetArousedHitPointAddOn(chessman.Arouse) +
-                                   heroTable.GetDeputyHitPoint(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputyHitPoint(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         magicResist = hero.GetArousedMagicRest(chessman.Arouse) + 
-                                   heroTable.GetDeputyMagicRest(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputyMagicRest(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         armor = hero.GetArousedArmor(chessman.Arouse) +
-                                   heroTable.GetDeputyArmor(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id, chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                   heroTable.GetDeputyArmor(
+                                       chessman.Deputy1Id, chessman.Deputy1Level,
+                                       chessman.Deputy2Id, chessman.Deputy2Level,
+                                       chessman.Deputy3Id, chessman.Deputy3Level,
+                                       chessman.Deputy4Id, chessman.Deputy4Level);
                         dodge = hero.GetArousedDodge(chessman.Arouse) +
-                                heroTable.GetDeputyDodge(chessman.Deputy1Id, chessman.Deputy1Level, chessman.Deputy2Id,
-                                    chessman.Deputy2Level, chessman.Deputy3Id, chessman.Deputy3Level);
+                                heroTable.GetDeputyDodge(
+                                    chessman.Deputy1Id, chessman.Deputy1Level,
+                                    chessman.Deputy2Id, chessman.Deputy2Level,
+                                    chessman.Deputy3Id, chessman.Deputy3Level,
+                                    chessman.Deputy4Id, chessman.Deputy4Level);
                         gameSetRecover = hero.GameSetRecovery;
                         rare = hero.Rarity;
                         break;

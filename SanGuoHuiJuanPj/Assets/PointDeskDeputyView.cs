@@ -7,41 +7,55 @@ public class PointDeskDeputyView : MonoBehaviour
 {
     [SerializeField] private DeputyBtnUi[] deputies;
     [SerializeField] private EnlistBtnUi enlistBtn;
-
-    public void Init(UnityAction<int> onClickDeputyAction,UnityAction onEnlistAction)
+    private event UnityAction OnEnlistAction;
+    private event UnityAction<GameCard> OnRecallFromDeputy;
+    public void Init(UnityAction<int, GameCard> onClickDeputyAction, 
+        UnityAction onEnlistAction,
+        UnityAction<GameCard> onRecallFromDeputy)
     {
         for (var i = 0; i < deputies.Length; i++)
         {
             var ui = deputies[i];
             var index = i;
-            ui.Init(() => onClickDeputyAction(index));
+            ui.Init(() => onClickDeputyAction(index, ui.DeputyCard));
         }
-        enlistBtn.Init(onEnlistAction);
+        OnEnlistAction = onEnlistAction;
+        OnRecallFromDeputy = onRecallFromDeputy;
     }
 
     public void UpdateCardUi(GameCard card)
     {
-        var isEnlisted = card.IsFight != 0;
-        enlistBtn.Set(!isEnlisted);
+        foreach (var ui in deputies) ui.SetMode(DeputyBtnUi.Modes.Locked);
+        var deputyList = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
         var isHero = card.Type == (int)GameCardType.Hero;
-        var isArousable = false;
-        if (isHero)
-            isArousable = DataTable.Hero[card.CardId].Arousable > 0;
-        if (!isArousable)
+        var isDeputy = isHero && deputyList.Contains(card.CardId);
+        if (isDeputy)
         {
-            SetNotArousable();
+            enlistBtn.SetOnClick(()=>OnRecallFromDeputy?.Invoke(card));
+            enlistBtn.SetRecall();
             return;
         }
-        var arouseLevel = card.Arouse;
+
+        enlistBtn.SetOnClick(OnEnlistAction);
+        enlistBtn.SetEnlist(card);
+        var acceptDeputy = false;
+        if (isHero) acceptDeputy = DataTable.Hero[card.CardId].Arousable > 0;
+
+        if (!acceptDeputy || card.Arouse <= 1)
+        {
+            SetNoDeputy();
+            return;
+        }
+
+        var deputyIndexes = card.Arouse - 1;
         var list = new[]
         {
-            GetCard(card.Deputy1Id),
-            GetCard(card.Deputy2Id),
-            GetCard(card.Deputy3Id),
-            GetCard(card.Deputy4Id)
+            GetCard(card.Deputy1Id),//0
+            GetCard(card.Deputy2Id),//1
+            GetCard(card.Deputy3Id),//2
+            GetCard(card.Deputy4Id)//3
         };
-
-        for (int i = 0; i < arouseLevel; i++) //如果已经觉醒
+        for (int i = 0; i < deputyIndexes; i++) //如果已经觉醒
         {
             var deputyUi = deputies[i]; //副将ui
             var deputyCard = list[i];
@@ -55,8 +69,8 @@ public class PointDeskDeputyView : MonoBehaviour
     }
 
 
-    private void SetNotArousable()
+    private void SetNoDeputy()
     {
-        foreach (var ui in deputies) ui.Display(false);
+        foreach (var ui in deputies) ui.SetMode(DeputyBtnUi.Modes.Locked);
     }
 }

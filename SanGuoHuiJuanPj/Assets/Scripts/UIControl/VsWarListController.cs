@@ -127,13 +127,13 @@ public class VsWarListController : MonoBehaviour
             public int Chips { get; set; }
             public int Type { get; set; }
             public int Arouse { get; set; }
-            public int Deputy1Id { get; set; }
+            public int Deputy1Id { get; set; } = -1;
             public int Deputy1Level { get; set; }
-            public int Deputy2Id { get; set; }
+            public int Deputy2Id { get; set; } = -1;
             public int Deputy2Level { get; set; }
-            public int Deputy3Id { get; set; }
+            public int Deputy3Id { get; set; } = -1;
             public int Deputy3Level { get; set; }
-            public int Deputy4Id { get; set; }
+            public int Deputy4Id { get; set; } = -1;
             public int Deputy4Level { get; set; }
         }
     }

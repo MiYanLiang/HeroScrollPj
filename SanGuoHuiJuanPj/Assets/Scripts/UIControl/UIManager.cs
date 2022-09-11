@@ -150,7 +150,7 @@ public class UIManager : MonoBehaviour
 
         InitializationPlayerInfo();
         expedition.Init();
-        Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist, OnArouseAction);
+        Barrack.Init(MergeCard, OnClickForSellCard, OnCardEnlist, OnArouseAction, OnDeputySubmitAction, OnDeputyRecallAction);
         Versus.Init(this);
         InitChickenOpenTs();
         //chickenWindow.Init();
@@ -166,9 +166,54 @@ public class UIManager : MonoBehaviour
         IsInit = true;
     }
 
+    private void OnDeputyRecallAction(GameCard card)
+    {
+        var generalCard = PlayerDataForGame.instance.hstData.heroSaveData
+            .FirstOrDefault(c =>
+                c.Deputy1Id == card.CardId ||
+                c.Deputy2Id == card.CardId ||
+                c.Deputy3Id == card.CardId ||
+                c.Deputy4Id == card.CardId);
+        if (generalCard != null)
+        {
+            if (generalCard.Deputy1Id == card.CardId)
+            {
+                generalCard.Deputy1Id = -1;
+                generalCard.Deputy1Level = 0;
+            }
+            if (generalCard.Deputy2Id == card.CardId)
+            {
+                generalCard.Deputy2Id = -1;
+                generalCard.Deputy2Level = 0;
+            }
+            if (generalCard.Deputy3Id == card.CardId)
+            {
+                generalCard.Deputy3Id = -1;
+                generalCard.Deputy3Level = 0;
+            }
+            if (generalCard.Deputy4Id == card.CardId)
+            {
+                generalCard.Deputy4Id = -1;
+                generalCard.Deputy4Level = 0;
+            }
+        }
+        Barrack.RefreshCardList();
+    }
+
+    private void OnDeputySubmitAction(GameCard card,int index,int cardId)
+    {
+        var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
+        if (savedCard != null)
+            savedCard.Clone(card);
+        Barrack.RefreshCardList();
+    }
+
     private void OnArouseAction(GameCard card)
     {
         card.Arouse++;
+        var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
+        if (savedCard != null)
+            savedCard.Clone(card);
         Barrack.RefreshCardList();
     }
 

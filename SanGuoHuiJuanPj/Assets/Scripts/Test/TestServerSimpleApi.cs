@@ -83,8 +83,7 @@ public class TestServerSimpleApi : MonoBehaviour
         var f = selectedFormation;
         var challengerFormation = WarBoard.PlayerScope.ToDictionary(c => c.Pos, c => new ChallengeSet.Card(c.Card));
         challengerFormation.Add(17,
-            new ChallengeSet.Card(GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: Versus.CityLevel, arouse: 0, deputy1Id:
-                0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0)));
+            new ChallengeSet.Card(GameCard.Instance(cardId: 0, type: (int)GameCardType.Base, level: Versus.CityLevel)));
         var set = new ChallengeSet
         {
             CharacterId = 123,
@@ -118,13 +117,13 @@ public class TestServerSimpleApi : MonoBehaviour
             public int Chips { get; set; }
             public int Type { get; set; }
             public int Arouse { get; set; }
-            public int Deputy1Id { get; set; }
+            public int Deputy1Id { get; set; } = -1;
             public int Deputy1Level { get; set; }
-            public int Deputy2Id { get; set; }
+            public int Deputy2Id { get; set; } = -1;
             public int Deputy2Level { get; set; }
-            public int Deputy3Id { get; set; }
+            public int Deputy3Id { get; set; } = -1;
             public int Deputy3Level { get; set; }
-            public int Deputy4Id { get; set; }
+            public int Deputy4Id { get; set; } = -1;
             public int Deputy4Level { get; set; }
 
             public Card()

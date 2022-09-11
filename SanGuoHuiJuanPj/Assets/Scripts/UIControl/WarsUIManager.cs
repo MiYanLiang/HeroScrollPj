@@ -800,7 +800,7 @@ public class WarsUIManager : MonoBehaviour
         var cardRarity = mercenary.Produce.Rarity;
         var cardLevel = mercenary.Produce.Star;
         var card = RandomPickFromRareClass(cardType, cardRarity);
-        ui.SetGameCard(GameCard.Instance(cardId: card.Id, type: mercenary.Produce.CardType, level: cardLevel, arouse: 0, deputy1Id: 0, deputy1Level: 0, deputy2Id: 0, deputy2Level: 0, deputy3Id: 0, deputy3Level: 0, deputy4Id: 0, deputy4Level: 0));
+        ui.SetGameCard(GameCard.Instance(cardId: card.Id, type: mercenary.Produce.CardType, level: cardLevel));
         ui.OnClickAction.RemoveAllListeners();
         ui.OnClickAction.AddListener(() => OnClickToShowShopInfo(index, card.About));
         return card;
@@ -895,7 +895,7 @@ public class WarsUIManager : MonoBehaviour
             var reward = DataTable.QuestReward[pick].Produce;
 
             var info = RandomPickFromRareClass((GameCardType)reward.CardType, reward.Rarity);
-            var card = GameCard.Instance(info.Id, info.Type, reward.Star, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var card = GameCard.Instance(info.Id, info.Type, reward.Star);
             WarBoard.CreateCardToRack(card);
         }
         else
