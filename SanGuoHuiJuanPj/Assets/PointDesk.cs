@@ -114,35 +114,35 @@ public class PointDesk : MonoBehaviour
             OnDeputySubmit.Invoke(card, index, deputy.CardId);
         } , () =>
         {
-            var card = SelectedCard.Card;
-            switch (selectedIndex)
-            {
-                case 0:
-                {
-                    card.Deputy1Id = -1;
-                    card.Deputy1Level = 0;
-                    break;
-                }
-                case 1:
-                {
-                    card.Deputy2Id = -1;
-                    card.Deputy2Level = 0;
-                    break;
-                }
-                case 2:
-                {
-                    card.Deputy3Id = -1;
-                    card.Deputy3Level = 0;
-                    break;
-                }
-                case 3:
-                {
-                    card.Deputy4Id = -1;
-                    card.Deputy4Level = 0;
-                    break;
-                }
-            }
-            OnDeputySubmit.Invoke(card, index, -1);
+            //var card = SelectedCard.Card;
+            //switch (selectedIndex)
+            //{
+            //    case 0:
+            //    {
+            //        card.Deputy1Id = -1;
+            //        card.Deputy1Level = 0;
+            //        break;
+            //    }
+            //    case 1:
+            //    {
+            //        card.Deputy2Id = -1;
+            //        card.Deputy2Level = 0;
+            //        break;
+            //    }
+            //    case 2:
+            //    {
+            //        card.Deputy3Id = -1;
+            //        card.Deputy3Level = 0;
+            //        break;
+            //    }
+            //    case 3:
+            //    {
+            //        card.Deputy4Id = -1;
+            //        card.Deputy4Level = 0;
+            //        break;
+            //    }
+            //}
+            OnCancelDeputy.Invoke(deputyCard);
         }, deputyCard);
     }
 

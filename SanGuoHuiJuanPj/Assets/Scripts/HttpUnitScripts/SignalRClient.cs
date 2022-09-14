@@ -142,20 +142,8 @@ public class SignalRClient : MonoBehaviour
             var warCampaignList = bag.GetPlayerWarCampaignDtos();
             var gameCardList = bag.GetPlayerGameCardDtos();
             var troops = bag.GetPlayerTroopDtos();
-            PlayerDataForGame.instance.pyData = PlayerData.Instance(playerData);
-            PlayerDataForGame.instance.UpdateCharacter(character);
-            PlayerDataForGame.instance.GenerateLocalStamina();
-            PlayerDataForGame.instance.warsData.warUnlockSaveData = warCampaignList.Select(w => new UnlockWarCount
-            {
-                warId = w.WarId,
-                isTakeReward = w.IsFirstRewardTaken,
-                unLockCount = w.UnlockProgress
-            }).ToList();
-            PlayerDataForGame.instance.UpdateGameCards(troops, gameCardList);
-            PlayerDataForGame.instance.gbocData.redemptionCodeGotList = redeemedList.ToList();
-            PlayerDataForGame.instance.gbocData.fightBoxs = warChestList.ToList();
-            PlayerDataForGame.instance.isNeedSaveData = true;
-            LoadSaveData.instance.SaveGameData();
+            PlayerDataForGame.instance.SetDto(playerData, character, warChestList, redeemedList, warCampaignList,
+                gameCardList, troops);
             onCompleteAction?.Invoke();
         }, ViewBag.Instance(), cancelToken);
 

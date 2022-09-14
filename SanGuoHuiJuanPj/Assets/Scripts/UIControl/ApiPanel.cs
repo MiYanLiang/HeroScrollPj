@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using Assets.Scripts.Utl;
-using BestHTTP.SignalRCore;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
@@ -50,9 +49,31 @@ public class ApiPanel : MonoBehaviour
         }, bag);
     }
 
+    public void CallTest(string username,UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
+        params object[] args)
+    {
+#if UNITY_EDITOR
+        SetBusy(true);
+        var queryString = $"username={username}&clientVersion={Application.version}&ServiceZone=-1&RUserId=test";
+        var jsonBag = DataBag.SerializeBag(method, args);
+        Http.Post($"{Server.ApiServer}{EventStrings.Req_Call}Test?{queryString}", jsonBag, text =>
+        {
+            var bag = DataBag.DeserializeBag(text);
+            SetBusy(false);
+            if (bag != null)
+                successAction(bag);
+            else
+                failedAction(text);
+        }, method);
+#endif
+    }
+
+    public void Call(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
+        params object[] args) =>
+        InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Call, method: method, args);
     public void InvokeRk(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>
-        InvokeBag(successAction, failedAction, true, EventStrings.Req_Rk, method, args);
+        InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Rk, method: method, args);
 
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string controller,
         string method, params object[] args) =>

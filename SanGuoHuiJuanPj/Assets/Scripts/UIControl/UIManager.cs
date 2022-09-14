@@ -179,47 +179,89 @@ public class UIManager : MonoBehaviour
                 c.Deputy2Id == card.CardId ||
                 c.Deputy3Id == card.CardId ||
                 c.Deputy4Id == card.CardId);
-        if (generalCard != null)
+        if (generalCard == null) throw new NotImplementedException("找不到任何卡牌设此卡牌为副将!");
+        var slot = 0;
+        if (generalCard.Deputy1Id == card.CardId)
         {
-            if (generalCard.Deputy1Id == card.CardId)
-            {
-                generalCard.Deputy1Id = -1;
-                generalCard.Deputy1Level = 0;
-            }
-            if (generalCard.Deputy2Id == card.CardId)
-            {
-                generalCard.Deputy2Id = -1;
-                generalCard.Deputy2Level = 0;
-            }
-            if (generalCard.Deputy3Id == card.CardId)
-            {
-                generalCard.Deputy3Id = -1;
-                generalCard.Deputy3Level = 0;
-            }
-            if (generalCard.Deputy4Id == card.CardId)
-            {
-                generalCard.Deputy4Id = -1;
-                generalCard.Deputy4Level = 0;
-            }
+            slot = 1;
+            //generalCard.Deputy1Id = -1;
+            //generalCard.Deputy1Level = 0;
         }
-        Barrack.RefreshCardList();
+
+        if (generalCard.Deputy2Id == card.CardId)
+        {
+            slot = 2;
+            //generalCard.Deputy2Id = -1;
+            //generalCard.Deputy2Level = 0;
+        }   
+
+        if (generalCard.Deputy3Id == card.CardId)
+        {
+            slot = 3;
+            //generalCard.Deputy3Id = -1;
+            //generalCard.Deputy3Level = 0;
+        }
+
+        if (generalCard.Deputy4Id == card.CardId)
+        {
+            slot = 4;
+            //generalCard.Deputy4Id = -1;
+            //generalCard.Deputy4Level = 0;
+        }
+
+        //Barrack.RefreshCardList();
+        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+            {
+                var dto = bag.Get<GameCardDto>(0);
+                var genCard = PlayerDataForGame.instance.hstData.heroSaveData
+                    .First(c => c.CardId == dto.CardId && c.Type == (int)dto.Type);
+                genCard.CloneFrom(dto);
+                Barrack.RefreshCardList();
+            }, PlayerDataForGame.instance.ShowStringTips
+            , EventStrings.Call_DeputyRemove, generalCard.CardId, generalCard.Type, slot);
     }
 
-    private void OnDeputySubmitAction(GameCard card,int index,int cardId)
+    private void OnDeputySubmitAction(GameCard generalCard,int index,int cardId)
     {
-        var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
-        if (savedCard != null)
-            savedCard.Clone(card);
-        Barrack.RefreshCardList();
+        var slot = index + 1;
+        //var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == generalCard.CardId);
+        //if (savedCard != null)
+        //    savedCard.Clone(generalCard);
+        //Barrack.RefreshCardList();
+        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+            {
+                var dto = bag.Get<GameCardDto>(0);
+                var genCard = PlayerDataForGame.instance.hstData.heroSaveData
+                    .First(c => c.CardId == dto.CardId && c.Type == (int)dto.Type);
+                genCard.CloneFrom(dto);
+                generalCard.Clone(genCard);
+                Barrack.RefreshCardList();
+            }, PlayerDataForGame.instance.ShowStringTips
+            , EventStrings.Call_DeputyAdd, generalCard.CardId, generalCard.Type, cardId, generalCard.Type, slot);
     }
 
     private void OnArouseAction(GameCard card)
     {
-        card.Arouse++;
-        var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
-        if (savedCard != null)
-            savedCard.Clone(card);
-        Barrack.RefreshCardList();
+        //card.Arouse++;
+        //var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
+        //if (savedCard != null)
+        //    savedCard.Clone(card);
+        //Barrack.RefreshCardList();
+        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+            {
+                var dto = bag.Get<GameCardDto>(0);
+                var consume = bag.Get<GameCardDto>(1);
+                var genCard =
+                    PlayerDataForGame.instance.hstData.heroSaveData.First(c =>
+                        c.CardId == dto.CardId && c.Type == (int)dto.Type);
+                var consumeCard = PlayerDataForGame.instance.hstData.heroSaveData.First(c =>
+                    c.CardId == consume.CardId && c.Type == (int)consume.Type);
+                genCard.CloneFrom(dto);
+                consumeCard.CloneFrom(consume);
+                card.Clone(genCard);
+                Barrack.RefreshCardList();
+            }, PlayerDataForGame.instance.ShowStringTips
+            , EventStrings.Call_Arouse, card.CardId, card.Type);
     }
 
     public void UpdateMainSceneUi()
@@ -638,47 +680,63 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ApiPanel.instance.InvokeVb(vb =>
+        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
-                var player = vb.GetPlayerDataDto();
-                var dto = vb.GetGameCardDto();
-                GameCard ca;
-                var hst = PlayerDataForGame.instance.hstData;
-                switch (dto.Type)
-                {
-                    case GameCardType.Hero:
-                        ca = hst.heroSaveData.First(c => c.CardId == dto.CardId);
-                        break;
-                    case GameCardType.Tower:
-                        ca = hst.towerSaveData.First(c => c.CardId == dto.CardId);
-                        break;
-                    case GameCardType.Trap:
-                        ca = hst.trapSaveData.First(c => c.CardId == dto.CardId);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                var player = bag.Get<PlayerDataDto>(0);
+                var dto = bag.Get<GameCardDto>(1);
+                CardMergedUpdate(dto, player);
+            }, msg => CardMergeErrorMessage(card),
+            "Call_CardMerge", card.CardId, card.Type);
+        //ApiPanel.instance.InvokeVb(vb =>
+        //    {
+        //        var player = vb.GetPlayerDataDto();
+        //        var dto = vb.GetGameCardDto();
+        //        CardMergedUpdate(dto, player);
+        //    }, msg => CardMergeErrorMessage(card),
+        //    EventStrings.Req_CardMerge,
+        //    ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
 
-                ca.Chips = dto.Chips;
-                ca.Level = dto.Level;
-                ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 7);
-                Barrack.RefreshCardList();
-                Barrack.PointDesk.PlayUpgradeEffect();
-                AudioController0.instance.ChangeAudioClip(16);
-                AudioController0.instance.PlayAudioSource(0);
-                //UpdateLevelCardUi();
-                ShowOrHideGuideObj(2, false);
-            }, msg =>
+        void CardMergedUpdate(GameCardDto dto, PlayerDataDto player)
+        {
+            GameCard ca;
+            var hst = PlayerDataForGame.instance.hstData;
+            switch (dto.Type)
             {
-                var message = "失败。";
-                if (card.Level == 0)
-                    message = "合成" + message;
-                else message = "升级" + message;
-                PlayerDataForGame.instance.ShowStringTips(message);
-            },
-            EventStrings.Req_CardMerge,
-            ViewBag.Instance().SetValues(new object[] {card.CardId, card.Type}));
+                case GameCardType.Hero:
+                    ca = hst.heroSaveData.First(c => c.CardId == dto.CardId);
+                    break;
+                case GameCardType.Tower:
+                    ca = hst.towerSaveData.First(c => c.CardId == dto.CardId);
+                    break;
+                case GameCardType.Trap:
+                    ca = hst.trapSaveData.First(c => c.CardId == dto.CardId);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            ca.Chips = dto.Chips;
+            ca.Level = dto.Level;
+            ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 7);
+            Barrack.RefreshCardList();
+            Barrack.PointDesk.PlayUpgradeEffect();
+            AudioController0.instance.ChangeAudioClip(16);
+            AudioController0.instance.PlayAudioSource(0);
+            //UpdateLevelCardUi();
+            ShowOrHideGuideObj(2, false);
+        }
+
+        static void CardMergeErrorMessage(GameCard card)
+        {
+            var message = "失败。";
+            if (card.Level == 0)
+                message = "合成" + message;
+            else message = "升级" + message;
+            PlayerDataForGame.instance.ShowStringTips(message);
+        }
     }
+
+
 
     private void OnCardEnlist(GameCard card)
     {
