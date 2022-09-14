@@ -83,10 +83,9 @@ public class GameSystem : MonoBehaviour
         InitEnqueue(() =>
         {
             MapService = new MapService();
-            playerDataForGame.Init();
+            playerDataForGame.Init(()=>IsInit = true);
             _serverException = ServerException;
             ServerException.Init();
-            IsInit = true;
         });
         StartCoroutine(InitCo());
     }

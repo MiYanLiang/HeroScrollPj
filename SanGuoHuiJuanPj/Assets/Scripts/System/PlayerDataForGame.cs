@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CorrelateLib;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -107,7 +108,6 @@ public class PlayerDataForGame : MonoBehaviour
     private bool isRequestingSaveFile; //存档请求中
     //计算出战总数量 
     public int TotalCardsEnlisted => fightHeroId.Count + fightTowerId.Count + fightTrapId.Count;
-
     public int UnlockForceId =>
         DataTable.Force.Values.Where(f => f.UnlockLevel <= pyData.Level).Max(f => f.Id);// DataTable.PlayerLevelConfig[pyData.Level].UnlockForces;
     public LocalStamina Stamina
@@ -140,7 +140,7 @@ public class PlayerDataForGame : MonoBehaviour
         }
     }
 
-    public virtual void Init()
+    public virtual void Init(UnityAction onCompleteAction)
     {
         selectedWarId = -1;
         isJumping = false;
@@ -152,6 +152,7 @@ public class PlayerDataForGame : MonoBehaviour
         isHadNewSaveData = false;
 
         StartCoroutine(InitFade());
+        onCompleteAction?.Invoke();
     }
 
     private void Update()
@@ -436,7 +437,7 @@ public class PlayerDataForGame : MonoBehaviour
     }
 
     public void GenerateLocalStamina() =>
-        stamina = new LocalStamina(pyData.Stamina, secsPerStamina, staminaIncreaseLimit, staminaMax);
+        stamina = new LocalStamina(pyData?.Stamina ?? 0, secsPerStamina, staminaIncreaseLimit, staminaMax);
 
     public IEnumerable<GameCard> GetCards(bool isAllForces)
     {
@@ -497,5 +498,29 @@ public class PlayerDataForGame : MonoBehaviour
         pyData.AdPass = tickets;
         LoadSaveData.instance.SaveGameData(1);
         NotifyDataUpdate();
+    }
+
+    public void SetDto(PlayerDataDto playerData,
+        CharacterDto character,
+        int[] warChestList,
+        string[] redeemedList,
+        WarCampaignDto[] warCampaignList,
+        GameCardDto[] gameCardList,
+        TroopDto[] troops)
+    {
+        pyData = PlayerData.Instance(playerData);
+        UpdateCharacter(character);
+        GenerateLocalStamina();
+        warsData.warUnlockSaveData = warCampaignList.Select(w => new UnlockWarCount
+        {
+            warId = w.WarId,
+            isTakeReward = w.IsFirstRewardTaken,
+            unLockCount = w.UnlockProgress
+        }).ToList();
+        UpdateGameCards(troops, gameCardList);
+        gbocData.redemptionCodeGotList = redeemedList.ToList();
+        gbocData.fightBoxs = warChestList.ToList();
+        isNeedSaveData = true;
+        LoadSaveData.instance.SaveGameData();
     }
 }

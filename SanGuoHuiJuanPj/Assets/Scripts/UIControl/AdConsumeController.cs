@@ -28,7 +28,7 @@ public class AdConsumeController : MonoBehaviour
     
     private void UpdateTickets()
     {
-        var value = PlayerDataForGame.instance.pyData.AdPass;
+        var value = PlayerDataForGame.instance.pyData?.AdPass ?? 0;
         var isMax = value > maxTickets;
         ticketText.text =  isMax ? maxTickets.ToString() : value.ToString();
         ticketText.color = isMax ? maxColor : defaultTicketColor; 

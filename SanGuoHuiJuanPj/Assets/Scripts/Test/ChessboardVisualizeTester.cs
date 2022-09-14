@@ -21,21 +21,25 @@ public class ChessboardVisualizeTester : ChessboardVisualizeManager
     void Start()
     {
         DataTable.Init();
-        PlayerData.Init();
-        gameResources = new GameResources();
-        gameResources.Init();
-        EffectsPooling.Init();
-
-        Init(chessboard, jbAnimationManager);
-        NewWar.Init(chessboard);
-        NewWar.NewGame();
-        var enemies = NewWar.ConfirmInstanceEnemies();
-        var players = NewWar.ConfirmInstancePlayers();
-        _cardData = enemies.Concat(players).ToDictionary(c => c.InstanceId, c => c);
-        
-        GenerateChessmanFromList();
+        PlayerData.Init(ContinueInit);
         //chessboard.SetStartWarUi(RoundStart);
+        void ContinueInit()
+        {
+            gameResources = new GameResources();
+            gameResources.Init();
+            EffectsPooling.Init();
+
+            Init(chessboard, jbAnimationManager);
+            NewWar.Init(chessboard);
+            NewWar.NewGame();
+            var enemies = NewWar.ConfirmInstanceEnemies();
+            var players = NewWar.ConfirmInstancePlayers();
+            _cardData = enemies.Concat(players).ToDictionary(c => c.InstanceId, c => c);
+            
+            GenerateChessmanFromList();
+        }
     }
+
 #endif
 
     //public void RoundStart()

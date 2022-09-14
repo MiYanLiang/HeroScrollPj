@@ -263,7 +263,8 @@ public class GameCard : IGameCard,IComparable<GameCard>
     public void Clone(GameCard c)
     {
         CardId = c.CardId;
-        Chips = c.Level;
+        Level = c.Level;
+        Chips = c.Chips;
         IsFight = c.IsFight;
         Type = c.Type;
         Arouse = c.Arouse;
@@ -275,6 +276,22 @@ public class GameCard : IGameCard,IComparable<GameCard>
         Deputy3Level = c.Deputy3Level;
         Deputy4Id = c.Deputy4Id;
         Deputy4Level = c.Deputy4Level;
+    }
+    public void CloneFrom(GameCardDto dto)
+    {
+        CardId = dto.CardId;
+        Level = dto.Level;
+        Chips = dto.Chips;
+        Type = (int)dto.Type;
+        Arouse = dto.Arouse;
+        Deputy1Id = dto.Deputy1Id;
+        Deputy1Level = dto.Deputy1Level;
+        Deputy2Id = dto.Deputy2Id;
+        Deputy2Level = dto.Deputy2Level;
+        Deputy3Id = dto.Deputy3Id;
+        Deputy3Level = dto.Deputy3Level;
+        Deputy4Id = dto.Deputy4Id;
+        Deputy4Level = dto.Deputy4Level;
     }
 }
 

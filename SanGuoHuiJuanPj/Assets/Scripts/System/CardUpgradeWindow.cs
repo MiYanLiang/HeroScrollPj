@@ -17,9 +17,17 @@ public class CardUpgradeWindow : MonoBehaviour
     }
     public void Init(UnityAction onSellAction, UnityAction onMergeAction)
     {
-        _sellBtn.onClick.AddListener(onSellAction);
+        _sellBtn.onClick.AddListener(() =>
+        {
+            Display(false);
+            onSellAction();
+        });
         _closeBtn.onClick.AddListener(() => Display(false));
-        _mergeBtn.Init(onMergeAction);
+        _mergeBtn.Init(() =>
+        {
+            Display(false);
+            onMergeAction();
+        });
         _mergeBtn.Set(0, true);
         Display(false);
     }
