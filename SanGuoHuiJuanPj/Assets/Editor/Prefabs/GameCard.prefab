@@ -1946,6 +1946,7 @@ MonoBehaviour:
   Enlisted: {fileID: 6784055028249413153}
   Disabled: {fileID: 59859479283641747}
   Selected: {fileID: 59859479283640887}
+  Deputy: {fileID: 0}
   OnclickAction:
     m_PersistentCalls:
       m_Calls: []
