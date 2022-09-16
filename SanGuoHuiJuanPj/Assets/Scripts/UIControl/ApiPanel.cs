@@ -48,13 +48,16 @@ public class ApiPanel : MonoBehaviour
             if(closeBusyAfterInvoke) SetBusy(false);
         }, bag);
     }
-
+#if UNITY_EDITOR
+    public static string TestUserQuery(string username) =>
+        $"username={username}&clientVersion={Application.version}&ServiceZone=-1&RUserId=test";
+#endif
     public void CallTest(string username,UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args)
     {
-#if UNITY_EDITOR
+#if !UNITY_EDITOR
         SetBusy(true);
-        var queryString = $"username={username}&clientVersion={Application.version}&ServiceZone=-1&RUserId=test";
+        var queryString = TestUserQuery(username);
         var jsonBag = DataBag.SerializeBag(method, args);
         Http.Post($"{Server.ApiServer}{EventStrings.Req_Call}Test?{queryString}", jsonBag, text =>
         {
@@ -65,12 +68,14 @@ public class ApiPanel : MonoBehaviour
             else
                 failedAction(text);
         }, method);
+#else
+        Call(successAction, failedAction, method, args);
 #endif
     }
 
     public void Call(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>
-        InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Call, method: method, args);
+        InvokeCallerBag(successAction, failedAction, true, controller: EventStrings.Req_Call, method: method, args);
     public void InvokeRk(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Rk, method: method, args);
@@ -78,6 +83,31 @@ public class ApiPanel : MonoBehaviour
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string controller,
         string method, params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller, method, args);
+    public void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller, string method,
+        object[] args)
+    {
+        SetBusy(this);
+#if UNITY_EDITOR
+        if (isSkipApi)
+        {
+            successAction.Invoke(new DataBag());
+            return;
+        }
+#endif
+        var bag = new ClientDataBag(method, args);
+        //bag.DataName = method;
+        //bag.Data = args;
+        //bag.Size = args.Length;
+        var serializeBag = Json.Serialize(bag); //DataBag.SerializeBag(method, args);
+        Client.InvokeCaller(controller, result =>
+        {
+            var dataBag = DataBag.DeserializeBag(result);
+            if (!dataBag.IsValid()) failedAction?.Invoke(result);
+            else successAction.Invoke(dataBag);
+            if (closeBusyAfterInvoke) SetBusy(false);
+        }, serializeBag);
+
+    }
 
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller,string method,
         object[] args)

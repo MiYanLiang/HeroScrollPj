@@ -253,6 +253,34 @@ public class SignalRClient : MonoBehaviour
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
     }
+    public void InvokeCaller(string method, UnityAction<string> recallAction, string serializedBag,
+        CancellationTokenSource tokenSource = default)
+    {
+        if (SignalRClientConnection.Status == ConnectionStates.Connected)
+        {
+            InvokeRequest();
+            return;
+        }
+
+        ReconnectServer(isSuccess =>
+        {
+            if (isSuccess)
+            {
+                InvokeRequest();
+                return;
+            }
+            throw new InvalidOperationException("登录异常，请重新登录！");
+        });
+
+        async void InvokeRequest()
+        {
+            CallerGuid = Guid.NewGuid();
+            var result = await HubRequestByCallerBag(method, serializedBag, CallerGuid.ToString(), tokenSource);
+            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+        }
+    }
+    private static Guid CallerGuid { get; set; }
+
     private readonly TimeSpan _requestTimeOut = TimeSpan.FromMinutes(1);
     private async Task<string> HubRequestByViewBag(string method, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
@@ -273,6 +301,16 @@ public class SignalRClient : MonoBehaviour
         if (tokenSource == null) tokenSource = new CancellationTokenSource(_requestTimeOut);
         var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
             string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized });
+        DisplayPanel(false);
+        return result;
+    }
+    private async Task<string> HubRequestByCallerBag(string method, string serialized,string guid,
+        CancellationTokenSource tokenSource = default)
+    {
+        DisplayPanel(true);
+        if (tokenSource == null) tokenSource = new CancellationTokenSource(_requestTimeOut);
+        var result = await SignalRClientConnection.HubInvokeAsync<string>(method, tokenSource.Token,
+            string.IsNullOrWhiteSpace(serialized) ? Array.Empty<object>() : new object[] { serialized, guid });
         DisplayPanel(false);
         return result;
     }
