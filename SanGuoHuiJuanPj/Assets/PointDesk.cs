@@ -1,8 +1,8 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -16,17 +16,6 @@ public class PointDesk : MonoBehaviour
     public GameCardUi SelectedCard;
 
     [SerializeField] GameObject TagSelectionPointer;
-    //[SerializeField]Text Fullname;        //详情信息取消名字显示
-    [SerializeField] Text strength;
-    [SerializeField] Text hitpoint;
-    [SerializeField] Text intelligent;
-    [SerializeField] Text speed;
-    [SerializeField] Text dodgeRatio;
-    [SerializeField] Text armorResist;
-    [SerializeField] Text magicResist;
-    [SerializeField] Text criticalRatio;
-    [SerializeField] Text rougeRatio;
-
     [SerializeField]Text Info;
     [SerializeField]Text CardCapability;
     [SerializeField]Text CardCapabilityTxt;
@@ -38,19 +27,7 @@ public class PointDesk : MonoBehaviour
     [SerializeField] private Button upgradeButton;
     [SerializeField] private PointDeskDeputyView pointDeskDeputyView;
     [SerializeField] private DeputySelectionView deputySelectionView;
-
-    [Header("为武将把威力->改写成武力的文字控件")][SerializeField]Text WuLiText;
-    [SerializeField]TextImageUi PowerUi;
-    [SerializeField]TextImageUi StrUi;
-    [SerializeField]TextImageUi HpUi;
-    [SerializeField]TextImageUi IntUi;
-    [SerializeField]TextImageUi SpeedUi;
-    [SerializeField]TextImageUi DodgeUi;
-    [SerializeField]TextImageUi ArmorUi;
-    [SerializeField]TextImageUi MagicUi;
-    [SerializeField]TextImageUi CriUi;
-    [SerializeField]TextImageUi RouUi;
-
+    [SerializeField] private GameCardPropertyViewUi gameCardPropertyView;
     [SerializeField] CardInfoTagUi About;
     [SerializeField] CardInfoTagUi Military;
     [SerializeField] CardInfoTagUi Armed;
@@ -61,16 +38,18 @@ public class PointDesk : MonoBehaviour
     public CardEvent OnMergeCard = new CardEvent();
     public CardEvent OnCardSell = new CardEvent();
     public CardEvent OnEnlistCall = new CardEvent();
-    public CardEvent OnArouseCall = new CardEvent();
+    public CardRecallEvent OnArouseCall = new CardRecallEvent();
     public CardEvent OnCancelDeputy = new CardEvent();
     public IndexCardEvent OnDeputySubmit = new IndexCardEvent();
 
     public void Init()
     {
+        UpLevelEffect.gameObject.SetActive(false);
         arouseWindow.Init();
         pointDeskDeputyView.Init(OnClickDeputyAction, SelectedCardEnlistSwitch, c => OnCancelDeputy.Invoke(c));
         deputySelectionView.Init();
-        cardUpgradeWindow.Init(() => OnCardSell.Invoke(SelectedCard.Card), () => OnMergeCard.Invoke(SelectedCard.Card));
+        cardUpgradeWindow.Init(() => OnCardSell.Invoke(SelectedCard.Card), 
+            () => OnMergeCard.Invoke(SelectedCard.Card));
         if(TagSelectionPointer)
             TagSelectionPointer.SetActive(false);
     }
@@ -112,88 +91,41 @@ public class PointDesk : MonoBehaviour
             }
 
             OnDeputySubmit.Invoke(card, index, deputy.CardId);
-        } , () =>
-        {
-            //var card = SelectedCard.Card;
-            //switch (selectedIndex)
-            //{
-            //    case 0:
-            //    {
-            //        card.Deputy1Id = -1;
-            //        card.Deputy1Level = 0;
-            //        break;
-            //    }
-            //    case 1:
-            //    {
-            //        card.Deputy2Id = -1;
-            //        card.Deputy2Level = 0;
-            //        break;
-            //    }
-            //    case 2:
-            //    {
-            //        card.Deputy3Id = -1;
-            //        card.Deputy3Level = 0;
-            //        break;
-            //    }
-            //    case 3:
-            //    {
-            //        card.Deputy4Id = -1;
-            //        card.Deputy4Level = 0;
-            //        break;
-            //    }
-            //}
-            OnCancelDeputy.Invoke(deputyCard);
-        }, deputyCard);
+        } , () => OnCancelDeputy.Invoke(deputyCard), deputyCard);
     }
 
     private GameCard[] GetAvailableDeputy(GameCard general)
     {
         var heroes = PlayerDataForGame.instance.hstData.heroSaveData
-            .Where(c => c.GetForceId() == general.GetForceId())
+            .Where(c =>
+            {
+                var isHero = c.Type == (int)GameCardType.Hero;
+                var isDeputy = DataTable.Hero[c.CardId].Deputy > 0;
+                var minLevel = c.Level > 0;
+                return isHero && isDeputy && minLevel;
+            })
+            .OrderByDescending(c => c.IsFight)
+            .ThenByDescending(c => c.Arouse)
+            .ThenByDescending(c => c.Level)
+            .ThenByDescending(c => c.GetInfo().Rare)
             .ToArray();
         var deputies = heroes.GetDeputyIds().ToList();
         deputies.Add(general.CardId);//不包括主将
         return heroes.Where(c=>!deputies.Contains(c.CardId)).ToArray();
     }
 
-
-    private void UpdateAttributes()
-    {
-        StrUi.Off();
-        HpUi.Off();
-        IntUi.Off();
-        SpeedUi.Off();
-        DodgeUi.Off();
-        ArmorUi.Off();
-        MagicUi.Off();
-        CriUi.Off();
-        RouUi.Off();
-
-        var c = SelectedCard;
-        PowerUi.Set(c.Card.Power(), null);
-        var fc = new FightCardData(c.Card);
-        StrUi.Set(fc.Damage, null);
-        HpUi.Set(fc.HitPoint, null);
-        if (c.CardInfo.Type != GameCardType.Trap) 
-            SpeedUi.Set(fc.Speed, null);
-
-        if (c.CardInfo.Type == GameCardType.Hero)
-        {
-            IntUi.Set(fc.Style.Intelligent, null);
-            DodgeUi.Set(fc.Style.Dodge, null);
-            ArmorUi.Set(fc.Style.Armor, null);
-            MagicUi.Set(fc.Style.MagicResist, null);
-            CriUi.Set(c.CardInfo.CriticalRatio, null);
-            RouUi.Set(c.CardInfo.RougeRatio, null);
-        }
-    }
-
     public void SelectCard(GameCard card)
     {
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
+        if(card.Type == (int)GameCardType.Hero)
+        {
+            var deputies = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
+            if (deputies.Contains(card.CardId))
+                SelectedCard.CityOperation.SetState(GameCardCityUiOperation.States.Deputy);
+        }
         var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
-        arouseButton.interactable = card.Level > 0 && consume != null;
+        SetButtonInteractable(arouseButton, card.Level > 0 && consume != null);
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
@@ -204,11 +136,19 @@ public class PointDesk : MonoBehaviour
             $"{PlayerDataForGame.instance.TotalCardsEnlisted}/{DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].CardLimit}";
 
         UpdateUpgradeWindow(card);
-        UpdateAttributes();
+        gameCardPropertyView.UpdateAttributes(card);
         UpdateInfoTags(card);
         TagSelectionPointer.SetActive(false);
-        arouseWindow.Display(false);
         pointDeskDeputyView.UpdateCardUi(card);
+        if (arouseWindow.gameObject.activeSelf)
+            arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess));
+    }
+
+    private static void SetButtonInteractable(Button btn, bool interactable)
+    {
+        btn.interactable = interactable;
+        foreach (var img in btn.GetComponentsInChildren<Image>()) 
+            img.DOFade(interactable ? 1f : 0.7f, 0);
     }
 
     private void UpdateInfoTags(GameCard gameCard)
@@ -226,7 +166,6 @@ public class PointDesk : MonoBehaviour
         var armed = string.Empty;
         var combatType = string.Empty;
         var isHero = card.CardInfo.Type == GameCardType.Hero;
-        WuLiText.text = isHero ? "武力：" : "威力：";
         if (isHero)
         {
             var c = DataTable.Hero[card.Card.CardId];
@@ -303,6 +242,29 @@ public class PointDesk : MonoBehaviour
             ResetTag(Armed, armed);
             ResetTag(CombatType, combatType);
             SetOnClick(CombatType, combatText);
+            if (c.Deputy > 0)
+            {
+                var strength = c.DeputyStrengths.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var hp = c.DeputyHitPoints.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var speed = c.DeputySpeeds.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var dodge = c.DeputyDodges.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var intelligent = c.DeputyIntelligents.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var armor = c.DeputyArmors.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var magicArmor = c.DeputyMagicRests.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
+                var deputyText = "副将效果：" +
+                                 GenerateText("力量", strength) +
+                                 GenerateText("血量", hp) +
+                                 GenerateText("速度", speed) +
+                                 GenerateText("闪避", dodge) +
+                                 GenerateText("智力", intelligent) +
+                                 GenerateText("物防", armor) +
+                                 GenerateText("法防", magicArmor);
+
+                string GenerateText(string text, int value) => 
+                    value==0 ? string.Empty : $"\n{text} + {value}";
+
+                SetOnClick(Major, deputyText);
+            }
             ResetTag(Element, ElementText(card.CardInfo.Element, false));
             SetOnClick(Element, ElementText(card.CardInfo.Element, true));
             Info.text = m.Detail;
@@ -386,7 +348,8 @@ public class PointDesk : MonoBehaviour
         upgradeButton.onClick.RemoveAllListeners();
         upgradeButton.onClick.AddListener(() => cardUpgradeWindow.Set(card.GetValue(), cost, upgrade));
         arouseButton.onClick.RemoveAllListeners();
-        arouseButton.onClick.AddListener(() => arouseWindow.Set(card, () => OnArouseCall.Invoke(card)));
+        arouseButton.onClick.AddListener(
+            () => arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess)));
     }
 
     public void PlayUpgradeEffect() => StartCoroutine(CardUpgradeEffect());
@@ -411,6 +374,11 @@ public class PointDesk : MonoBehaviour
         OnEnlistCall.Invoke(SelectedCard.Card);
     }
 
+    void OnDisable()
+    {
+        UpLevelEffect.gameObject.SetActive(false);
+    }
     public class CardEvent : UnityEvent<GameCard> { }
+    public class CardRecallEvent : UnityEvent<GameCard,UnityAction<bool>> { }
     public class IndexCardEvent : UnityEvent<GameCard,int,int> { }
 }

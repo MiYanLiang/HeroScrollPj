@@ -48,7 +48,9 @@ public static class Server
     public static string GameServer { get; private set; } = 
     "https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
-    public static string ApiServer { get; private set; } = "https://herotestfuncapi.azurewebsites.net/api/";//"http://localhost:7071/api/";
+    public static string ApiServer { get; private set; } =
+        //"http://localhost:7071/api/";
+        "https://herotestfuncapi.azurewebsites.net/api/";
 #endif
 
     private static bool isInitialized;

@@ -57,7 +57,7 @@ public class GameSystem : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void Init()
+    public virtual void Init()
     {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
         Configuration = configuration;

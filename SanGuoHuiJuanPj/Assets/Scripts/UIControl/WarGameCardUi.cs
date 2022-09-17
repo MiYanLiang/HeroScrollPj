@@ -59,7 +59,7 @@ public class GameCardUiBase : MonoBehaviour
         Card = card;
         CardInfo = card.GetInfo();
         Image.sprite = GameResources.Instance.GetCardImage(card);
-        Set();
+        LoadCardImage();
         SetName(CardInfo);
         SetLevel(Card.Level);
         SetFrame(PrefabManager.Instance.GetFrame(card.Arouse));
@@ -82,7 +82,7 @@ public class GameCardUiBase : MonoBehaviour
         CardInfo = null;
     }
 
-    protected void Set()
+    protected void LoadCardImage()
     {
         Image.sprite = CardInfo.Type == GameCardType.Hero
             ? GameResources.Instance.HeroImg[Card.CardId]

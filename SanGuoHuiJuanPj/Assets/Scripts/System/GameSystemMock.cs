@@ -5,11 +5,21 @@ using UnityEngine.Events;
 public class GameSystemMock : GameSystem
 {
     [SerializeField] private UnityEvent StartEvent;
+    [SerializeField] private bool AutoStart;
     void Start()
     {
-        Init();
+#if UNITY_EDITOR
+        if (AutoStart) Init();
+#endif
+    }
+
+#if UNITY_EDITOR
+    public override void Init()
+    {
+        base.Init();
         StartCoroutine(MockInit());
     }
+#endif
 
     IEnumerator MockInit()
     {

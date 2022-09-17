@@ -38,7 +38,7 @@ public class GameCardUi : GameCardUiBase
     public void Set(CardModes mode)
     {
         GrayScale.Init();
-        Set();
+        LoadCardImage();
         SetMode(mode);
         gameObject.SetActive(true);
     }

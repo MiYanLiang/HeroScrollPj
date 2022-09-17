@@ -106,7 +106,7 @@ public static class HeroCombatInfoExtension
         Func<HeroTable, int[]> getPropFunc)
     {
         var array = !table.ContainsKey(index) ? Array.Empty<int>() : getPropFunc(table[index]);
-        return GetValueFromArrayOrDefault(array, level);
+        return GetValueFromArrayOrDefault(array, level - 1);
     }
     private static int GetValueFromArrayOrDefault(int[] array, int index) =>
         index > 0 && array?.Length > index ? array[index] : 0;

@@ -184,32 +184,23 @@ public class UIManager : MonoBehaviour
         if (generalCard.Deputy1Id == card.CardId)
         {
             slot = 1;
-            //generalCard.Deputy1Id = -1;
-            //generalCard.Deputy1Level = 0;
         }
 
         if (generalCard.Deputy2Id == card.CardId)
         {
             slot = 2;
-            //generalCard.Deputy2Id = -1;
-            //generalCard.Deputy2Level = 0;
         }   
 
         if (generalCard.Deputy3Id == card.CardId)
         {
             slot = 3;
-            //generalCard.Deputy3Id = -1;
-            //generalCard.Deputy3Level = 0;
         }
 
         if (generalCard.Deputy4Id == card.CardId)
         {
             slot = 4;
-            //generalCard.Deputy4Id = -1;
-            //generalCard.Deputy4Level = 0;
         }
 
-        //Barrack.RefreshCardList();
         ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
@@ -224,15 +215,13 @@ public class UIManager : MonoBehaviour
     private void OnDeputySubmitAction(GameCard generalCard,int index,int cardId)
     {
         var slot = index + 1;
-        //var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == generalCard.CardId);
-        //if (savedCard != null)
-        //    savedCard.Clone(generalCard);
-        //Barrack.RefreshCardList();
         ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
+                var troop = bag.Get<TroopDto>(1);
                 var genCard = PlayerDataForGame.instance.hstData.heroSaveData
                     .First(c => c.CardId == dto.CardId && c.Type == (int)dto.Type);
+                PlayerDataForGame.instance.UpdateTroopEnlist(troop);
                 genCard.CloneFrom(dto);
                 generalCard.Clone(genCard);
                 Barrack.RefreshCardList();
@@ -240,17 +229,13 @@ public class UIManager : MonoBehaviour
             , EventStrings.Call_DeputyAdd, generalCard.CardId, generalCard.Type, cardId, generalCard.Type, slot);
     }
 
-    private void OnArouseAction(GameCard card)
+    private void OnArouseAction(GameCard card, UnityAction<bool> recallAction)
     {
-        //card.Arouse++;
-        //var savedCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(c => c.CardId == card.CardId);
-        //if (savedCard != null)
-        //    savedCard.Clone(card);
-        //Barrack.RefreshCardList();
         ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
                 var consume = bag.Get<GameCardDto>(1);
+                var troop = bag.Get<TroopDto>(2);
                 var genCard =
                     PlayerDataForGame.instance.hstData.heroSaveData.First(c =>
                         c.CardId == dto.CardId && c.Type == (int)dto.Type);
@@ -259,7 +244,9 @@ public class UIManager : MonoBehaviour
                 genCard.CloneFrom(dto);
                 consumeCard.CloneFrom(consume);
                 card.Clone(genCard);
+                PlayerDataForGame.instance.UpdateTroopEnlist(troop);
                 Barrack.RefreshCardList();
+                recallAction?.Invoke(true);
             }, PlayerDataForGame.instance.ShowStringTips
             , EventStrings.Call_Arouse, card.CardId, card.Type);
     }
@@ -680,21 +667,21 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
-            {
-                var player = bag.Get<PlayerDataDto>(0);
-                var dto = bag.Get<GameCardDto>(1);
-                CardMergedUpdate(dto, player);
-            }, msg => CardMergeErrorMessage(card),
-            "Call_CardMerge", card.CardId, card.Type);
-        //ApiPanel.instance.InvokeVb(vb =>
+        //ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
         //    {
-        //        var player = vb.GetPlayerDataDto();
-        //        var dto = vb.GetGameCardDto();
+        //        var player = bag.Get<PlayerDataDto>(0);
+        //        var dto = bag.Get<GameCardDto>(1);
         //        CardMergedUpdate(dto, player);
         //    }, msg => CardMergeErrorMessage(card),
-        //    EventStrings.Req_CardMerge,
-        //    ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
+        //    "Call_CardMerge", card.CardId, card.Type);
+        ApiPanel.instance.InvokeVb(vb =>
+            {
+                var player = vb.GetPlayerDataDto();
+                var dto = vb.GetGameCardDto();
+                CardMergedUpdate(dto, player);
+            }, msg => CardMergeErrorMessage(card),
+            EventStrings.Req_CardMerge,
+            ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
 
         void CardMergedUpdate(GameCardDto dto, PlayerDataDto player)
         {
@@ -735,8 +722,6 @@ public class UIManager : MonoBehaviour
             PlayerDataForGame.instance.ShowStringTips(message);
         }
     }
-
-
 
     private void OnCardEnlist(GameCard card)
     {
@@ -1181,131 +1166,9 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    ////对开启鸡坛时间进行矫正 
-    //public void InitOpenChickenTime(bool isGetNetTime)
-    //{
-    //    if (isGetNetTime) return;
-    //    //没有网络连接关闭鸡坛入口 
-    //    chickenWindow.Off();
-    //}
-
     int openCKTime0 = 0;    //0未到时1可开启2已领取 
     int openCKTime1 = 0;
     int openCKTime2 = 0;
-
-    //int closeCkWinSeconds = 7201;
-
-    ////刷新鸡坛关闭时间显示 
-    //private void UpdateChickenCloseTime(TimeSpan dspNow, TimeSpan dspEnd)
-    //{
-    //    int seconds = (int)(dspEnd.TotalSeconds - dspNow.TotalSeconds);
-    //    if (seconds < closeCkWinSeconds)
-    //    {
-    //        closeCkWinSeconds = seconds;
-    //        chickenCloseText.text = TimeSystemControl.instance.TimeDisplayInChineseText(TimeSpan.FromSeconds(closeCkWinSeconds));
-    //    }
-    //}
-
-    ////是否可以开启鸡坛 
-    //private bool IsChickenReady()
-    //{
-    //    //当前时间点TimeOfDay 
-    //    TimeSpan dspNow = TimeSystemControl.instance.SystemTimer.Now.LocalDateTime.TimeOfDay;
-    //    //TimeSpan dspNow = DateTime.Now.TimeOfDay; 
-
-    //    //在12点-14点之间 
-    //    if (chickenOpenTs[0][0] < dspNow && dspNow < chickenOpenTs[0][1])
-    //    {
-    //        //如果未领取过 
-    //        if (openCKTime0 != 2)
-    //        {
-    //            if (openCKTime0 == 0)
-    //            {
-    //                openCKTime0 = 1;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime0_str, openCKTime0);
-
-    //                openCKTime2 = 0;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime2_str, openCKTime2);
-
-    //                closeCkWinSeconds = 7201;
-
-    //                TimeSystemControl.instance.UpdateIsNotFirstInGame();
-    //            }
-    //            UpdateChickenCloseTime(dspNow, chickenOpenTs[0][1]);
-    //            return true;
-    //        }
-
-    //        return false;
-    //    }
-
-    //    if (openCKTime0 != 0)
-    //    {
-    //        openCKTime0 = 0;
-    //        PlayerPrefs.SetInt(TimeSystemControl.openCKTime0_str, openCKTime0);
-    //    }
-    //    //在17点-19点之间 
-    //    if (chickenOpenTs[1][0] < dspNow && dspNow < chickenOpenTs[1][1])
-    //    {
-    //        if (openCKTime1 != 2)
-    //        {
-    //            if (openCKTime1 == 0)
-    //            {
-    //                openCKTime1 = 1;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime1_str, openCKTime1);
-
-    //                openCKTime0 = 0;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime0_str, openCKTime0);
-
-    //                closeCkWinSeconds = 7201;
-
-    //                TimeSystemControl.instance.UpdateIsNotFirstInGame();
-    //            }
-    //            UpdateChickenCloseTime(dspNow, chickenOpenTs[1][1]);
-    //            return false;
-    //        }
-
-    //        return false;
-    //    }
-
-    //    if (openCKTime1 != 0)
-    //    {
-    //        openCKTime1 = 0;
-    //        PlayerPrefs.SetInt(TimeSystemControl.openCKTime1_str, openCKTime1);
-    //    }
-    //    //在21点-23点之间 
-    //    if (chickenOpenTs[2][0] < dspNow && dspNow < chickenOpenTs[2][1])
-    //    {
-    //        if (openCKTime2 != 2)
-    //        {
-    //            if (openCKTime2 == 0)
-    //            {
-    //                openCKTime2 = 1;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime2_str, openCKTime2);
-
-    //                openCKTime1 = 0;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime1_str, openCKTime1);
-
-    //                openCKTime0 = 0;
-    //                PlayerPrefs.SetInt(TimeSystemControl.openCKTime1_str, openCKTime1);
-
-    //                closeCkWinSeconds = 7201;
-
-    //                TimeSystemControl.instance.UpdateIsNotFirstInGame();
-    //            }
-    //            UpdateChickenCloseTime(dspNow, chickenOpenTs[2][1]);
-    //            return true;
-    //        }
-
-    //        return false;
-    //    }
-
-    //    if (openCKTime2 != 0)
-    //    {
-    //        openCKTime2 = 0;
-    //        PlayerPrefs.SetInt(TimeSystemControl.openCKTime2_str, openCKTime2);
-    //    }
-    //    return false;
-    //}
 
     bool isWaitingToExit = false;
     private void Update()

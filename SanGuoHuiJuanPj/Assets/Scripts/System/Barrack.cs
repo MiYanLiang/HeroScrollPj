@@ -20,7 +20,7 @@ public class Barrack : MonoBehaviour
     public void Init(UnityAction<GameCard> onCardMerge,
         UnityAction<GameCard> onCardSell,
         UnityAction<GameCard> onCardEnlist,
-        UnityAction<GameCard> onArouseCall,
+        UnityAction<GameCard,UnityAction<bool>> onArouseCall,
         UnityAction<GameCard,int,int> onDeputySubmit,
         UnityAction<GameCard> onCancelDeputy)
     {

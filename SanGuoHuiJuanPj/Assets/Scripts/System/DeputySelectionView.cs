@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -34,13 +36,13 @@ public class DeputySelectionView : MonoBehaviour
 
     private void SetDisplay(bool display) => gameObject.SetActive(display);
 
-    public void Set(IEnumerable<GameCard> gameCards, 
+    public void Set(IEnumerable<GameCard> deputyGameCards, 
         UnityAction<GameCard> onCardSubmitAction,
         UnityAction onCancelDeputyAction, 
         GameCard selectedCard = null)
     {
         SelectedCard = selectedCard;
-        foreach (var card in gameCards) Instance(card, onCardSubmitAction);
+        foreach (var card in deputyGameCards) Instance(card, onCardSubmitAction);
         _cancelButton.onClick.RemoveAllListeners();
         _cancelButton.onClick.AddListener(() =>
         {
