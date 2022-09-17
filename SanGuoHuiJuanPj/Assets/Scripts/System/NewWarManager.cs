@@ -19,26 +19,33 @@ public class NewWarManager : MonoBehaviour, ILogger
 
     public ChessGrid Grid;
     public ChessOperatorManager<FightCardData> ChessOperator;
-
+#if UNITY_EDITOR
+    [SerializeField] private bool GenerateLog;
+#else
+    private bool GenerateLog => false;
+#endif
     public void Init(Chessboard chessboard)
     {
         PlayerPoses = chessboard.PlayerScope;
         EnemyPoses = chessboard.EnemyScope;
         Grid = new ChessGrid(PlayerPoses, EnemyPoses);
     }
+
     /// <summary>
     /// 棋盘3部曲 1.新游戏
     /// </summary>
     public void NewGame()
     {
         foreach (var chessPos in PlayerPoses.Concat(EnemyPoses)) chessPos.ResetPos();
-#if UNITY_EDITOR
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
-            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values, this);
-#else
-        ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
-            DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values);
-#endif
+
+        if (GenerateLog)
+            ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
+                DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values,
+                this);
+        else
+
+            ChessOperator = new ChessOperatorManager<FightCardData>(Grid, DataTable.Hero.Values, DataTable.Tower.Values,
+                DataTable.Trap.Values, DataTable.Military.Values, DataTable.JiBan.Values, DataTable.BaseLevel.Values);
     }
 
     private List<FightCardData> RegChessmanList(ChessCard[] list, bool isChallenger)
