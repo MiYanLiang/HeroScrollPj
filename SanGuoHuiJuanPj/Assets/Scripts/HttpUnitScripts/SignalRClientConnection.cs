@@ -84,7 +84,17 @@ public class SignalRClientConnection
         _conn.On(EventStrings.ServerCall, OnServerCall);
         StatusChanged(_conn.State, "连接成功！");
 
-        async void CloseConn() => await _conn.CloseAsync();
+        async void CloseConn()
+        {
+            try
+            {
+                await _conn.CloseAsync();
+            }
+            catch
+            {
+                // ignored
+            }
+        }
     }
 
 

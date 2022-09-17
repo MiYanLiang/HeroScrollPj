@@ -99,10 +99,9 @@ public class PointDesk : MonoBehaviour
         var heroes = PlayerDataForGame.instance.hstData.heroSaveData
             .Where(c =>
             {
-                var isHero = c.Type == (int)GameCardType.Hero;
-                var isDeputy = DataTable.Hero[c.CardId].Deputy > 0;
-                var minLevel = c.Level > 0;
-                return isHero && isDeputy && minLevel;
+                if (c.Level <= 0) return false;
+                if (c.Type != (int)GameCardType.Hero) return false;
+                return DataTable.Hero[c.CardId].Deputy > 0;
             })
             .OrderByDescending(c => c.IsFight)
             .ThenByDescending(c => c.Arouse)
@@ -118,14 +117,15 @@ public class PointDesk : MonoBehaviour
     {
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
-        if(card.Type == (int)GameCardType.Hero)
+        if (card.Type == (int)GameCardType.Hero)
         {
             var deputies = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
             if (deputies.Contains(card.CardId))
                 SelectedCard.CityOperation.SetState(GameCardCityUiOperation.States.Deputy);
+            var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
+            var arouseAble = card.Level > 0 && consume != null;
+            SetButtonInteractable(arouseButton, arouseAble);
         }
-        var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
-        SetButtonInteractable(arouseButton, card.Level > 0 && consume != null);
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);

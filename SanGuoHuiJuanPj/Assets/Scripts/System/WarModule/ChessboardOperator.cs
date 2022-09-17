@@ -687,9 +687,9 @@ namespace Assets.System.WarModule
                 Activity activity;
                 //try
                 //{
-                    //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
-                    activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
-                        conducts, skill, rePos);
+                //如果是Counter将会在这个执行结束前，递归的活动都记录再反击里
+                activity = InstanceActivity(offender.IsChallenger, offender, target.Operator.InstanceId, intent,
+                    conducts, skill, rePos);
                 //}
                 //catch (Exception e)
                 //{
@@ -702,7 +702,7 @@ namespace Assets.System.WarModule
                 //        $"数据异常！请向程序汇报 Offender[{offender}], Target[{target.Operator}], Conducts[{conducts?.Length}], intent = {intent}, Skill = {skill}, repos = [{rePos}]\n{e}");
                 //}
 
-                
+
                 if (target.Operator != null)
                     activity.TargetStatus = GetFullCondition(target.Operator);
 
@@ -712,9 +712,15 @@ namespace Assets.System.WarModule
                     throw new NullReferenceException(
                         $"Target Pos({target.Pos}) is null! from offender Pos({GetStatus(offender).Pos}) as IsChallenger[{offender?.IsChallenger}] type[{offender?.GetType().Name}]");
                 //Process Result
-                var activityResult = ProcessActivityResult(activity, actId);
-                
-                return activityResult;
+                try
+                {
+                    var activityResult = ProcessActivityResult(activity, actId);
+                    return activityResult;
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
             }
         }
 
