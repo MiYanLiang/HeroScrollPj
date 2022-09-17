@@ -103,7 +103,9 @@ public class GameSystem : MonoBehaviour
     {
         TimeSystemControl.Init();
     }
-
+#if UNITY_EDITOR
+    public void SetScene(GameScene scene) => CurrentScene = scene;
+#endif
     private void InitScene(GameScene scene)
     {
         CurrentScene = scene;

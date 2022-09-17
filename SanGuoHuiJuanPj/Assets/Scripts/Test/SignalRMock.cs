@@ -37,6 +37,7 @@ public class SignalRMock : MonoBehaviour
         _apiPanel.SyncSaved(() =>
         {
             GameSystem.Instance.Init();
+            GameSystem.Instance.SetScene(GameSystem.GameScene.MainScene);
             gameObject.SetActive(false);
         });
     }
