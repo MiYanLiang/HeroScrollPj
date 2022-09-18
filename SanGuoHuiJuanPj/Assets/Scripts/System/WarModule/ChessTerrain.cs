@@ -9,19 +9,14 @@ namespace Assets.System.WarModule
     /// </summary>
     public class ChessTerrain
     {
-        private readonly List<PosSprite> sprites;
-        public IEnumerable<PosSprite> Sprites => sprites;
+        private List<PosSprite> sprites = new List<PosSprite>();
+        public IEnumerable<PosSprite> Sprites => sprites.Where(s => s != null);
 
         public int GetServed(CardState.Cons con,IChessOperator op) => Sprites.Sum(o => o.ServedBuff(con, op));
-        public ChessTerrain()
-        {
-            sprites = new List<PosSprite>();
-        }
 
         /// <summary>
         /// 添加状态
         /// </summary>
-
         public void AddSprite(PosSprite sprite)
         {
             if (sprites.Any(s=>s.InstanceId == sprite.InstanceId))
@@ -30,6 +25,9 @@ namespace Assets.System.WarModule
             sprites.Add(sprite);
         }
 
-        public void RemoveSprite(PosSprite sprite) => sprites.Remove(sprite);
+        public void RemoveSprite(PosSprite sprite)
+        {
+            sprites = sprites.Where(s => s != null && s.InstanceId != sprite.InstanceId).ToList();
+        }
     }
 }

@@ -20,7 +20,11 @@ public class DeputySelectionView : MonoBehaviour
         Cards = new List<GameCardUi>();
         foreach (var ui in _scrollRect.content.GetComponentsInChildren<GameCardUi>()) 
             ui.gameObject.SetActive(false);
-        _closeButton.onClick.AddListener(ResetWindow);
+        _closeButton.onClick.AddListener(() =>
+        {
+            UIManager.instance.PlayOnClickMusic();
+            ResetWindow();
+        });
         ResetWindow();
     }
 
@@ -63,6 +67,7 @@ public class DeputySelectionView : MonoBehaviour
         if (isDeputy) return;
         ui.CityOperation.OnclickAction.AddListener(() =>
         {
+            UIManager.instance.PlayOnClickMusic();
             SelectedCard = card;
             _submitButton.onClick.RemoveAllListeners();
             _submitButton.interactable = true;

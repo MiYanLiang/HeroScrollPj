@@ -24,7 +24,11 @@ public class ArouseWindow : MonoBehaviour
 
     public void Init()
     {
-        _closeButton.onClick.AddListener(() => Display(false));
+        _closeButton.onClick.AddListener(() =>
+        {
+            UIManager.instance.PlayOnClickMusic();
+            Display(false);
+        });
         textUiList.Init();
         _upgradeEffectObj.SetActive(false);
         yuanBaoText.color = ybNormalColor;
@@ -33,6 +37,8 @@ public class ArouseWindow : MonoBehaviour
 
     public void Set(GameCard card,UnityAction<UnityAction<bool>> onArouseAction)
     {
+        if (card.Type != (int)GameCardType.Hero)
+            throw new InvalidOperationException("非武将卡牌，不允许打开觉醒窗口!");
         var table = DataTable.Hero[card.CardId];
         var nextArouse = card.Arouse + 1;
         var isLevelEnough = false;
@@ -104,6 +110,7 @@ public class ArouseWindow : MonoBehaviour
     {
         ui.Init(card);
         ui.Set(GameCardUi.CardModes.Desk);
+        ui.CityOperation.SetState(GameCardCityUiOperation.States.None);
         ui.CityOperation.OffChipValue();
     }
 

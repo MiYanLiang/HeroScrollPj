@@ -56,6 +56,7 @@ public class PointDesk : MonoBehaviour
 
     private void OnClickDeputyAction(int index, GameCard deputyCard)
     {
+        UIManager.instance.PlayOnClickMusic();
         var debuties = GetAvailableDeputy(SelectedCard.Card);
         var selectedIndex = index;
         deputySelectionView.Set(debuties, deputy =>
@@ -99,10 +100,9 @@ public class PointDesk : MonoBehaviour
         var heroes = PlayerDataForGame.instance.hstData.heroSaveData
             .Where(c =>
             {
-                var isHero = c.Type == (int)GameCardType.Hero;
-                var isDeputy = DataTable.Hero[c.CardId].Deputy > 0;
-                var minLevel = c.Level > 0;
-                return isHero && isDeputy && minLevel;
+                if (c.Level <= 0) return false;
+                if (c.Type != (int)GameCardType.Hero) return false;
+                return DataTable.Hero[c.CardId].Deputy > 0;
             })
             .OrderByDescending(c => c.IsFight)
             .ThenByDescending(c => c.Arouse)
@@ -118,14 +118,16 @@ public class PointDesk : MonoBehaviour
     {
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
-        if(card.Type == (int)GameCardType.Hero)
+        var isHero = card.Type == (int)GameCardType.Hero;
+        if (isHero)
         {
             var deputies = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
             if (deputies.Contains(card.CardId))
                 SelectedCard.CityOperation.SetState(GameCardCityUiOperation.States.Deputy);
         }
         var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
-        SetButtonInteractable(arouseButton, card.Level > 0 && consume != null);
+        var arouseAble = isHero && card.Level > 0 && consume != null;
+        SetButtonInteractable(arouseButton, arouseAble);
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
@@ -346,10 +348,18 @@ public class PointDesk : MonoBehaviour
         if (upgrade != CardUpgradeWindow.Upgrades.MaxLevel)
             cost = DataTable.CardLevel[card.Level + 1].YuanBaoConsume;
         upgradeButton.onClick.RemoveAllListeners();
-        upgradeButton.onClick.AddListener(() => cardUpgradeWindow.Set(card.GetValue(), cost, upgrade));
+        upgradeButton.onClick.AddListener(() =>
+        {
+            UIManager.instance.PlayOnClickMusic();
+            cardUpgradeWindow.Set(card.GetValue(), cost, upgrade);
+        });
         arouseButton.onClick.RemoveAllListeners();
         arouseButton.onClick.AddListener(
-            () => arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess)));
+            () =>
+            {
+                UIManager.instance.PlayOnClickMusic();
+                arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess));
+            });
     }
 
     public void PlayUpgradeEffect() => StartCoroutine(CardUpgradeEffect());
