@@ -173,6 +173,7 @@ public class UIManager : MonoBehaviour
 
     private void OnDeputyRecallAction(GameCard card)
     {
+        PlayOnClickMusic();
         var generalCard = PlayerDataForGame.instance.hstData.heroSaveData
             .FirstOrDefault(c =>
                 c.Deputy1Id == card.CardId ||
@@ -214,6 +215,7 @@ public class UIManager : MonoBehaviour
 
     private void OnDeputySubmitAction(GameCard generalCard,int index,int cardId)
     {
+        PlayOnClickMusic();
         var slot = index + 1;
         ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
@@ -231,6 +233,7 @@ public class UIManager : MonoBehaviour
 
     private void OnArouseAction(GameCard card, UnityAction<bool> recallAction)
     {
+        PlayOnClickMusic();
         ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
@@ -246,6 +249,7 @@ public class UIManager : MonoBehaviour
                 card.Clone(genCard);
                 PlayerDataForGame.instance.UpdateTroopEnlist(troop);
                 Barrack.RefreshCardList();
+                AudioController0.instance.ForcePlayAudio(16);
                 recallAction?.Invoke(true);
             }, PlayerDataForGame.instance.ShowStringTips
             , EventStrings.Call_Arouse, card.CardId, card.Type);
@@ -657,13 +661,13 @@ public class UIManager : MonoBehaviour
         var nextLevel = DataTable.CardLevel[card.Level + 1];
         var isChipsEnough = card.Chips >= nextLevel.ChipsConsume;
         var isYanBaoEnough = PlayerDataForGame.instance.pyData.YuanBao >= nextLevel.YuanBaoConsume;
+        PlayOnClickMusic();
 
         if (!isChipsEnough || !isYanBaoEnough || !ConsumeManager.instance.DeductYuanBao(nextLevel.YuanBaoConsume))
         {
             PlayerDataForGame.instance.ShowStringTips(!isYanBaoEnough
                 ? DataTable.GetStringText(36)
                 : DataTable.GetStringText(37));
-            UIManager.instance.PlayOnClickMusic();
             return;
         }
 
@@ -707,8 +711,7 @@ public class UIManager : MonoBehaviour
             ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 7);
             Barrack.RefreshCardList();
             Barrack.PointDesk.PlayUpgradeEffect();
-            AudioController0.instance.ChangeAudioClip(16);
-            AudioController0.instance.PlayAudioSource(0);
+            AudioController0.instance.ForcePlayAudio(16);
             //UpdateLevelCardUi();
             ShowOrHideGuideObj(2, false);
         }
@@ -725,6 +728,7 @@ public class UIManager : MonoBehaviour
 
     private void OnCardEnlist(GameCard card)
     {
+        PlayOnClickMusic();
         ApiPanel.instance.InvokeVb(vb =>
             {
                 var troop = vb.GetTroopDto();

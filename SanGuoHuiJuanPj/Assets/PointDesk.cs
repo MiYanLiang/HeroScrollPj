@@ -56,6 +56,7 @@ public class PointDesk : MonoBehaviour
 
     private void OnClickDeputyAction(int index, GameCard deputyCard)
     {
+        UIManager.instance.PlayOnClickMusic();
         var debuties = GetAvailableDeputy(SelectedCard.Card);
         var selectedIndex = index;
         deputySelectionView.Set(debuties, deputy =>
@@ -347,10 +348,18 @@ public class PointDesk : MonoBehaviour
         if (upgrade != CardUpgradeWindow.Upgrades.MaxLevel)
             cost = DataTable.CardLevel[card.Level + 1].YuanBaoConsume;
         upgradeButton.onClick.RemoveAllListeners();
-        upgradeButton.onClick.AddListener(() => cardUpgradeWindow.Set(card.GetValue(), cost, upgrade));
+        upgradeButton.onClick.AddListener(() =>
+        {
+            UIManager.instance.PlayOnClickMusic();
+            cardUpgradeWindow.Set(card.GetValue(), cost, upgrade);
+        });
         arouseButton.onClick.RemoveAllListeners();
         arouseButton.onClick.AddListener(
-            () => arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess)));
+            () =>
+            {
+                UIManager.instance.PlayOnClickMusic();
+                arouseWindow.Set(card, isSuccess => OnArouseCall.Invoke(card, isSuccess));
+            });
     }
 
     public void PlayUpgradeEffect() => StartCoroutine(CardUpgradeEffect());

@@ -24,7 +24,11 @@ public class ArouseWindow : MonoBehaviour
 
     public void Init()
     {
-        _closeButton.onClick.AddListener(() => Display(false));
+        _closeButton.onClick.AddListener(() =>
+        {
+            UIManager.instance.PlayOnClickMusic();
+            Display(false);
+        });
         textUiList.Init();
         _upgradeEffectObj.SetActive(false);
         yuanBaoText.color = ybNormalColor;
@@ -106,6 +110,7 @@ public class ArouseWindow : MonoBehaviour
     {
         ui.Init(card);
         ui.Set(GameCardUi.CardModes.Desk);
+        ui.CityOperation.SetState(GameCardCityUiOperation.States.None);
         ui.CityOperation.OffChipValue();
     }
 
