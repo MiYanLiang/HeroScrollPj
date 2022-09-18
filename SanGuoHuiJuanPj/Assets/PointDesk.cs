@@ -117,15 +117,16 @@ public class PointDesk : MonoBehaviour
     {
         SelectedCard.Init(card);
         SelectedCard.Set(GameCardUi.CardModes.Desk);
-        if (card.Type == (int)GameCardType.Hero)
+        var isHero = card.Type == (int)GameCardType.Hero;
+        if (isHero)
         {
             var deputies = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
             if (deputies.Contains(card.CardId))
                 SelectedCard.CityOperation.SetState(GameCardCityUiOperation.States.Deputy);
-            var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
-            var arouseAble = card.Level > 0 && consume != null;
-            SetButtonInteractable(arouseButton, arouseAble);
         }
+        var consume = DataTable.Hero[card.CardId].ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
+        var arouseAble = isHero && card.Level > 0 && consume != null;
+        SetButtonInteractable(arouseButton, arouseAble);
         //详情信息取消名字显示
         //Fullname.text = info.Name;
         //Fullname.color = ColorDataStatic.GetNameColor(info.Rare);
