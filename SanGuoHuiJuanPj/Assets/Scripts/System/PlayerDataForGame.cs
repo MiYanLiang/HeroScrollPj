@@ -292,6 +292,7 @@ public class PlayerDataForGame : MonoBehaviour
     /// <param name="str"></param> 
     public void ShowStringTips(string str)
     {
+        if (!Application.isPlaying) return;
         textTipsObj.SetActive(false);
         textTipsObj.transform.GetComponent<Text>().text = str;
         textTipsObj.SetActive(true);
