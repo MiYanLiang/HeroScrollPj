@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.WarModule;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
+using UnityEngine.UIElements;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 namespace Assets.System.WarModule
 {
@@ -513,7 +515,7 @@ namespace Assets.System.WarModule
                     {
                         var hero = heroTable[chessman.CardId];
                         var m = militaryTable[hero.MilitaryUnitTableId];
-                        strength = hero.GetArousedStrength(chessman.Arouse) +
+                        strength = hero.GetArousedStrength(chessman.Arouse,chessman.Level) +
                                    heroTable.GetDeputyStrength(
                                        chessman.Deputy1Id, chessman.Deputy1Level,
                                        chessman.Deputy2Id, chessman.Deputy2Level,
@@ -537,8 +539,7 @@ namespace Assets.System.WarModule
                         armedType = m.ArmedType;
                         combatType = m.CombatStyle;
                         element = m.Element;
-                        hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level)
-                                   + hero.GetArousedHitPointAddOn(chessman.Arouse) +
+                        hitpoint = hero.GetArousedHitPoint(chessman.Level, chessman.Arouse) +
                                    heroTable.GetDeputyHitPoint(
                                        chessman.Deputy1Id, chessman.Deputy1Level,
                                        chessman.Deputy2Id, chessman.Deputy2Level,
@@ -570,7 +571,7 @@ namespace Assets.System.WarModule
                     {
                         var tower = towerTable[chessman.CardId];
                         force = tower.ForceId;
-                        strength = tower.Strength;
+                        strength = CombatStyle.DamageFormula(tower.Strength, chessman.Level);
                         speed = tower.Speed;
                         intelligent = CombatStyle.EffectFormula(tower.Effect, chessman.Level, tower.EffectUp);
                         military = tower.Id;
@@ -585,7 +586,7 @@ namespace Assets.System.WarModule
                 case GameCardType.Trap:
                     {
                         var trap = trapTable[chessman.CardId];
-                        strength = trap.Strength;
+                        strength = CombatStyle.DamageFormula(trap.Strength, chessman.Level);
                         force = trap.ForceId;
                         speed = 0;
                         intelligent = 0;
@@ -619,7 +620,7 @@ namespace Assets.System.WarModule
                     throw new ArgumentOutOfRangeException();
             }
 
-            var damage = CombatStyle.DamageFormula(strength, chessman.Level);
+            var damage = strength;
 
             return CombatStyle.Instance(military, armedType, combatType, element, damage, chessman.Level, hitpoint,
                 speed, force, intelligent, gameSetRecover, rare, magicResist, armor, dodge);

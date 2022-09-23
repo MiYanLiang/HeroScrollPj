@@ -1,4 +1,5 @@
-﻿using Assets.System.WarModule;
+﻿using System.WarModule;
+using Assets.System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,14 +35,14 @@ public class GameCardPropertyViewUi : MonoBehaviour
         {
             var heroTable = DataTable.Hero;
             var hero = heroTable[c.CardId];
-            var selfStrength = CombatStyle.DamageFormula(hero.GetArousedStrength(c.Arouse), c.Level);
+            var selfStrength = hero.GetArousedStrength(c.Level, c.Arouse);
             var deputyStrength = heroTable.GetDeputyStrength(
                 c.Deputy1Id, c.Deputy1Level,
                 c.Deputy2Id, c.Deputy2Level,
                 c.Deputy3Id, c.Deputy3Level,
                 c.Deputy4Id, c.Deputy4Level);
             StrPropUi.Set(selfStrength, deputyStrength);
-            var selfHp = CombatStyle.HitPointFormula(hero.HitPoint, c.Level) + hero.GetArousedHitPointAddOn(c.Arouse);
+            var selfHp = hero.GetArousedHitPoint(c.Level, c.Arouse);
             var deputyHp = heroTable.GetDeputyHitPoint(
                 c.Deputy1Id, c.Deputy1Level,
                 c.Deputy2Id, c.Deputy2Level,

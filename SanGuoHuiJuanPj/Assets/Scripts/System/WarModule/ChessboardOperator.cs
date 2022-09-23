@@ -16,7 +16,7 @@ namespace Assets.System.WarModule
     public abstract class ChessboardOperator 
     {
         public const int HeroDodgeLimit = 75;
-        public const int HeroArmorLimit = 100;
+        public const int HeroArmorLimit = 80;
         public ChessGrid Grid { get; }
         public abstract IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
         public abstract IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
@@ -1354,7 +1354,7 @@ namespace Assets.System.WarModule
         /// <returns></returns>
         public void OnCombatMiddlewareConduct(ChessOperator op, Activity.Intentions activityIntent, CombatConduct conduct,ActivityResult result)
         {
-            float armor;
+            int armor;
             var addOn = 0;
             if (Damage.GetKind(conduct) == Damage.Kinds.Physical)
             {
@@ -1367,7 +1367,8 @@ namespace Assets.System.WarModule
 
             if (armor < 0) armor = 0;
             //加护甲
-            var resisted = Math.Min(1 - (armor + addOn) * 0.01f, 1);
+            var armorValue = Math.Min(HeroArmorLimit, armor + addOn);
+            var resisted = 1 - armorValue * 0.01f;
             conduct.Multiply(resisted);
             //伤害或护甲转化buff 例如：流血
             foreach (var bo in GetBuffOperator(b => b.IsSufferConductTrigger))
