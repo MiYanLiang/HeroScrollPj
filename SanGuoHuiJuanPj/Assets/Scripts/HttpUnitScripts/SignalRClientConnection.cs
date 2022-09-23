@@ -124,6 +124,23 @@ public class SignalRClientConnection
     public async Task<TResult> HubInvokeAsync<TResult>(string method, CancellationToken cancellationToken,
         params object[] args) where TResult : class
     {
+        if (_conn.State != ConnectionStates.Connected)
+        {
+            if (_conn.State == ConnectionStates.Closed)
+            {
+                var reconnectSuccess = await HubReconnectTask();
+                if (!reconnectSuccess)
+                {
+                    PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
+                    return null;
+                }
+            }
+            else
+            {
+                PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
+                return null;
+            }
+        }
         return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
         //var retries = 0;
         //for (var i = 0; i < _hubInvokeRetries; i++)
@@ -158,22 +175,22 @@ public class SignalRClientConnection
         //}
 
         //return null;
-        async Task ReconnectScheme()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                try
-                {
-                    PlayerDataForGame.instance.ShowStringTips($"网络状态不稳定，重试中...{i}");
-                    await HubConnectAsync();
-                    return;
-                }
-                catch (Exception)
-                {
-                    await Task.Delay(i * 1000, cancellationToken);
-                }
-            }
-        }
+        //async Task ReconnectScheme()
+        //{
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        try
+        //        {
+        //            PlayerDataForGame.instance.ShowStringTips($"网络状态不稳定，重试中...{i}");
+        //            await HubConnectAsync();
+        //            return;
+        //        }
+        //        catch (Exception)
+        //        {
+        //            await Task.Delay(i * 1000, cancellationToken);
+        //        }
+        //    }
+        //}
     }
 
 

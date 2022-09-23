@@ -147,15 +147,15 @@ public class UIManager : MonoBehaviour
         if(initBaYe) PlayerDataForGame.instance.BaYeManager.InitBaYe();
 
         taoYuan.Init();
-
-        InitializationPlayerInfo();
-        expedition.Init();
         Barrack.Init(MergeCard,
             OnClickForSellCard,
             OnCardEnlist,
             OnArouseAction,
             OnDeputySubmitAction,
             OnDeputyRecallAction);
+
+        InitializationPlayerInfo();
+        expedition.Init();
         Versus.Init(this);
         InitChickenOpenTs();
         //chickenWindow.Init();

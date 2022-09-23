@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Beebyte.Obfuscator;
 using CorrelateLib;
 using UnityEngine;
-using static System.Net.WebRequestMethods;
 
 public static class Server
 {
@@ -45,12 +38,11 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } = "OneClickSignIn"; //"DeviceSignIn";
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
     public static string TokenLogin { get; private set; } = "TokenLogin";
-    public static string GameServer { get; private set; } = 
-    "https://motahero.azurewebsites.net/api/";
+    public static string GameServer { get; private set; } = "https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
     public static string ApiServer { get; private set; } =
-        //"http://localhost:7071/api/";
-        "https://herotestfuncapi.azurewebsites.net/api/";
+        "http://localhost:7071/api/";
+        //"https://herotestfuncapi.azurewebsites.net/api/";
 #endif
 
     private static bool isInitialized;
