@@ -25,6 +25,7 @@ public class PointDeskDeputyView : MonoBehaviour
 
     public void UpdateCardUi(GameCard card)
     {
+        if (card == null) return;
         foreach (var ui in deputies) ui.SetMode(DeputyBtnUi.Modes.Locked);
         var deputyList = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds();
         var isHero = card.Type == (int)GameCardType.Hero;

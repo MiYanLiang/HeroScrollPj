@@ -109,7 +109,7 @@ public class PointDesk : MonoBehaviour
             .ThenByDescending(c => c.Level)
             .ThenByDescending(c => c.GetInfo().Rare)
             .ToArray();
-        var deputies = heroes.GetDeputyIds().ToList();
+        var deputies = PlayerDataForGame.instance.hstData.heroSaveData.GetDeputyIds().ToList();
         deputies.Add(general.CardId);//不包括主将
         return heroes.Where(c=>!deputies.Contains(c.CardId)).ToArray();
     }

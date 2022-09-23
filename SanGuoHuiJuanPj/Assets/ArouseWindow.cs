@@ -54,7 +54,7 @@ public class ArouseWindow : MonoBehaviour
         fromUi.CityOperation.SetDisable(!hasArouseConfig || !isLevelEnough);
         var arousesCard = GameCard.Instance(card);
         arousesCard.Arouse = nextArouse;
-        if (hasArouseConfig && !isLevelEnough) arousesCard.Level = arouseConfig.Level;
+        if (hasArouseConfig && !isLevelEnough) arousesCard.Level = arouseConfig.Stars;
         InitCardUi(arousesCard, toUi);
         
         var costCard = GameCard.InstanceHero(consume.CardId, consume.CardLevel);
@@ -62,14 +62,15 @@ public class ArouseWindow : MonoBehaviour
         var ownCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(h => h.CardId == consume.CardId);
         var hasCard = (ownCard?.Level ?? -1) >= consume.CardLevel;
         costUi.CityOperation.SetDisable(!hasCard);
-
-        var strength = CompareValue(card, arousesCard, table.GetArousedStrength);
-        var intelligent = CompareValue(card, arousesCard, table.GetArousedIntelligent);
-        var dodge = CompareValue(card, arousesCard, table.GetArousedDodge);
-        var speed = CompareValue(card, arousesCard, table.GetArousedSpeed);
-        var armor = CompareValue(card, arousesCard, table.GetArousedArmor);
-        var hitPoint = CompareValue(card, arousesCard, table.GetArousedHitPointAddOn);
-        var magicResist = CompareValue(card, arousesCard, table.GetArousedMagicRest);
+        var fromFc = new FightCardData(card);
+        var toFc = new FightCardData(arousesCard);
+        var strength = toFc.Style.Strength - fromFc.Style.Strength;
+        var intelligent = toFc.Style.Intelligent - fromFc.Style.Intelligent;
+        var dodge = toFc.Style.Dodge - fromFc.Style.Dodge;
+        var speed = toFc.Style.Speed - fromFc.Style.Speed;
+        var armor = toFc.Style.Armor - fromFc.Style.Armor;
+        var hitPoint = toFc.Style.HitPoint - fromFc.Style.HitPoint;
+        var magicResist = toFc.Style.MagicResist - fromFc.Style.MagicResist;
         var list = new[]
         {
             ("武力",strength),
@@ -112,13 +113,6 @@ public class ArouseWindow : MonoBehaviour
         ui.Set(GameCardUi.CardModes.Desk);
         ui.CityOperation.SetState(GameCardCityUiOperation.States.None);
         ui.CityOperation.OffChipValue();
-    }
-
-    private int CompareValue(GameCard card, GameCard arousesCard, Func<int, int> func)
-    {
-        var fromValue = func(card.Arouse);
-        var toValue = func(arousesCard.Arouse);
-        return toValue - fromValue;
     }
 
     public void Display(bool display)
