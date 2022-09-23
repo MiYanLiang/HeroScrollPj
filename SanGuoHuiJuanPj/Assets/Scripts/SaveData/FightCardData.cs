@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.WarModule;
 using Assets.System.WarModule;
 using CorrelateLib;
 using Newtonsoft.Json;
@@ -68,7 +69,7 @@ public class FightCardData : IChessman
         level = card.Level;
         Arouse = card.Arouse;
         this.element = info.Element;
-        var strength = 0;
+        var damage = 0;
         var force = -1;
         var speed = 0;
         var intelligent = 0;
@@ -90,12 +91,12 @@ public class FightCardData : IChessman
                 var heroTable = DataTable.Hero;
                 var hero = DataTable.Hero[card.CardId];
                 var m = DataTable.Military[hero.MilitaryUnitTableId];
-                strength = hero.GetArousedStrength(chessman.Arouse) +
-                           heroTable.GetDeputyStrength(
-                               chessman.Deputy1Id, chessman.Deputy1Level, 
-                               chessman.Deputy2Id, chessman.Deputy2Level, 
-                               chessman.Deputy3Id, chessman.Deputy3Level, 
-                               chessman.Deputy4Id, chessman.Deputy4Level);
+                damage = hero.GetArousedStrength(level,chessman.Arouse) +
+                         heroTable.GetDeputyStrength(
+                             chessman.Deputy1Id, chessman.Deputy1Level,
+                             chessman.Deputy2Id, chessman.Deputy2Level,
+                             chessman.Deputy3Id, chessman.Deputy3Level,
+                             chessman.Deputy4Id, chessman.Deputy4Level);
                 force = hero.ForceTableId;
                 speed = hero.GetArousedSpeed(chessman.Arouse) +
                         heroTable.GetDeputySpeed(chessman.Deputy1Id, chessman.Deputy1Level,
@@ -112,8 +113,7 @@ public class FightCardData : IChessman
                 armedType = m.ArmedType;
                 combatType = m.CombatStyle;
                 element = m.Element;
-                hitpoint = CombatStyle.HitPointFormula(hero.HitPoint, chessman.Level)
-                           + hero.GetArousedHitPointAddOn(chessman.Arouse) +
+                hitpoint = hero.GetArousedHitPoint(level,chessman.Arouse) +
                            heroTable.GetDeputyHitPoint(chessman.Deputy1Id, chessman.Deputy1Level,
                                chessman.Deputy2Id, chessman.Deputy2Level,
                                chessman.Deputy3Id, chessman.Deputy3Level,
@@ -139,7 +139,7 @@ public class FightCardData : IChessman
             {
                 var tower = DataTable.Tower[card.CardId];
                 force = tower.ForceId;
-                strength = tower.Strength;
+                damage = CombatStyle.DamageFormula(tower.Strength, level);
                 speed = tower.Speed;
                 intelligent = CombatStyle.EffectFormula(tower.Effect, level, tower.EffectUp);
                 military = tower.Id;
@@ -152,7 +152,7 @@ public class FightCardData : IChessman
             case GameCardType.Trap:
             {
                 var trap = DataTable.Trap[card.CardId];
-                strength = trap.Strength;
+                damage = CombatStyle.DamageFormula(trap.Strength, level);
                 force = trap.ForceId;
                 speed = 0;
                 intelligent = 0;
@@ -167,7 +167,7 @@ public class FightCardData : IChessman
                 break;
             case GameCardType.Base:
             {
-                strength = 0;
+                damage = 0;
                 force = 0;
                 speed = 0;
                 intelligent = 0;
@@ -187,7 +187,7 @@ public class FightCardData : IChessman
         
         Troop = force;
         Speed = speed;
-        Damage = CombatStyle.DamageFormula(strength, level);
+        Damage = damage;
         StatesUi = new Dictionary<int, EffectStateUi>();
         status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
         Style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,

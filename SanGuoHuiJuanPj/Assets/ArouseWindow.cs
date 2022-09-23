@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using System.WarModule;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
@@ -39,14 +40,14 @@ public class ArouseWindow : MonoBehaviour
     {
         if (card.Type != (int)GameCardType.Hero)
             throw new InvalidOperationException("非武将卡牌，不允许打开觉醒窗口!");
-        var table = DataTable.Hero[card.CardId];
+        var hero = DataTable.Hero[card.CardId];
         var nextArouse = card.Arouse + 1;
         var isLevelEnough = false;
         var hasArouseConfig = DataTable.ArouseConfig.TryGetValue(nextArouse, out var arouseConfig);
         if (hasArouseConfig)
             isLevelEnough = arouseConfig.Stars <= card.Level;
 
-        var consume = table.ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
+        var consume = hero.ArouseConsumes.Where((_, i) => i >= card.Arouse).FirstOrDefault();
         if (consume == null) return;
 
         textUiList.ClearList();
@@ -62,24 +63,22 @@ public class ArouseWindow : MonoBehaviour
         var ownCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(h => h.CardId == consume.CardId);
         var hasCard = (ownCard?.Level ?? -1) >= consume.CardLevel;
         costUi.CityOperation.SetDisable(!hasCard);
-        var fromFc = new FightCardData(card);
-        var toFc = new FightCardData(arousesCard);
-        var strength = toFc.Style.Strength - fromFc.Style.Strength;
-        var intelligent = toFc.Style.Intelligent - fromFc.Style.Intelligent;
-        var dodge = toFc.Style.Dodge - fromFc.Style.Dodge;
-        var speed = toFc.Style.Speed - fromFc.Style.Speed;
-        var armor = toFc.Style.Armor - fromFc.Style.Armor;
-        var hitPoint = toFc.Style.HitPoint - fromFc.Style.HitPoint;
-        var magicResist = toFc.Style.MagicResist - fromFc.Style.MagicResist;
+        var strength = hero.GetArousedStrength(arousesCard.Level, arousesCard.Arouse) - hero.GetArousedStrength(arousesCard.Level, card.Arouse);
+        var intelligent = hero.GetArousedIntelligent(arousesCard.Arouse) - hero.GetArousedIntelligent(card.Arouse);
+        var dodge = hero.GetArousedDodge(arousesCard.Arouse) - hero.GetArousedDodge(card.Arouse);
+        var speed = hero.GetArousedSpeed(arousesCard.Arouse) - hero.GetArousedSpeed(card.Arouse);
+        var armor = hero.GetArousedArmor(arousesCard.Arouse) - hero.GetArousedArmor(card.Arouse);
+        var hitPoint = hero.GetArousedHitPoint(arousesCard.Level, arousesCard.Arouse) - hero.GetArousedHitPoint(arousesCard.Level, card.Arouse);
+        var magicResist = hero.GetArousedMagicRest(arousesCard.Arouse) - hero.GetArousedMagicRest(card.Arouse);
         var list = new[]
         {
-            ("武力",strength),
-            ("智力",intelligent),
-            ("血量",hitPoint),
-            ("速度",speed),
-            ("闪避",dodge),
-            ("护甲",armor),
-            ("法免",magicResist),
+            ("武力", strength),
+            ("智力", intelligent),
+            ("血量", hitPoint),
+            ("速度", speed),
+            ("闪避", dodge),
+            ("护甲", armor),
+            ("法免", magicResist),
         };
         foreach (var(title,value) in list)
         {
