@@ -134,8 +134,8 @@ namespace System.WarModule
 
         private static int GetArouseArrayValue(int[] array, int arouse)
         {
-            if (arouse == 0) return 0;
-            if (array == null || array.Length == 0) return 0;
+            if (arouse <= 0) return 0;
+            if (array == null || arouse > array.Length) return 0;
             var index = arouse - 1;
             return array[index];
         }
