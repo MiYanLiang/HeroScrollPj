@@ -55,7 +55,7 @@ public class ApiPanel : MonoBehaviour
     public void CallTest(string username,UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args)
     {
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
         SetBusy(true);
         var queryString = TestUserQuery(username);
         var jsonBag = DataBag.SerializeBag(method, args);

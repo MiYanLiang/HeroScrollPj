@@ -174,6 +174,7 @@ public class UIManager : MonoBehaviour
     private void OnDeputyRecallAction(GameCard card)
     {
         PlayOnClickMusic();
+        if (card == null) return;
         var generalCard = PlayerDataForGame.instance.hstData.heroSaveData
             .FirstOrDefault(c =>
                 c.Deputy1Id == card.CardId ||
@@ -202,7 +203,7 @@ public class UIManager : MonoBehaviour
             slot = 4;
         }
 
-        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+        ApiPanel.instance.Call(bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
                 var genCard = PlayerDataForGame.instance.hstData.heroSaveData
@@ -217,7 +218,7 @@ public class UIManager : MonoBehaviour
     {
         PlayOnClickMusic();
         var slot = index + 1;
-        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+        ApiPanel.instance.Call(bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
                 var troop = bag.Get<TroopDto>(1);
@@ -234,7 +235,7 @@ public class UIManager : MonoBehaviour
     private void OnArouseAction(GameCard card, UnityAction<bool> recallAction)
     {
         PlayOnClickMusic();
-        ApiPanel.instance.CallTest(PlayerDataMock.Username, bag =>
+        ApiPanel.instance.Call(bag =>
             {
                 var dto = bag.Get<GameCardDto>(0);
                 var consume = bag.Get<GameCardDto>(1);

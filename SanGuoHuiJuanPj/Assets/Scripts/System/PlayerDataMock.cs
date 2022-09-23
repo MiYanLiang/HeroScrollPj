@@ -15,7 +15,7 @@ public class PlayerDataMock : PlayerDataForGame
         if (downloadSavedData)
         {
             Username = username;
-            ApiPanel.instance.CallTest(username, bag => SetSavedFile(bag, () => base.Init(onCompleteAction)),
+            ApiPanel.instance.Call(bag => SetSavedFile(bag, () => base.Init(onCompleteAction)),
                 _ => ShowStringTips("服务器连接失败！"),
                 "Req_CallSaved", username);
             return;

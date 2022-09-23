@@ -124,39 +124,40 @@ public class SignalRClientConnection
     public async Task<TResult> HubInvokeAsync<TResult>(string method, CancellationToken cancellationToken,
         params object[] args) where TResult : class
     {
-        var retries = 0;
-        for (var i = 0; i < _hubInvokeRetries; i++)
-        {
-            try
-            {
-                retries = i;
-                var result = await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
-                return result;
-            }
-            catch (Exception e)
-            {
-                if (i < _hubInvokeRetries)
-                {
-                    OnRequestError?.Invoke();
-                    await Task.Delay(i * _retryIntervalMilliseconds, cancellationToken);
-                    await ReconnectScheme(); 
-                    continue;
-                }
+        return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+        //var retries = 0;
+        //for (var i = 0; i < _hubInvokeRetries; i++)
+        //{
+        //    try
+        //    {
+        //        retries = i;
+        //        var result = await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+        //        return result;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        if (i < _hubInvokeRetries)
+        //        {
+        //            OnRequestError?.Invoke();
+        //            await Task.Delay(i * _retryIntervalMilliseconds, cancellationToken);
+        //            await ReconnectScheme(); 
+        //            continue;
+        //        }
 #if UNITY_EDITOR
-                XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e}");
-#endif
-                var now = SysTime.Now;
-                var timeText = $"{now.Year - 2000}.{now.Month}.{now.Day}";
-                var username = GamePref.Username;
-                var filtered = username.Split("yx").LastOrDefault();
-                filtered = filtered?.Split("hj").LastOrDefault();
-                var userid = int.TryParse(filtered, out var id) ? id - 10000 : 0;
-                GameSystem.ServerRequestException(method,
-                    $"v{Application.version}.{timeText}.{userid}.Retried:{retries}\n{e}");
-            }
-        }
+        //        XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e}");
+#endif  //
+        //        var now = SysTime.Now;
+        //        var timeText = $"{now.Year - 2000}.{now.Month}.{now.Day}";
+        //        var username = GamePref.Username;
+        //        var filtered = username.Split("yx").LastOrDefault();
+        //        filtered = filtered?.Split("hj").LastOrDefault();
+        //        var userid = int.TryParse(filtered, out var id) ? id - 10000 : 0;
+        //        GameSystem.ServerRequestException(method,
+        //            $"v{Application.version}.{timeText}.{userid}.Retried:{retries}\n{e}");
+        //    }
+        //}
 
-        return null;
+        //return null;
         async Task ReconnectScheme()
         {
             for (int i = 0; i < 3; i++)
