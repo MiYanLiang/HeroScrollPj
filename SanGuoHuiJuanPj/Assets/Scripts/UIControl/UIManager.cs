@@ -695,7 +695,16 @@ public class UIManager : MonoBehaviour
             switch (dto.Type)
             {
                 case GameCardType.Hero:
+                {
                     ca = hst.heroSaveData.First(c => c.CardId == dto.CardId);
+                    hst.heroSaveData.ForEach(c =>
+                    {
+                        if (c.Deputy1Id == dto.CardId) c.Deputy1Level = dto.Level;
+                        if (c.Deputy2Id == dto.CardId) c.Deputy2Level = dto.Level;
+                        if (c.Deputy3Id == dto.CardId) c.Deputy3Level = dto.Level;
+                        if (c.Deputy4Id == dto.CardId) c.Deputy4Level = dto.Level;
+                    });
+                }
                     break;
                 case GameCardType.Tower:
                     ca = hst.towerSaveData.First(c => c.CardId == dto.CardId);

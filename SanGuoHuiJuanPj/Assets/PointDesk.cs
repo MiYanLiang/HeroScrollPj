@@ -254,7 +254,7 @@ public class PointDesk : MonoBehaviour
                 var armor = c.DeputyArmors.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
                 var magicArmor = c.DeputyMagicRests.Where((_, i) => i == card.Card.Level - 1).FirstOrDefault();
                 var deputyText = "副将效果：" +
-                                 GenerateText("力量", strength) +
+                                 GenerateText("武力", strength) +
                                  GenerateText("血量", hp) +
                                  GenerateText("速度", speed) +
                                  GenerateText("闪避", dodge) +

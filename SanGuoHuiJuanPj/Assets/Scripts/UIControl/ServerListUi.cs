@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -16,44 +14,48 @@ public class ServerListUi : SignInBaseUi
     [SerializeField] private Button changePwdButton;
     public Button backButton;
     [SerializeField] private ConfirmWindowUi confirmWindowUi;
-    private Dictionary<int, (ServerUi ui, string url)> Servers { get; } = new Dictionary<int, (ServerUi ui, string url)>();
-    public int SelectedZone { get; private set; }
+    private List<ServerUi> Servers { get; } = new List<ServerUi>();
+    public ServerUi SelectedServer => Servers[SelectedServerIndex];
+    public int SelectedServerIndex { get; private set; }
+
     private UnityAction ResetAction;
     private UnityAction ChangePwdAction;
     public void Set(ServerInfo[] servers, UnityAction<int> onLoginAction, UnityAction onClickReset,
         UnityAction onClickChangePwd)
     {
-        foreach (var button in Servers.Values.ToArray()) Destroy(button.ui.gameObject);
+        foreach (var ui in Servers.ToArray()) Destroy(ui.gameObject);
         Servers.Clear();
-        foreach (ServerInfo server in servers
 #if !UNITY_EDITOR
-                     .Where(s=>s.Zone>=0)
+        servers = servers.Where(s => s.Zone >= 0).ToArray();
 #endif
-                     .ToArray())
+        for (var i = 0; i < servers.Length; i++)
         {
+            var server = servers[i];
             var s = Instantiate(ServerPrefab, scrollRect.content.transform);
-            s.SelectButton.onClick.AddListener(() => OnSelect(server.Zone));
-            Servers.Add(server.Zone, (s, server.Api));
-            s.Init(server.Zone, server.Title, server == servers[servers.Length - 1]);
-            s.gameObject.SetActive(true);
+            var i1 = i;
+            s.SelectButton.onClick.AddListener(() => OnSelect(i1));
+            Servers.Add(s);
+            s.Init(server.Zone, server.Title, server == servers[^1], server.StartDate, server.CloseDate);
         }
 
         OnSelect(GamePref.LastServiceZone);
-        loginButton.onClick.AddListener(() => onLoginAction.Invoke(SelectedZone));
+        loginButton.onClick.AddListener(() => onLoginAction.Invoke(SelectedServer.Zone));
         resetButton.onClick.RemoveAllListeners();
         resetButton.onClick.AddListener(onClickReset);
         changePwdButton.onClick.RemoveAllListeners();
         changePwdButton.onClick.AddListener(onClickChangePwd);
     }
 
-    private void OnSelect(int zone)
+    private void OnSelect(int index)
     {
-        SelectedZone = zone;
-        foreach (var s in Servers)
+        if (index < 0 || (Servers.Count > index && !Servers[index].IsActive))
+            index = 0;
+        for (var i = 0; i < Servers.Count; i++)
         {
-            var ui = s.Value.ui;
-            ui.OnSelected(s.Key == zone);
+            var ui = Servers[i];
+            ui.OnSelected(i == index);
         }
+        SelectedServerIndex = index;
     }
 
     public override void ResetUi()
@@ -68,8 +70,9 @@ public class ServerListUi : SignInBaseUi
     public class ServerInfo
     {
         public int Zone { get; set; }
-        public string Api { get; set; }
         public string Title { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime CloseDate { get; set; }
     }
 
     public void OpenConfirmWindow(string msg,UnityAction action) => confirmWindowUi.Open(msg, action);
