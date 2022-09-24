@@ -79,7 +79,7 @@ public class NewWarManager : MonoBehaviour, ILogger
     /// </summary>
     public List<FightCardData> ConfirmInstanceEnemies() => RegChessmanList(Enemy, false);
 
-    public void RegCard(FightCardData card) => ChessOperator.RegOperator(card);
+    public void RegCard(FightCardData card) => ChessOperator.RegOperatorWithSeed(card);
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {

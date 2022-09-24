@@ -215,7 +215,7 @@ public class SignalRClientConnection
     private void OnDisconnect() => Disconnect();
     private async void Disconnect(UnityAction onActionDone = null)
     {
-        if (_conn.State == ConnectionStates.Closed || _conn.State == ConnectionStates.CloseInitiated) return;
+        if (_conn?.State is ConnectionStates.Closed or ConnectionStates.CloseInitiated) return;
         await CloseConnectionAsync();
         onActionDone?.Invoke();
     }

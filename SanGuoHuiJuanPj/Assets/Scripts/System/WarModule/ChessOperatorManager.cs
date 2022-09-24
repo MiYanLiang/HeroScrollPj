@@ -4,8 +4,7 @@ using System.Linq;
 using System.WarModule;
 using CorrelateLib;
 using Microsoft.Extensions.Logging;
-using UnityEngine.UIElements;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
+
 namespace Assets.System.WarModule
 {
     public class ChessOperatorManager<TCard> : ChessboardOperator where TCard : IChessman
@@ -97,15 +96,14 @@ namespace Assets.System.WarModule
             return seed;
         }
 
-        public TCard RegOperator(TCard card)
+        public void RegOperatorWithSeed(TCard card)
         {
             card.InstanceId = GetCardSeed();
             var op = InstanceOperator(card);
             StatusMap.Add(op, op.GenerateStatus());
-            ops.Add(op.InstanceId,op);
+            ops.Add(op.InstanceId, op);
             PosOperator(op, card.Pos);
             NewPlaceList.Add(op);
-            return card;
         }
 
 
@@ -515,7 +513,7 @@ namespace Assets.System.WarModule
                     {
                         var hero = heroTable[chessman.CardId];
                         var m = militaryTable[hero.MilitaryUnitTableId];
-                        strength = hero.GetArousedStrength(chessman.Arouse,chessman.Level) +
+                        strength = hero.GetArousedStrength(arouse: chessman.Arouse,level: chessman.Level) +
                                    heroTable.GetDeputyStrength(
                                        chessman.Deputy1Id, chessman.Deputy1Level,
                                        chessman.Deputy2Id, chessman.Deputy2Level,
@@ -539,7 +537,7 @@ namespace Assets.System.WarModule
                         armedType = m.ArmedType;
                         combatType = m.CombatStyle;
                         element = m.Element;
-                        hitpoint = hero.GetArousedHitPoint(chessman.Level, chessman.Arouse) +
+                        hitpoint = hero.GetArousedHitPoint(arouse: chessman.Arouse, level: chessman.Level) +
                                    heroTable.GetDeputyHitPoint(
                                        chessman.Deputy1Id, chessman.Deputy1Level,
                                        chessman.Deputy2Id, chessman.Deputy2Level,

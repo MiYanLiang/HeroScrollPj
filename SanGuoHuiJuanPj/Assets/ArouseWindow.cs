@@ -63,12 +63,12 @@ public class ArouseWindow : MonoBehaviour
         var ownCard = PlayerDataForGame.instance.hstData.heroSaveData.FirstOrDefault(h => h.CardId == consume.CardId);
         var hasCard = (ownCard?.Level ?? -1) >= consume.CardLevel;
         costUi.CityOperation.SetDisable(!hasCard);
-        var strength = hero.GetArousedStrength(arousesCard.Level, arousesCard.Arouse) - hero.GetArousedStrength(arousesCard.Level, card.Arouse);
+        var strength = hero.GetArousedStrength(arouse: arousesCard.Arouse, level: arousesCard.Level) - hero.GetArousedStrength(arouse: card.Arouse, level: arousesCard.Level);
         var intelligent = hero.GetArousedIntelligent(arousesCard.Arouse) - hero.GetArousedIntelligent(card.Arouse);
         var dodge = hero.GetArousedDodge(arousesCard.Arouse) - hero.GetArousedDodge(card.Arouse);
         var speed = hero.GetArousedSpeed(arousesCard.Arouse) - hero.GetArousedSpeed(card.Arouse);
         var armor = hero.GetArousedArmor(arousesCard.Arouse) - hero.GetArousedArmor(card.Arouse);
-        var hitPoint = hero.GetArousedHitPoint(arousesCard.Level, arousesCard.Arouse) - hero.GetArousedHitPoint(arousesCard.Level, card.Arouse);
+        var hitPoint = hero.GetArousedHitPoint(arouse: arousesCard.Arouse, level: arousesCard.Level) - hero.GetArousedHitPoint(arouse: card.Arouse, level: arousesCard.Level);
         var magicResist = hero.GetArousedMagicRest(arousesCard.Arouse) - hero.GetArousedMagicRest(card.Arouse);
         var list = new[]
         {

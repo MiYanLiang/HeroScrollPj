@@ -91,7 +91,7 @@ public class FightCardData : IChessman
                 var heroTable = DataTable.Hero;
                 var hero = DataTable.Hero[card.CardId];
                 var m = DataTable.Military[hero.MilitaryUnitTableId];
-                damage = hero.GetArousedStrength(level,chessman.Arouse) +
+                damage = hero.GetArousedStrength(arouse: chessman.Arouse,level: level) +
                          heroTable.GetDeputyStrength(
                              chessman.Deputy1Id, chessman.Deputy1Level,
                              chessman.Deputy2Id, chessman.Deputy2Level,
@@ -113,7 +113,7 @@ public class FightCardData : IChessman
                 armedType = m.ArmedType;
                 combatType = m.CombatStyle;
                 element = m.Element;
-                hitpoint = hero.GetArousedHitPoint(level,chessman.Arouse) +
+                hitpoint = hero.GetArousedHitPoint(arouse: chessman.Arouse,level: level) +
                            heroTable.GetDeputyHitPoint(chessman.Deputy1Id, chessman.Deputy1Level,
                                chessman.Deputy2Id, chessman.Deputy2Level,
                                chessman.Deputy3Id, chessman.Deputy3Level,

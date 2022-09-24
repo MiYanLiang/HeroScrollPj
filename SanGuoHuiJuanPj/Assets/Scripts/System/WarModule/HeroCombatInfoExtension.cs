@@ -6,13 +6,13 @@ namespace System.WarModule
 {
     public static class HeroCombatInfoExtension
     {
-        public static int GetArousedStrength(this HeroTable h, int level, int arouse) =>
+        public static int GetArousedStrength(this HeroTable h, int arouse, int level) =>
             CombatStyle.DamageFormula(h.Strength, level) + GetArouseArrayValue(h.ArouseStrengths, arouse);
 
         public static int GetArousedIntelligent(this HeroTable h, int arouse) =>
              h.Intelligent + GetArouseArrayValue(h.ArouseIntelligents, arouse);
 
-        public static int GetArousedHitPoint(this HeroTable h, int level, int arouse) =>
+        public static int GetArousedHitPoint(this HeroTable h, int arouse, int level) =>
             CombatStyle.HitPointFormula(h.HitPoint, level) + GetArouseArrayValue(h.ArouseHitPoints, arouse);
 
         public static int GetArousedSpeed(this HeroTable h, int arouse) =>
