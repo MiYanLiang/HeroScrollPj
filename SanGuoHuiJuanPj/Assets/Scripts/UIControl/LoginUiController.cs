@@ -39,7 +39,7 @@ public class LoginUiController : MonoBehaviour
     [SerializeField] private Image AddictPanel;
     public string DeviceIsBound = @"设备已绑定了账号，请用设备登录修改账号信息!";
     private static bool isDeviceLogin;
-    public Dictionary<int,ServerListUi.ServerInfo> Servers { get; set; }
+    private ServerListUi.ServerInfo[] _server;
     [SerializeField] private TapTapAntiAddict TtAa;
 
 #if UNITY_EDITOR
@@ -139,7 +139,7 @@ public class LoginUiController : MonoBehaviour
         OnSignInAction?.Invoke();
         serverList.gameObject.SetActive(true);
         serverList.backButton.onClick.AddListener(()=>OnAction(ActionWindows.Login));
-        serverList.Set(Servers.Values.ToArray(), zone =>
+        serverList.Set(_server.ToArray(), zone =>
         {
             AsyncInvoke(LoginZone);
 
@@ -186,7 +186,7 @@ public class LoginUiController : MonoBehaviour
             }
 
         }, () => serverList.OpenConfirmWindow(
-            $"重置【{serverList.SelectedZone}】服\n【{Servers[serverList.SelectedZone].Title}】玩家数据，\n请确定？",
+            $"重置【{serverList.SelectedServerIndex}】服\n【{serverList.SelectedServer.Title}】玩家数据，\n请确定？",
             OnResetAccount), () => OnAction(ActionWindows.ChangePassword));
     }
 
@@ -197,7 +197,7 @@ public class LoginUiController : MonoBehaviour
         async Task RequestApiReset()
         {
             var response =
-                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedZone}", SignalRClient.instance.LoginToken);
+                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedServer.Zone}", SignalRClient.instance.LoginToken);
             var message = await response.Content.ReadAsStringAsync();
             serverList.SetMessage(message);
         }
@@ -419,9 +419,11 @@ public class LoginUiController : MonoBehaviour
         AddictPanel.gameObject.SetActive(true);
         SignalRClient.instance.LoginToken = bag.Get<string>(0);
         var list = bag.Get<ServerListUi.ServerInfo[]>(1);
+        //list[3].StartDate = list[3].StartDate.AddMonths(-1);
+        //list[2].CloseDate = list[2].CloseDate.AddMonths(-1);
         var username = bag.Get<string>(2);
         UpdateUsername(username);
-        Servers = list.ToDictionary(s => s.Zone, s => s);
+        _server = list;
         TtAa.StartUp(username);
     }
 
