@@ -127,7 +127,6 @@ namespace Assets.System.WarModule
 
         protected class ConductResult
         {
-            public int JbId;
             public int PushBackRate;
             public CombatConduct[] Conducts;
 
@@ -244,17 +243,23 @@ namespace Assets.System.WarModule
     /// </summary>
     public class CangLongHaoYue : BondOperator
     {
-        private int DamageRate => 100;
-
+        //击中概率
+        private int RandomRate { get; } = 30;
+        //初始伤害
+        private int InitDamage { get; } = 50;
+        //对方血量的百分比伤害
+        private float HpDamageRate { get; } = 0.15f;
         public CangLongHaoYue(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
         }
 
         protected override ConductResult RoundStartRivalConduct(ChessOperator[] ops, IChessOperator rival)
         {
+            var emptyConduct = new ConductResult(Array.Empty<CombatConduct>());
             if (rival.CardType == GameCardType.Hero || rival.CardType == GameCardType.Base)
-                return new ConductResult(Array.Empty<CombatConduct>());
-            var damage = AverageAdditionalDamageFromBonds(ops.Where(IsInBondList).ToArray(), DamageRate);
+                return emptyConduct;
+            if (!Chessboard.IsRandomPass(RandomRate)) return emptyConduct;
+            var damage = InitDamage + Chessboard.GetStatus(rival).MaxHp * HpDamageRate;
             var scope = ops.First().IsChallenger ? -1 : -2;
             var conducts = new List<CombatConduct> { CombatConduct.InstanceDamage(scope, damage) };
             return new ConductResult(conducts.ToArray());
