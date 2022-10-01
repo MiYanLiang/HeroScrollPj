@@ -47,7 +47,7 @@ public static class GamePref
     public const string IsPlayedIntroString = "IsPlayedIntro";
 
     private const string LastServiceZoneString = "LastServiceZone";
-    public static int LastServiceZone => PlayerPrefs.GetInt(LastServiceZoneString);
+    public static int LastServiceZone => PlayerPrefs.GetInt(LastServiceZoneString, -2);
     public static void SetLastServiceZone(int zone) => PlayerPrefs.SetInt(LastServiceZoneString, zone);
 
 
