@@ -244,7 +244,7 @@ namespace Assets.System.WarModule
     public class CangLongHaoYue : BondOperator
     {
         //击中概率
-        private int RandomRate { get; } = 30;
+        private int RandomRate { get; } = 50;
         //初始伤害
         private int InitDamage { get; } = 50;
         //对方血量的百分比伤害
