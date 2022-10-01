@@ -7,6 +7,7 @@ using BestHTTP.SignalRCore.Messages;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
+using static Assets.System.WarModule.CardState;
 
 public class SignalRClientConnection
 {
@@ -19,14 +20,9 @@ public class SignalRClientConnection
     /// </summary>
     public ConnectionStates Status { get; private set; }
     private SignalRConnectionInfo ConnectionInfo { get; set; }
-    private readonly int _hubInvokeRetries;
-    private readonly int _retryIntervalMilliseconds;
 
-    public SignalRClientConnection(int hubInvokeRetries, int retryIntervalMilliseconds = 1000)
+    public SignalRClientConnection()
     {
-        _hubInvokeRetries = hubInvokeRetries;
-        _retryIntervalMilliseconds = retryIntervalMilliseconds;
-        Application.quitting += OnDisconnect;
     }
 
     private HubConnection InstanceHub(string url, string token)
@@ -42,6 +38,8 @@ public class SignalRClientConnection
         conn.AuthenticationProvider = new AzureSignalRServiceAuthenticator(conn, token);
         return conn;
     }
+
+
     //Hub connection
     public async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo)
     {
@@ -72,6 +70,7 @@ public class SignalRClientConnection
             _conn.OnClosed -= OnConnectionClose;
             _conn.OnReconnected -= OnReconnected;
             _conn.OnReconnecting -= OnReconnecting;
+            _conn.OnError -= OnError;
             Application.quitting -= OnDisconnect;
             CloseConn();//不用await，因为这个链接有可能释放不了而导致永远等待。
         }
@@ -79,6 +78,8 @@ public class SignalRClientConnection
         _conn.OnClosed += OnConnectionClose;
         _conn.OnReconnected += OnReconnected;
         _conn.OnReconnecting += OnReconnecting;
+        _conn.OnError += OnError;
+        Application.quitting += OnDisconnect;
 
         await _conn.ConnectAsync();
         _conn.On(EventStrings.ServerCall, OnServerCall);
@@ -97,6 +98,14 @@ public class SignalRClientConnection
         }
     }
 
+    private async void OnError(HubConnection conn, string error)
+    {
+        PlayerDataForGame.instance.ShowStringTips("网络连接异常！重新连接...");
+        var isSuccess = await HubReconnectTask();
+        var msg = "网络重连失败！";
+        if (isSuccess) msg = "重新连接！";
+        PlayerDataForGame.instance.ShowStringTips(msg);
+    }
 
     public async Task<bool> HubReconnectTask()
     {
@@ -124,75 +133,32 @@ public class SignalRClientConnection
     public async Task<TResult> HubInvokeAsync<TResult>(string method, CancellationToken cancellationToken,
         params object[] args) where TResult : class
     {
-        if (_conn.State != ConnectionStates.Connected)
+        try
         {
-            if (_conn.State == ConnectionStates.Closed)
+            if (_conn.State != ConnectionStates.Connected)
             {
-                var reconnectSuccess = await HubReconnectTask();
-                if (!reconnectSuccess)
+                if (_conn.State == ConnectionStates.Closed)
+                {
+                    var reconnectSuccess = await HubReconnectTask();
+                    if (!reconnectSuccess)
+                    {
+                        PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
+                        return null;
+                    }
+                }
+                else
                 {
                     PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
                     return null;
                 }
             }
-            else
-            {
-                PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
-                return null;
-            }
+            return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
         }
-        return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
-        //var retries = 0;
-        //for (var i = 0; i < _hubInvokeRetries; i++)
-        //{
-        //    try
-        //    {
-        //        retries = i;
-        //        var result = await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
-        //        return result;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        if (i < _hubInvokeRetries)
-        //        {
-        //            OnRequestError?.Invoke();
-        //            await Task.Delay(i * _retryIntervalMilliseconds, cancellationToken);
-        //            await ReconnectScheme(); 
-        //            continue;
-        //        }
-#if UNITY_EDITOR
-        //        XDebug.LogError<SignalRClient>($"Error in interpretation {method}:{e}");
-#endif  //
-        //        var now = SysTime.Now;
-        //        var timeText = $"{now.Year - 2000}.{now.Month}.{now.Day}";
-        //        var username = GamePref.Username;
-        //        var filtered = username.Split("yx").LastOrDefault();
-        //        filtered = filtered?.Split("hj").LastOrDefault();
-        //        var userid = int.TryParse(filtered, out var id) ? id - 10000 : 0;
-        //        GameSystem.ServerRequestException(method,
-        //            $"v{Application.version}.{timeText}.{userid}.Retried:{retries}\n{e}");
-        //    }
-        //}
-
-        //return null;
-        //async Task ReconnectScheme()
-        //{
-        //    for (int i = 0; i < 3; i++)
-        //    {
-        //        try
-        //        {
-        //            PlayerDataForGame.instance.ShowStringTips($"网络状态不稳定，重试中...{i}");
-        //            await HubConnectAsync();
-        //            return;
-        //        }
-        //        catch (Exception)
-        //        {
-        //            await Task.Delay(i * 1000, cancellationToken);
-        //        }
-        //    }
-        //}
+        catch (Exception e)
+        {
+            return default;
+        }
     }
-
 
     #region Event
 

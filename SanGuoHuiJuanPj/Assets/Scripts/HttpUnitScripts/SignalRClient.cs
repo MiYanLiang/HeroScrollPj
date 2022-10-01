@@ -60,7 +60,7 @@ public class SignalRClient : MonoBehaviour
         _actions = new Dictionary<string, UnityAction<string>>();
         if (SignalRClientConnection == null)
         {
-            SignalRClientConnection = new SignalRClientConnection(_signalRRequestRetries);
+            SignalRClientConnection = new SignalRClientConnection();
             SignalRClientConnection.OnStatusChanged += OnStatusChange;
             SignalRClientConnection.OnStatusChanged += OnStatusChanged;
             SignalRClientConnection.OnServerCall += OnServerCall;
