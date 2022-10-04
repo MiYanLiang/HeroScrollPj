@@ -49,7 +49,7 @@ public class ServerListUi : SignInBaseUi
     private void OnSelect(int index)
     {
         if (index < 0 || (Servers.Count > index && !Servers[index].IsActive))
-            index = 0;
+            index = Servers.Count - 1;//默认服务选项
         for (var i = 0; i < Servers.Count; i++)
         {
             var ui = Servers[i];
