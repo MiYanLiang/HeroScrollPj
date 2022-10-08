@@ -15,8 +15,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public abstract class ChessboardOperator 
     {
-        public const int HeroDodgeLimit = 75;
-        public const int HeroArmorLimit = 80;
+        public const int HeroDodgeLimit = 80;
+        public const int HeroArmorLimit = 95;
         public ChessGrid Grid { get; }
         public abstract IReadOnlyDictionary<int,HeroTable> HeroTable { get; }
         public abstract IReadOnlyDictionary<int,TowerTable> TowerTable { get; }
