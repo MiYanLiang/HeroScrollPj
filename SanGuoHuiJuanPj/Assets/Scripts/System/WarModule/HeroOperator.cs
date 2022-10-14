@@ -1145,7 +1145,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected virtual int Healing() => (int)(StateDamage() * ((StateIntelligent()+50) / 100f));
+        protected virtual int Healing() => (int)(StateDamage() * (StateIntelligent() / 50f));
 
         protected virtual Func<IChessPos, bool> TargetFilter() =>
             p => p.IsAliveHero && Chessboard.GetStatus(p.Operator).HpRate < 1;
