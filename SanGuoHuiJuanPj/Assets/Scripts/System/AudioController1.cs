@@ -58,8 +58,7 @@ public class AudioController1 : MonoBehaviour
     //随机背景小音乐
     private void PlayRandomBackClip()
     {
-        if (!GamePref.PrefMusicPlay)
-            return;
+        if (!GamePref.PrefMusicPlay) return;
 
         audioTimer += Time.deltaTime;
         if (audioTimer >= audioPlayInterval)
@@ -102,6 +101,7 @@ public class AudioController1 : MonoBehaviour
     //改变音乐播放器clip
     private void ChangeAudioClip(AudioClip audioClip, float audioVolume)
     {
+        if (!GamePref.PrefMusicPlay) return;
         //Debug.Log("audioVolume: " + audioVolume + " audioClip: " + audioClip.name);
         audioSource.clip = audioClip;
         audioSource.volume = audioVolume;

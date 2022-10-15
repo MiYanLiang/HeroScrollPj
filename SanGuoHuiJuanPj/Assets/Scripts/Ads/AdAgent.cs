@@ -27,7 +27,7 @@ public class AdAgent : AdAgentBase
         instance = this;
         loadButton.gameObject.SetActive(false);
         showButton.gameObject.SetActive(false);
-        loadButton.onClick.AddListener(OnLoad);
+        //loadButton.onClick.AddListener(OnLoad);
         showButton.onClick.AddListener(OnShow);
         instance = this;
         cancelButton.onClick.AddListener(() =>
@@ -61,20 +61,22 @@ public class AdAgent : AdAgentBase
     {
         gameObject.SetActive(true);
         callBackAction = callBack;
-        if(controller.Status != States.Loaded)
-            OnLoad();
-        else OnShow();
-    }
-    protected void OnLoad()
-    {
-        isBusy = true;
-        proceedMessage.text = "请求广告中，请等待...";
-        controller.RequestLoad((success, msg) => UnityMainThread.thread.RunNextFrame(() => OnLoadResponse(success, msg)));
-        loadButton.gameObject.SetActive(false);
-        StartCoroutine(StartTimer());
+        //if(controller.Status != States.Loaded)
+        //    OnLoad();
+        //else
+            OnShow();
     }
 
-    protected void OnShow()
+    //private void OnLoad()
+    //{
+    //    isBusy = true;
+    //    proceedMessage.text = "请求广告中，请等待...";
+    //    controller.RequestLoad((success, msg) => UnityMainThread.thread.RunNextFrame(() => OnLoadResponse(success, msg)));
+    //    loadButton.gameObject.SetActive(false);
+    //    StartCoroutine(StartTimer());
+    //}
+
+    private void OnShow()
     {
         isBusy = true;
         proceedMessage.text = "请求成功，请等待广告加载...";
