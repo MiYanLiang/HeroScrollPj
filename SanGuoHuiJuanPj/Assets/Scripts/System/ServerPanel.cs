@@ -98,11 +98,22 @@ public class ServerPanel : MonoBehaviour
         void Disconnected()
         {
             var state = message.IsNullArg() ? States.ServerMaintenance : States.Other;
-            if (state == States.Other) Message.text = message;
+            if (state == States.Other)
+            {
+                var obj = Json.Deserialize<ServerData>(message);
+                Message.text = obj != null ? obj.Data.Msg : message;
+            }
             UiShow(state);
         }
     }
-
+    private class ServerData
+    {
+        public Message Data { get; set; }
+        public class Message
+        {
+            public string Msg { get; set; }
+        }
+    }
 
     private void UpdateReconnectBtn(ConnectionStates status)
     {

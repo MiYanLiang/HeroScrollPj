@@ -915,7 +915,7 @@ public class UIManager : MonoBehaviour
                 break;
             case 4: //霸业
             {
-                var isPlayerEnoughLevel = PlayerDataForGame.instance.pyData.Level > 4;
+                var isPlayerEnoughLevel = PlayerDataForGame.instance.pyData.Level > 6;
                 bayeBelowLevelPanel.gameObject.SetActive(!isPlayerEnoughLevel);
                 if (!isPlayerEnoughLevel) break;
                 if (!SystemTimer.IsToday(PlayerDataForGame.instance.baYe.lastBaYeActivityTime))
