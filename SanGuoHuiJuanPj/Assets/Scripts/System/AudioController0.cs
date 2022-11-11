@@ -56,6 +56,7 @@ public class AudioController0 : MonoBehaviour
     /// </summary>
     public bool ChangeAudioClip(int audioClipId)
     {
+        if (!GamePref.PrefMusicPlay) return false;
         if (isPlaying) return false;
         audioSource.clip = audioClips[audioClipId];
         audioSource.volume = audioVolumes[audioClipId];
@@ -64,8 +65,7 @@ public class AudioController0 : MonoBehaviour
 
     public void ForcePlayAudio(int audioClipId)
     {
-        if (!GamePref.PrefMusicPlay)
-            return;
+        if (!GamePref.PrefMusicPlay) return;
         StopAllCoroutines();
         if(audioSource.isPlaying) audioSource.Stop();
         audioSource.clip = audioClips[audioClipId];
@@ -75,6 +75,7 @@ public class AudioController0 : MonoBehaviour
 
     public bool ChangeAudioClip(AudioClip audioClip, float volume)
     {
+        if (!GamePref.PrefMusicPlay) return false;
         if (isPlaying) return false;
         audioSource.clip = audioClip;
         audioSource.volume = volume;

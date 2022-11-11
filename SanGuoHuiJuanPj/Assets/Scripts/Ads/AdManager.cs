@@ -134,10 +134,10 @@ public class AdManager : AdControllerBase
 
     private void PangleResolve(AdControllerBase controller)
     {
-        var adController = (PangleAdController)controller;
-        if (adController.Status == AdAgentBase.States.None ||
-            adController.Status == AdAgentBase.States.Closed ||
-            adController.Status == AdAgentBase.States.FailedToLoad)
-            adController.RequestLoad(adController.OnRequestLoadResult);
+        //var adController = (PangleAdController)controller;
+        //if (adController.Status == AdAgentBase.States.None ||
+        //    adController.Status == AdAgentBase.States.Closed ||
+        //    adController.Status == AdAgentBase.States.FailedToLoad)
+        //    adController.RequestLoad(adController.OnRequestLoadResult);
     }
 }
