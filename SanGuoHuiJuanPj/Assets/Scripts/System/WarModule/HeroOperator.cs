@@ -972,7 +972,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 5;
+        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 4;
 
         protected override CardState.Cons PerformState => CardState.Cons.Confuse;
     }
@@ -1408,7 +1408,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 10 + (StateIntelligentDiff(op)) / 5;
+        protected override int SkillRate(IChessOperator op) => 10 + (StateIntelligentDiff(op)) / 4;
 
         protected override CardState.Cons PerformState => CardState.Cons.Stunned;
     }
@@ -1429,7 +1429,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 15 + (StateIntelligentDiff(op)) / 5;
+        protected override int SkillRate(IChessOperator op) => 15 + (StateIntelligentDiff(op)) / 4;
         
 
         protected override CardState.Cons PerformState => CardState.Cons.Imprisoned;
