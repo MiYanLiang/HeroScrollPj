@@ -1443,7 +1443,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 暴击增率
         /// </summary>
-        protected virtual int CriticalRate => 5;
+        protected virtual int CriticalRate => 10;
         /// <summary>
         /// 法术随机值
         /// </summary>
@@ -1452,7 +1452,7 @@ namespace Assets.System.WarModule
         /// <summary>
         /// 会心增率
         /// </summary>
-        protected virtual int RouseRate => 10;
+        protected virtual int RouseRate => 20;
         protected abstract CardState.Cons PerformState { get; }
         protected override void MilitaryPerforms(int skill = 1)
         {
