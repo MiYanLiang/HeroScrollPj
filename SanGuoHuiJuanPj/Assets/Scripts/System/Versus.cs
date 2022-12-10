@@ -295,9 +295,9 @@ public class Versus : MonoBehaviour
 #if UNITY_EDITOR
         if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
         {
-            hstData.heroSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
-            hstData.towerSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
-            hstData.trapSaveData.ForEach(c => WarBoard.CreateCardToRack(c));
+            hstData.heroSaveData.ForEach(c => WarBoard.CreateCardToRack(c,null));
+            hstData.towerSaveData.ForEach(c => WarBoard.CreateCardToRack(c,null));
+            hstData.trapSaveData.ForEach(c => WarBoard.CreateCardToRack(c,null));
             return;
         }
 #endif
@@ -310,7 +310,7 @@ public class Versus : MonoBehaviour
             .Enlist(forceId)
             .Where(c=> !except.Any(e=> e.CardId == c.CardId && e.Type == c.Type))
             .ToList();
-        list.ForEach(c => WarBoard.CreateCardToRack(c));
+        list.ForEach(c => WarBoard.CreateCardToRack(c, null));
     }
 
     public void PlayResult(WarResult data)

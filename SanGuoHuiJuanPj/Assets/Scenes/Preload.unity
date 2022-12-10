@@ -13067,8 +13067,6 @@ MonoBehaviour:
   adAgent: {fileID: 8237168893214138051}
   AdFields:
   - Ad: 1
-    Ratio: 2
-  - Ad: 0
     Ratio: 1
   adEmu: {fileID: 6333115403404333519}
 --- !u!1 &1081135909092006557

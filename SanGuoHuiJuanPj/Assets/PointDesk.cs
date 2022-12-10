@@ -97,12 +97,14 @@ public class PointDesk : MonoBehaviour
 
     private GameCard[] GetAvailableDeputy(GameCard general)
     {
+        var generalForceId = general.GetForceId();
         var heroes = PlayerDataForGame.instance.hstData.heroSaveData
             .Where(c =>
             {
                 if (c.Level <= 0) return false;
                 if (c.Type != (int)GameCardType.Hero) return false;
-                return DataTable.Hero[c.CardId].Deputy > 0;
+                var hero = DataTable.Hero[c.CardId];
+                return hero.Deputy > 0 && hero.ForceTableId == generalForceId;
             })
             .OrderByDescending(c => c.IsFight)
             .ThenByDescending(c => c.Arouse)

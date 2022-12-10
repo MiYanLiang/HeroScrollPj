@@ -774,36 +774,36 @@ public class WarsUIManager : MonoBehaviour
             var mercenary = DataTable.Mercenary[pick];
             int btnIndex = i;
             var ui = sanXuan.GameCards[i];
-            var info = GenerateGiftCard(i, ui, mercenary);
+            InitGiftCard(i, ui, mercenary);
             //广告概率
             if (Random.Range(0, 100) < 25)
             {
                 ui.SetAd(success =>
                 {
                     if (!success) return;
-                    GetOrBuyCards(true, 0, ui.Card, btnIndex);
+                    GetOrBuyCards(true, 0, ui, btnIndex);
                     PlayerDataForGame.instance.ShowStringTips(DataTable.GetStringText(57));
                 });
                 continue;
             }
 
             ui.SetPrice(mercenary.Cost, () =>
-                GetOrBuyCards(true, mercenary.Cost, ui.Card, btnIndex));
+                GetOrBuyCards(true, mercenary.Cost, ui, btnIndex));
         }
 
         return true;
     }
 
-    private GameCardInfo GenerateGiftCard(int index, TradableGameCardUi ui, MercenaryTable mercenary)
+    private void InitGiftCard(int index, TradableGameCardUi ui, MercenaryTable mercenary)
     {
         var cardType = (GameCardType)mercenary.Produce.CardType;
         var cardRarity = mercenary.Produce.Rarity;
         var cardLevel = mercenary.Produce.Star;
-        var card = RandomPickFromRareClass(cardType, cardRarity);
-        ui.SetGameCard(GameCard.Instance(cardId: card.Id, type: mercenary.Produce.CardType, level: cardLevel));
+        var info = RandomPickFromRareClass(cardType, cardRarity);
+        ui.SetGameCard(GameCard.Instance(cardId: info.Id, type: mercenary.Produce.CardType, level: cardLevel));
         ui.OnClickAction.RemoveAllListeners();
-        ui.OnClickAction.AddListener(() => OnClickToShowShopInfo(index, card.About));
-        return card;
+        ui.OnClickAction.AddListener(() => OnClickToShowShopInfo(index, info.About));
+        ui.GameCard.SetCardInfo(info);
     }
 
     //刷新奇遇商品
@@ -817,8 +817,8 @@ public class WarsUIManager : MonoBehaviour
         {
             var index = i;
             var ui = sanXuan.GameCards[i];
-            var info = GenerateGiftCard(i, ui, mercenary);
-            ui.SetPrice(0, () => GetOrBuyCards(false, 0, ui.Card, index));
+            InitGiftCard(i, ui, mercenary);
+            ui.SetPrice(0, () => GetOrBuyCards(false, 0, ui, index));
         }
     }
 
@@ -857,7 +857,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //获得或购买三选物品
-    private void GetOrBuyCards(bool isBuy, int cost, GameCard card, int btnIndex)
+    private void GetOrBuyCards(bool isBuy, int cost, TradableGameCardUi cardUi, int btnIndex)
     {
         var sanXuan = SanXuanWindow;
         var ui = sanXuan.GameCards[btnIndex];
@@ -876,7 +876,7 @@ public class WarsUIManager : MonoBehaviour
             ui.Off();
         }
 
-        WarBoard.CreateCardToRack(card);
+        WarBoard.CreateCardToRack(cardUi.Card, cardUi.GameCard.CardInfo);
         if (!isBuy) PassStage();
 
         ui.SetSelect(false);
@@ -896,7 +896,7 @@ public class WarsUIManager : MonoBehaviour
 
             var info = RandomPickFromRareClass((GameCardType)reward.CardType, reward.Rarity);
             var card = GameCard.Instance(info.Id, info.Type, reward.Star);
-            WarBoard.CreateCardToRack(card);
+            WarBoard.CreateCardToRack(card, info);
         }
         else
         {
@@ -929,7 +929,7 @@ public class WarsUIManager : MonoBehaviour
                     GameCard.InstanceTower(id, GetLevel(hst.towerSaveData, id))))
                 .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
                     GameCard.InstanceTrap(id, GetLevel(hst.trapSaveData, id))))
-                .ToList().ForEach(c => WarBoard.CreateCardToRack(c));
+                .ToList().ForEach(c => WarBoard.CreateCardToRack(c,null));
             return;
         }
 
@@ -942,11 +942,11 @@ public class WarsUIManager : MonoBehaviour
         var hstData = PlayerDataForGame.instance.hstData;
         //临时记录武将存档信息
         hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c));
+            .ForEach(c => WarBoard.CreateCardToRack(c,null));
         hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c));
+            .ForEach(c => WarBoard.CreateCardToRack(c,null));
         hstData.trapSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c));
+            .ForEach(c => WarBoard.CreateCardToRack(c, null));
     }
 
 

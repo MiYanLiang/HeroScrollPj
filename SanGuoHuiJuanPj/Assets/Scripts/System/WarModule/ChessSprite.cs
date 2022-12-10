@@ -220,7 +220,9 @@ namespace Assets.System.WarModule
         /// 代理特殊条件
         /// </summary>
         protected abstract Func<IChessOperator, bool> OpCondition { get; }
-        public override int ServedBuff(CardState.Cons buff, IChessOperator op) => OpCondition(op) ? BuffRespond(buff,op) : 0;
+
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
+            op == null ? 0 : OpCondition(op) ? BuffRespond(buff, op) : 0;
         //依赖类不执行(回合)消耗
         protected abstract int BuffRespond(CardState.Cons con, IChessOperator op);
     }

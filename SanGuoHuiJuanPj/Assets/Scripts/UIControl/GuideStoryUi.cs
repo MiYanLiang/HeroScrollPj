@@ -329,7 +329,7 @@ public class GuideStoryUi : MonoBehaviour
         warBoard.MaxCards = 20;
         warBoard.UpdateHeroEnlistText();
         foreach (var c in racks.Values.Where(c => c != null))
-            warBoard.CreateCardToRack(GameCard.Instance(cardId: c.CardId, type: c.CardType, level: c.Star));
+            warBoard.CreateCardToRack(GameCard.Instance(cardId: c.CardId, type: c.CardType, level: c.Star),null);
 
         foreach (var chessman in players)
         {

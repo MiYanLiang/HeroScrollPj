@@ -57,14 +57,19 @@ public class GameCardUiBase : MonoBehaviour
     public virtual void Init(GameCard card)
     {
         Card = card;
-        CardInfo = card.GetInfo();
+        SetCardInfo(card.GetInfo());
         Image.sprite = GameResources.Instance.GetCardImage(card);
         LoadCardImage();
-        SetName(CardInfo);
         SetLevel(Card.Level);
         SetFrame(PrefabManager.Instance.GetFrame(card.Arouse));
     }
-    
+
+    public void SetCardInfo(GameCardInfo info)
+    {
+        CardInfo = info;
+        SetName(CardInfo);
+    }
+
     public void Display(bool isShow)
     {
         Image.enabled = isShow;

@@ -71,18 +71,19 @@ public class WarBoardUi : MonoBehaviour
     }
 
     //创建玩家卡牌
-    public FightCardData CreateCardToRack(GameCard card)
+    public FightCardData CreateCardToRack(GameCard card,GameCardInfo customInfo = null)
     {
         var fightCard = new FightCardData(card);
         fightCard.isPlayerCard = true;
-        GenerateCardUi(fightCard);
+        GenerateCardUi(fightCard, customInfo);
         PlaceCard(fightCard);
         return fightCard;
 
-        void GenerateCardUi(FightCardData fCard)
+        void GenerateCardUi(FightCardData fCard, GameCardInfo customCardInfo)
         {
             var wUi = UiPool.Get();
             wUi.Init(fCard.Card);
+            if (customCardInfo != null) wUi.SetCardInfo(customCardInfo);
             wUi.SetSize(Vector3.one);
             wUi.tag = GameSystem.PyCard;
             wUi.DragComponent.Init(fCard);

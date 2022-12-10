@@ -83,7 +83,9 @@ public class ApiPanel : MonoBehaviour
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string controller,
         string method, params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller, method, args);
-    public void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller, string method,
+
+    public void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
+        bool closeBusyAfterInvoke, string controller, string method,
         object[] args)
     {
         SetBusy(this);
@@ -106,10 +108,10 @@ public class ApiPanel : MonoBehaviour
             else successAction.Invoke(dataBag);
             if (closeBusyAfterInvoke) SetBusy(false);
         }, serializeBag);
-
     }
 
-    public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, bool closeBusyAfterInvoke, string controller,string method,
+    public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
+        bool closeBusyAfterInvoke, string controller, string method,
         object[] args)
     {
         SetBusy(this);
@@ -130,10 +132,11 @@ public class ApiPanel : MonoBehaviour
             var dataBag = DataBag.DeserializeBag(result);
             if (!dataBag.IsValid()) failedAction?.Invoke(result);
             else successAction.Invoke(dataBag);
-            if(closeBusyAfterInvoke) SetBusy(false);
+            if (closeBusyAfterInvoke) SetBusy(false);
         }, serializeBag);
 
     }
+
     private class ClientDataBag : IDataBag
     {
         public string DataName { get; set; }

@@ -407,7 +407,6 @@ namespace Assets.System.WarModule
                 }
             }
         }
-
     }
 
     /// <summary>
