@@ -14,14 +14,16 @@ public class BaYeForceSelectorUi : ForceSelectorUi
 
     public void UpdateZhanLing()
     {
-        var baYe = PlayerDataForGame.instance.baYe;
-        foreach (var pair in Data)
-        {
-            var forceId = pair.Key;
-            var flagUi = pair.Value;
-            baYe.zhanLingMap.TryGetValue(forceId, out var amount);
-            flagUi.SetLing(amount);
-        }
+        OnSelected(BaYeManager.instance.BaYeLing, true, true);//<----限制一个势力玩法
+        //<----战令玩法
+        //var baYe = PlayerDataForGame.instance.baYe;
+        //foreach (var pair in Data)
+        //{
+        //    var forceId = pair.Key;
+        //    var flagUi = pair.Value;
+        //    baYe.zhanLingMap.TryGetValue(forceId, out var amount);
+        //    flagUi.SetLing(amount);
+        //}
     }
 }
 

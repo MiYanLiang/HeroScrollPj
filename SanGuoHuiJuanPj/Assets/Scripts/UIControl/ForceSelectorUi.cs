@@ -105,7 +105,7 @@ public class ForceSelectorUi : MonoBehaviour
         PlayerDataForGame.instance.WarForceMap[warType] = forceId;
     }
 
-    public virtual void OnSelected(int forceId = -1, bool disableAllUi = false)
+    public virtual void OnSelected(int forceId = -1, bool disableAllUi = false, bool useDisablePanel = false)
     {
         OnSelectedTroop?.Invoke(forceId);
         if (onSelectedAudioId > -1)
@@ -118,6 +118,7 @@ public class ForceSelectorUi : MonoBehaviour
             var ui = obj.Value;
             var force = obj.Key;
             ui.Select(force == forceId);
+            if (useDisablePanel) ui.Interaction(force == forceId);
         }
 
         foreach (var button in btnData)

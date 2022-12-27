@@ -339,6 +339,7 @@ public class UIManager : MonoBehaviour
     {
         PlayerDataForGame.instance.WarType = PlayerDataForGame.WarTypes.Baye;
         var selectedForce = PlayerDataForGame.instance.CurrentWarForceId;
+        //if (!PlayerDataForGame.instance.ConsumeZhanLing()) return;//消费战令 
         switch (BaYeManager.instance.CurrentEventType)
         {
             case BaYeManager.EventTypes.Story:
@@ -350,7 +351,6 @@ public class UIManager : MonoBehaviour
                         return;
                     }
                     if (selectedForce < 0) break;
-                    if (!PlayerDataForGame.instance.ConsumeZhanLing()) return;//消费战令 
                     BaYeManager.instance.CacheCurrentStoryEvent();
                     PlayerDataForGame.instance.baYe.storyMap.Remove(BaYeManager.instance.CurrentEventPoint);
                     GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
@@ -372,7 +372,6 @@ public class UIManager : MonoBehaviour
                         PlayerDataForGame.instance.ShowStringTips("该地区已经平定了噢。");
                         return;
                     }
-                    if (!PlayerDataForGame.instance.ConsumeZhanLing()) return;//消费战令 
                     PlayerDataForGame.instance.SaveBaYeWarEvent(PlayerDataForGame.instance.selectedCity);
                     StartBattle(city.WarIds[passes]);
                     return;

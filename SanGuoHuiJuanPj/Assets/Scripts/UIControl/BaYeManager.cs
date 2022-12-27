@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using Assets.System.WarModule;
 using CorrelateLib;
@@ -41,6 +42,7 @@ public class BaYeManager : MonoBehaviour
     public string tipsText;//弹出文字内容
 
     public IReadOnlyList<BaYeCityEvent> Map => map;
+    public int BaYeLing { get; private set; }
     public static BaYeManager instance;
     private bool isHourlyEventRegistered;
     public EventTypes CurrentEventType { get; private set; }//当前事件类型
@@ -76,8 +78,21 @@ public class BaYeManager : MonoBehaviour
             GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
         }
 
+        SyncBaYeLing();
         InitStoryWarEventMap();
         InitBaYeMap();
+    }
+
+    private void SyncBaYeLing()
+    {
+        //霸业令牌是不会success，因为返回的是string
+        ApiPanel.instance.Call(_ => { }, arg =>
+        {
+            int.TryParse(arg, out var ling);
+            BaYeLing = ling;
+            if (GameSystem.CurrentScene == GameSystem.GameScene.MainScene)
+                UIManager.instance.baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
+        }, EventStrings.Call_BaYeLing);
     }
 
     private void InitStoryWarEventMap()
