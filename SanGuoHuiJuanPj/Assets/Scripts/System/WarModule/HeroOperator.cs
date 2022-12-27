@@ -1769,9 +1769,9 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int BasicKillRate => 3;
-        private int CriticalAddRate => 2;
-        private int RouseAddRate => 4;
+        private int BasicKillRate => 5;
+        private int CriticalAddRate => 3;
+        private int RouseAddRate => 5;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this, c => c.IsAliveHero)
@@ -1785,6 +1785,7 @@ namespace Assets.System.WarModule
             }
 
             var baseDamage = InstanceGenericDamage();
+            baseDamage.Multiply(0.5f);
             baseDamage.Element = CombatConduct.WindDmg;
 
             var kill = CombatConduct.InstanceKilling(InstanceId);
@@ -2273,7 +2274,7 @@ namespace Assets.System.WarModule
             }
         }
 
-        private int ComboRate => 40;
+        private int ComboRate => 50;
 
         protected override void MilitaryPerforms(int skill = 1)
         {

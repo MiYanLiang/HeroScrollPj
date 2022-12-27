@@ -342,7 +342,7 @@ namespace Assets.System.WarModule
             switch (card.CardId)
             {
                 //营寨
-                case 0: op = new YingZhaiOperator(); break;
+                case 0: case 24:case 25:case 26:case 27:case 28:case 29: op = new YingZhaiOperator(); break;
                 //投石台
                 case 1: op = new PaoShiTaiOperator(); break;
                 //奏乐台
