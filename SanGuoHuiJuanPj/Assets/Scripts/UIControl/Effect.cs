@@ -630,7 +630,13 @@ public static class Effect
     {
         switch (towerId)
         {
-            case 0: //营寨
+            case 0:
+            case 24:
+            case 25:
+            case 26:
+            case 27:
+            case 28:
+            case 29://营寨
                 switch (skill) 
                 {
                     case 1:
@@ -1349,6 +1355,12 @@ public static class Effect
         {
             //营寨
             case 0:
+            case 24:
+            case 25:
+            case 26:
+            case 27:
+            case 28:
+            case 29:
                 switch (skill ) 
                 {
                     case 1: return 409;//援军        
@@ -2438,7 +2450,14 @@ public static class Effect
     {
         switch (towerId)
         {
-            case 0: //营寨
+            //营寨
+            case 0:
+            case 24:
+            case 25:
+            case 26:
+            case 27:
+            case 28:
+            case 29:
                 switch (skill) 
                 {
                     case 1://补给
