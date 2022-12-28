@@ -88,7 +88,7 @@ public class UIManager : MonoBehaviour
     public PlayerCharacterUi PlayerCharacterUi;
     public ConfirmationWindowUi ConfirmationWindowUi;
 
-    private List<BaYeCityField> cityFields; //霸业的地图物件 
+    public List<BaYeCityField> CityFields { get; private set; } //霸业的地图物件 
     private List<BaYeForceField> forceFields; //可选势力物件 
     [HideInInspector] public RewardManager rewardManager;
     private GameResources GameResources => GameSystem.GameResources;
@@ -400,10 +400,8 @@ public class UIManager : MonoBehaviour
     //初始化霸业界面内容 
     private void InitBaYeFun()
     {
-
         try
         {
-
             var baye = BaYeManager.instance;
             baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
             baYeWarButton.onClick.RemoveAllListeners();
@@ -432,41 +430,30 @@ public class UIManager : MonoBehaviour
 
                 cityLvlMap[lvl.maxCity] = cityLvlMap[lvl.maxCity] > lvl.level ? cityLvlMap[lvl.maxCity] : lvl.level;
             });
-            var cityList = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].BaYeCityPoints;
-            if (cityFields != null && cityFields.Count > 0)
-                cityFields.ForEach(Destroy);
-            cityFields = new List<BaYeCityField>();
+
+            if (CityFields != null && CityFields.Count > 0)
+                CityFields.ForEach(Destroy);
+            CityFields = new List<BaYeCityField>();
             var baYe = PlayerDataForGame.instance.baYe;
-            for (int i = 0; i < baYeBattleEventController.eventList.Length; i++)
+            for (int cityId = 0; cityId < baYeBattleEventController.eventList.Length; cityId++)
             {
-                int cityPoint = i;
                 //得到战役id 
-                var ui = baYeBattleEventController.eventList[i];
-                var cityField = ui.gameObject.AddComponent<BaYeCityField>();
-                cityField.id = cityPoint;
-                cityField.button = ui.button;
-                cityFields.Add(cityField);
-                var baYeEvent = BaYeManager.instance.Map.Single(e => e.CityId == cityPoint);
-                var flagId = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagId; //旗帜id 
-                var flagName = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagText; //旗帜文字 
-                ui.button.interactable = cityList.Length > i;
-                ui.forceFlag.Set(flagId, true, flagName);
-                if (cityList.Length > i)
-                {
-                    var city = BaYeManager.instance.Map.Single(c => c.CityId == i);
-                    ui.Init(city.WarIds.Count);
-                    ui.button.onClick.RemoveAllListeners();
-                    ui.button.onClick.AddListener(() =>
-                        BaYeManager.instance.OnBaYeWarEventPointSelected(BaYeManager.EventTypes.City,
-                            baYeEvent.CityId));
-                    ui.text.text = DataTable.BaYeCity[cityPoint].Name; //城市名 
-                }
-                else
-                {
-                    ui.text.text = $"{cityLvlMap[i]}级开启";
-                    ui.InactiveCityColor();
-                }
-                var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityPoint);
+                var eventUi = GetBaYeCityEventUi(cityId);
+                var cityField = eventUi.gameObject.AddComponent<BaYeCityField>();
+                cityField.id = cityId;
+                cityField.button = eventUi.button;
+                CityFields.Add(cityField);
+                //cityField.IsLevelAvailable = cityList.Length > cityId;
+                //if (cityField.IsLevelAvailable)
+                //{
+                //    InitCityEventUi(cityId);
+                //}
+                //else
+                //{
+                //    eventUi.text.text = $"{cityLvlMap[cityId]}级开启";
+                //    eventUi.InactiveCityColor();
+                //}
+                var baYeRecord = baYe.data.SingleOrDefault(f => f.CityId == cityId);
                 if (baYeRecord != null) cityField.boundWars = baYeRecord.WarIds;
             }
             UpdateCitiesProgress();
@@ -475,8 +462,33 @@ public class UIManager : MonoBehaviour
         {
             bayeErrorPanel.gameObject.SetActive(true);
         }
-
     }
+
+    private BaYeCityEvent GetBaYeCityEvent(int cityId) => BaYeManager.instance.Map.Single(e => e.CityId == cityId);
+    private BaYeCityEventUI GetBaYeCityEventUi(int cityId) => baYeBattleEventController.eventList[cityId];
+    public void InitCityEventUi(int cityId, UnityAction onClickAction)
+    {
+        var eventUi = GetBaYeCityEventUi(cityId);
+        var baYeEvent = GetBaYeCityEvent(cityId);
+        var city = BaYeManager.instance.Map.Single(c => c.CityId == cityId);
+        var flagId = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagId; //旗帜id 
+        var flagName = DataTable.BaYeCityEvent[baYeEvent.EventId].FlagText; //旗帜文字 
+        eventUi.forceFlag.Set(flagId, true, flagName);
+
+        eventUi.Init(city.WarIds.Count);
+        eventUi.button.onClick.RemoveAllListeners();
+        eventUi.button.onClick.AddListener(onClickAction);
+        eventUi.text.text = DataTable.BaYeCity[cityId].Name; //城市名 
+    }
+
+    public void DisableCityEventUi(int cityId)
+    {
+        var eventUi = GetBaYeCityEventUi(cityId);
+        eventUi.Disable();
+        eventUi.forceFlag.Hide();
+        eventUi.InactiveCityColor();
+    }
+
 
     public void UpdateCitiesProgress()
     {

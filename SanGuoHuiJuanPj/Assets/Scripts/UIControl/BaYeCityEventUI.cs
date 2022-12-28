@@ -34,12 +34,22 @@ public class BaYeCityEventUI : MonoBehaviour
             list.Add(box);
         }
         text.color = cityNameColor;
+        button.interactable = true;
+        GetComponent<Image>().color = Color.white;
         contentLayout.gameObject.SetActive(true);
         contentLayout.sizeDelta = new Vector2(list.Count * space, contentLayout.sizeDelta.y);
     }
+
+    public void Disable(string disableText = null)
+    {
+        contentLayout.gameObject.SetActive(false);
+        button.interactable = false;
+        text.text = disableText;
+        InactiveCityColor();
+    }
     public void InactiveCityColor()
     {
-        text.color = defaultCityColor;
+        GetComponent<Image>().color = defaultCityColor;
     }
 
     public void SetValue(int value)
