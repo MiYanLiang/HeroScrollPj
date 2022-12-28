@@ -77,7 +77,6 @@ public class BaYeManager : MonoBehaviour
             };
             GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
         }
-
         SyncBaYeLing();
         InitStoryWarEventMap();
         InitBaYeMap();
@@ -86,13 +85,27 @@ public class BaYeManager : MonoBehaviour
     private void SyncBaYeLing()
     {
         //霸业令牌是不会success，因为返回的是string
-        ApiPanel.instance.Call(_ => { }, arg =>
+        ApiPanel.instance.Call(bag =>
         {
-            int.TryParse(arg, out var ling);
-            BaYeLing = ling;
+            BaYeLing = bag.Get<int>(0);
+            SyncCities(bag.Get<int[]>(1));
             if (GameSystem.CurrentScene == GameSystem.GameScene.MainScene)
                 UIManager.instance.baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
-        }, EventStrings.Call_BaYeLing);
+        }, err => PlayerDataForGame.instance.ShowStringTips(err), EventStrings.Call_BaYeLing);
+    }
+
+    private void SyncCities(int[] cityMap)
+    {
+        foreach (var city in UIManager.instance.CityFields)
+        {
+            //if (!city.IsLevelAvailable) continue;
+            if (cityMap.Contains(city.id))
+                UIManager.instance.InitCityEventUi(city.id, () => OnBaYeWarEventPointSelected(EventTypes.City, city.id));
+            else
+            {
+                UIManager.instance.DisableCityEventUi(city.id);
+            }
+        }
     }
 
     private void InitStoryWarEventMap()
