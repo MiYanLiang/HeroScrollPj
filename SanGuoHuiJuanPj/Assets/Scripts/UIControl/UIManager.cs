@@ -74,7 +74,8 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     Text chickenCloseText;  //烧鸡关闭时间Text 
 
-    public BaYeForceSelectorUi baYeForceSelectorUi;//战役势力选择器 
+    [SerializeField]private BaYeForceSelectorUi baYeForceSelectorUi;//战役势力选择器 
+    [SerializeField]private BaYeForcePicController _baYeForcePicController;//霸业军团
     public BaYeProgressUI baYeProgressUi; //霸业经验条 
     public ChestUI[] baYeChestButtons; //霸业宝箱 
     public StoryEventUIController storyEventUiController;//霸业的故事事件控制器 
@@ -489,8 +490,7 @@ public class UIManager : MonoBehaviour
         eventUi.InactiveCityColor();
     }
 
-
-    public void UpdateCitiesProgress()
+    private void UpdateCitiesProgress()
     {
         var baYe = PlayerDataForGame.instance.baYe;
         for (int i = 0; i < baYeBattleEventController.eventList.Length; i++)
@@ -506,14 +506,22 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void ResetBaYeProgressAndGold()
+    public void BaYeProgressUpdate()
+    {
+        UpdateCitiesProgress();
+        ResetBaYeProgressAndGold();
+        baYeForceSelectorUi.UpdateZhanLing();
+        _baYeForcePicController.UpdateUi();
+    }
+    public void BaYeForceSelectorInit() => baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
+    private void ResetBaYeProgressAndGold()
     {
         var baYe = PlayerDataForGame.instance.baYe;
         var baYeReward = DataTable.BaYeTask.Values
             .Select(task => new { id = task.Id, exp = task.Exp, warChestId = task.WarChestTableId })
             .ToList();
         baYeGoldNumText.text = $"{baYe.gold}/{BaYeManager.instance.BaYeMaxGold}";
-        baYeProgressUi.Set(baYe.CurrentExp, baYeReward[baYeReward.Count - 1].exp);
+        baYeProgressUi.Set(baYe.CurrentExp, baYeReward[^1].exp);
         for (int i = 0; i < baYeReward.Count; i++)
         {
             baYeChestButtons[i].Text.text = baYeReward[i].exp.ToString();

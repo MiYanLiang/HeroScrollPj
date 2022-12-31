@@ -54,10 +54,9 @@ public class BaYeCityEventUI : MonoBehaviour
 
     public void SetValue(int value)
     {
-        for (int i = 0; i < list.Count; i++)
-        {
-            list[i].color = i < value ? activeColor : defaultColor;
-        }
+        if (list is { Count: > 0 })
+            for (int i = 0; i < list.Count; i++)
+                list[i].color = i < value ? activeColor : defaultColor;
     }
 
     public void SetStory(string title,UnityAction action)
