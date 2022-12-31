@@ -43,6 +43,7 @@ public class BaYeManager : MonoBehaviour
 
     public IReadOnlyList<BaYeCityEvent> Map => map;
     public int BaYeLing { get; private set; }
+    private int[] BaYeActiveCities { get; set; }
     public static BaYeManager instance;
     private bool isHourlyEventRegistered;
     public EventTypes CurrentEventType { get; private set; }//当前事件类型
@@ -88,23 +89,24 @@ public class BaYeManager : MonoBehaviour
         ApiPanel.instance.Call(bag =>
         {
             BaYeLing = bag.Get<int>(0);
-            SyncCities(bag.Get<int[]>(1));
+            BaYeActiveCities = bag.Get<int[]>(1);
+            SyncCities();
             if (GameSystem.CurrentScene == GameSystem.GameScene.MainScene)
-                UIManager.instance.baYeForceSelectorUi.Init(PlayerDataForGame.WarTypes.Baye);
+                UIManager.instance.BaYeForceSelectorInit();
+            UIManager.instance.BaYeProgressUpdate();
         }, err => PlayerDataForGame.instance.ShowStringTips(err), EventStrings.Call_BaYeLing);
     }
 
-    private void SyncCities(int[] cityMap)
+    private void SyncCities()
     {
+        if (UIManager.instance.CityFields == null) return;
         foreach (var city in UIManager.instance.CityFields)
         {
             //if (!city.IsLevelAvailable) continue;
-            if (cityMap.Contains(city.id))
+            if (BaYeActiveCities.Contains(city.id))
                 UIManager.instance.InitCityEventUi(city.id, () => OnBaYeWarEventPointSelected(EventTypes.City, city.id));
             else
-            {
                 UIManager.instance.DisableCityEventUi(city.id);
-            }
         }
     }
 
@@ -254,8 +256,12 @@ public class BaYeManager : MonoBehaviour
         var baYe = PlayerDataForGame.instance.baYe;
         var playerLevel = PlayerDataForGame.instance.pyData.Level;
         var max = DataTable.PlayerLevelConfig[playerLevel].BaYeCityPoints.Max();
-        var cityStories =
-            GenerateBaYeCityStories(map.Where(m => m.CityId <= max).Select(m => m.CityId).ToArray());
+        var cityStories = BaYeActiveCities != null
+            ? GenerateBaYeCityStories(map.Where(m => BaYeActiveCities.Contains(m.CityId))
+                .Select(m => m.CityId).ToArray())
+            : Array.Empty<CityStory>();
+
+        //GenerateBaYeCityStories(map.Where(m => m.CityId <= max).Select(m => m.CityId).ToArray());//旧霸业生成
         baYe.cityStories = cityStories.Where(c => c != null).ToDictionary(c => c.CityId, c => c.StoryId);
         //获取玩家等级可开启的事件点id列表
         //获取每个故事id的权重
@@ -451,7 +457,7 @@ public class BaYeManager : MonoBehaviour
                     var message = TradeZhanLing(selectedId, sEvent.ZhanLing[selectedId])
                         ? $"获得[{DataTable.Force[selectedId].Short}]战令"
                         : "战令获取异常！";
-                    UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+                    UIManager.instance.BaYeProgressUpdate();
                     PlayerDataForGame.instance.ShowStringTips(message);
                 });
                 break;
@@ -479,9 +485,9 @@ public class BaYeManager : MonoBehaviour
                 if (!success) return;
                 UIManager.instance.baYeWindowUi.Show(InstanceReward(se, 2));
                 OnBayeStoryEventReward(se);
-                UIManager.instance.ResetBaYeProgressAndGold();
+                UIManager.instance.BaYeProgressUpdate();
             });
-            UIManager.instance.ResetBaYeProgressAndGold();
+            UIManager.instance.BaYeProgressUpdate();
 
             Dictionary<int, int> InstanceReward(BaYeStoryEvent baYeStoryEvent, int rate = 1) =>
                 new Dictionary<int, int>()
@@ -545,8 +551,7 @@ public class BaYeManager : MonoBehaviour
 
         if (op.Gold != 0) AddGold(-op.Gold);
         foreach (var ling in op.Lings) AddZhanLing(ling.ForceId, -ling.Amt);
-        UIManager.instance.ResetBaYeProgressAndGold();
-        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+        UIManager.instance.BaYeProgressUpdate();
         return (true, string.Empty);
     }
 
@@ -563,9 +568,7 @@ public class BaYeManager : MonoBehaviour
         {
             var window = UIManager.instance.baYeCityStoryWindowUi;
             window.SetResult(result);
-            UIManager.instance.UpdateCitiesProgress();
-            UIManager.instance.ResetBaYeProgressAndGold();
-            UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
+            UIManager.instance.BaYeProgressUpdate();
         }
     }
 
@@ -609,8 +612,7 @@ public class BaYeManager : MonoBehaviour
             AddZhanLing(forceId, 1);
             PlayerDataForGame.instance.ShowStringTips($"获得[{DataTable.Force[forceId].Short}]战令");
         }
-        UIManager.instance.baYeForceSelectorUi.UpdateZhanLing();
-        UIManager.instance.ResetBaYeProgressAndGold();
+        UIManager.instance.BaYeProgressUpdate();
     }
 
     #region BaYeResources

@@ -14,7 +14,9 @@ public class BaYeForceSelectorUi : ForceSelectorUi
 
     public void UpdateZhanLing()
     {
-        OnSelected(BaYeManager.instance.BaYeLing, true, true);//<----限制一个势力玩法
+        var bayeLing = BaYeManager.instance.BaYeLing;
+        PlayerDataForGame.instance.WarForceMap[PlayerDataForGame.WarTypes.Baye] = bayeLing;
+        OnSelected(bayeLing, true, true); //<----限制一个势力玩法
         //<----战令玩法
         //var baYe = PlayerDataForGame.instance.baYe;
         //foreach (var pair in Data)
