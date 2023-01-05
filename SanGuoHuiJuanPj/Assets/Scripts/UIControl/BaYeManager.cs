@@ -30,7 +30,7 @@ public class BaYeManager : MonoBehaviour
         交易战令
     }
 
-    [Header("霸业初始金币")]public int BaYeGoldDefault = 30; //霸业初始金币
+    [Header("霸业初始金币")]public int BaYeGoldDefault = 20; //霸业初始金币
     [Header("霸业金币上限")]public int BaYeMaxGold = 75; //霸业金币上限
     [Header("军团令价钱表")]public int[] BaYeLingPrices = new int[] { 5, 10, 15, 20, 25 };
     [Header("霸业故事执行时间(秒)")]public float BaYeCityStoryProgressSecs = 3f;//霸业故事执行秒数
