@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class ForceFlagUI : MonoBehaviour
 {
     public Image forceFlag;
-    public Image forceName;
+    //public Image forceName;
     public Image selected;
     public Image panel;
     public Text lingText;
@@ -35,7 +35,7 @@ public class ForceFlagUI : MonoBehaviour
         if (nameInText == null) nameInText = string.Empty;
         nameText.text = string.Join("\n", nameInText.ToCharArray().Where(c => c != default));
         nameText.gameObject.SetActive(true);
-        forceName.gameObject.SetActive(false);
+        //forceName.gameObject.SetActive(false);
         gameObject.SetActive(display);
     }
 
