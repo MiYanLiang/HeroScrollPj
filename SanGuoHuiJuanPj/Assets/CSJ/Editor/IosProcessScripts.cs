@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,10 +11,33 @@ namespace PangleAdapterScripts.Editor
     public static class IosProcessScripts
     {
         private const string FileExtension = ".xcconfig";
-        private const string BUAdSDK = "-framework \"BUAdSDK\"";
-        private const string BUFoundation = "-framework \"BUFoundation\"";
-        private const string BUCNAuxiliary = "-framework \"BUCNAuxiliary\"";
-
+        private static readonly string[] BULibs = new string[]
+        {"-framework \"CSJAdSDK\"",
+            "-framework \"BUAdSDK\"",
+            "\"${PODS_ROOT}/BUAdSDK/BUAdSDK\"",
+            "\"${PODS_ROOT}/Ads-CN/SDK\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationSDWebImage\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationAFN\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationGecko\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationFoundation\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationHeader\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationNETWork\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationYYModel\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationZFPlayer\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/BURelyFoundationZip\"",
+            "\"${PODS_ROOT}/BURelyFoundation/Frameworks/SDK/HM\"",
+            "\"${PODS_ROOT}/Headers/Public/BURelyFoundation\"",
+            "-l\"BURelyFoundationAFN\"",
+            "-l\"BURelyFoundationFoundation\"",
+            "-l\"BURelyFoundationGecko\"",
+            "-l\"BURelyFoundationHeader\"",
+            "-l\"BURelyFoundationNETWork\"",
+            "-l\"BURelyFoundationSDWebImage\"",
+            "-l\"BURelyFoundationYYModel\"",
+            "-l\"BURelyFoundationZFPlayer\"",
+            "-l\"BURelyFoundationZip\"",
+            "-l\"HM\""
+        };
         [PostProcessBuild(10002)]
         public static void OnPostprocessBuild(BuildTarget buildTarget, string path)
         {
@@ -74,9 +98,11 @@ namespace PangleAdapterScripts.Editor
         {
             if (!fileInfo.Exists) return;
             var str = File.ReadAllText(fileInfo.FullName);
-            str = str.Replace(BUAdSDK, "");
-            str = str.Replace(BUFoundation, "");
-            str = str.Replace(BUCNAuxiliary, "");
+
+            foreach (string libs in BULibs)
+            {
+                str = str.Replace(libs, "");
+            }
             File.WriteAllText(fileInfo.FullName, str);
         }
     }

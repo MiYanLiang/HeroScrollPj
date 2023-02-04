@@ -13,18 +13,23 @@ namespace ByteDance.Union
     public interface ISplashAdListener
     {
         /// <summary>
-        /// Invoke when load Ad error.
+        /// Invoke when load Ad fail.
         /// </summary>
-        void OnError(int code, string message);
+        void OnSplashLoadFail(int code, string message);
 
         /// <summary>
         /// Invoke when the Ad load success.
         /// </summary>
-        void OnSplashAdLoad(BUSplashAd ad);
+        void OnSplashLoadSuccess();
 
         /// <summary>
-        /// loading timeout callback
+        /// Invoke when the Ad render success.
         /// </summary>
-        void OnTimeout();
+        void OnSplashRenderSuccess(BUSplashAd ad);
+        
+        /// <summary>
+        /// Invoke when the Ad render fail.
+        /// </summary>
+        void OnSplashRenderFail(int code, string message);
     }
 }

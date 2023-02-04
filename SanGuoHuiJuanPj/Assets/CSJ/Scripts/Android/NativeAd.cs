@@ -16,6 +16,7 @@ namespace ByteDance.Union
     public class NativeAd : IClintBidding
     {
         protected readonly AndroidJavaObject ad;
+        private AdInteractionListener interactionListener;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NativeAd"/> class.
@@ -108,9 +109,9 @@ namespace ByteDance.Union
 
         public void Dispose()
         {
-           
+            ad.Call("destroy");
         }
-        
+
         public void Win(double auctionBidToWin)
         {
             ClientBiddingUtils.Win(ad, auctionBidToWin);
@@ -124,6 +125,69 @@ namespace ByteDance.Union
         public void SetPrice(double auctionPrice = double.NaN)
         {
             ClientBiddingUtils.SetPrice(ad, auctionPrice);
+        }
+
+        public void RenderNative(AndroidJavaObject activity,
+            IDislikeInteractionListener dislikeInteractionListener, AdSlotType type, bool callbackOnMainThread = true)
+        {
+            if (type == AdSlotType.Banner)
+            {
+                NativeAdManager.Instance().ShowNativeBannerAd(activity, ad,interactionListener,new DislikeInteractionCallback(dislikeInteractionListener, callbackOnMainThread));
+            }
+            else if(type == AdSlotType.InteractionAd)
+            {
+                NativeAdManager.Instance().ShowNativeInterstitialAd(activity, ad, interactionListener, new DislikeInteractionCallback(dislikeInteractionListener, callbackOnMainThread));
+            }
+        }
+
+        public void SetNativeAdInteractionListener(
+            IInteractionAdInteractionListener listener, bool callbackOnMainThead = true)
+        {
+            this.interactionListener = new AdInteractionListener(listener, callbackOnMainThead);
+        }
+
+        public class AdInteractionListener : AndroidJavaProxy
+        {
+            private IInteractionAdInteractionListener listener;
+            private bool callbackOnMainThead;
+
+            public AdInteractionListener(IInteractionAdInteractionListener listener, bool callbackOnMainThead = true) :
+                base("com.bytedance.sdk.openadsdk.TTNativeAd$AdInteractionListener")
+            {
+                this.listener = listener;
+                this.callbackOnMainThead = callbackOnMainThead;
+            }
+
+            /**
+         * 广告点击的回调，点击后的动作由sdk控制
+         *
+         * @param ad
+         */
+            void onAdClicked(AndroidJavaObject view, AndroidJavaObject ad)
+            {
+                UnityDispatcher.PostTask((() => { listener?.OnAdClicked(); }), callbackOnMainThead);
+            }
+
+            /**
+         * 创意广告点击回调
+         *
+         * @param view
+         * @param ad
+         */
+            void onAdCreativeClick(AndroidJavaObject view, AndroidJavaObject ad)
+            {
+                UnityDispatcher.PostTask((() => { listener?.OnAdCreativeClick(); }), callbackOnMainThead);
+            }
+
+            /**
+         * 广告展示回调 每个广告仅回调一次
+         *
+         * @param ad
+         */
+            void onAdShow(AndroidJavaObject ad)
+            {
+                UnityDispatcher.PostTask((() => { listener?.OnAdShow(); }), callbackOnMainThead);
+            }
         }
     }
 #endif

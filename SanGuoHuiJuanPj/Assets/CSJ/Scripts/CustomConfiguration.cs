@@ -44,5 +44,12 @@ namespace ByteDance.Union
         
         public string DevImei { get; set; }
         public string DevOaid { get; set; }
+        
+        /**
+        * 是否允许SDK主动获取ANDROID_ID
+         *
+         * @return true 允许  false 不允许
+         */
+        public bool CanUseAndroidId { get; set; }
     }
 }

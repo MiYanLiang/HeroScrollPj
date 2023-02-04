@@ -15,15 +15,15 @@ public class PangleSDKManager : EditorWindow
 {
     private const string downloadDir = "Temp/CSJ/CSJAdapter";
 
-    private const string manifestURL = "https://sf3-fe-tos.pglstatp-toutiao.com/obj/pangle-sdk-static/Unity/info.json";
+    private const string manifestURL = "https://sf3-fe-tos.pglstatp-toutiao.com/obj/csj-sdk-static/Unity/info.json";
 
     private const string stagingURL  = "";
 
-    private const string migrateLink = "https://www.pangle.cn/";
+    private const string migrateLink = "https://www.csjplatform.com";
 
-    private const string mediationLink = "https://www.pangle.cn/";
+    private const string mediationLink = "https://www.csjplatform.com";
 
-    private const string helpLink    = "https://www.pangle.cn/";
+    private const string helpLink    = "https://www.csjplatform.com";
 
     private const string mediationNote = "A legacy directory of Pangle Mediation was found in your project.\n" +
                                          "If you wish to mediate other networks, please delete these\n" +

@@ -31,6 +31,7 @@
           android:networkSecurityConfig="@xml/network_config"
           android:requestLegacyExternalStorage="true"
           android:supportsRtl="true">
+          <!-- android:appComponentFactory="android.support.v4.app.CoreComponentFactory" -->
     <meta-data
             android:name="test"
             android:value="one" />

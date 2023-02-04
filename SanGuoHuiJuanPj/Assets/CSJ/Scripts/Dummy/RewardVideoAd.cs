@@ -38,6 +38,14 @@ namespace ByteDance.Union
             IRewardAdInteractionListener againListener, bool callbackOnMainThread = true)
         {
         }
+        
+        /// <summary>
+        /// Sets the interaction listener for this Ad.
+        /// </summary>
+        public void SetRewardPlayAgainController(
+            IRewardAdPlayAgainController againListener, bool callbackOnMainThread = true)
+        {
+        }
 
         /// <summary>
         /// Sets the download listener.

@@ -16,7 +16,7 @@ namespace ByteDance.Union
     /// The android proxy listener for <see cref=
     /// "IDislikeInteractionListener"/>.
     /// </summary>
-    internal sealed class DislikeInteractionCallback : AndroidJavaProxy
+    public sealed class DislikeInteractionCallback : AndroidJavaProxy
     {
         private readonly IDislikeInteractionListener listener;
         private bool callbackOnMainThread;

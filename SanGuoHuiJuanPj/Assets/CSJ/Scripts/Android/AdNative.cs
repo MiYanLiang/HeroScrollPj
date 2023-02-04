@@ -267,7 +267,7 @@ namespace ByteDance.Union
                 }
 
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnNativeAdLoad(list,null), callbackOnMainThread);
+                    () => this.listener.OnNativeAdLoad(ads), callbackOnMainThread);
             }
         }
 
@@ -328,29 +328,49 @@ namespace ByteDance.Union
             private readonly ISplashAdListener listener;
             private bool callbackOnMainThread;
             public SplashAdListener(ISplashAdListener listener, bool callbackOnMainThread)
-                : base("com.bytedance.sdk.openadsdk.TTAdNative$SplashAdListener")
+                : base("com.bytedance.sdk.openadsdk.TTAdNative$CSJSplashAdListener")
             {
                 this.listener = listener;
                 this.callbackOnMainThread = callbackOnMainThread;
             }
-
-            public void onError(int code, string message)
+            
+            public void onSplashLoadSuccess()
             {
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnError(code, message), callbackOnMainThread);
+                    () => this.listener.OnSplashLoadSuccess(), callbackOnMainThread);
             }
 
-            public void onSplashAdLoad(AndroidJavaObject handle)
+            public void onSplashLoadFail(AndroidJavaObject error)
+            {
+                int code = 0;
+                string message = "";
+                if (error != null)
+                {
+                    code = error.Call<int>("getCode");
+                    message = error.Call<string>("getMsg");
+                } 
+                UnityDispatcher.PostTask(
+                    () => this.listener.OnSplashLoadFail(code, message), callbackOnMainThread);
+            }
+
+            public void onSplashRenderSuccess(AndroidJavaObject handle)
             {
                 var ad = new BUSplashAd(handle);
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnSplashAdLoad(ad), callbackOnMainThread);
+                    () => this.listener.OnSplashRenderSuccess(ad), callbackOnMainThread);
             }
             
-            public void onTimeout()
+            public void onSplashRenderFail(AndroidJavaObject ad, AndroidJavaObject error)
             {
+                int code = 0;
+                string message = "";
+                if (error != null)
+                {
+                    code = error.Call<int>("getCode");
+                    message = error.Call<string>("getMsg");
+                } 
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnTimeout(), callbackOnMainThread);
+                    () => this.listener.OnSplashRenderFail(code, message), callbackOnMainThread);
             }
         }
 

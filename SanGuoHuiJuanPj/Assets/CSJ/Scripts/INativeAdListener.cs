@@ -22,6 +22,6 @@ namespace ByteDance.Union
         /// <summary>
         /// Invoke when the Ad load success.
         /// </summary>
-        void OnNativeAdLoad(AndroidJavaObject list,NativeAd ad);
+        void OnNativeAdLoad(NativeAd[] ads);
     }
 }

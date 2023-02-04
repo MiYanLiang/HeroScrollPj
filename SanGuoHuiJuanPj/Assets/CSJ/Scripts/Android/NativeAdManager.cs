@@ -176,6 +176,32 @@
                     () => this.dislikeInteractionCallback.OnShow(), callbackOnMainThread);
             }
         }
+
+        public void ShowNativeBannerAd(AndroidJavaObject activity, AndroidJavaObject nativeAd,
+            NativeAd.AdInteractionListener listener, DislikeInteractionCallback dislikeInteractionListener)
+        {
+            object[] objs = {activity, nativeAd, listener, dislikeInteractionListener};
+            var signature =
+                "(Landroid.content.Context;Lcom.bytedance.sdk.openadsdk.TTNativeAd;Lcom.bytedance.sdk.openadsdk.TTNativeAd$AdInteractionListener;Lcom.bytedance.sdk.openadsdk.TTAdDislike$DislikeInteractionCallback;)V";
+            CallJavaMethod("showNativeBannerAd", signature, objs);
+        }
+
+        public void ShowNativeInterstitialAd(AndroidJavaObject activity, AndroidJavaObject nativeAd,
+            NativeAd.AdInteractionListener listener, DislikeInteractionCallback dislikeInteractionListener)
+        {
+            //TODO 删除
+            // if (mNativeAdManager == null)
+            // {
+            //     mNativeAdManager = GetNativeAdManager();
+            // }
+            //
+            // // mNativeAdManager.Call("showNativeIntersititialAd", activity, mIntersititialAd);
+            //
+            object[] objs = {activity, nativeAd, listener, dislikeInteractionListener};
+            var signature =
+                "(Landroid.content.Context;Lcom.bytedance.sdk.openadsdk.TTNativeAd;Lcom.bytedance.sdk.openadsdk.TTNativeAd$AdInteractionListener;Lcom.bytedance.sdk.openadsdk.TTAdDislike$DislikeInteractionCallback;)V";
+            CallJavaMethod("showNativeIntersititialAd", signature, objs);
+        }
     }
 #endif
 }
