@@ -21,8 +21,8 @@
          * Local Android SDK Maven repo.
 
          Additional repositories can be added using the "repositories" element.
-    -->
-    <androidPackage spec="com.pangle.cn:ads-sdk-pro:4.4.0.2"/>
+    -->    
+    <androidPackage spec="com.pangle.cn:ads-sdk-pro:4.7.1.2"/>
     <androidPackage spec="com.squareup.okhttp3:okhttp:3.12.1"/>
     <!--<androidPackage spec="com.android.support:appcompat-v7:28.0.0"/>-->
     <androidPackage spec="androidx.appcompat:appcompat:1.0.2"/>
@@ -70,7 +70,7 @@
          * "subspecs" (optional)
            Subspecs to include for the pod.
      -->
-    <iosPod name="Ads-CN" version="4.4.0.0" bitcodeEnabled="true"
+    <iosPod name="Ads-CN" version="4.7.0.8" bitcodeEnabled="true"
             minTargetSdk="9.0" addToAllTargets="false">
       <!-- Set of source URIs to search for this Cocoapod spec.
            By default Cocoapods will attempt to fetch the pod specs from:

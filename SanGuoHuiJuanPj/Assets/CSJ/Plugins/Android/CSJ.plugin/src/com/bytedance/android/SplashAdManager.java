@@ -8,7 +8,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import com.bytedance.sdk.openadsdk.TTSplashAd;
+import com.bytedance.sdk.openadsdk.CSJSplashAd;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -75,7 +75,7 @@ public class SplashAdManager {
 
     //广告使用完毕后，比如关闭或移除后，请调用destory释放资源。
     //相关调用注意放在主线程
-    public void showSplashAd(final Context context, final TTSplashAd ad) {
+    public void showSplashAd(final Context context, final CSJSplashAd ad) {
         if (context == null || ad == null) {
             return;
         }
@@ -100,7 +100,7 @@ public class SplashAdManager {
     }
     
     //解决点击事件会直接穿过广告view的问题，增加一层拦截事件
-    private FrameLayout attachSplashView(Context context,TTSplashAd ad){
+    private FrameLayout attachSplashView(Context context,CSJSplashAd ad){
         View realSplashView = ad.getSplashView();
         if(realSplashView == null){
             return null;

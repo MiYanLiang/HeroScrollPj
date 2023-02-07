@@ -19,6 +19,7 @@ public class CustomController extends TTCustomController {
     private boolean mIsCanUsePhoneState = true;
     private boolean mIsCanUseWifiState = true;
     private boolean mIsCanUseWriteExternal = true;
+    private boolean mIsCanUseAndroidId = true;
 
     public void canUseLocation(boolean canUseLocation) {
         mIsCanUseLocation = canUseLocation;
@@ -56,6 +57,11 @@ public class CustomController extends TTCustomController {
     public void setDevOaid(String oaid) {
         this.mDevOaid = oaid;
     }
+    
+    public void canUseAndroidId(boolean canUseAndroidId) {
+        this.mIsCanUseAndroidId = canUseAndroidId;
+    }
+
 
     /**
      * 是否允许SDK主动使用地理位置信息
@@ -151,6 +157,15 @@ public class CustomController extends TTCustomController {
      */
     public String getDevOaid() {
         return mDevOaid;
+    }
+    
+    /**
+     * 是否允许SDK主动获取ANDROID_ID
+     *
+     * @return true 允许  false 不允许
+     */
+    public boolean isCanUseAndroidId() {
+        return mIsCanUseAndroidId;
     }
 
 }

@@ -50,7 +50,7 @@ namespace ByteDance.Union
             ISplashAdInteractionListener listener, bool callbackOnMainThread = true)
         {
             var androidListener = new AdInteractionListener(listener, callbackOnMainThread);
-            this.ad.Call("setSplashInteractionListener", androidListener);
+            this.ad.Call("setSplashAdListener", androidListener);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace ByteDance.Union
         /// </summary>
         public void SetNotAllowSdkCountdown()
         {
-            this.ad.Call("setNotAllowSdkCountdown");
+            this.ad.Call("hideSkipButton");
         }
 
         public void Dispose()
@@ -83,32 +83,38 @@ namespace ByteDance.Union
             private bool callbackOnMainThread;
             public AdInteractionListener(
                 ISplashAdInteractionListener listener, bool callbackOnMainThread)
-                : base("com.bytedance.sdk.openadsdk.TTSplashAd$AdInteractionListener")
+                : base("com.bytedance.sdk.openadsdk.CSJSplashAd$SplashAdListener")
             {
                 this.listener = listener;
                 this.callbackOnMainThread = callbackOnMainThread;
             }
 
-            public void onAdClicked(AndroidJavaObject view, int var2)
+            public void onSplashAdClick(AndroidJavaObject ad)
             {
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnAdClicked(var2), callbackOnMainThread);
+                    () => this.listener.OnAdClicked(getType(ad)), callbackOnMainThread);
             }
 
-            public void onAdShow(AndroidJavaObject view, int var2)
+            public void onSplashAdShow(AndroidJavaObject ad)
             {
                 UnityDispatcher.PostTask(
-                    () => this.listener.OnAdShow(var2), callbackOnMainThread);
+                    () => this.listener.OnAdDidShow(getType(ad)), callbackOnMainThread);
             }
 
-            public void onAdSkip()
+            public void onSplashAdClose(AndroidJavaObject ad, int closeType)
             {
-                UnityDispatcher.PostTask(() => this.listener.OnAdSkip(), callbackOnMainThread);
+               
+                UnityDispatcher.PostTask(() => this.listener.OnAdClose(closeType), callbackOnMainThread);
             }
 
-            public void onAdTimeOver()
-            {
-                UnityDispatcher.PostTask(() => this.listener.OnAdTimeOver(), callbackOnMainThread);
+            private int getType(AndroidJavaObject ad)
+            { 
+                var type = 0;
+                if (ad != null)
+                {
+                    type = ad.Call<int>("getInteractionType");
+                }
+                return type;
             }
         }
 

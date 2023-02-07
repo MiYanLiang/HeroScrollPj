@@ -5,6 +5,8 @@
 // Proprietary and confidential.
 //------------------------------------------------------------------------------
 
+using UnityEngine;
+
 namespace ByteDance.Union
 {
 #if UNITY_EDITOR || (!UNITY_ANDROID && !UNITY_IOS)
@@ -128,6 +130,11 @@ namespace ByteDance.Union
         }
 
         public void Loss(double price, string reason, string bidder)
+        {
+        }
+
+        public void RenderNative(AndroidJavaObject activity,
+            IDislikeInteractionListener dislikeInteractionListener, AdSlotType type, bool callbackOnMainThread = true)
         {
         }
     }

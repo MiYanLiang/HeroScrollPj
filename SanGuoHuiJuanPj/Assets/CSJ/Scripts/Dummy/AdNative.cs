@@ -64,7 +64,7 @@ namespace ByteDance.Union
         public void LoadSplashAd(
             AdSlot adSlot, ISplashAdListener listener, int timeOut, bool callbackOnMainThread = true)
         {
-            listener.OnError(0, "Not Support on this platform");
+            listener.OnSplashLoadFail(0, "Not Support on this platform");
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace ByteDance.Union
         /// </summary>
         public void LoadSplashAd(AdSlot adSlot, ISplashAdListener listener, bool callbackOnMainThread = true)
         {
-            listener.OnError(0, "Not Support on this platform");
+            listener.OnSplashLoadFail(0, "Not Support on this platform");
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace ByteDance.Union
         /// </summary>
         public void LoadExpressSplashAd(AdSlot adSlot, ISplashAdListener listener, bool callbackOnMainThread = true)
         {
-            listener.OnError(0, "Not Support on this platform");
+            listener.OnSplashLoadFail(0, "Not Support on this platform");
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace ByteDance.Union
         /// </summary>
         public BUSplashAd LoadSplashAd_iOS(AdSlot adSlot, ISplashAdListener listener, bool callbackOnMainThread = true)
         {
-            listener.OnError(0, "Not Support on this platform");
+            listener.OnSplashLoadFail(0, "Not Support on this platform");
             return default;
         }
 
@@ -97,7 +97,7 @@ namespace ByteDance.Union
         /// </summary>
         public BUExpressSplashAd LoadExpressSplashAd_iOS(AdSlot adSlot, ISplashAdListener listener, bool callbackOnMainThread = true)
         {
-            listener.OnError(0, "Not Support on this platform");
+            listener.OnSplashLoadFail(0, "Not Support on this platform");
             return default;
         }
 

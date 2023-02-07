@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 dependencies {
     implementation fileTree(dir: 'bin', include: ['*.jar'])
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'com.pangle.cn:ads-sdk-pro:4.4.0.2'
+    compileOnly 'com.pangle.cn:ads-sdk-pro:4.7.1.2'
 }
 
 project.rootProject.allprojects {

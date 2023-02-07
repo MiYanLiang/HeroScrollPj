@@ -24,6 +24,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
+import com.bytedance.android.IntersititialView;
 import com.bytedance.sdk.openadsdk.TTAdConstant;
 import com.bytedance.sdk.openadsdk.TTAdDislike;
 import com.bytedance.sdk.openadsdk.TTAppDownloadListener;
@@ -111,7 +112,7 @@ public class NativeAdManager {
     }
 
     //相关调用注意放在主线程
-    public void showNativeBannerAd(final Context context, final TTNativeAd nativeAd) {
+    public void showNativeBannerAd(final Context context, final TTNativeAd nativeAd, final TTNativeAd.AdInteractionListener listener, final TTAdDislike.DislikeInteractionCallback dislikeCallBack) {
         if (context == null || nativeAd == null) {
             return;
         }
@@ -129,13 +130,13 @@ public class NativeAdManager {
                 layoutParams.gravity = Gravity.CENTER | Gravity.BOTTOM;
                 addAdView((Activity) context, mBannerView, layoutParams);
                 //绑定原生广告的数据
-                setBannerAdData(mBannerView, nativeAd);
+                setBannerAdData(mBannerView, nativeAd, dislikeCallBack, listener);
             }
         });
     }
 
     //相关调用注意放在主线程
-    public void showNativeIntersititialAd(final Context context, final TTNativeAd nativeAd) {
+    public void showNativeIntersititialAd(final Context context, final TTNativeAd nativeAd, final TTNativeAd.AdInteractionListener listener, final TTAdDislike.DislikeInteractionCallback dislikeCallBack) {
         if (context == null || nativeAd == null) {
             return;
         }
@@ -157,7 +158,7 @@ public class NativeAdManager {
                 mAdDialog.getWindow().setAttributes(wmParams);
                 mAdDialog.setCancelable(false);
                 mAdDialog.setContentView(mIntersititialView);
-                setIntersititialAdData(mIntersititialView, nativeAd);
+                setIntersititialAdData(mIntersititialView, nativeAd, listener, dislikeCallBack);
                 mAdDialog.show();
             }
         });
@@ -438,25 +439,31 @@ public class NativeAdManager {
         return dipValue * scale + 0.5f;
     }
 
-    private void setBannerAdData(BannerView nativeView, TTNativeAd nativeAd) {
+    private void setBannerAdData(BannerView nativeView, TTNativeAd nativeAd, final TTAdDislike.DislikeInteractionCallback dislikeCallBack, final TTNativeAd.AdInteractionListener listener) {
         nativeView.setTitle(nativeAd.getTitle());
-        View dislike = nativeView.getDisLikeView();
+        final View dislike = nativeView.getDisLikeView();
         Button mCreativeButton = nativeView.getCreateButton();
         bindDislikeAction(nativeAd, dislike, new TTAdDislike.DislikeInteractionCallback() {
             @Override
             public void onSelected(int position, String value, boolean enforce) {
-                Log.e("unity", "banner dislike onSelected");
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onSelected(position, value, enforce);
+                }
                 removeBannerView();
             }
 
             @Override
             public void onCancel() {
-                Log.e("unity", "banner dislike onCancel");
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onCancel();
+                }
             }
 
             @Override
             public void onShow() {
-                Log.e("unity", "banner dislike onShow");
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onShow();
+                }
             }
         });
         if (nativeAd.getImageList() != null && !nativeAd.getImageList().isEmpty()) {
@@ -501,29 +508,29 @@ public class NativeAdManager {
         nativeAd.registerViewForInteraction((ViewGroup) nativeView, clickViewList, creativeViewList, dislike, new TTNativeAd.AdInteractionListener() {
             @Override
             public void onAdClicked(View view, TTNativeAd ad) {
-                if (ad != null) {
-                    Toast.makeText(mContext, "广告" + ad.getTitle() + "被点击", Toast.LENGTH_SHORT).show();
+                if (listener != null) {
+                    listener.onAdClicked(view, ad);
                 }
             }
 
             @Override
             public void onAdCreativeClick(View view, TTNativeAd ad) {
-                if (ad != null) {
-                    Toast.makeText(mContext, "广告" + ad.getTitle() + "被创意按钮被点击", Toast.LENGTH_SHORT).show();
+                if (listener != null) {
+                    listener.onAdCreativeClick(view, ad);
                 }
             }
 
             @Override
             public void onAdShow(TTNativeAd ad) {
-                if (ad != null) {
-                    Toast.makeText(mContext, "广告" + ad.getTitle() + "展示", Toast.LENGTH_SHORT).show();
+                if (listener != null) {
+                    listener.onAdShow(ad);
                 }
             }
         });
 
     }
 
-    private void setIntersititialAdData(IntersititialView nativeView, TTNativeAd nativeAd) {
+    private void setIntersititialAdData(IntersititialView nativeView, TTNativeAd nativeAd, final TTNativeAd.AdInteractionListener listener, final TTAdDislike.DislikeInteractionCallback dislikeCallBack) {
         nativeView.setTitle(nativeAd.getTitle());
         View dislike = nativeView.getDisLikeView();
         View close = nativeView.getClose();
@@ -543,16 +550,23 @@ public class NativeAdManager {
                 if (mAdDialog != null) {
                     mAdDialog.dismiss();
                 }
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onSelected(position, value, enforce);
+                }
             }
 
             @Override
             public void onCancel() {
-                 Log.e("unity", "Intersititial dislike onCancel");
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onCancel();
+                }
             }
 
             @Override
             public void onShow() {
-                Log.e("unity", "Intersititial dislike onShow");
+                if (dislikeCallBack != null) {
+                    dislikeCallBack.onShow();
+                }
             }
         });
         if (nativeAd.getImageList() != null && !nativeAd.getImageList().isEmpty()) {
@@ -604,6 +618,9 @@ public class NativeAdManager {
                 if (mAdDialog != null) {
                     mAdDialog.dismiss();
                 }
+                if (listener != null) {
+                    listener.onAdClicked(view, ad);
+                }
             }
 
             @Override
@@ -611,6 +628,9 @@ public class NativeAdManager {
                   Log.e("unity", "Intersititial onAdCreativeClick");
                 if (ad != null) {
                     Toast.makeText(mContext, "广告" + ad.getTitle() + "被创意按钮被点击", Toast.LENGTH_SHORT).show();
+                }
+                if (listener != null) {
+                    listener.onAdCreativeClick(view, ad);
                 }
             }
 
@@ -629,6 +649,9 @@ public class NativeAdManager {
                         mAdDialog.getWindow().setAttributes(wmParams);
                     }
                 });
+                if (listener != null) {
+                    listener.onAdShow(ad);
+                }
             }
         });
 

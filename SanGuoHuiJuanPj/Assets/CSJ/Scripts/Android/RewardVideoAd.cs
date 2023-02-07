@@ -53,6 +53,16 @@ namespace ByteDance.Union
         }
 
         /// <summary>
+        /// 注册激励视频 再看功能 控制器，实现此控制器可提供再看多个功能，以及动态显示每次再看可获得的奖励信息
+        /// </summary>
+        public void SetRewardPlayAgainController(
+            IRewardAdPlayAgainController againListener, bool callbackOnMainThread=true)
+        {
+            var androidListener = new RewardPlayAgainControllerListener(againListener, callbackOnMainThread);
+            this.ad.Call("setRewardPlayAgainController", androidListener);
+        }
+        
+        /// <summary>
         /// Sets the download listener.
         /// </summary>
         public void SetDownloadListener(IAppDownloadListener listener, bool callbackOnMainThread)
@@ -106,6 +116,7 @@ namespace ByteDance.Union
             }
             return result;
         }
+        
 #pragma warning disable SA1300
 #pragma warning disable IDE1006
 
@@ -175,8 +186,34 @@ namespace ByteDance.Union
         {
             ClientBiddingUtils.SetPrice(ad, auctionPrice);
         }
+        
+        private sealed class RewardPlayAgainControllerListener : AndroidJavaProxy
+        {
+            private readonly IRewardAdPlayAgainController listener;
+            private readonly bool callbackOnMainThread;
+            public RewardPlayAgainControllerListener(IRewardAdPlayAgainController listener, bool callbackOnMainThread)
+                : base("com.bytedance.sdk.openadsdk.TTRewardVideoAd$RewardAdPlayAgainController")
+            {
+                this.listener = listener;
+                this.callbackOnMainThread = callbackOnMainThread;
+            }
+
+            public void getPlayAgainCondition(int nextPlayAgainCount, AndroidJavaObject callback)
+            {
+                this.listener.GetPlayAgainCondition(nextPlayAgainCount, bean =>
+                {
+                    var bundle = new AndroidBundleWrapper();
+                    bundle.putBoolean(PlayAgainCallbackBean.KEY_PLAY_AGAIN_ALLOW, bean.IsAgain);
+                    bundle.putString(PlayAgainCallbackBean.KEY_PLAY_AGAIN_REWARD_NAME, bean.RewardName);
+                    bundle.putString(PlayAgainCallbackBean.KEY_PLAY_AGAIN_REWARD_AMOUNT, bean.RewardCount);
+                    callback.Call("onConditionReturn",bundle.getAndroidBundle());
+                });
+            }
+        }
 #pragma warning restore SA1300
 #pragma warning restore IDE1006
     }
+    
+
 #endif
 }
