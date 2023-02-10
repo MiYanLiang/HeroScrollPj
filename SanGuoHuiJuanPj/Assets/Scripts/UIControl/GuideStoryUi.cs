@@ -11,7 +11,7 @@ using Random = UnityEngine.Random;
 public class GuideStoryUi : MonoBehaviour
 {
     private int storyIndex;    //当前剧情故事编号
-    [SerializeField] private StoryWindow Story;
+    //[SerializeField] private StoryWindow Story;
     private GuideTable[] guides;          //剧情故事数量
 
     bool isShowed0 = false;
@@ -20,8 +20,11 @@ public class GuideStoryUi : MonoBehaviour
     [SerializeField] private WarBoardUi warBoard;
     [SerializeField] private Image GuidePanel; //指引档板
     [SerializeField] private Text[] GuideTexts;//引导文本
+    [SerializeField] private GameObject _film;//新的过场动画
     [Header("指示显示间隔")][SerializeField] private float GuideTextInterval = 1f;
     [Header("指示渐变时间")][SerializeField] private float GuideTextFading = 1f;
+    [SerializeField]private int 新手引导Id = 4;
+    private int GuidId => 新手引导Id;
     private List<string[]> barragesList;
 
     public void BeginStory()
@@ -32,7 +35,33 @@ public class GuideStoryUi : MonoBehaviour
         var loginUi = GameSystem.LoginUi;
         loginUi.gameObject.SetActive(false);
         warBoard.Init();
-        PlayStoryIntro();
+        //PlayStoryIntro();
+        PlayNewIntro();
+    }
+
+    private void PlayNewIntro()
+    {
+        _film.SetActive(false);
+        AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1, 4);
+        StartCoroutine(PlayStory());
+
+        IEnumerator PlayStory()
+        {
+            var guide = DataTable.Guide[GuidId];
+            InitWarboard(guide);
+            _film.SetActive(true);
+            yield return new WaitForSeconds(10);
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 0).WaitForCompletion();
+            StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(true);
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(1, 5).WaitForCompletion();
+            _film.SetActive(false);
+            StartCoroutine(ShowBarrageForStory(0));
+            StartSceneUIManager.instance.BlackPanel.DOFade(0, 3).WaitForCompletion();
+            StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(false);
+            PlayZhanZhongBarrage();
+            StartCoroutine(ShowFeiHuaBarrage());
+            OnStartWarboard();
+        }
     }
 
     public void Init()
@@ -42,15 +71,17 @@ public class GuideStoryUi : MonoBehaviour
         storyIndex = 0;
         guides = DataTable.Guide.Values.ToArray();
 
-        barragesList = new List<string[]>();
-        barragesList.Add(pTBarrages_1);
-        barragesList.Add(zhanQianBarrages_1);
-        barragesList.Add(zhanZhongBarrages_1);
-        barragesList.Add(pTBarrages_2);
-        barragesList.Add(zhanQianBarrages_2);
-        barragesList.Add(zhanZhongBarrages_2);
-        barragesList.Add(pTBarrages_3);
-        barragesList.Add(feiHuaBarrages);
+        barragesList = new List<string[]>
+        {
+            pTBarrages_1,
+            zhanQianBarrages_1,
+            zhanZhongBarrages_1,
+            pTBarrages_2,
+            zhanQianBarrages_2,
+            zhanZhongBarrages_2,
+            pTBarrages_3,
+            feiHuaBarrages
+        };
     }
 
 
@@ -267,53 +298,53 @@ public class GuideStoryUi : MonoBehaviour
     /// <summary>
     /// 初始化卡牌到战斗位上
     /// </summary>
-    public void PlayStoryIntro()
-    {
-        PanelAnimation.gameObject.SetActive(false);
-        var guide = DataTable.Guide[storyIndex];
-        if(!Story.Background.gameObject.activeSelf)
-            Story.Background.gameObject.SetActive(true);
-        Story.Title.sprite = GetStoryTitle();
-        StartCoroutine(PlayStory(guide));
-    }
+    //private void PlayStoryIntro()
+    //{
+    //    //PanelAnimation.gameObject.SetActive(false);
+    //    var guide = DataTable.Guide[storyIndex];
+    //    if(!Story.Background.gameObject.activeSelf)
+    //        Story.Background.gameObject.SetActive(true);
+    //    Story.Title.sprite = GetStoryTitle();
+    //    StartCoroutine(PlayStory(guide));
+    //}
 
-    [SerializeField] private Animation PanelAnimation;
+    //[SerializeField] private Animation PanelAnimation;
     [Header("遮罩动画时间")][SerializeField] private float PanelSec = 5f;
-    private IEnumerator PlayStory(GuideTable guide)
-    {
-        Story.Intro.text = string.Empty;
-        Story.ClickToContinue.gameObject.SetActive(false);
-        yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
-        PanelAnimation.gameObject.SetActive(true);
-        Story.Intro.gameObject.SetActive(true);
-        Story.TitleObj.gameObject.SetActive(true);
-        Story.MoonObj.gameObject.SetActive(true);
-        //播放片头弹幕
-        Story.Intro.text = guide.Intro;
-        Story.Intro.gameObject.SetActive(true);
-        PanelAnimation.Play(PlayMode.StopAll);
-        StartCoroutine(ShowBarrageForStory(storyIndex - 1));
-        if (!isShowFHDM)
-        {
-            StartCoroutine(ShowFeiHuaBarrage());
-            isShowFHDM = true;
-        }
-
-        yield return new WaitForSeconds(PanelSec);
-        PanelAnimation.gameObject.SetActive(false);
-        InitWarboard(guide);
-        Story.Button.onClick.RemoveAllListeners();
-        if (guide.Id > 2)
-        {
-            GamePref.SetIsPlayedIntro(true);
-            Story.Button.onClick.AddListener(() => GameSystem.LoginUi.gameObject.SetActive(true));
-        }
-        else Story.Button.onClick.AddListener(OnStartWarboard);
-        Story.Button.enabled = true;
-        Story.ClickToContinue.gameObject.SetActive(true);
-        GuidePanel.gameObject.SetActive(guide.Id == 1);
-        storyIndex++;
-    }
+    //private IEnumerator PlayStory(GuideTable guide)
+    //{
+    //    Story.Intro.text = string.Empty;
+    //    Story.ClickToContinue.gameObject.SetActive(false);
+    //    yield return Story.Background.DOFade(1, 1.5f).WaitForCompletion();
+    //    //PanelAnimation.gameObject.SetActive(true);
+    //    Story.Intro.gameObject.SetActive(true);
+    //    Story.TitleObj.gameObject.SetActive(true);
+    //    Story.MoonObj.gameObject.SetActive(true);
+    //    //播放片头弹幕
+    //    Story.Intro.text = guide.Intro;
+    //    Story.Intro.gameObject.SetActive(true);
+    //    //PanelAnimation.Play(PlayMode.StopAll);
+    //    StartCoroutine(ShowBarrageForStory(storyIndex - 1));
+    //    if (!isShowFHDM)
+    //    {
+    //        StartCoroutine(ShowFeiHuaBarrage());
+    //        isShowFHDM = true;
+    //    }
+    //
+    //    yield return new WaitForSeconds(PanelSec);
+    //    //PanelAnimation.gameObject.SetActive(false);
+    //    InitWarboard(guide);
+    //    Story.Button.onClick.RemoveAllListeners();
+    //    if (guide.Id > 2)
+    //    {
+    //        GamePref.SetIsPlayedIntro(true);
+    //        Story.Button.onClick.AddListener(() => GameSystem.LoginUi.gameObject.SetActive(true));
+    //    }
+    //    else Story.Button.onClick.AddListener(OnStartWarboard);
+    //    Story.Button.enabled = true;
+    //    Story.ClickToContinue.gameObject.SetActive(true);
+    //    GuidePanel.gameObject.SetActive(guide.Id == 1);
+    //    storyIndex++;
+    //}
 
     private void InitWarboard(GuideTable guide)
     {
@@ -367,46 +398,52 @@ public class GuideStoryUi : MonoBehaviour
 
     private void OnStartWarboard()
     {
-        Story.Intro.gameObject.SetActive(false);
-        Story.TitleObj.gameObject.SetActive(false);
-        Story.MoonObj.gameObject.SetActive(false);
-        Story.Button.onClick.RemoveAllListeners();
-        if (storyIndex == 2)
-        {
-            StartCoroutine(PlayGuideTexts());
-        }
+        //Story.Intro.gameObject.SetActive(false);
+        //Story.TitleObj.gameObject.SetActive(false);
+        //Story.MoonObj.gameObject.SetActive(false);
+        //Story.Button.onClick.RemoveAllListeners();
+        if (storyIndex == 2) StartCoroutine(PlayGuideTexts());
 
         PlayZhanZhongBarrage();
         WarMusicController.Instance.OnBattleMusic();
         WarMusicController.Instance.PlayBgm(storyIndex - 1);
-        Story.Intro.text = string.Empty;
+        //Story.Intro.text = string.Empty;
+        var storyUi = StartSceneUIManager.instance.StoryController;
+        storyUi.GuidePanel.gameObject.SetActive(true);
+        warBoard.OnRoundStart += RoundStart;
         warBoard.gameObject.SetActive(true);
-        Story.Background.DOFade(0, 1.5f).OnComplete(() => Story.Background.gameObject.SetActive(false));
+        //Story.Background.DOFade(0, 1.5f).OnComplete(() => Story.Background.gameObject.SetActive(false));
         warBoard.OnGameSet.RemoveListener(FinalizeStory);
         warBoard.OnGameSet.AddListener(FinalizeStory);
         warBoard.Chessboard.DisplayStartButton(true);
+
+        void RoundStart(int round)
+        {
+            if (round == 0)
+            {
+                warBoard.OnRoundStart -= RoundStart;
+                storyUi.GuidePanel.gameObject.SetActive(false);
+            }
+        }
     }
 
     private void FinalizeStory(bool isWin)
     {
+        StopAllCoroutines();
         StartCoroutine(Finalization());
         IEnumerator Finalization()
         {
             AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1, 4);
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 0).WaitForCompletion();
             yield return new WaitForSeconds(4);
-            PlayStoryIntro();
+            StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(true);
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(1, 4).WaitForCompletion();
+            warBoard.gameObject.SetActive(false);
+            //PlayStoryIntro();
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 4).WaitForCompletion();
+            StartSceneToServerCS.instance.PromptLoginWindow();
+            StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(false);
+            GamePref.SetIsPlayedIntro(true);
         }
-    }
-
-    [Serializable]private class StoryWindow
-    {
-        public int Index;
-        public Image Background;
-        public Image Title;
-        public Text Intro;
-        public Text ClickToContinue;
-        public Button Button;
-        public GameObject MoonObj;
-        public GameObject TitleObj;
     }
 }

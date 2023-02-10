@@ -23,6 +23,7 @@ public class StartSceneUIManager : MonoBehaviour
     EffectsPoolingControl EffectPoolManagerObj;   //特效组
     bool isJumping; //是否在跳转
     public GuideStoryUi StoryController;
+    public Image BlackPanel;//黑色的挡板
     private void Awake()
     {
         if (instance == null)
@@ -49,7 +50,7 @@ public class StartSceneUIManager : MonoBehaviour
         }
         //播放诗句
         ShowNextVerse(0);
-        AudioController1.instance.PlayLoop(pianTouAudio, pianTouAudioVolume);
+        AudioController1.instance?.PlayLoop(pianTouAudio, pianTouAudioVolume);
     }
 
     //诗句展示

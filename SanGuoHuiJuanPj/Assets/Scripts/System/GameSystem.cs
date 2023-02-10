@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Assets.HttpUnitScripts;
-using Assets.Scripts.Utl;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
