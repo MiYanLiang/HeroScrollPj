@@ -11,6 +11,7 @@ namespace ByteDance.Union
         internal static int NETWORK_STATE_WIFI = 4;
         internal static int NETWORK_STATE_4G = 5;
         private static AndroidJavaObject activity;
+        private const string AppId = "5279066";
 
         public static void InitializeSDK(PangleInitializeCallBack callback,CustomConfiguration configuration = null)
         {
@@ -27,11 +28,11 @@ namespace ByteDance.Union
             var sdkInitCallback = new SdkInitCallback(callback);
             AndroidJavaObject adConfigBuilder = new AndroidJavaObject("com.bytedance.sdk.openadsdk.TTAdConfig$Builder");
             Debug.Log("Pangle InitializeSDK 开始设置config");
-            adConfigBuilder.Call<AndroidJavaObject>("appId", "5001121")
+            adConfigBuilder.Call<AndroidJavaObject>("appId", AppId)
                 .Call<AndroidJavaObject>("useTextureView", true) //使用TextureView控件播放视频,默认为SurfaceView,当有SurfaceView冲突的场景，可以使用TextureView
-                .Call<AndroidJavaObject>("appName", "APP测试媒体")
+                .Call<AndroidJavaObject>("appName", "英雄绘卷")
                 .Call<AndroidJavaObject>("allowShowNotify", true) //是否允许sdk展示通知栏提示
-                .Call<AndroidJavaObject>("debug", true) //测试阶段打开，可以通过日志排查问题，上线时去除该调用
+                .Call<AndroidJavaObject>("debug", false) //测试阶段打开，可以通过日志排查问题，上线时去除该调用
                 .Call<AndroidJavaObject>("directDownloadNetworkType",
                     new int[] {NETWORK_STATE_WIFI, NETWORK_STATE_3G}) //允许直接下载的网络状态集合
                 .Call<AndroidJavaObject>("themeStatus", 0)//设置主题类型，0：正常模式；1：夜间模式；默认为0；传非法值，按照0处理

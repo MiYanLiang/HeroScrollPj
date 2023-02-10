@@ -1,12 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-using Assets.Scripts.Utl;
+﻿using System;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class StartSceneToServerCS : MonoBehaviour
