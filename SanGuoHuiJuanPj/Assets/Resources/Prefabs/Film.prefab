@@ -1048,6 +1048,7 @@ GameObject:
   - component: {fileID: 3057585856474043451}
   - component: {fileID: 3057585856474043448}
   - component: {fileID: 3057585856474043450}
+  - component: {fileID: 655740981732535702}
   - component: {fileID: 3057585856474043453}
   m_Layer: 5
   m_Name: Peom
@@ -1150,6 +1151,22 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 1
+--- !u!111 &655740981732535702
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3057585856474043446}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: 56f02ee475d909445a499899b0758abb, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: 56f02ee475d909445a499899b0758abb, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!95 &3057585856474043453
 Animator:
   serializedVersion: 4
