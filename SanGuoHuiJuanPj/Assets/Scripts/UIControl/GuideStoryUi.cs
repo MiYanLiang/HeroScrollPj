@@ -24,8 +24,11 @@ public class GuideStoryUi : MonoBehaviour
     [Header("指示显示间隔")][SerializeField] private float GuideTextInterval = 1f;
     [Header("指示渐变时间")][SerializeField] private float GuideTextFading = 1f;
     [SerializeField]private int 新手引导Id = 4;
+    [SerializeField] private int 跳过秒数 = 5;
+    [SerializeField] private Button _pressContinue;
     private int GuidId => 新手引导Id;
     private List<string[]> barragesList;
+    private int SkipSecs => 跳过秒数;
 
     public void BeginStory()
     {
@@ -50,7 +53,21 @@ public class GuideStoryUi : MonoBehaviour
             var guide = DataTable.Guide[GuidId];
             InitWarboard(guide);
             _film.SetActive(true);
-            yield return new WaitForSeconds(10);
+            var anim = _film.GetComponentInChildren<Animation>();
+            var clip = anim.clip;
+            yield return new WaitForSeconds(SkipSecs);
+            _pressContinue.onClick.RemoveAllListeners();
+            _pressContinue.gameObject.SetActive(true);
+            _pressContinue.onClick.AddListener(() =>
+            {
+                StartCoroutine(StartWarBoard());
+                _pressContinue.onClick.RemoveAllListeners();
+                _pressContinue.gameObject.SetActive(false);
+            });
+        }
+
+        IEnumerator StartWarBoard()
+        {
             yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 0).WaitForCompletion();
             StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(true);
             yield return StartSceneUIManager.instance.BlackPanel.DOFade(1, 5).WaitForCompletion();
@@ -357,6 +374,7 @@ public class GuideStoryUi : MonoBehaviour
             enemies.Where(e => e.Value != null).Select((e, i) =>
                     ChessCard.Instance(e.Value.CardId, e.Value.CardType, e.Value.Star, arouse: 0, pos: e.Key))
                 .ToList());
+        warBoard.Chessboard.Background.sprite = GameResources.Instance.BattleBG[guide.MapBg];
         warBoard.MaxCards = 20;
         warBoard.UpdateHeroEnlistText();
         foreach (var c in racks.Values.Where(c => c != null))
