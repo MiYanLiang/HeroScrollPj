@@ -310,7 +310,7 @@ namespace Assets.System.WarModule
             TrapOperator op = null;
             switch (card.CardId)
             {
-                case 0: op = new JuMaOperator(); break;
+                case 0:case 17:case 18:case 19:case 20:case 21:case 22:case 23: op = new JuMaOperator(); break;
                 case 1: op = new DiLeiOperator(); break;
                 case 2: op = new ShiQiangOperator(); break;
                 case 3: op = new BaZhenTuOperator(); break;
