@@ -326,8 +326,6 @@ public class GuideStoryUi : MonoBehaviour
     //}
 
     //[SerializeField] private Animation PanelAnimation;
-    [Header("遮罩动画时间")][SerializeField] private float PanelSec = 5f;
-
     [SerializeField]private float 战斗胜利渐暗 = 4f;
 
     [SerializeField]private float 战斗胜利渐亮 = 4f;
