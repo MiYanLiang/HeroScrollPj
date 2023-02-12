@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44402242, g: 0.49316543, b: 0.5722324, a: 1}
+  m_IndirectSpecularColor: {r: 0.44402188, g: 0.4931649, b: 0.57223135, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2826,6 +2826,8 @@ MonoBehaviour:
   "\u8DF3\u8FC7\u79D2\u6570": 5
   _pressContinue: {fileID: 1396474215}
   PanelSec: 5
+  "\u6218\u6597\u80DC\u5229\u6E10\u6697": 1
+  "\u6218\u6597\u80DC\u5229\u6E10\u4EAE": 1
 --- !u!223 &280852578
 Canvas:
   m_ObjectHideFlags: 0
