@@ -11,6 +11,15 @@ public class LoginUi : SignInBaseUi
     public Button forgetPasswordBtn;
     public Button resetAccountBtn;
     public Button loginBtn;
+    public Toggle Toggle;
+
+    void Start()
+    {
+        Toggle.onValueChanged.AddListener(OnToggleChanged);
+        OnToggleChanged(Toggle.isOn);
+    }
+
+    private void OnToggleChanged(bool isTicked) => loginBtn.interactable = isTicked;
 
     public override void ResetUi()
     {
