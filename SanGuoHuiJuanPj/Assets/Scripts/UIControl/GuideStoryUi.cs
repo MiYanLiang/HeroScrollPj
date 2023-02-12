@@ -327,6 +327,10 @@ public class GuideStoryUi : MonoBehaviour
 
     //[SerializeField] private Animation PanelAnimation;
     [Header("遮罩动画时间")][SerializeField] private float PanelSec = 5f;
+
+    [SerializeField]private float 战斗胜利渐暗 = 4f;
+
+    [SerializeField]private float 战斗胜利渐亮 = 4f;
     //private IEnumerator PlayStory(GuideTable guide)
     //{
     //    Story.Intro.text = string.Empty;
@@ -455,11 +459,11 @@ public class GuideStoryUi : MonoBehaviour
             yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 0).WaitForCompletion();
             yield return new WaitForSeconds(4);
             StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(true);
-            yield return StartSceneUIManager.instance.BlackPanel.DOFade(1, 4).WaitForCompletion();
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(1, 战斗胜利渐暗).WaitForCompletion();
             warBoard.gameObject.SetActive(false);
-            //PlayStoryIntro();
-            yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 4).WaitForCompletion();
             StartSceneToServerCS.instance.PromptLoginWindow();
+            //PlayStoryIntro();
+            yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 战斗胜利渐亮).WaitForCompletion();
             StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(false);
             GamePref.SetIsPlayedIntro(true);
         }
