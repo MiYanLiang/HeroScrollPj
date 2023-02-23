@@ -467,7 +467,14 @@ public static class Effect
             case 64:
             case 198:
             case 199://锦帆
-                value = 079;break;
+                switch (skill) 
+                {
+                    case 1://贪婪
+                        value = 079;break;
+                    case 2://劫掠
+                        value = 092;break;
+                }
+                break;
 
             case 200:
             case 201:
@@ -1193,11 +1200,18 @@ public static class Effect
             case 64:
             case 198:
             case 199://锦帆
-                return 230;
+                switch (skill) 
+                {
+                    case 1://贪婪
+                        return 264;break;
+                    case 2://劫掠
+                        return 265;break;
+                }
+                break;
 
             case 200:
             case 201:
-            case 202://蛟鳄军
+            case 202://蛟鳄
                 return 254;
 
             case 26:
@@ -1994,7 +2008,7 @@ public static class Effect
 
             case 93:
             case 94:
-            case 95://解烦
+            case 95://霹雳
                 switch (skill)
                 {
                     case 1://引燃
@@ -2301,8 +2315,14 @@ public static class Effect
             case 64:
             case 198:
             case 199://锦帆
-                audioId = 0; break;
-
+                switch (skill) 
+                {
+                    case 1://贪婪
+                        audioId = 35; break;
+                    case 2://劫掠
+                        audioId = 56; break;
+                }
+                break;
             case 200:
             case 201:
             case 202://蛟鳄军

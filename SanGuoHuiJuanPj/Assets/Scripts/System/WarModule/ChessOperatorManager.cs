@@ -256,6 +256,8 @@ namespace Assets.System.WarModule
 
                 case 55: case 196: case 197: op = new HuoChuanOperator(); break; //55  火船
 
+                case 64: case 198: case 199: op = new JinFanOperator();break;    //锦帆
+
                 case 26: case 27: case 203: op = new JunShiOperator(); break; //26  军师 //27  大军师
 
                 case 28: case 29: case 204: op = new ShuShiOperator(); break; //28  术士 //29  大术士
