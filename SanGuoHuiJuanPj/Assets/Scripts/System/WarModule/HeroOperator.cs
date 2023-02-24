@@ -902,6 +902,54 @@ namespace Assets.System.WarModule
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(damage, BurningRate())));
         }
     }
+    /// <summary>
+    /// 锦帆 - 1、攻击时必定造成伤害，否则无限追击；2、攻击[武将]单位时，按照伤害量*1.5|2|3倍，恢复自身血量
+    /// </summary>
+    public class JinFanOperator : HeroOperator 
+    {
+        private int Huixuebi() 
+        {
+            switch (Style.Military) 
+            {
+                case 64: return 150;
+                case 198: return 200;
+                case 199: return 300;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        private const int RecursiveLimit = 20;//上限
+        private static int loopCount = 0;
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, InstanceGenericDamage());
+            if (result == null) return;
+
+            var targetStat = Chessboard.GetStatus(target.Operator);
+            var resultType = result.Type;
+
+            var lastDmg = 0;
+            while (target.IsAliveHero &&
+                   (resultType == ActivityResult.Types.Shield ||
+                    resultType == ActivityResult.Types.Dodge) &&
+                   !targetStat.IsDeath &&
+                   loopCount <= RecursiveLimit)
+            {
+                resultType = OnPerformActivity(target, Activity.Intentions.Offensive,
+                    loopCount + 1, 1, InstanceGenericDamage()).Type;
+                if (resultType == ActivityResult.Types.Suffer)
+                {
+                    //吸血
+                    lastDmg = result?.Status?.LastSuffers?.LastOrDefault() ?? 0;
+                }
+                loopCount++;
+            }
+            if (lastDmg > 0)
+                OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: 1, skill: 2,
+                    CombatConduct.InstanceHeal((int)(lastDmg * Huixuebi() * 0.01f), InstanceId));
+            loopCount = 0;
+        }
+    }
 
     /// <summary>
     /// 53  隐士 - 召唤激流，攻击敌方3个武将，造成伤害并将其击退。
