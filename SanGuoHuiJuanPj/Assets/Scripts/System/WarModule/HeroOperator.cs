@@ -923,12 +923,13 @@ namespace Assets.System.WarModule
         {
             var target = Chessboard.GetLaneTarget(this);
             var result = OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1, InstanceGenericDamage());
+
             if (result == null) return;
 
             var targetStat = Chessboard.GetStatus(target.Operator);
             var resultType = result.Type;
+            var lastDmg = result?.Status?.LastSuffers?.LastOrDefault() ?? 0;
 
-            var lastDmg = 0;
             while (target.IsAliveHero &&
                    (resultType == ActivityResult.Types.Shield ||
                     resultType == ActivityResult.Types.Dodge) &&
@@ -944,7 +945,7 @@ namespace Assets.System.WarModule
                 }
                 loopCount++;
             }
-            if (lastDmg > 0)
+            if (lastDmg > 0 && target?.Operator.CardType==GameCardType.Hero)
                 OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: 1, skill: 2,
                     CombatConduct.InstanceHeal((int)(lastDmg * Huixuebi() * 0.01f), InstanceId));
             loopCount = 0;
