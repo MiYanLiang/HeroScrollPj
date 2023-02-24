@@ -453,6 +453,7 @@ public class GuideStoryUi : MonoBehaviour
         StartCoroutine(Finalization());
         IEnumerator Finalization()
         {
+            GamePref.SetIsPlayedIntro(true);
             AudioController1.instance.PlayLoop(StartSceneUIManager.instance.pianTouAudio, 1, 4);
             yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 0).WaitForCompletion();
             yield return new WaitForSeconds(4);
@@ -463,7 +464,6 @@ public class GuideStoryUi : MonoBehaviour
             //PlayStoryIntro();
             yield return StartSceneUIManager.instance.BlackPanel.DOFade(0, 战斗胜利渐亮).WaitForCompletion();
             StartSceneUIManager.instance.BlackPanel.gameObject.SetActive(false);
-            GamePref.SetIsPlayedIntro(true);
         }
     }
 }
