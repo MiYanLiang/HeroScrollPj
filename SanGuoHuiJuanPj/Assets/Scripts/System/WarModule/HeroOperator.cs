@@ -909,6 +909,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class PiLiOperator : HeroOperator 
     {
+
         private float ExplodeDamageRate1()
         {
             switch (Style.Military)
@@ -946,19 +947,39 @@ namespace Assets.System.WarModule
             var target = Chessboard.GetLaneTarget(this);
             var surrounded = Chessboard.GetNeighbors(target, false).ToList();
             surrounded.Insert(0, target);
-            var explode = CombatConduct.InstanceDamage(InstanceId, (int)(StateDamage() * ExplodeDamageRate1()),
-                    Style.Element);
-            var burnBuff = CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn,
-                rate: CountRate(explode, ExplodeBurningRate()));
-            for (var i = 0; i < surrounded.Count; i++)
+            var explode = CombatConduct.InstanceDamage(InstanceId, (int)(StateDamage() * ExplodeDamageRate1()), Style.Element);//爆炸
+            var burnBuff = GetBurningBuff(explode);//火buff
+            for (var i = 0; i < surrounded.Count; i++)//对面一群单位逐一生成伤害
             {
                 var chessPos = surrounded[i];
-                OnPerformActivity(chessPos, Activity.Intentions.Inevitable, actId: 0, 1, explode, burnBuff);
+                OnPerformActivity(chessPos, Activity.Intentions.Inevitable, actId: 0, 1, explode, burnBuff);//添加伤害,爆炸+火buff
             }
-            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
-                CombatConduct.InstanceKilling(InstanceId));
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1, CombatConduct.InstanceKilling(InstanceId));//自杀
         }
 
+        private CombatConduct GetBurningBuff(CombatConduct explode) => 
+            CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(explode, ExplodeBurningRate()));
+
+        protected override void OnReflectingConduct(Activity activity, ChessOperator offender)
+        {
+            // 执行反击方法
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable, CounterConducts, actId: -1, skill: 1);
+            //自杀
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1, CombatConduct.InstanceKilling(InstanceId));
+        }
+        //自爆反伤
+        private CombatConduct[] CounterConducts
+        {
+            get
+            {
+                var explode = CombatConduct.InstanceDamage(InstanceId, (int)(StateDamage() * ExplodeDamageRate2()), Style.Element);
+                return new[]
+                {
+                    explode,//爆炸
+                    GetBurningBuff(explode)//火buff
+                };
+            }
+        }
     }
 
     /// <summary>
