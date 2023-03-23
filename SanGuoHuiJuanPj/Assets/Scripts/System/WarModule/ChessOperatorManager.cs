@@ -176,9 +176,9 @@ namespace Assets.System.WarModule
 
                 case 10: case 85: case 86: op = new XianDengOperator(); break; //10  先登
 
-                                                             //青州 87|88|89
-                                                             //链锁 90|91|92
-                                                             //解烦 93|94|95
+                //青州 87|88|89
+                //链锁 90|91|92
+                case 93: case 94: case 95: op = new PiLiOperator(); break;        //霹雳 93|94|95
 
                 case 57: case 96: case 97: op = new TengJiaOperator(); break; //57  藤甲
 
