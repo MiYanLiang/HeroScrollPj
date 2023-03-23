@@ -847,9 +847,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 55: return 4f;
-                case 196: return 5f;
-                case 197: return 7f;
+                case 55: return 3f;
+                case 196: return 4f;
+                case 197: return 6f;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -902,6 +902,65 @@ namespace Assets.System.WarModule
                 CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn, rate: CountRate(damage, BurningRate())));
         }
     }
+    /// <summary>
+    /// 霹雳 
+    /// 【攻击自爆】攻击时自爆，对目标及周围单位造成倍数3|4|5伤害，并有70%|80%|100%概率添加[灼烧] 状态1层
+    /// 【受击自爆】受击-近战单位-攻击时自爆，对攻击方造成倍数5|6|7伤害，并有70%|80%|100%概率添加[灼烧] 状态1层
+    /// </summary>
+    public class PiLiOperator : HeroOperator 
+    {
+        private float ExplodeDamageRate1()
+        {
+            switch (Style.Military)
+            {
+                case 93: return 3f;
+                case 94: return 4f;
+                case 95: return 6f;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+        private float ExplodeDamageRate2() 
+        {
+            switch (Style.Military)
+            {
+                case 93: return 5f;
+                case 94: return 6f;
+                case 95: return 8f;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        private int ExplodeBurningRate()
+        {
+            switch (Style.Military)
+            {
+                case 93: return 70;
+                case 94: return 80;
+                case 95: return 100;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var target = Chessboard.GetLaneTarget(this);
+            var surrounded = Chessboard.GetNeighbors(target, false).ToList();
+            surrounded.Insert(0, target);
+            var explode = CombatConduct.InstanceDamage(InstanceId, (int)(StateDamage() * ExplodeDamageRate1()),
+                    Style.Element);
+            var burnBuff = CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Burn,
+                rate: CountRate(explode, ExplodeBurningRate()));
+            for (var i = 0; i < surrounded.Count; i++)
+            {
+                var chessPos = surrounded[i];
+                OnPerformActivity(chessPos, Activity.Intentions.Inevitable, actId: 0, 1, explode, burnBuff);
+            }
+            OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1,
+                CombatConduct.InstanceKilling(InstanceId));
+        }
+
+    }
+
     /// <summary>
     /// 锦帆 - 1、攻击时必定造成伤害，否则无限追击；2、攻击[武将]单位时，按照伤害量*1.5|2|3倍，恢复自身血量
     /// </summary>
@@ -1532,9 +1591,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 32: return 1f;
-                case 33: return 1.2f;
-                case 209: return 1.5f;
+                case 32: return 0.3f;
+                case 33: return 0.5f;
+                case 209: return 1.0f;
                 default: throw MilitaryNotValidError(this);
             }
         }

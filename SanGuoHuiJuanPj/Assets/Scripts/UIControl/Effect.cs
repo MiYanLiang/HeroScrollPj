@@ -156,13 +156,13 @@ public static class Effect
 
             case 93:
             case 94:
-            case 95://解烦
+            case 95://霹雳
                 switch (skill)
                 {
-                    case 1://引燃
-                        value = 218; break;
-                    case 2://自爆
-                        value = 071; break;
+                    case 1://攻击自爆
+                        value = 07101; break;
+                    case 2://受击自爆
+                        value = 064; break;
                 }
                 break;
 
@@ -889,13 +889,13 @@ public static class Effect
 
             case 93:
             case 94:
-            case 95://解烦
+            case 95://霹雳
                 switch (skill)
                 {
-                    case 1://引燃
-                        return -1;
-                    case 2://自爆
-                        return -1;
+                    case 1://攻击自爆
+                        return 227;
+                    case 2://受击自爆
+                        return 227;
                 }
                 break;
 
@@ -2011,10 +2011,10 @@ public static class Effect
             case 95://霹雳
                 switch (skill)
                 {
-                    case 1://引燃
-                        audioId = -1; break;
-                    case 2://自爆
-                        audioId = -1; break;
+                    case 1://攻击自爆
+                        audioId = 38; break;
+                    case 2://受击自爆
+                        audioId = 38; break;
                 }
                 break;
 
