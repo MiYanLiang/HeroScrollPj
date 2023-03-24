@@ -963,7 +963,7 @@ namespace Assets.System.WarModule
         protected override void OnReflectingConduct(Activity activity, ChessOperator offender)
         {
             // 执行反击方法
-            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable, CounterConducts, actId: -1, skill: 1);
+            Chessboard.AppendOpActivity(this, Chessboard.GetChessPos(offender), Activity.Intentions.Inevitable, CounterConducts, actId: -1, skill: 2);
             //自杀
             OnPerformActivity(Chessboard.GetChessPos(this), Activity.Intentions.Self, actId: -1, skill: -1, CombatConduct.InstanceKilling(InstanceId));
         }
