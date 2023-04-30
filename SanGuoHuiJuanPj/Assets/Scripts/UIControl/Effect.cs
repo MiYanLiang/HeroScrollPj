@@ -566,7 +566,12 @@ public static class Effect
             case 61:
             case 62:
             case 63://红颜
-                value = 169;break;
+                value = 055;break;
+
+            case 251:
+            case 252:
+            case 253://权臣
+                value = 163; break;
 
             case 38:
             case 226:
@@ -1296,7 +1301,12 @@ public static class Effect
             case 61:
             case 62:
             case 63://红颜
-                return 503;
+                return 319;
+
+            case 251:
+            case 252:
+            case 253://权臣
+                return 320;
 
             case 38:
             case 226:
@@ -2400,7 +2410,12 @@ public static class Effect
             case 61:
             case 62:
             case 63://红颜
-                audioId = 0; break;
+                audioId = 62; break;
+
+            case 251:
+            case 252:
+            case 253://权臣
+                audioId = 66; break;
 
             case 38:
             case 226:
@@ -2680,8 +2695,8 @@ public static class Effect
                     case PosSprite.Kinds.Earthquake:
                         switch (arg)
                         {
-                            case ChessboardEvent.Shady: return 42;
-                            case ChessboardEvent.Dark: return 43;
+                            case ChessboardEvent.Shady: return 43;
+                            case ChessboardEvent.Dark: return 42;
                         }
                         break;
                     case PosSprite.Kinds.Generic:

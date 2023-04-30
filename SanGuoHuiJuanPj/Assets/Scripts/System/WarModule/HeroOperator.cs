@@ -1104,7 +1104,46 @@ namespace Assets.System.WarModule
 
         protected override CardState.Cons PerformState => CardState.Cons.Confuse;
     }
+    /// <summary>
+    /// 74 红颜 每3|2|1回合，对敌方全体单位，有概率（5+智力差/10）%对其添加【魅惑】状态1回合，此概率受到暴击和会心概率加成
+    /// </summary>
+    public class HongYanOperator : HeroBuffingOperator 
+    {
+        protected override int Targets()
+        {
+            switch (Style.Military)
+            {
+                case 47: return 3;
+                case 48: return 5;
+                case 222: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
 
+        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 4;
+
+        protected override CardState.Cons PerformState => CardState.Cons.Confuse;
+    }
+    /// <summary>
+    /// 87 权臣 随机选择1|3|5个武将士兵单位，有概率（10+智力差/10）%对其添加【弃战】状态1回合，此概率受到暴击和会心概率加成合
+    /// </summary>
+    public class QuanChenOperator : HeroBuffingOperator
+    {
+        protected override int Targets()
+        {
+            switch (Style.Military)
+            {
+                case 47: return 3;
+                case 48: return 5;
+                case 222: return 7;
+                default: throw MilitaryNotValidError(this);
+            }
+        }
+
+        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 4;
+
+        protected override CardState.Cons PerformState => CardState.Cons.Confuse;
+    }
     /// <summary>
     /// 46  大美人 - 以倾国之姿激励友方武将，有概率使其获得【神助】，下次攻击时必定会心一击。
     /// </summary>

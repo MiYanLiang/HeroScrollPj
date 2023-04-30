@@ -293,6 +293,8 @@ namespace Assets.System.WarModule
                 case 244: op = new DuanNuOperator(); break;//短弩
                 case 245: case 246: case 247: op = new DaoShiOperator(); break;//道士
                 case 248: case 249: case 250: op = new FangShiOperator(); break;//方士
+                case 61: case 62: case 63:op = new HongYanOperator();break;//红颜
+                case 251: case 252: case 253:op = new QuanChenOperator();break;//权臣
 
             }
 
