@@ -1147,7 +1147,7 @@ namespace Assets.System.WarModule
     public class QuanChenOperator : HeroOperator
     {
         //触发概率
-        private int SkillRate(IChessOperator op) => 10 + StateIntelligentDiff(op) / 4;
+        private int SkillRate(IChessOperator op) => 20 + StateIntelligentDiff(op) / 3;
         //武力百分比扣除
         private int BuffRate => -10;//暂时让武力-10%
         //目标数量
@@ -1155,9 +1155,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 251: return 1;
-                case 252: return 3;
-                case 253: return 5;
+                case 251: return 3;
+                case 252: return 5;
+                case 253: return 7;
                 default: throw MilitaryNotValidError(this);
             }
         }

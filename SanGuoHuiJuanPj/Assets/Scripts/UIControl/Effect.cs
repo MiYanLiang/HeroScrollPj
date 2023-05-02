@@ -1874,7 +1874,7 @@ public static class Effect
             case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
             case PosSprite.Kinds.RollingWood://滚木
             case PosSprite.Kinds.RollingStone:return 063;//滚石
-            case PosSprite.Kinds.Throne: return 50502;//todo 暂时用火焰代替
+            case PosSprite.Kinds.Throne: return 076;//权臣 弃战
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.YellowBand:
