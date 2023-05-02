@@ -972,7 +972,12 @@ namespace Assets.System.WarModule
             if (HasLogger) LogSprite(sp: sprite,isAdd: true,activityTo: activity.To);
         }
 
-        public bool UpdateRemovable(PosSprite sprite)
+        /// <summary>
+        /// 更新并移除被判定可移除的精灵,宿主精灵将检测是否还有宿主,回合精灵会根据回合次数移除,返回是否有精灵被移除
+        /// </summary>
+        /// <param name="sprite"></param>
+        /// <returns></returns>
+        public bool UpdateRemovableSprite(PosSprite sprite)
         {
             if (sprite.Host == PosSprite.HostType.Relation && sprite.Lasting > 0 &&
                 GetOperator(sprite.Lasting).IsAlive) return false;
@@ -986,8 +991,11 @@ namespace Assets.System.WarModule
             if (HasLogger) LogSprite(sprite, false, activity.To);
             return true;
         }
-
-        private void RemoveSprite(PosSprite sprite)
+        /// <summary>
+        /// 强制移除精灵
+        /// </summary>
+        /// <param name="sprite"></param>
+        public void RemoveSprite(PosSprite sprite)
         {
             RecordSpriteTrigger(sprite, 0, 0, false);
             Sprites.Remove(sprite);
@@ -998,7 +1006,7 @@ namespace Assets.System.WarModule
         {
             foreach (var pos in Grid.Challenger.Values.Concat(Grid.Opposite.Values)) 
             foreach (var sprite in pos.Terrain.Sprites.ToArray())
-                UpdateRemovable(sprite);
+                UpdateRemovableSprite(sprite);
         }
 
         #endregion

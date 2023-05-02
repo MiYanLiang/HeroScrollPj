@@ -131,6 +131,7 @@ namespace Assets.System.WarModule
         protected CombatConduct InstanceGenericDamage(float additionDamage = 0)
         {
             var damage = StateDamage() + additionDamage;
+            damage = MathF.Max(1, damage);//最低1伤害
             if (Chessboard.IsRouseDamagePass(this))
             {
                 var rouse = RouseAddOn();
@@ -1107,17 +1108,33 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 74 红颜 每3|2|1回合，对敌方全体单位，有概率（5+智力差/10）%对其添加【魅惑】状态1回合，此概率受到暴击和会心概率加成
     /// </summary>
-    public class HongYanOperator : HeroBuffingOperator 
+    public class HongYanOperator : HeroBuffingOperator
     {
-        protected override int Targets()
+        protected override int Targets() => 0;//所有目标
+
+        private int TurnLimit()
         {
             switch (Style.Military)
             {
-                case 47: return 3;
-                case 48: return 5;
-                case 222: return 7;
+                case 61: return 3;
+                case 62: return 2;
+                case 63: return 1;
                 default: throw MilitaryNotValidError(this);
             }
+        }
+
+        private int _turnCount;
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            if (_turnCount == 0)
+            {
+                //魅惑是混乱的一种,的技能id为2
+                base.MilitaryPerforms(skill: 2);
+                _turnCount = TurnLimit();
+            }
+            else
+                BasicAttack();
+            _turnCount--;
         }
 
         protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 4;
@@ -1127,22 +1144,52 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 87 权臣 随机选择1|3|5个武将士兵单位，有概率（10+智力差/10）%对其添加【弃战】状态1回合，此概率受到暴击和会心概率加成合
     /// </summary>
-    public class QuanChenOperator : HeroBuffingOperator
+    public class QuanChenOperator : HeroOperator
     {
-        protected override int Targets()
+        //触发概率
+        private int SkillRate(IChessOperator op) => 10 + StateIntelligentDiff(op) / 4;
+        //武力百分比扣除
+        private int BuffRate => -10;//暂时让武力-10%
+        //目标数量
+        private int Targets()
         {
             switch (Style.Military)
             {
-                case 47: return 3;
-                case 48: return 5;
-                case 222: return 7;
+                case 251: return 1;
+                case 252: return 3;
+                case 253: return 5;
                 default: throw MilitaryNotValidError(this);
             }
         }
 
-        protected override int SkillRate(IChessOperator op) => 5 + StateIntelligentDiff(op) / 4;
+        protected override void MilitaryPerforms(int skill = 1)
+        {
+            var targets = Chessboard.GetRivals(this,
+                    p => p.IsAliveHero)
+                .OrderByDescending(_ => SysTime.Random.NextDouble())
+                .Take(Targets())
+                .ToArray();
+            if (!targets.Any())
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
 
-        protected override CardState.Cons PerformState => CardState.Cons.Confuse;
+            var conduct = InstanceGenericDamage();
+            foreach (var target in targets)
+            {
+                var rate = CountRate(conduct, SkillRate(target.Operator));
+                var emptyConduct = Helper.Singular(CombatConduct.InstanceDamage(InstanceId, damage: 0, Style.Element));
+                OnPerformActivity(target, Activity.Intentions.Offensive, 0, 1, emptyConduct);
+                //概率判断不过就仅仅攻击,并不生成精灵
+                if (!Chessboard.IsRandomPass(rate))
+                    continue;
+                //生成精灵
+                Chessboard.InstanceSprite<ThroneSprite>(target: target, lasting: InstanceId,
+                    value: BuffRate,
+                    actId: 0, skill: 1);
+            }
+        }
     }
     /// <summary>
     /// 46  大美人 - 以倾国之姿激励友方武将，有概率使其获得【神助】，下次攻击时必定会心一击。
@@ -1244,14 +1291,15 @@ namespace Assets.System.WarModule
                 //这一段不理想的代码
                 var disarmedRate = CountRate(conduct, DisarmedRate(), CriticalAddOn, RouseAddOn);
                 if (Chessboard.IsRandomPass(disarmedRate))
-                { 
-                OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1,
-                    CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Disarmed, value: 1, rate: 100));
-                OnPerformActivity(target, Activity.Intentions.Offensive, actId: 1, 2, InstanceGenericDamage());
+                {
+                    OnPerformActivity(target, Activity.Intentions.Offensive, actId: -1, skill: -1,
+                        CombatConduct.InstanceBuff(InstanceId, CardState.Cons.Disarmed, value: 1, rate: 100));
+                    OnPerformActivity(target, Activity.Intentions.Offensive, actId: 1, 2, InstanceGenericDamage());
                 }
             }
         }
     }
+
     /// <summary>
     /// 44  飞熊骑
     /// </summary>
@@ -1602,10 +1650,14 @@ namespace Assets.System.WarModule
         protected override CardState.Cons PerformState => CardState.Cons.Imprisoned;
     }
     /// <summary>
-    /// 对一定数量的对方武将类逐一对其发出武将技
+    /// 对一定数量的对方武将类逐一对其发出buff武将技
     /// </summary>
     public abstract class HeroBuffingOperator : HeroOperator
     {
+        /// <summary>
+        /// 目标数量, 0为全部
+        /// </summary>
+        /// <returns></returns>
         protected abstract int Targets();
         /// <summary>
         /// 暴击增率
@@ -1623,12 +1675,24 @@ namespace Assets.System.WarModule
         protected abstract CardState.Cons PerformState { get; }
         protected override void MilitaryPerforms(int skill = 1)
         {
-            var targets = Chessboard.GetRivals(this,
-                    p => p.IsPostedAlive && p.Operator.CardType == GameCardType.Hero)
-                .Select(c => new WeightElement<IChessPos> { Obj = c, Weight = Chessboard.Randomize(3) + 1 })
-                .Pick(Targets()).Select(c => c.Obj).ToArray();
+            var pick = Targets();
+            IChessPos[] targets;
+            if (pick > 0)
+                targets = Chessboard.GetRivals(this,
+                        p => p.IsAliveHero)
+                    .Select(c => new WeightElement<IChessPos> { Obj = c, Weight = Chessboard.Randomize(3) + 1 })
+                    .Pick(pick).Select(c => c.Obj).ToArray();
+            else
+                targets = Chessboard.GetRivals(this,
+                        p => p.IsAliveHero)
+                    .Select(c => new WeightElement<IChessPos> { Obj = c, Weight = Chessboard.Randomize(3) + 1 })
+                    .Select(c => c.Obj).ToArray();
 
-            if (targets.Length == 0) base.MilitaryPerforms(0);
+            if (targets.Length == 0)
+            {
+                base.MilitaryPerforms(0);
+                return;
+            }
 
             var damage = InstanceGenericDamage();
             
@@ -1636,10 +1700,20 @@ namespace Assets.System.WarModule
             {
                 var target = targets[i];
                 OnPerformActivity(target, Activity.Intentions.Offensive, actId: 0, skill: 1,
-                    conducts: CombatConduct.InstanceBuff(InstanceId, PerformState,
-                        rate: CountRate(damage, SkillRate(target.Operator), CriticalRate, RouseRate)));
+                    conducts: CombatConduct.InstanceBuff(refId: InstanceId, con: PerformState,
+                        rate: CountRate(damage, SkillRate(target.Operator), CriticalRate, RouseRate),
+                        value: BuffValue));
             }
         }
+        /// <summary>
+        /// Buff 值
+        /// </summary>
+        protected virtual float BuffValue { get; } = 1;
+
+        /// <summary>
+        /// 为了提供给子类一个直接调用基础攻击的方法
+        /// </summary>
+        protected void BasicAttack() => base.MilitaryPerforms(0);
     }
 
     /// <summary>

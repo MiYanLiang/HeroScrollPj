@@ -1874,6 +1874,7 @@ public static class Effect
             case PosSprite.Kinds.Arrow:return 13501;//箭楼（井阑）
             case PosSprite.Kinds.RollingWood://滚木
             case PosSprite.Kinds.RollingStone:return 063;//滚石
+            case PosSprite.Kinds.Throne: return 50502;//todo 暂时用火焰代替
 
             case PosSprite.Kinds.CastSprite:
             case PosSprite.Kinds.YellowBand:
@@ -1884,8 +1885,7 @@ public static class Effect
             case PosSprite.Kinds.Critical:
             case PosSprite.Kinds.Rouse:
             case PosSprite.Kinds.Shady:
-            case PosSprite.Kinds.Generic: return -1;
-                break;
+            case PosSprite.Kinds.Generic: 
             default:
                 return -1;
         }
@@ -2583,6 +2583,7 @@ public static class Effect
             case PosSprite.Kinds.RollingStone:
             case PosSprite.Kinds.RollingWood:return 48;
 
+            case PosSprite.Kinds.Throne:
             case PosSprite.Kinds.Generic: 
             case PosSprite.Kinds.CastSprite: 
             case PosSprite.Kinds.YellowBand: 
@@ -2594,7 +2595,6 @@ public static class Effect
             case PosSprite.Kinds.Rouse: 
             case PosSprite.Kinds.Shady:
                 return -1;
-                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -2716,6 +2716,7 @@ public static class Effect
                     case PosSprite.Kinds.Dodge:
                     case PosSprite.Kinds.Critical:
                     case PosSprite.Kinds.Rouse:
+                    case PosSprite.Kinds.Throne:
                         return -1;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(spriteKind), spriteKind, null);
@@ -2773,6 +2774,7 @@ public static class Effect
         {
             case PosSprite.Kinds.Thunder:
             case PosSprite.Kinds.Shady:
+            case PosSprite.Kinds.Throne://权臣
             case PosSprite.Kinds.Earthquake:return true;
             case PosSprite.Kinds.Generic:
             case PosSprite.Kinds.YeHuo:

@@ -152,9 +152,10 @@ namespace Assets.System.WarModule
 
             //除去所有精灵(如果被移位)
             var removeList = Chessboard.ChessSprites
-                .Where(s => s.Host == PosSprite.HostType.Relation && s.Lasting == InstanceId).Except(sprites);
+                .Where(s => s.Host == PosSprite.HostType.Relation && s.Lasting == InstanceId)
+                .Except(sprites).ToArray();
             foreach (var remove in removeList) 
-                Chessboard.UpdateRemovable(remove);
+                Chessboard.UpdateRemovableSprite(remove);
         }
     }
 

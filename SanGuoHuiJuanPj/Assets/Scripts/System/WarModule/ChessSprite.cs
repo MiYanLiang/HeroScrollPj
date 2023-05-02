@@ -58,6 +58,10 @@ namespace Assets.System.WarModule
             /// 阴天精灵
             /// </summary>
             Shady = 110,
+            /// <summary>
+            /// 权利精灵
+            /// </summary>
+            Throne = 111,
             /**下列是跟状态有关的精灵类型**/
             YellowBand = 23,
             Chained = 24,
@@ -163,6 +167,8 @@ namespace Assets.System.WarModule
                 case Kinds.RollingStone: return (nameof(Kinds.RollingStone));
                 case Kinds.RollingWood: return (nameof(Kinds.RollingWood));
                 case Kinds.Shady: return (nameof(Kinds.Shady));
+                case Kinds.Throne: return (nameof(Kinds.Throne));
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -232,6 +238,7 @@ namespace Assets.System.WarModule
     public abstract class StrengthSprite : RelationSprite
     {
         public override int TypeId => (int)Kinds.Strength;
+        protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;//支持所有英雄单位
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.StrengthUp ? Value : 0;
     }
     public class ArmorSprite : RelationSprite
@@ -239,6 +246,24 @@ namespace Assets.System.WarModule
         public override int TypeId => (int)Kinds.Armor;
         protected override Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;
         protected override int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.ArmorUp ? Value : 0;
+    }
+    /// <summary>
+    /// 权利精灵
+    /// </summary>
+    public class ThroneSprite : StrengthSprite
+    {
+        public override int TypeId => (int)Kinds.Throne;
+
+        public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
+        {
+            //除去所有精灵(如果被移位)
+            var removeList = chessboard.ChessSprites
+                .Where(s => s.Host == HostType.Relation &&
+                            s.Lasting == Lasting &&
+                            !chessboard.GetChessPos(s.IsChallenger, s.Pos).IsAliveHero).ToArray();
+            foreach (var remove in removeList)
+                chessboard.RemoveSprite(remove);
+        }
     }
     /// <summary>
     /// 近战力量精灵

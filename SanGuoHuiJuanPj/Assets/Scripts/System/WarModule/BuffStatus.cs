@@ -19,7 +19,7 @@ namespace Assets.System.WarModule
             if (value == 0)
                 Buffs[buffId]--;
             else Buffs[buffId] -= value;
-            RefreshBuffs();
+            NegativeBuffAlignment();
         }
 
         public void AddBuff(CardState.Cons con, int value = 1) => AddBuff((int) con, value);
@@ -35,13 +35,34 @@ namespace Assets.System.WarModule
                 Buffs[buffId] = Math.Min(Buffs[buffId] + value, 20);//战意最大值10
 
             //去掉负数或是0的状态
-            RefreshBuffs();
+            NegativeBuffAlignment(); 
         }
 
-        protected void RefreshBuffs()
+        //负值校正
+        private void NegativeBuffAlignment()
         {
-            foreach (var buff in Buffs.ToDictionary(b=>b.Key,b=>b.Value).Where(buff => buff.Value < 0))
+            foreach (var buff in Buffs.ToDictionary(b => b.Key, b => b.Value).Where(BuffPredicate))
                 Buffs[buff.Key] = 0;
+
+            bool BuffPredicate(KeyValuePair<int, int> arg)
+            {
+                var buffId = (CardState.Cons)arg.Key;
+                var buffValue = arg.Value;
+                //属于基础属性的值加成类的会有负值,所以不会有负值校正
+                switch (buffId)
+                {
+                    case CardState.Cons.StrengthUp:
+                    case CardState.Cons.DodgeUp:
+                    case CardState.Cons.CriticalUp:
+                    case CardState.Cons.RouseUp:
+                    case CardState.Cons.ArmorUp:
+                    case CardState.Cons.SpeedUp:
+                    case CardState.Cons.IntelligentUp:
+                        return false;
+                    default:
+                        return buffValue < 0;
+                }
+            }
         }
 
         public void ClearBuff(CardState.Cons con) => ClearBuff((int) con);
