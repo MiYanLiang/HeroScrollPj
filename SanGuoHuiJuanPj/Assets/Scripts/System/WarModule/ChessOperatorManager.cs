@@ -316,8 +316,8 @@ namespace Assets.System.WarModule
             {
                 case 0:case 17:case 18:case 19:case 20:case 21:case 22:case 23: op = new JuMaOperator(); break;
                 case 1: op = new DiLeiOperator(); break;
-                case 2: op = new ShiQiangOperator(); break;
-                case 3: op = new BaZhenTuOperator(); break;
+                case 2: case 24: case 25: case 26: case 27: case 28: case 29: case 30: op = new ShiQiangOperator(); break;
+                case 3: case 31: case 32: case 33: case 34: case 35: case 36: case 37: op = new BaZhenTuOperator(); break;
                 case 4: op = new JinSuoZhenOperator(); break;
                 case 5: op = new GuiBingZhenOperator(); break;
                 case 6: op = new FireWallOperator(); break;
