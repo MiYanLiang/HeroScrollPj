@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44402242, g: 0.49316543, b: 0.5722324, a: 1}
+  m_IndirectSpecularColor: {r: 0.44402185, g: 0.49316472, b: 0.57223153, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5467,27 +5467,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
-  m_RequiresOpaqueTextureOption: 2
-  m_CameraType: 0
-  m_Cameras: []
-  m_RendererIndex: -1
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 0}
-  m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
-  m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
-  m_ClearDepth: 1
-  m_AllowXRRendering: 1
-  m_RequiresDepthTexture: 0
-  m_RequiresColorTexture: 0
-  m_Version: 2
 --- !u!1 &1006629021
 GameObject:
   m_ObjectHideFlags: 0
@@ -23895,55 +23874,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b24c1c2cf2bc08541969411947a62cc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayerInitialConfigTable: {fileID: 4900000, guid: 61f01db87a6544d4e9e6e5fbdbc12720,
+  PlayerInitialConfigTable: {fileID: 4900000, guid: 54fbe3340f293a74e8b7ecda2fd9f1e0,
     type: 3}
-  ResourceConfigTable: {fileID: 4900000, guid: f5e97a1b2bfd5e742a09415b8179d77e, type: 3}
-  HeroTable: {fileID: 4900000, guid: e25a6c4b14da66f4899b5ebc6dd09296, type: 3}
-  PlayerLevelConfigTable: {fileID: 4900000, guid: 736047f10b61a2e40a63fcae48a615a4,
+  ResourceConfigTable: {fileID: 4900000, guid: 2bc7caae0042ed443a47c1fe72e97b98, type: 3}
+  HeroTable: {fileID: 4900000, guid: f81782a76dc20d34bbda15d377ee9662, type: 3}
+  PlayerLevelConfigTable: {fileID: 4900000, guid: 98c808fc3bb45eb4cb2707994afe6ddd,
     type: 3}
-  TowerTable: {fileID: 4900000, guid: 9a2558febce25d34c81f3bf9c4f98c00, type: 3}
-  MilitaryTable: {fileID: 4900000, guid: 93acb047637d35b4f891951914c403d9, type: 3}
-  CardLevelTable: {fileID: 4900000, guid: e371d9c85ee61f44c9bf5f365910eb6f, type: 3}
-  TrapTable: {fileID: 4900000, guid: d7c3bcd7d24e69b439d81fee1fbc1437, type: 3}
-  WarChestTable: {fileID: 4900000, guid: d594c932049d21e4cbf44d1e36ae2eab, type: 3}
-  WarTable: {fileID: 4900000, guid: b8e24a57929f29b4e8904471f942af74, type: 3}
-  BaseLevelTable: {fileID: 4900000, guid: d0cdfc20cc4f924459428953df5fb491, type: 3}
-  CheckpointTable: {fileID: 4900000, guid: 81cd0b5bcaac7984e87d51449adfb70b, type: 3}
-  BattleEventTable: {fileID: 4900000, guid: 35b1aba95a396f74684600088c0bdf8f, type: 3}
-  EnemyTable: {fileID: 4900000, guid: e7bfc6c943ca9bc4eac960e0def2733c, type: 3}
-  EnemyUnitTable: {fileID: 4900000, guid: d5ea54e72ebe18f46bbb5d95d4882adc, type: 3}
-  QuestTable: {fileID: 4900000, guid: 8d2bbb3f7a96af24987a2eccf3e3878c, type: 3}
-  QuestRewardTable: {fileID: 4900000, guid: 109cd545dc1e1d54eab67a45f4c9c62c, type: 3}
-  MercenaryTable: {fileID: 4900000, guid: 67503a177781b2a4ca12a0559b58c264, type: 3}
-  GameModeTable: {fileID: 4900000, guid: 6542e5b3540585746a93d396f2f26fc5, type: 3}
-  GuideTable: {fileID: 4900000, guid: 938d9842f8ebbb24e89ffd019278dcb4, type: 3}
-  TipsTable: {fileID: 4900000, guid: fc503ce46fba40c4fabc2c82a2983eaa, type: 3}
-  ChickenTable: {fileID: 4900000, guid: f3fb523de6aacca42b6945bb9f6ee240, type: 3}
-  StaticArrangementTable: {fileID: 4900000, guid: 8346230bab0e0214da7d65281b0006d0,
+  TowerTable: {fileID: 4900000, guid: 069ae02c0c0344440b32312db467318c, type: 3}
+  MilitaryTable: {fileID: 4900000, guid: 9b8725ae252ae3949a72b3b056d296e0, type: 3}
+  CardLevelTable: {fileID: 4900000, guid: 9387109c73e1eda4b9e4a2ccf28c4dd1, type: 3}
+  TrapTable: {fileID: 4900000, guid: fe0b3d8c350a169449bbd6f3c6bd00b2, type: 3}
+  WarChestTable: {fileID: 4900000, guid: 569eb01243009a641bd573428901ea74, type: 3}
+  WarTable: {fileID: 4900000, guid: 3f435904bb6be784885e2278f3b710b0, type: 3}
+  BaseLevelTable: {fileID: 4900000, guid: 7b1a983f2283ff44487ceedd44e09f1d, type: 3}
+  CheckpointTable: {fileID: 4900000, guid: f0d7973b6abaa094cb099b0bce364609, type: 3}
+  BattleEventTable: {fileID: 4900000, guid: 30f4a2127a3b4604887db9d6cc12704c, type: 3}
+  EnemyTable: {fileID: 4900000, guid: ca1fb1f2078bdcc4488150078ff433c7, type: 3}
+  EnemyUnitTable: {fileID: 4900000, guid: 61269f38c0e68e34c80505d2b2ce1412, type: 3}
+  QuestTable: {fileID: 4900000, guid: 3ab24e7aef37e134ea4fe34e1826096c, type: 3}
+  QuestRewardTable: {fileID: 4900000, guid: ced98a6c09529914cba2e7376a9601a4, type: 3}
+  MercenaryTable: {fileID: 4900000, guid: e13e5a5a08ed7c945a4833974ed1f92f, type: 3}
+  GameModeTable: {fileID: 4900000, guid: f39d260d785397c43a628b69fbf77254, type: 3}
+  GuideTable: {fileID: 4900000, guid: 07ed28c70d1117644bd2599eafd7aac0, type: 3}
+  TipsTable: {fileID: 4900000, guid: 5155aeb669c45fb46941cabcd7070622, type: 3}
+  ChickenTable: {fileID: 4900000, guid: d7bb99bf35fbab34086d114517dd90e5, type: 3}
+  StaticArrangementTable: {fileID: 4900000, guid: b4494db11d1563249824b9821939217e,
     type: 3}
-  TextTable: {fileID: 4900000, guid: a407da76a8111ee40961ae9f51ac4df9, type: 3}
-  NumericalConfigTable: {fileID: 4900000, guid: a2adea32b0051b94f899188ee5f72428,
+  TextTable: {fileID: 4900000, guid: c1f24912f4141514380246c30ae0b388, type: 3}
+  NumericalConfigTable: {fileID: 4900000, guid: 36e144e93ec9c5f4b876efd59435e9d0,
     type: 3}
-  JiBanTable: {fileID: 4900000, guid: e4ca6bffff1c17a4b920a2e29d3fb07e, type: 3}
-  ForceTable: {fileID: 4900000, guid: 496c780b64137f24ba9d8e5ab45a0de2, type: 3}
-  BaYeCityTable: {fileID: 4900000, guid: 0f0f164e1ac741e49960a15618d6e0c2, type: 3}
-  BaYeCityEventTable: {fileID: 4900000, guid: fb02a6404feaa9d4389859fec23f37f3, type: 3}
-  BaYeLevelMappingTable: {fileID: 4900000, guid: a270177e225cb9d46ba1fe529d8c5e30,
+  JiBanTable: {fileID: 4900000, guid: d41ad5b407c8ccd4d998d9146dd30381, type: 3}
+  ForceTable: {fileID: 4900000, guid: 931d44428a5067e40b5dd85e9a89b41a, type: 3}
+  BaYeCityTable: {fileID: 4900000, guid: dd74666870d2a4e4892bd31b885991b7, type: 3}
+  BaYeCityEventTable: {fileID: 4900000, guid: 134ca6aa440239f41a8af06befe54aad, type: 3}
+  BaYeLevelMappingTable: {fileID: 4900000, guid: 58494df44c34de144a6b8eaca8a02826,
     type: 3}
-  BaYeTaskTable: {fileID: 4900000, guid: 08a130ad17c099f40b03e1755a3b88ac, type: 3}
-  BaYeStoryPoolTable: {fileID: 4900000, guid: 274aca41a1a97a44c8121e474b68f7a8, type: 3}
-  BaYeStoryEventTable: {fileID: 4900000, guid: 22c810f05734c7d43b278b43ba7dd2bf, type: 3}
-  BaYeTvTable: {fileID: 4900000, guid: 679d9e494437b2b41a1108af95ec9bdf, type: 3}
-  BaYeNameTable: {fileID: 4900000, guid: 5640efbcfbe49ff4e95fbdd8e5c8c551, type: 3}
-  CityTable: {fileID: 4900000, guid: 1508f1bfa4fef1447be75be99b099f93, type: 3}
-  PlayerNameTable: {fileID: 4900000, guid: 0f1a2e038b0d44f4aae3e1bb3b5f177e, type: 3}
-  PlayerNicknameTable: {fileID: 4900000, guid: d9cc2cfc37cd75f408eb57f32b3d5d03, type: 3}
-  PlayerSignTable: {fileID: 4900000, guid: 78a0335937d9ee544b82392f2bbb23e6, type: 3}
-  DirtyWordTable: {fileID: 4900000, guid: 1789f5d184582164ca191fe69d5cf068, type: 3}
-  BaYeCityStoryTable: {fileID: 4900000, guid: 9e8ba866ed993a0438ce3f81244a70e5, type: 3}
-  BaYeCityOptionTable: {fileID: 4900000, guid: adbbd05ee1662f24eb0f9cce6a9876f6, type: 3}
-  BaYeCityResultTable: {fileID: 4900000, guid: 1866bc3c9263fcc4aa1ea7849285ddc6, type: 3}
-  ArouseConfigTable: {fileID: 4900000, guid: 35ba3f9343530884dbec637d2458590d, type: 3}
+  BaYeTaskTable: {fileID: 4900000, guid: a331998031640e24da23d390540a85c4, type: 3}
+  BaYeStoryPoolTable: {fileID: 4900000, guid: 951092121c6d759498068896f8f7345d, type: 3}
+  BaYeStoryEventTable: {fileID: 4900000, guid: 85860a9f3bee4ac499a13c6d5c730580, type: 3}
+  BaYeTvTable: {fileID: 4900000, guid: 1ba06007dcb13d34688289f3d81a9f5a, type: 3}
+  BaYeNameTable: {fileID: 4900000, guid: 4be9a2edbcf0bc948a176cf41eec9763, type: 3}
+  CityTable: {fileID: 4900000, guid: 165a4121986e0484bbc92e99765a51e9, type: 3}
+  PlayerNameTable: {fileID: 4900000, guid: 48ee403b1ffc7104fb62ec240f8ed271, type: 3}
+  PlayerNicknameTable: {fileID: 4900000, guid: aff7d0c579e004b41a8ccfd40a70b8fa, type: 3}
+  PlayerSignTable: {fileID: 4900000, guid: 61267bfe6ab95d0408bf0a410c2657d5, type: 3}
+  DirtyWordTable: {fileID: 4900000, guid: 4ab56a6fe9f2ec44693f560aeee246d2, type: 3}
+  BaYeCityStoryTable: {fileID: 4900000, guid: fbaa1be42957dc046bdfe6880635b1a1, type: 3}
+  BaYeCityOptionTable: {fileID: 4900000, guid: 3108c26c41676d7468aadced35eceb6e, type: 3}
+  BaYeCityResultTable: {fileID: 4900000, guid: cda82a801d1da6145950afbdd2cfafdb, type: 3}
+  ArouseConfigTable: {fileID: 4900000, guid: 0da7605b79342dd449b3d418065a0d68, type: 3}
 --- !u!224 &7185362201880157762
 RectTransform:
   m_ObjectHideFlags: 0
