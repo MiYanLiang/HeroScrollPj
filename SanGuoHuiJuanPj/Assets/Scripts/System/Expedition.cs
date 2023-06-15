@@ -14,11 +14,9 @@ public class Expedition : MonoBehaviour
     public Image stageTipUi;//模式说明
     public Text stageTipForceName;
     public Button[] difficultyButtons;
-    public Button yuanZhengButton;
+    [SerializeField] private YuanZhengField[] yuanZhengFields;
     public WarStageBtnUi warStageBtnPrefab;
     public ScrollRect warStageScrollRect;
-    private const int YuanZhengIndex = 6;//远征id
-
 
     public ForceSelectorUi warForceSelectorUi; //战役势力选择器
     private int lastAvailableStageIndex; //最远可战的战役索引
@@ -84,42 +82,50 @@ public class Expedition : MonoBehaviour
         InitWarsListInfo(lastAvailableStageIndex, true);
 
         //远征关卡
+        foreach (var yz in yuanZhengFields)
         {
-            var yuanZhengMode = DataTable.GameMode[YuanZhengIndex];
-            indexWarModeMap.Add(YuanZhengIndex, yuanZhengMode);
-            var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
-            yuanZhengButton.gameObject.SetActive(true);
-            var textUi = yuanZhengButton.GetComponentInChildren<Text>();
-            textUi.color = isYuanZhengUnlock ? Color.white : Color.gray;
-            if (isYuanZhengUnlock)
-            {
-                textUi.text = yuanZhengMode.Title;
-                textUi.color = Color.white;
-                yuanZhengButton.GetComponent<Button>().onClick.AddListener(() =>
-                {
-                    InitWarsListInfo(YuanZhengIndex);
-                    UIManager.instance.PlayOnClickMusic();
-                });
-            }
-            else
-            {
-                yuanZhengButton.GetComponent<Button>().onClick.AddListener(() =>
-                {
-                    PlayerDataForGame.instance.ShowStringTips(yuanZhengMode.Intro);
-                    UIManager.instance.PlayOnClickMusic();
-                });
-            }
+            var yuanZhengMode = DataTable.GameMode[yz.Index];
+            InitYuanZhengButton(yz, yuanZhengMode);
         }
+    }
 
-        bool IsWarUnlock(GameModeTable warMode)
+    private void InitYuanZhengButton(YuanZhengField yz, GameModeTable yuanZhengMode)
+    {
+        var yzButton = yz.Button;
+        var yzIndex = yz.Index;
+        indexWarModeMap.Add(yzIndex, yuanZhengMode);
+        var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
+        yzButton.gameObject.SetActive(true);
+        var textUi = yzButton.GetComponentInChildren<Text>();
+        textUi.color = isYuanZhengUnlock ? Color.white : Color.gray;
+        if (isYuanZhengUnlock)
         {
-            if (warMode.Unlock == default) return true;//解锁关卡为(id = 0)初始关卡
-            var theWarBeforeUnlockWar = warMode.Unlock - 1;//当前需要解锁关卡的前一个关卡id
-            var lastWarTotalStages = DataTable.War[theWarBeforeUnlockWar].CheckPoints;//上一个war的总关卡
-            var lastWar = PlayerDataForGame.instance.warsData.warUnlockSaveData.FirstOrDefault(w => w.warId == theWarBeforeUnlockWar);
-            if (lastWar == null) return false;
-            return lastWar.unLockCount >= lastWarTotalStages;//是否上一关已经完成
+            textUi.text = yuanZhengMode.Title;
+            textUi.color = Color.white;
+            yzButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                InitWarsListInfo(yzIndex);
+                UIManager.instance.PlayOnClickMusic();
+            });
         }
+        else
+        {
+            yzButton.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                PlayerDataForGame.instance.ShowStringTips(yuanZhengMode.Intro);
+                UIManager.instance.PlayOnClickMusic();
+            });
+        }
+    }
+
+    private bool IsWarUnlock(GameModeTable warMode)
+    {
+        if (warMode.Unlock == default) return true;//解锁关卡为(id = 0)初始关卡
+        var theWarBeforeUnlockWar = warMode.Unlock - 1;//当前需要解锁关卡的前一个关卡id
+        var lastWarTotalStages = DataTable.War[theWarBeforeUnlockWar].CheckPoints;//上一个war的总关卡
+        var lastWar = PlayerDataForGame.instance.warsData.warUnlockSaveData.FirstOrDefault(w => w.warId == theWarBeforeUnlockWar);
+        if (lastWar == null) return false;
+        return lastWar.unLockCount >= lastWarTotalStages;//是否上一关已经完成
     }
 
     /// <summary>
@@ -142,9 +148,12 @@ public class Expedition : MonoBehaviour
         stages.Clear();
 
         var lastStageWarId = -1;
-        if (warMode.Id == 6)
+        var yz = yuanZhengFields.FirstOrDefault(yz => yz.Index == warMode.Id);
+        if (yz!=null)
         {
-            var warId = DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].YuanZhengWarTableId;
+            var warId = yz.IsTieXue
+                ? 120 //铁血远征的WarId固定是120
+                : DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].YuanZhengWarTableId;
             lastStageWarId = warId;
             InitWarListUi(warId);
         }
@@ -199,7 +208,10 @@ public class Expedition : MonoBehaviour
     private void OnSelectDifficultyUiScale(int index)
     {
         var scaleUp = new Vector2(1.2f, 1.2f);
-        yuanZhengButton.transform.localScale = index == YuanZhengIndex ? scaleUp : Vector2.one;
+        foreach (var yz in yuanZhengFields)
+        {
+            yz.Button.transform.localScale = index == yz.Index ? scaleUp : Vector2.one;
+        }
         for (int i = 0; i < difficultyButtons.Length; i++)
             difficultyButtons[i].transform.localScale = index == i ? scaleUp : Vector2.one;
     }
@@ -291,5 +303,19 @@ public class Expedition : MonoBehaviour
             }, PlayerDataForGame.instance.ShowStringTips,
             EventStrings.Req_Achievement,
             ViewBag.Instance().SetValue(playerUnlockProgress.warId));
+    }
+
+    [Serializable] private class YuanZhengField
+    {
+        [SerializeField] private int 按键索引;
+        [SerializeField] private Button 按键;
+        [SerializeField] private bool 是铁血远征;
+
+        /// <summary>
+        /// 是否是铁血远征
+        /// </summary>
+        public bool IsTieXue => 是铁血远征;
+        public int Index => 按键索引;
+        public Button Button => 按键;
     }
 }
