@@ -348,11 +348,11 @@ namespace Assets.System.WarModule
                 //营寨
                 case 0: case 24:case 25:case 26:case 27:case 28:case 29: op = new YingZhaiOperator(); break;
                 //投石台
-                case 1: op = new PaoShiTaiOperator(); break;
+                case 1: case 30: case 31: case 32: case 33: case 34:case 35: op = new PaoShiTaiOperator(); break;
                 //奏乐台
-                case 2: op = new ZouYueTaiOperator(); break;
+                case 2: case 36: case 37: case 38: case 39: case 40: case 41: op = new ZouYueTaiOperator(); break;
                 //箭楼
-                case 3: op = new JianLouOperator(); break;
+                case 3: case 42: case 43: case 44: case 45: case 46: case 47: op = new JianLouOperator(); break;
                 //战鼓台
                 case 4: op = new ZhanGuTaiOperator(); break;
                 //风神台
