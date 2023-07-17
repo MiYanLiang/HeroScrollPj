@@ -13,9 +13,7 @@ public class PlayerDataForGame : MonoBehaviour
 {
     public static PlayerDataForGame instance;
 
-    public int staminaMax = 500;
     public int secsPerStamina = 600;
-    private int staminaIncreaseLimit = 100;
     //修复v1.89无限刷霸业宝箱3的Bug 
     [Serializable]
     public enum WarTypes
@@ -437,8 +435,11 @@ public class PlayerDataForGame : MonoBehaviour
         fightTrapId = hstData.trapSaveData.Enlist(forceId).Select(t => t.CardId).ToList();
     }
 
-    public void GenerateLocalStamina() =>
-        stamina = new LocalStamina(pyData?.Stamina ?? 0, secsPerStamina, staminaIncreaseLimit, staminaMax);
+    public void GenerateLocalStamina()
+    {
+        var staConfig = DataTable.ResourceConfig[2];
+        stamina = new LocalStamina(pyData?.Stamina ?? 0, secsPerStamina, staConfig.NewPlayerValue, staConfig.Limit);
+    }
 
     public IEnumerable<GameCard> GetCards(bool isAllForces)
     {

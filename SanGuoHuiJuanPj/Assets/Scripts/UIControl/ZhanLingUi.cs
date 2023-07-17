@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class ZhanLingUi : MonoBehaviour
 {
-    public int MaxValue = 100;
+    public int MaxValue => DataTable.ResourceConfig[2].NewPlayerValue;
     public Color HightColor = new Color(170, 0, 0);
     public Color NormalColor = Color.black;
     private int _value;
@@ -27,6 +27,7 @@ public class ZhanLingUi : MonoBehaviour
 
     private void InternalUpdateUi()
     {
+        MaxText.text = "/" + MaxValue;
         ValueText.fontStyle = FontStyle.Normal;
         MaxText.fontStyle = FontStyle.Normal;
         ValueText.text = _value.ToString();

@@ -2,19 +2,12 @@
 using UnityEngine.Advertisements;
 using UnityEngine.Events;
 
-public class UnityAdController : AdControllerBase, IUnityAdsListener
+public class UnityAdController : AdControllerBase
 {
     private AdAgentBase.States status;
     public override string StatusDetail => Status.ToString();
 
-    public override AdAgentBase.States Status
-    {
-        get
-        {
-            status = Advertisement.IsReady(PlacementId) ? AdAgentBase.States.Loaded : AdAgentBase.States.None;
-            return status;
-        }
-    }
+    public override AdAgentBase.States Status => status;
     private const string GameId = "3997035";
     private const string PlacementId = "Android_Rewarded";
 #if UNITY_EDITOR
@@ -28,17 +21,14 @@ public class UnityAdController : AdControllerBase, IUnityAdsListener
     {
 #if !UNITY_EDITOR
         Advertisement.Initialize(GameId, isDevTest);
+        LoadUnityAd(null);
 #endif
-        Advertisement.AddListener(this);
     }
-
-    //Unity暂时无法(回调)知道当前是否已经把广告预备好。只能每次都检查是否已经可以播放广告。
-    public bool IsReady() => Advertisement.IsReady(PlacementId);
 
     public override void RequestShow(UnityAction<bool, string> requestAction)
     {
         recallAction = requestAction;
-        if (Advertisement.IsReady(PlacementId))
+        if (status == AdAgentBase.States.Loaded)
         {
             Advertisement.Show(PlacementId);
             return;
@@ -54,36 +44,39 @@ public class UnityAdController : AdControllerBase, IUnityAdsListener
 
     public override void RequestLoad(UnityAction<bool, string> loadingAction)
     {
-        if (!Advertisement.IsReady(PlacementId))
+        if (status is not (AdAgentBase.States.Loading or AdAgentBase.States.Loaded))
         {
-            Advertisement.Load(PlacementId);
+            LoadUnityAd(loadingAction);
             return;
         }
         loadingAction?.Invoke(true, string.Empty);
     }
 
-    public void OnUnityAdsReady(string placementId) { }
-
-    public void OnUnityAdsDidError(string message) => XDebug.Log<UnityAdController>(message);
-
-    public void OnUnityAdsDidStart(string placementId) { }
-
-    public void OnUnityAdsDidFinish(string placementId, ShowResult showResult)
+    private void LoadUnityAd(UnityAction<bool, string> loadingAction)
     {
-        switch (showResult)
+        Advertisement.Load(PlacementId, new UnityAdLoadListener(CallbackAction));
+
+        void CallbackAction(bool isSuccess, string message)
         {
-            case ShowResult.Failed:
-                OnActionRecallOnce(false, "Failed!");
-                break;
-            case ShowResult.Skipped:
-                OnActionRecallOnce(false, "玩家跳过广告。");
-                break;
-            case ShowResult.Finished:
-                OnActionRecallOnce(true, "请求成功。");
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(showResult), showResult, null);
+            status = isSuccess ? AdAgentBase.States.Loaded : AdAgentBase.States.FailedToLoad;
+            loadingAction?.Invoke(isSuccess, message);
         }
     }
 
+    public void OnUnityAdsAdLoaded(string placementId) => status = AdAgentBase.States.Loaded;
+    public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message) =>
+        status = AdAgentBase.States.FailedToLoad;
+    private class UnityAdLoadListener : IUnityAdsLoadListener
+    {
+        private UnityAction<bool, string> OnloadAction { get; }
+
+        public UnityAdLoadListener(UnityAction<bool,string> onloadAction)
+        {
+            OnloadAction = onloadAction;
+        }
+        public void OnUnityAdsAdLoaded(string placementId)=> OnloadAction?.Invoke(true, string.Empty);
+
+        public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message) =>
+            OnloadAction?.Invoke(false, message);
+    }
 }
