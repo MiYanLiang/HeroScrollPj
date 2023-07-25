@@ -76,13 +76,13 @@ public class GameSystem : MonoBehaviour
             GameResources.Init();
         });
         InitEnqueue(prefabManager.Init);
-        InitEnqueue(adManager.Init);
+        //InitEnqueue(adManager.Init); // 广告初始化
         InitEnqueue(() => AudioController0.instance.MusicSwitch(GamePref.PrefMusicPlay));
         InitEnqueue(() => AudioController1.instance.MusicSwitch(GamePref.PrefMusicPlay));
         InitEnqueue(() =>
         {
             MapService = new MapService();
-            playerDataForGame.Init(()=>IsInit = true);
+            playerDataForGame.Init(() => IsInit = true);
             _serverException = ServerException;
             ServerException.Init();
         });
@@ -98,8 +98,10 @@ public class GameSystem : MonoBehaviour
         }
     }
 
-    public static void InitGameDependencyComponents()
+    // 当登录成功后，初始化游戏依赖组件
+    public static void OnLoggedInInitGameDependencyComponents()
     {
+        Instance.adManager.Init(); // 广告初始化换到这里
         TimeSystemControl.Init();
     }
 #if UNITY_EDITOR

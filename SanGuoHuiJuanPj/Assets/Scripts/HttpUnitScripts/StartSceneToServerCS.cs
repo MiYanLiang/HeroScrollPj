@@ -112,7 +112,7 @@ public class StartSceneToServerCS : MonoBehaviour
         PlayerDataForGame.instance.acData.Username = usr;
         PlayerDataForGame.instance.Arrangement = arrangement;
 
-        GameSystem.InitGameDependencyComponents();
+        GameSystem.OnLoggedInInitGameDependencyComponents();
         GameSystem.LoginUi.Close();
         GameSystem.Instance.BeginAllOnlineServices();
         StartSceneUIManager.instance.LoadingScene(GameSystem.GameScene.MainScene, true);

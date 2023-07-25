@@ -95,7 +95,6 @@ public class Expedition : MonoBehaviour
         var yzIndex = yz.Index;
         indexWarModeMap.Add(yzIndex, yuanZhengMode);
         var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
-        yzButton.gameObject.SetActive(true);
         var textUi = yzButton.GetComponentInChildren<Text>();
         textUi.color = isYuanZhengUnlock ? Color.white : Color.gray;
         if (isYuanZhengUnlock)
