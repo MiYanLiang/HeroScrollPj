@@ -536,9 +536,9 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 146: return 30;
-                case 147: return 50;
-                case 148: return 80;
+                case 146: return 50;
+                case 147: return 100;
+                case 148: return 200;
                 default: throw MilitaryNotValidError(this);
             }
         }
@@ -1147,9 +1147,9 @@ namespace Assets.System.WarModule
     public class QuanChenOperator : HeroOperator
     {
         //触发概率
-        private int SkillRate(IChessOperator op) => 20 + StateIntelligentDiff(op) / 3;
+        private int SkillRate(IChessOperator op) => 30 + StateIntelligentDiff(op) / 3;
         //武力百分比扣除
-        private int BuffRate => -10;//暂时让武力-10%
+        private int BuffRate => -15;//暂时让武力-15%
         //目标数量
         private int Targets()
         {
@@ -1558,7 +1558,7 @@ namespace Assets.System.WarModule
                 return;
             }
 
-            var rate = StateIntelligent() / 2;
+            var rate = StateIntelligent();
             var combat = InstanceGenericDamage();
             var deplete = 1;
             if (combat.IsCriticalDamage())
