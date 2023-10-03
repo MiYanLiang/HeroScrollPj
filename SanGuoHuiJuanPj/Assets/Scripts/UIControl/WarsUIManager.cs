@@ -362,6 +362,7 @@ public class WarsUIManager : MonoBehaviour
         }
         else if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition)
         {
+            //注意: 如果这里报错, 有时候是因为请求token的时候不成功而导致初始化失败
             PlayerDataForGame.instance.UpdateWarUnlockProgress(PassCheckpoints.Count(isPass => isPass));
             var ca = PlayerDataForGame.instance.warsData.GetCampaign(reward.WarId);
             //if (treasureChestNums > 0) rewardMap.Trade(2, treasureChestNums); //index2是宝箱图
