@@ -34,8 +34,9 @@ public class VsWarUi : MonoBehaviour
         List = new List<RankingUi>();
         WarId = warId;
         gameObject.SetActive(true);
-        for (int i = 0; i < WarBgs.Length; i++)
+        for (var i = 0; i < WarBgs.Length; i++)
         {
+            if (i >= warTitles.Length) break;
             WarBgs[i].SetActive(i == warId);
             if (i == warId) WarInfo.TextImage.sprite = warTitles[i];
         }
