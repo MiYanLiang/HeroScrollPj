@@ -218,8 +218,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WuHuSHangJiang : BondOperator
     {
-        private int CowardlyRate => 25;
-        private int DamageRate => 35;
+        private int CowardlyRate => 30;
+        private int DamageRate => 30;
 
         public WuHuSHangJiang(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
         {
@@ -341,8 +341,8 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WeiWuQiMou : BondOperator
     {
-        private int BuffRate => 25;
-        private int IntelligentRate => 20;
+        private int BuffRate => 30;
+        private int IntelligentRate => 50;
         private int TroopId => 1; //魏
 
         public WeiWuQiMou(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
@@ -398,7 +398,7 @@ namespace Assets.System.WarModule
     {
         private int DamageRate => 20;
         private int DamageUpRate => 50;
-        private int PushBackRate => 70;
+        private int PushBackRate => 100;
         private int WarshipArmedType => 8; //战船系
 
         public ShuiShiDuDu(JiBanTable jiBan, ChessboardOperator chessboard) : base(jiBan, chessboard)
@@ -561,7 +561,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class BaJianJIang : BondOperator
     {
-        private int DamageUpRate => 25;
+        private int DamageUpRate => 50;
         private int NeiZhuRate => 80;
         private int QiBingId => 5;
 
@@ -584,7 +584,7 @@ namespace Assets.System.WarModule
     /// </summary>
     public class WeiZhenXiLiang : BondOperator
     {
-        private int DamageUpRate => 10;
+        private int DamageUpRate => 20;
         private int NeiZhuRate => 50;
         private int TroopId => 4;
 
