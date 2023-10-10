@@ -575,10 +575,14 @@ public class UIManager : MonoBehaviour
         }
 
         var warChestId = DataTable.BaYeTask[index].WarChestTableId;
-        ApiPanel.instance.InvokeVb(bag => WarChestRecallAction(bag),
+        //ApiPanel.instance.InvokeVb(bag => WarChestRecallAction(bag),
+        //    PlayerDataForGame.instance.ShowStringTips,
+        //    EventStrings.Req_WarChest,
+        //    ViewBag.Instance().SetValues(warChestId, 3));        
+        ApiPanel.instance.CallVb(bag => WarChestRecallAction(bag),
             PlayerDataForGame.instance.ShowStringTips,
-            EventStrings.Req_WarChest,
-            ViewBag.Instance().SetValues(warChestId, 3));
+            EventStrings.Call_WarChest,
+            DataBag.SerializeBag(EventStrings.Call_WarChest, warChestId, 3));
         baYeChestButtons[btnIndex].Open();
         PlayerDataForGame.instance.baYe.openedChest[btnIndex] = true;
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
@@ -698,14 +702,22 @@ public class UIManager : MonoBehaviour
         //        CardMergedUpdate(dto, player);
         //    }, msg => CardMergeErrorMessage(card),
         //    "Call_CardMerge", card.CardId, card.Type);
-        ApiPanel.instance.InvokeVb(vb =>
+        //ApiPanel.instance.InvokeVb(vb =>
+        //    {
+        //        var player = vb.GetPlayerDataDto();
+        //        var dto = vb.GetGameCardDto();
+        //        CardMergedUpdate(dto, player);
+        //    }, msg => CardMergeErrorMessage(card),
+        //    EventStrings.Req_CardMerge,
+        //    ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
+        ApiPanel.instance.CallVb(vb =>
             {
                 var player = vb.GetPlayerDataDto();
                 var dto = vb.GetGameCardDto();
                 CardMergedUpdate(dto, player);
-            }, msg => CardMergeErrorMessage(card),
-            EventStrings.Req_CardMerge,
-            ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
+            }, _ => CardMergeErrorMessage(card),
+            EventStrings.Call_CardMerge,
+            DataBag.SerializeBag(EventStrings.Call_CardMerge, card.CardId, card.Type));
 
         void CardMergedUpdate(GameCardDto dto, PlayerDataDto player)
         {
@@ -758,16 +770,25 @@ public class UIManager : MonoBehaviour
     private void OnCardEnlist(GameCard card)
     {
         PlayOnClickMusic();
-        ApiPanel.instance.InvokeVb(vb =>
+        //ApiPanel.instance.InvokeVb(vb =>
+        //    {
+        //        var troop = vb.GetTroopDto();
+        //        PlayerDataForGame.instance.UpdateTroopEnlist(troop);
+        //        Barrack.RefreshCardList();
+        //    }, PlayerDataForGame.instance.ShowStringTips,
+        //    EventStrings.Req_TroopEnlist,
+        //    ViewBag.Instance()
+        //        .SetValues(Barrack.SelectedForce, card.IsFight > 0)
+        //        .GameCardDto(card.ToDto()));
+        ApiPanel.instance.CallVb(vb =>
             {
                 var troop = vb.GetTroopDto();
                 PlayerDataForGame.instance.UpdateTroopEnlist(troop);
                 Barrack.RefreshCardList();
             }, PlayerDataForGame.instance.ShowStringTips,
-            EventStrings.Req_TroopEnlist,
-            ViewBag.Instance()
-                .SetValues(Barrack.SelectedForce, card.IsFight > 0)
-                .GameCardDto(card.ToDto()));
+            EventStrings.Call_TroopEnlist,
+            DataBag.SerializeBag(EventStrings.Call_TroopEnlist,
+                Barrack.SelectedForce, card.IsFight > 0, card.ToDto()));
     }
 
 
@@ -779,7 +800,23 @@ public class UIManager : MonoBehaviour
         queRenWindows.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.RemoveAllListeners();
         queRenWindows.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
         {
-            ApiPanel.instance.InvokeVb(vb =>
+            //ApiPanel.instance.InvokeVb(vb =>
+            //    {
+            //        var player = vb.GetPlayerDataDto();
+            //        var gameCards = vb.GetPlayerGameCardDtos();
+            //        var troops = vb.GetPlayerTroopDtos();
+            //        ConsumeManager.instance.SaveUpdatePlayerTroops(player, troops, gameCards);
+            //        AudioController0.instance.ChangeAudioClip(17);
+            //        AudioController0.instance.PlayAudioSource(0);
+            //        RefreshList();
+            //    }, msg =>
+            //    {
+            //        PlayerDataForGame.instance.ShowStringTips(msg);
+            //        RefreshList();
+            //    },
+            //    EventStrings.Req_CardSell,
+            //    ViewBag.Instance().SetValues(new object[] {gameCard.CardId, gameCard.Type}));
+            ApiPanel.instance.CallVb(vb =>
                 {
                     var player = vb.GetPlayerDataDto();
                     var gameCards = vb.GetPlayerGameCardDtos();
@@ -793,8 +830,8 @@ public class UIManager : MonoBehaviour
                     PlayerDataForGame.instance.ShowStringTips(msg);
                     RefreshList();
                 },
-                EventStrings.Req_CardSell,
-                ViewBag.Instance().SetValues(new object[] {gameCard.CardId, gameCard.Type}));
+                EventStrings.Call_CardSell,
+                DataBag.SerializeBag(EventStrings.Call_CardSell, gameCard.CardId, gameCard.Type));
         });
         queRenWindows.SetActive(true);
 
@@ -1097,7 +1134,17 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ApiPanel.instance.InvokeVb(vb =>
+        //ApiPanel.instance.InvokeVb(vb =>
+        //    {
+        //        var rC = vb.GetRCode();
+        //        var py = vb.GetPlayerDataDto();
+        //        var cards = vb.GetPlayerGameCardDtos();
+        //        var troops = vb.GetPlayerTroopDtos();
+        //        OnSuccessRedeemed(rC, py, troops, cards);
+        //    }, PlayerDataForGame.instance.ShowStringTips,
+        //    EventStrings.Req_RCode, ViewBag.Instance().SetValue(code));        
+        
+        ApiPanel.instance.CallVb(vb =>
             {
                 var rC = vb.GetRCode();
                 var py = vb.GetPlayerDataDto();
@@ -1105,7 +1152,7 @@ public class UIManager : MonoBehaviour
                 var troops = vb.GetPlayerTroopDtos();
                 OnSuccessRedeemed(rC, py, troops, cards);
             }, PlayerDataForGame.instance.ShowStringTips,
-            EventStrings.Req_RCode, ViewBag.Instance().SetValue(code));
+            EventStrings.Call_RCode, DataBag.SerializeBag(EventStrings.Call_RCode,code));
 
         void ShowMessage(int textId)
         {

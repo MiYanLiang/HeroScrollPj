@@ -24,11 +24,11 @@ public static class Http
         SetCallerLock(callerLock, false);
         callbackAction(msg);
     }
-    public static async void Post(string url,string content, Action<string> callbackAction,string callerLock)
+    public static async void Post(string url,string content, Action<string> callbackAction,string callerLock,CancellationTokenSource cancellationTokenSource = null)
     {
         if(CallerIsLocked(callerLock))return;
         SetCallerLock(callerLock, true);
-        var token = new CancellationTokenSource().Token;
+        var token = cancellationTokenSource?.Token ?? new CancellationTokenSource().Token;
         token.Register(() => SetCallerLock(callerLock, false));
         var result = await PostAsync(url, content, token);
         var msg = await result.Content.ReadAsStringAsync();
@@ -61,11 +61,33 @@ public static class Http
 
     public static async Task<HttpResponseMessage> PostAsync(string url, string content,
         CancellationToken token = default) => await SendAsync(HttpMethod.Post, url, content, token);
+
     public static async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string content, CancellationToken token = default)
     {
         try
         {
             var client = Server.InstanceClient();
+            var request = new HttpRequestMessage(method, url);
+            if(HttpMethod.Get != method)
+                request.Content = new StringContent(content, Encoding.UTF8, "application / json");
+            return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+        }
+        catch (Exception e)
+        {
+#if UNITY_EDITOR
+            throw;
+#endif
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        }
+    }
+    
+    public static async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string content,(string key,string value)[] headers,CancellationToken token = default)
+    {
+        try
+        {
+            var client = Server.InstanceClient();
+            foreach ((string key, string value) header in headers)
+                client.DefaultRequestHeaders.Add(header.key, header.value);
             var request = new HttpRequestMessage(method, url);
             if(HttpMethod.Get != method)
                 request.Content = new StringContent(content, Encoding.UTF8, "application / json");

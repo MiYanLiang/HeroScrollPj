@@ -192,7 +192,7 @@ public class WarsUIManager : MonoBehaviour
         {
             if (success)
                 UpdateQiYuInventory();
-        }, _ => UpdateQiYuInventory(), ViewBag.Instance().SetValue(0), true);
+        }, _ => UpdateQiYuInventory(), true, 0);
         QuizWindow.Init();
         //adRefreshBtn.onClick.AddListener(WatchAdForUpdateQiYv);
         gameOverWindow.Init();
@@ -366,12 +366,31 @@ public class WarsUIManager : MonoBehaviour
             PlayerDataForGame.instance.UpdateWarUnlockProgress(PassCheckpoints.Count(isPass => isPass));
             var ca = PlayerDataForGame.instance.warsData.GetCampaign(reward.WarId);
             //if (treasureChestNums > 0) rewardMap.Trade(2, treasureChestNums); //index2是宝箱图
-            var viewBag = ViewBag.Instance()
-                .WarCampaignDto(new WarCampaignDto
-                { IsFirstRewardTaken = ca.isTakeReward, UnlockProgress = ca.unLockCount, WarId = ca.warId })
-                .SetValues(reward.Token, reward.Chests);
 
-            ApiPanel.instance.InvokeVb(vb =>
+            var warCampaignDto = new WarCampaignDto
+            {
+                IsFirstRewardTaken = ca.isTakeReward,
+                UnlockProgress = ca.unLockCount,
+                WarId = ca.warId
+            };
+            //var viewBag = ViewBag.Instance()
+            //    .WarCampaignDto(warCampaignDto)
+            //    .SetValues(reward.Token, reward.Chests);
+
+            //ApiPanel.instance.InvokeVb(vb =>
+            //    {
+            //        var player = vb.GetPlayerDataDto();
+            //        var campaign = vb.GetWarCampaignDto();
+            //        var chests = vb.GetPlayerWarChests();
+            //        PlayerDataForGame.instance.gbocData.fightBoxs.AddRange(chests);
+            //        var war = PlayerDataForGame.instance.warsData.warUnlockSaveData
+            //            .First(c => c.warId == campaign.WarId);
+            //        war.unLockCount = campaign.UnlockProgress;
+            //        ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 0);
+            //    }, PlayerDataForGame.instance.ShowStringTips,
+            //    EventStrings.Req_WarReward, viewBag);   
+            var db = DataBag.SerializeBag(EventStrings.Call_WarReward, reward.Token, reward.Chests, warCampaignDto);
+            ApiPanel.instance.CallVb(vb =>
                 {
                     var player = vb.GetPlayerDataDto();
                     var campaign = vb.GetWarCampaignDto();
@@ -382,7 +401,7 @@ public class WarsUIManager : MonoBehaviour
                     war.unLockCount = campaign.UnlockProgress;
                     ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 0);
                 }, PlayerDataForGame.instance.ShowStringTips,
-                EventStrings.Req_WarReward, viewBag);
+                EventStrings.Call_WarReward, db);
 
             GameSystem.Instance.DisplayStaminaUiChangeEffect = true;
         }

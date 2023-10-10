@@ -88,7 +88,7 @@ public class BaYeTradeLingWindowUi : MonoBehaviour
             AdConsume.SetCallBackAction(success =>
             {
                 if (success) onRewardLing.Invoke();
-            }, _ => onRewardLing.Invoke(), ViewBag.Instance().SetValue(0), true);
+            }, _ => onRewardLing.Invoke(), true, 0);
         }
 
         public void Init() => AdConsume.Init();

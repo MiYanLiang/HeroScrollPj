@@ -45,11 +45,11 @@ public class WorldMapWindow : MonoBehaviour
 
     public void CreateCharacter()
     {
-        ApiPanel.instance.InvokeVb(vb =>
+        ApiPanel.instance.CallVb(vb =>
             {
                 Debug.Log("角色创建成功！");
             }, Debug.Log,
-            EventStrings.Req_CreateCharacter,
-            ViewBag.Instance().PlayerCharacterDto(PlayerCharacter.Character.ToDto()));
+            EventStrings.Call_CreateCharacter,
+            DataBag.SerializeBag(EventStrings.Call_CreateCharacter, PlayerCharacter.Character.ToDto()));
     }
 }

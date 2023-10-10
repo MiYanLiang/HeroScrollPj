@@ -7,6 +7,14 @@ using UnityEngine.Events;
 
 public class ApiPanel : MonoBehaviour
 {
+    /**
+     * 服务器上的序列化方式有viewBag和dataBag, 早期用的是viewBag, 后来改成了dataBag,
+     * 但是为了兼容旧的序列化方式, 所以这里的方法都有两种
+     * dataBag更灵活, 而viewBag因为支持早期设定的数据模型,
+     * 但由于服务器上api, 并未完成从vb->dataBag的转移, 所以这里支持两种序列化方式.
+     * 另外Call和Invoke这两种调用法, 早期用的是Invoke,并且都是基于SignalR调用,
+     * 后来改成了Call, 并且支持了Http调用
+     */
     public static ApiPanel instance;
     public static bool IsBusy { get; private set; }
     private SignalRClient Client { get; set; }
@@ -24,12 +32,33 @@ public class ApiPanel : MonoBehaviour
         SetBusy(false);
     }
 
+    // 支持旧的vb序列化
+    public void CallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+        params object[] args)
+    {
+        var jsonBag = DataBag.SerializeBag(method, args);
+        CallVb(successAction, failedAction, method, jsonBag);
+    }
+    public void CallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+        string dataBagJson)
+    {
+        SetBusy(true);
+        Client.HttpInvoke(method, dataBagJson, text =>
+        {
+            var bag = Json.Deserialize<ViewBag>(text);
+            SetBusy(false);
+            if (bag != null)
+                successAction(bag);
+            else
+                failedAction(text);
+        });
+    }
 
     public void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         IViewBag bag = default) =>
         InvokeVb(successAction, failedAction, method, bag, true);
 
-    public void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+    private void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         IViewBag bag,bool closeBusyAfterInvoke)
     {
         SetBusy(this);

@@ -263,45 +263,49 @@ public class Expedition : MonoBehaviour
     {
         var playerUnlockProgress = PlayerDataForGame.instance.warsData.warUnlockSaveData.Single(w => w.warId == warId);
         if (playerUnlockProgress.isTakeReward) PlayerDataForGame.instance.ShowStringTips("首通宝箱已领取！");
-        ApiPanel.instance.InvokeVb(vb =>
-            {
-                var re = vb.GetResourceDto();
-                var py = vb.GetPlayerDataDto();
-                var reCard = vb.GetGameCardDto();
-                if(reCard!=null)
-                {
-                    List<GameCard> list = null;
-                    switch (reCard.Type)
-                    {
-                        case GameCardType.Hero:
-                            list = PlayerDataForGame.instance.hstData.heroSaveData;
-                            break;
-                        case GameCardType.Tower:
-                            list = PlayerDataForGame.instance.hstData.towerSaveData;
-                            break;
-                        case GameCardType.Trap:
-                            list = PlayerDataForGame.instance.hstData.trapSaveData;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
 
-                    var card = list.GetOrInstance(reCard.CardId, reCard.Type, reCard.Level);
-                    card.Chips += reCard.Chips;
+        //ApiPanel.instance.InvokeVb(SuccessAction, PlayerDataForGame.instance.ShowStringTips,
+        //    EventStrings.Req_Achievement,
+        //    ViewBag.Instance().SetValue(playerUnlockProgress.warId));
+
+        ApiPanel.instance.CallVb(SuccessAction, PlayerDataForGame.instance.ShowStringTips,
+            EventStrings.Call_Achievement,
+            DataBag.SerializeBag(EventStrings.Call_Achievement, playerUnlockProgress.warId));
+        return;
+
+        void SuccessAction(ViewBag vb)
+        {
+            var re = vb.GetResourceDto();
+            var py = vb.GetPlayerDataDto();
+            var reCard = vb.GetGameCardDto();
+            if (reCard != null)
+            {
+                List<GameCard> list = null;
+                switch (reCard.Type)
+                {
+                    case GameCardType.Hero:
+                        list = PlayerDataForGame.instance.hstData.heroSaveData;
+                        break;
+                    case GameCardType.Tower:
+                        list = PlayerDataForGame.instance.hstData.towerSaveData;
+                        break;
+                    case GameCardType.Trap:
+                        list = PlayerDataForGame.instance.hstData.trapSaveData;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
-                playerUnlockProgress.isTakeReward = true;
-                ConsumeManager.instance.SaveChangeUpdatePlayerData(py, 0);
-                UIManager.instance.ShowRewardsThings(new DeskReward(re.YuanBao, re.YuQue, 0, re.Stamina, 0,
-                    reCard == null
-                        ? new List<CardReward>()
-                        : new List<CardReward>
-                        {
-                            new CardReward
-                                {cardId = reCard.CardId, cardChips = reCard.Chips, cardType = (int) reCard.Type}
-                        }), 0);
-            }, PlayerDataForGame.instance.ShowStringTips,
-            EventStrings.Req_Achievement,
-            ViewBag.Instance().SetValue(playerUnlockProgress.warId));
+
+                var card = list.GetOrInstance(reCard.CardId, reCard.Type, reCard.Level);
+                card.Chips += reCard.Chips;
+            }
+
+            playerUnlockProgress.isTakeReward = true;
+            ConsumeManager.instance.SaveChangeUpdatePlayerData(py, 0);
+            UIManager.instance.ShowRewardsThings(new DeskReward(re.YuanBao, re.YuQue, 0, re.Stamina, 0, reCard == null
+                ? new List<CardReward>()
+                : new List<CardReward> { new CardReward { cardId = reCard.CardId, cardChips = reCard.Chips, cardType = (int)reCard.Type } }), 0);
+        }
     }
 
     [Serializable] private class YuanZhengField
