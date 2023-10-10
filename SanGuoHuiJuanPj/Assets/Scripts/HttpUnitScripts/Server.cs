@@ -16,6 +16,7 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } 
     public static string RESET_GAMEPLAY_API { get; private set; }
     public static string GameServer { get; private set; }
+    public static string ApiServer { get; private set; }
     public static string TokenLogin { get; private set; }
 #else
     // todo: CDN正式服
@@ -61,6 +62,7 @@ public static class Server
         isInitialized = true;
 #if !UNITY_EDITOR
         GameServer = fields.ServerUrl;
+        ApiServer = fields.ApiServer;
         PLAYER_SAVE_DATA_UPLOAD_API = fields.PLAYER_SAVE_DATA_UPLOAD_API;
         INSTANCE_ID_API = fields.INSTANCE_ID_API;
         REQUEST_USERNAME_API = fields.REQUEST_USERNAME_API;
