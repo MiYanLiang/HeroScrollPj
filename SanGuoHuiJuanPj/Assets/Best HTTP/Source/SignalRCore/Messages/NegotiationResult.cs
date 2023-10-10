@@ -29,6 +29,7 @@ namespace BestHTTP.SignalRCore.Messages
     /// </summary>
     public sealed class NegotiationResult
     {
+
         public int NegotiateVersion { get; private set; }
 
         /// <summary>
@@ -59,17 +60,17 @@ namespace BestHTTP.SignalRCore.Messages
 
         public HTTPResponse NegotiationResponse { get; internal set; }
 
-        /// <summary>
-        /// Only for special usage
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="accessToken"></param>
-        /// <returns></returns>
-        public static NegotiationResult Instance(string url,string accessToken)
+        /// <summary> 
+        /// Only for special usage 
+        /// </summary> 
+        /// <param name="url"></param> 
+        /// <param name="accessToken"></param> 
+        /// <returns></returns> 
+        public static NegotiationResult Instance(string url, string accessToken)
         {
             var list = new List<SupportedTransport>();
             list.Add(new SupportedTransport("WebSockets", new List<string> { "Text", "Binary" }));
-            list.Add(new SupportedTransport("ServerSentEvents", new List<string> { "Text"}));
+            list.Add(new SupportedTransport("ServerSentEvents", new List<string> { "Text" }));
             list.Add(new SupportedTransport("LongPolling", new List<string> { "Text", "Binary" }));
             return new NegotiationResult
             {
@@ -79,6 +80,7 @@ namespace BestHTTP.SignalRCore.Messages
                 SupportedTransports = list
             };
         }
+
         internal static NegotiationResult Parse(HTTPResponse resp, out string error, HubConnection hub)
         {
             error = null;

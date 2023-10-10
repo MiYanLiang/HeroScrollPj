@@ -512,10 +512,15 @@ namespace BestHTTP.JSON.LitJson
                         PropertyMetadata prop_data =
                             t_data.Properties[property];
 
-                        if (prop_data.IsField) {
+                        try
+                        {
+                            if (prop_data.IsField)
+                            {
                             ((FieldInfo) prop_data.Info).SetValue (
                                 instance, ReadValue (prop_data.Type, reader));
-                        } else {
+                            }
+                            else
+                            {
                             PropertyInfo p_info =
                                 (PropertyInfo) prop_data.Info;
 
@@ -526,6 +531,11 @@ namespace BestHTTP.JSON.LitJson
                                     null);
                             else
                                 ReadValue (prop_data.Type, reader);
+                        }
+                        }
+                        catch(JsonException ex)
+                        {
+                            throw new JsonException($"While parsing property '{property}': {ex.Message}");
                         }
 
                     } else {
@@ -542,9 +552,16 @@ namespace BestHTTP.JSON.LitJson
                             }
                         }
 
+                        try
+                        {
                         ((IDictionary) instance).Add (
                             property, ReadValue (
                                 t_data.ElementType, reader));
+                        }
+                        catch (JsonException ex)
+                        {
+                            throw new JsonException($"While parsing property '{property}': {ex.Message}");
+                        }
                     }
 
                 }

@@ -45,12 +45,28 @@ namespace BestHTTP.SignalRCore.Transports
 
                 HTTPManager.Logger.Verbose("WebSocketTransport", "StartConnect connecting to Uri: " + uri.ToString(), this.Context);
 
-                this.webSocket = new WebSocket.WebSocket(uri);
+                this.webSocket = new WebSocket.WebSocket(uri, string.Empty, string.Empty
+#if !UNITY_WEBGL || UNITY_EDITOR
+                    , (this.connection.Options.WebsocketOptions?.ExtensionsFactory ?? WebSocket.WebSocket.GetDefaultExtensions)?.Invoke()
+#endif
+                    );
+
                 this.webSocket.Context.Add("Transport", this.Context);
             }
 
 #if !UNITY_WEBGL || UNITY_EDITOR
-            this.webSocket.StartPingThread = true;
+            if (this.connection.Options.WebsocketOptions?.PingIntervalOverride is TimeSpan ping)
+            {
+                if (ping > TimeSpan.Zero)
+                {
+                    this.webSocket.StartPingThread = true;
+                    this.webSocket.PingFrequency = (int)ping.TotalMilliseconds;
+                }
+                else
+                    this.webSocket.StartPingThread = false;
+            }
+            else
+                this.webSocket.StartPingThread = true;
 
             // prepare the internal http request
             if (this.connection.AuthenticationProvider != null)
@@ -77,9 +93,9 @@ namespace BestHTTP.SignalRCore.Transports
                 return;
             }
 
-            this.webSocket.Send(msg.Data, (ulong)msg.Offset, (ulong)msg.Count);
-
-            BufferPool.Release(msg.Data);
+            if (HTTPManager.Logger.Level == Logger.Loglevels.All)
+                HTTPManager.Logger.Verbose("WebSocketTransport", "Send: " + msg.ToString(), this.Context);
+            this.webSocket.SendAsBinary(msg);
         }
 
         // The websocket connection is open
@@ -97,13 +113,6 @@ namespace BestHTTP.SignalRCore.Transports
             if (this.State == TransportStates.Closing)
                 return;
 
-            if (this.State == TransportStates.Connecting)
-            {
-                HandleHandshakeResponse(data);
-
-                return;
-            }
-
             this.messages.Clear();
             try
             {
@@ -112,11 +121,34 @@ namespace BestHTTP.SignalRCore.Transports
                 byte[] buffer = BufferPool.Get(len, true);
                 try
                 {
+                    // Clear the buffer, it might have previous messages in it with the record separator somewhere it doesn't gets overwritten by the new data
                     Array.Clear(buffer, 0, buffer.Length);
-
                     System.Text.Encoding.UTF8.GetBytes(data, 0, data.Length, buffer, 0);
 
                     this.connection.Protocol.ParseMessages(new BufferSegment(buffer, 0, len), ref this.messages);
+
+                    if (this.State == TransportStates.Connecting)
+                    {
+                        // we expect a handshake response in this case
+
+                        if (this.messages.Count == 0)
+                        {
+                            this.ErrorReason = $"Expecting handshake response, but message({data}) couldn't be parsed!";
+                            this.State = TransportStates.Failed;
+                            return;
+                        }
+
+                        var message = this.messages[0];
+                        if (message.type != MessageTypes.Handshake)
+                        {
+                            this.ErrorReason = $"Expecting handshake response, but the first message is {message.type}!";
+                            this.State = TransportStates.Failed;
+                            return;
+                        }
+
+                        this.ErrorReason = message.error;
+                        this.State = string.IsNullOrEmpty(message.error) ? TransportStates.Connected : TransportStates.Failed;
+                    }
                 }
                 finally
                 {
@@ -142,15 +174,57 @@ namespace BestHTTP.SignalRCore.Transports
 
             if (this.State == TransportStates.Connecting)
             {
-                HandleHandshakeResponse(System.Text.Encoding.UTF8.GetString(data.Data, data.Offset, data.Count));
+                int recordSeparatorIdx = Array.FindIndex(data.Data, data.Offset, data.Count, (b) => b == JsonProtocol.Separator);
 
-                return;
+                if (recordSeparatorIdx == -1)
+                {
+                    this.ErrorReason = $"Expecting handshake response, but message({data}) has no record separator(0x1E)!";
+                    this.State = TransportStates.Failed;
+                    return;
+                }
+                else
+                {
+                    HandleHandshakeResponse(System.Text.Encoding.UTF8.GetString(data.Data, data.Offset, recordSeparatorIdx - data.Offset));
+
+                    // Skip any other messages sent if handshake is failed
+                    if (this.State != TransportStates.Connected)
+                        return;
+
+                    recordSeparatorIdx++;
+                    if (recordSeparatorIdx == data.Offset + data.Count)
+                        return;
+
+                    data = new BufferSegment(data.Data, data.Offset + recordSeparatorIdx, data.Count - recordSeparatorIdx);
+                }
             }
 
             this.messages.Clear();
             try
             {
                 this.connection.Protocol.ParseMessages(data, ref this.messages);
+
+                if (this.State == TransportStates.Connecting)
+                {
+                    // we expect a handshake response in this case
+
+                    if (this.messages.Count == 0)
+                    {
+                        this.ErrorReason = $"Expecting handshake response, but message({data}) couldn't be parsed!";
+                        this.State = TransportStates.Failed;
+                        return;
+                    }
+
+                    var message = this.messages[0];
+                    if (message.type != MessageTypes.Handshake)
+                    {
+                        this.ErrorReason = $"Expecting handshake response, but the first message is {message.type}!";
+                        this.State = TransportStates.Failed;
+                        return;
+                    }
+
+                    this.ErrorReason = message.error;
+                    this.State = string.IsNullOrEmpty(message.error) ? TransportStates.Connected : TransportStates.Failed;
+                }
 
                 this.connection.OnMessages(this.messages);
             }

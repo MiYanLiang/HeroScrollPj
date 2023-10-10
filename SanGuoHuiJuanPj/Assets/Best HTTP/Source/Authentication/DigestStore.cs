@@ -60,7 +60,7 @@ namespace BestHTTP.Authentication
 
             List<string> headers = new List<string>(authHeaders.Count);
             for (int i = 0; i < authHeaders.Count; ++i)
-                headers.Add(authHeaders[i].ToLower());
+                headers.Add(authHeaders[i].ToLowerInvariant());
 
             for (int i = 0; i < SupportedAlgorithms.Length; ++i)
             {

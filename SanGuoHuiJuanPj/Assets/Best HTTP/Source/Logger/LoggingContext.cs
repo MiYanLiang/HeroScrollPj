@@ -158,7 +158,8 @@ namespace BestHTTP.Logger
 
         public static string Escape(string original)
         {
-            return new StringBuilder(original)
+            return PlatformSupport.Text.StringBuilderPool.ReleaseAndGrab(PlatformSupport.Text.StringBuilderPool.Get(1)
+                        .Append(original)
                         .Replace("\\", "\\\\")
                         .Replace("\"", "\\\"")
                         .Replace("/", "\\/")
@@ -166,8 +167,7 @@ namespace BestHTTP.Logger
                         .Replace("\f", "\\f")
                         .Replace("\n", "\\n")
                         .Replace("\r", "\\r")
-                        .Replace("\t", "\\t")
-                        .ToString();
+                        .Replace("\t", "\\t"));
         }
     }
 }

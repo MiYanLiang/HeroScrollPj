@@ -44,7 +44,8 @@ namespace BestHTTP
         /// <summary>
         /// The singleton instance of the HTTPUpdateDelegator
         /// </summary>
-        public static HTTPUpdateDelegator Instance { get; private set; }
+        public static HTTPUpdateDelegator Instance { get { return CheckInstance(); } }
+        private volatile static HTTPUpdateDelegator instance;
 
         /// <summary>
         /// True, if the Instance property should hold a valid value.
@@ -52,15 +53,13 @@ namespace BestHTTP
         public static bool IsCreated { get; private set; }
 
         /// <summary>
-        /// Set it true before any CheckInstance() call, or before any request sent to dispatch callbacks on another thread.
-        /// </summary>
-        public static bool IsThreaded { get; set; }
-
-        /// <summary>
         /// It's true if the dispatch thread running.
         /// </summary>
         public static bool IsThreadRunning { get; private set; }
 
+        /// <summary>
+        /// The current threading mode the plugin is in.
+        /// </summary>
         public ThreadingMode CurrentThreadingMode { get { return _currentThreadingMode; } set { SetThreadingMode(value); } }
         private ThreadingMode _currentThreadingMode = ThreadingMode.UnityUpdate;
 
@@ -86,6 +85,7 @@ namespace BestHTTP
         private int isHTTPManagerOnUpdateRunning;
         private AutoResetEvent pingEvent = new AutoResetEvent(false);
         private int updateThreadCount = 0;
+        private int mainThreadId;
 
 #if UNITY_EDITOR
         /// <summary>
@@ -97,6 +97,8 @@ namespace BestHTTP
         static void ResetSetup()
         {
             isSetupCalled = false;
+            instance?.SetThreadingMode(ThreadingMode.UnityUpdate);
+
             HTTPManager.Logger.Information("HTTPUpdateDelegator", "Reset called!");
         }
 #endif
@@ -109,7 +111,7 @@ namespace BestHTTP
         /// <summary>
         /// Will create the HTTPUpdateDelegator instance and set it up.
         /// </summary>
-        public static void CheckInstance()
+        public static HTTPUpdateDelegator CheckInstance()
         {
             try
             {
@@ -118,30 +120,30 @@ namespace BestHTTP
                     GameObject go = GameObject.Find("HTTP Update Delegator");
 
                     if (go != null)
-                        Instance = go.GetComponent<HTTPUpdateDelegator>();
+                        instance = go.GetComponent<HTTPUpdateDelegator>();
 
-                    if (Instance == null)
+                    if (instance == null)
                     {
                         go = new GameObject("HTTP Update Delegator");
                         go.hideFlags = HideFlags.HideAndDontSave;
                         
-                        Instance = go.AddComponent<HTTPUpdateDelegator>();
+                        instance = go.AddComponent<HTTPUpdateDelegator>();
                     }
                     IsCreated = true;
 
 #if UNITY_EDITOR
                     if (!UnityEditor.EditorApplication.isPlaying)
                     {
-                        UnityEditor.EditorApplication.update -= Instance.Update;
-                        UnityEditor.EditorApplication.update += Instance.Update;
+                        UnityEditor.EditorApplication.update -= instance.Update;
+                        UnityEditor.EditorApplication.update += instance.Update;
                     }
 
 #if UNITY_2017_2_OR_NEWER
-                    UnityEditor.EditorApplication.playModeStateChanged -= Instance.OnPlayModeStateChanged;
-                    UnityEditor.EditorApplication.playModeStateChanged += Instance.OnPlayModeStateChanged;
+                    UnityEditor.EditorApplication.playModeStateChanged -= instance.OnPlayModeStateChanged;
+                    UnityEditor.EditorApplication.playModeStateChanged += instance.OnPlayModeStateChanged;
 #else
-                    UnityEditor.EditorApplication.playmodeStateChanged -= Instance.OnPlayModeStateChanged;
-                    UnityEditor.EditorApplication.playmodeStateChanged += Instance.OnPlayModeStateChanged;
+                    UnityEditor.EditorApplication.playmodeStateChanged -= instance.OnPlayModeStateChanged;
+                    UnityEditor.EditorApplication.playmodeStateChanged += instance.OnPlayModeStateChanged;
 #endif
 #endif
 
@@ -156,31 +158,40 @@ namespace BestHTTP
             {
                 HTTPManager.Logger.Error("HTTPUpdateDelegator", "Please call the BestHTTP.HTTPManager.Setup() from one of Unity's event(eg. awake, start) before you send any request!");
             }
+
+            return instance;
         }
 
         private void Setup()
         {
             if (isSetupCalled)
                 return;
-            isSetupCalled = true;
 
-            HTTPManager.Logger.Information("HTTPUpdateDelegator", string.Format("Setup called Threading Mode: {0}, IsThreaded: {1}", _currentThreadingMode, IsThreaded));
+            using (var _ = new Unity.Profiling.ProfilerMarker(nameof(HTTPUpdateDelegator.Setup)).Auto())
+            {
+                isSetupCalled = true;
 
-            HTTPManager.Setup();
+                // Setup is expected to be called on the Unity main thread only.
+                mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                HTTPManager.Logger.Information("HTTPUpdateDelegator", $"Setup called Threading Mode: {this._currentThreadingMode}");
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-            // Threads are not implemented in WEBGL builds, disable it for now.
-            IsThreaded = false;
-#endif
-            SetThreadingMode(IsThreaded ? ThreadingMode.Threaded : ThreadingMode.UnityUpdate);
+                HTTPManager.Setup();
 
-            // Unity doesn't tolerate well if the DontDestroyOnLoad called when purely in editor mode. So, we will set the flag
-            //  only when we are playing, or not in the editor.
-            if (!Application.isEditor || Application.isPlaying)
-                GameObject.DontDestroyOnLoad(this.gameObject);
+                SetThreadingMode(this._currentThreadingMode);
 
-            HTTPManager.Logger.Information("HTTPUpdateDelegator", "Setup done!");
+                // Unity doesn't tolerate well if the DontDestroyOnLoad called when purely in editor mode. So, we will set the flag
+                //  only when we are playing, or not in the editor.
+                if (!Application.isEditor || Application.isPlaying)
+                    GameObject.DontDestroyOnLoad(this.gameObject);
+
+                HTTPManager.Logger.Information("HTTPUpdateDelegator", "Setup done!");
+            }
         }
+
+        /// <summary>
+        /// Return true if the call happens on the Unity main thread. Setup must be called before to save the thread id!
+        /// </summary>
+        public bool IsMainThread() => System.Threading.Thread.CurrentThread.ManagedThreadId == mainThreadId;
 
         /// <summary>
         /// Set directly the threading mode to use.
@@ -190,11 +201,13 @@ namespace BestHTTP
             if (_currentThreadingMode == mode)
                 return;
 
-            HTTPManager.Logger.Information("HTTPUpdateDelegator", "SetThreadingMode: " + mode);
+            HTTPManager.Logger.Information("HTTPUpdateDelegator", $"SetThreadingMode({mode}, {isSetupCalled})");
 
             _currentThreadingMode = mode;
 
-#if !UNITY_WEBGL || UNITY_EDITOR
+            if (!isSetupCalled)
+                Setup();
+
             switch (_currentThreadingMode)
             {
                 case ThreadingMode.UnityUpdate:
@@ -204,10 +217,13 @@ namespace BestHTTP
                     break;
 
                 case ThreadingMode.Threaded:
+#if !UNITY_WEBGL || UNITY_EDITOR
                     ThreadedRunner.RunLongLiving(ThreadFunc);
+#else
+                    HTTPManager.Logger.Warning(nameof(HTTPUpdateDelegator), "Threading mode set to ThreadingMode.Threaded, but threads aren't supported under WebGL!");
+#endif
                     break;
             }
-#endif
         }
 
         /// <summary>

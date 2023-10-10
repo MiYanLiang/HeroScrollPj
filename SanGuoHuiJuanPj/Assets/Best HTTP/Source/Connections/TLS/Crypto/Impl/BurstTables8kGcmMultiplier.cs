@@ -1,135 +1,148 @@
-#if !BESTHTTP_DISABLE_ALTERNATE_SSL && (!UNITY_WEBGL || UNITY_EDITOR) && BESTHTTP_WITH_BURST
+#if !BESTHTTP_DISABLE_ALTERNATE_SSL && (!UNITY_WEBGL || UNITY_EDITOR)
 #pragma warning disable
 using System;
+using System.Runtime.CompilerServices;
 
 using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Modes.Gcm;
 using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Utilities;
 using BestHTTP.SecureProtocol.Org.BouncyCastle.Utilities;
 
+#if BESTHTTP_WITH_BURST
 using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
+#endif
 
 namespace BestHTTP.Connections.TLS.Crypto.Impl
 {
     [BestHTTP.PlatformSupport.IL2CPP.Il2CppEagerStaticClassConstructionAttribute]
+#if BESTHTTP_WITH_BURST
     [BurstCompile]
-    public sealed class BurstTables8kGcmMultiplier
+#endif
+    public sealed class BurstTables8kGcmMultiplier //: IGcmMultiplier
     {
         private byte[] H;
-        private ulong[] T;
+        private GcmUtilities.FieldElement[][] T;
 
         public void Init(byte[] H)
         {
             if (T == null)
             {
-                T = new ulong[32 * 32];
+                T = new GcmUtilities.FieldElement[2][];
             }
             else if (Arrays.AreEqual(this.H, H))
             {
                 return;
             }
 
-            this.H = Arrays.Clone(H);
-
-            for (int i = 0; i < 32; ++i)
+            if (this.H == null)
+                this.H = Arrays.Clone(H);
+            else
             {
-                //ulong[] t = T[i] = new ulong[32];
+                if (this.H.Length != H.Length)
+                    Array.Resize(ref this.H, H.Length);
+
+                Array.Copy(H, this.H, H.Length);
+            }
+
+            for (int i = 0; i < 2; ++i)
+            {
+                if (T[i] == null)
+                    T[i] = new GcmUtilities.FieldElement[256];
+
+                GcmUtilities.FieldElement[] t = T[i];
 
                 // t[0] = 0
 
                 if (i == 0)
                 {
-                    // t[1] = H.p^3
-                    //GcmUtilities.AsUlongs(this.H, t, 2);
-                    Pack.BE_To_UInt64(this.H, 0, this.T, (i * 32) + 2, 2);
-
-                    // GcmUtilities.MultiplyP3(t, 2, t, 2);
-                    GcmUtilities.MultiplyP3(this.T, (i * 32) + 2, this.T, (i * 32) + 2);
+                    // t[1] = H.p^7
+                    GcmUtilities.AsFieldElement(this.H, out t[1]);
+                    GcmUtilities.MultiplyP7(ref t[1]);
                 }
                 else
                 {
-                    // t[1] = T[i-1][1].p^4
-                    //GcmUtilities.MultiplyP4(T[i - 1], 2, t, 2);
-                    GcmUtilities.MultiplyP4(this.T, ((i - 1) * 32) + 2, this.T, (i * 32) + 2);
+                    // t[1] = T[i-1][1].p^8
+                    GcmUtilities.MultiplyP8(ref T[i - 1][1], out t[1]);
                 }
 
-                for (int n = 2; n < 16; n += 2)
+                for (int n = 1; n < 128; ++n)
                 {
                     // t[2.n] = t[n].p^-1
-                    //GcmUtilities.DivideP(t, n, t, n << 1);
-                    GcmUtilities.DivideP(this.T, (i * 32) + n, this.T, (i * 32) + (n << 1));
+                    GcmUtilities.DivideP(ref t[n], out t[n << 1]);
 
                     // t[2.n + 1] = t[2.n] + t[1]
-                    //GcmUtilities.Xor(t, n << 1, t, 2, t, (n + 1) << 1);
-
-                    GcmUtilities.Xor(this.T, (i * 32) + (n << 1), this.T, (i * 32) + 2, this.T, (i * 32) + ((n + 1) << 1));
+                    GcmUtilities.Xor(ref t[n << 1], ref t[1], out t[(n << 1) + 1]);
                 }
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void MultiplyH(byte[] x)
         {
-            //ulong[] z = new ulong[2];
-            //for (int i = 15; i >= 0; --i)
-            //{
-            //    GcmUtilities.Xor(z, 0, T[i + i + 1], (x[i] & 0x0F) << 1);
-            //    GcmUtilities.Xor(z, 0, T[i + i], (x[i] & 0xF0) >> 3);
-            //}
-            //Pack.UInt64_To_BE(z, x, 0);
-
             fixed (byte* px = x)
-            fixed (ulong* pt = this.T)
-                MultiplyHImpl(px, pt);
+            fixed (GcmUtilities.FieldElement* pT0 = this.T[0])
+            fixed (GcmUtilities.FieldElement* pT1 = this.T[1])
+                MultiplyHImpl(px, pT0, pT1);
         }
 
+#if BESTHTTP_WITH_BURST
         [BurstCompile]
-        private unsafe void MultiplyHImpl(byte* x, ulong* t)
+#endif
+        private static unsafe void MultiplyHImpl(
+#if BESTHTTP_WITH_BURST
+            [NoAlias]
+#endif
+            byte* px,
+#if BESTHTTP_WITH_BURST
+            [NoAlias]
+#endif
+            GcmUtilities.FieldElement* pT0,
+#if BESTHTTP_WITH_BURST
+            [NoAlias]
+#endif
+            GcmUtilities.FieldElement* pT1)
         {
-            //ulong z0 = 0, z1 = 0;
-            ulong* z = stackalloc ulong[2];
-            z[0] = 0;
-            z[1] = 0;
+            int vPos = px[15];
+            int uPos = px[14];
+            ulong z1 = pT0[uPos].n1 ^ pT1[vPos].n1;
+            ulong z0 = pT0[uPos].n0 ^ pT1[vPos].n0;
 
-            for (int i = 15; i >= 0; --i)
+            for (int i = 12; i >= 0; i -= 2)
             {
-                //ulong[] tu = T[i + i + 1];
-                //ulong[] tv = T[i + i];
-                int tuIdx = (i + i + 1) * 32;
-                int tvIdx = (i + i) * 32;
+                vPos = px[i + 1];
+                uPos = px[i];
 
-                int uPos = (x[i] & 0x0F) << 1, vPos = (x[i] & 0xF0) >> 3;
-
-                //z0 ^= tu[uPos + 0] ^ tv[vPos + 0];
-                //z1 ^= tu[uPos + 1] ^ tv[vPos + 1];
-
-                z[0] ^= t[tuIdx + uPos + 0] ^ t[tvIdx + vPos + 0];
-                z[1] ^= t[tuIdx + uPos + 1] ^ t[tvIdx + vPos + 1];
+                ulong c = z1 << 48;
+                z1 = pT0[uPos].n1 ^ pT1[vPos].n1 ^ ((z1 >> 16) | (z0 << 48));
+                z0 = pT0[uPos].n0 ^ pT1[vPos].n0 ^ (z0 >> 16) ^ c ^ (c >> 1) ^ (c >> 2) ^ (c >> 7);
             }
 
+            //GcmUtilities.AsBytes(z0, z1, x);
+
             //UInt32_To_BE((uint)(n >> 32), bs, off);
-            uint n = (uint)(z[0] >> 32);
-            x[0] = (byte)(n >> 24);
-            x[1] = (byte)(n >> 16);
-            x[2] = (byte)(n >> 8);
-            x[3] = (byte)(n);
+            uint n = (uint)(z0 >> 32);
+            px[0] = (byte)(n >> 24);
+            px[1] = (byte)(n >> 16);
+            px[2] = (byte)(n >> 8);
+            px[3] = (byte)(n);
             //UInt32_To_BE((uint)(n), bs, off + 4);
-            n = (uint)(z[0]);
-            x[4] = (byte)(n >> 24);
-            x[5] = (byte)(n >> 16);
-            x[6] = (byte)(n >> 8);
-            x[7] = (byte)(n);
+            n = (uint)(z0);
+            px[4] = (byte)(n >> 24);
+            px[5] = (byte)(n >> 16);
+            px[6] = (byte)(n >> 8);
+            px[7] = (byte)(n);
             
-            n = (uint)(z[1] >> 32);
-            x[8] = (byte)(n >> 24);
-            x[9] = (byte)(n >> 16);
-            x[10] = (byte)(n >> 8);
-            x[11] = (byte)(n);
+            n = (uint)(z1 >> 32);
+            px[8] = (byte)(n >> 24);
+            px[9] = (byte)(n >> 16);
+            px[10] = (byte)(n >> 8);
+            px[11] = (byte)(n);
             //UInt32_To_BE((uint)(n), bs, off + 4);
-            n = (uint)(z[1]);
-            x[12] = (byte)(n >> 24);
-            x[13] = (byte)(n >> 16);
-            x[14] = (byte)(n >> 8);
-            x[15] = (byte)(n);
+            n = (uint)(z1);
+            px[12] = (byte)(n >> 24);
+            px[13] = (byte)(n >> 16);
+            px[14] = (byte)(n >> 8);
+            px[15] = (byte)(n);
         }
     }
 }

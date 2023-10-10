@@ -68,6 +68,18 @@ namespace BestHTTP.WebSocket
             WS_Send_Binary(this.ImplementationId, buffer, (int)offset, (int)count);
         }
 
+        public override void SendAsBinary(BufferSegment data)
+        {
+            WS_Send_Binary(this.ImplementationId, data.Data, data.Offset, data.Count);
+            BufferPool.Release(data);
+        }
+
+        public override void SendAsText(BufferSegment data)
+        {
+            WS_Send_String(this.ImplementationId, data.Data, data.Offset, data.Count);
+            BufferPool.Release(data);
+        }
+
         [DllImport("__Internal")]
         static extern uint WS_Create(string url, string protocol, OnWebGLWebSocketOpenDelegate onOpen, OnWebGLWebSocketTextDelegate onText, OnWebGLWebSocketBinaryDelegate onBinary, OnWebGLWebSocketErrorDelegate onError, OnWebGLWebSocketCloseDelegate onClose);
 

@@ -67,8 +67,7 @@ namespace BestHTTP
     }
 
     public delegate void OnRequestFinishedDelegate(HTTPRequest originalRequest, HTTPResponse response);
-    public delegate void OnDownloadProgressDelegate(HTTPRequest originalRequest, long downloaded, long downloadLength);
-    public delegate void OnUploadProgressDelegate(HTTPRequest originalRequest, long uploaded, long uploadLength);
+    public delegate void OnProgressDelegate(HTTPRequest originalRequest, long progress, long length);
     public delegate bool OnBeforeRedirectionDelegate(HTTPRequest originalRequest, HTTPResponse response, Uri redirectUri);
     public delegate void OnHeaderEnumerationDelegate(string header, List<string> values);
     public delegate void OnBeforeHeaderSendDelegate(HTTPRequest req);
@@ -147,7 +146,7 @@ namespace BestHTTP
         /// <summary>
         /// Called after data sent out to the wire.
         /// </summary>
-        public OnUploadProgressDelegate OnUploadProgress;
+        public OnProgressDelegate OnUploadProgress;
 
         /// <summary>
         /// Indicates that the connection should be open after the response received. If its true, then the internal TCP connections will be reused if it's possible. Default value is true.
@@ -289,7 +288,7 @@ namespace BestHTTP
         /// The first parameter is the original HTTTPRequest object itself, the second parameter is the downloaded bytes while the third parameter is the content length.
         /// <remarks>There are download modes where we can't figure out the exact length of the final content. In these cases we just guarantee that the third parameter will be at least the size of the second one.</remarks>
         /// </summary>
-        public OnDownloadProgressDelegate OnDownloadProgress;
+        public OnProgressDelegate OnDownloadProgress;
 
         /// <summary>
         /// Indicates that the request is redirected. If a request is redirected, the connection that served it will be closed regardless of the value of IsKeepAlive.
@@ -312,7 +311,7 @@ namespace BestHTTP
         /// </summary>
         public HTTPResponse Response { get; internal set; }
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
         /// <summary>
         /// Response from the Proxy server. It's null with transparent proxies.
         /// </summary>
@@ -334,7 +333,7 @@ namespace BestHTTP
         /// </summary>
         public Credentials Credentials { get; set; }
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
         /// <summary>
         /// True, if there is a Proxy object.
         /// </summary>
@@ -642,7 +641,7 @@ namespace BestHTTP
 
             this.EnableSafeReadOnUnknownContentLength = true;
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
             this.Proxy = HTTPManager.Proxy;
 #endif
 
@@ -912,14 +911,9 @@ namespace BestHTTP
             if (IsRedirected && !HasHeader("Referer"))
                 AddHeader("Referer", Uri.ToString());
 
-            if (!HasHeader("Accept-Encoding"))
-#if BESTHTTP_DISABLE_GZIP
-              AddHeader("Accept-Encoding", "identity");
-#else
-              AddHeader("Accept-Encoding", "gzip, identity");
-#endif
+            Decompression.DecompressorFactory.SetupHeaders(this);
 
-            #if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
             if (!HTTPProtocolFactory.IsSecureProtocol(this.CurrentUri) && HasProxy && !HasHeader("Proxy-Connection"))
                 AddHeader("Proxy-Connection", IsKeepAlive ? "Keep-Alive" : "Close");
             #endif
@@ -981,7 +975,7 @@ namespace BestHTTP
                 SetHeader("Content-Length", contentLength.ToString());
 
 #if !UNITY_WEBGL || UNITY_EDITOR
-            #if !BESTHTTP_DISABLE_PROXY
+            #if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
             // Proxy Authentication
             if (!HTTPProtocolFactory.IsSecureProtocol(this.CurrentUri) && HasProxy && Proxy.Credentials != null)
             {
@@ -1177,7 +1171,7 @@ namespace BestHTTP
             return null;
         }
 
-        internal struct UploadStreamInfo
+        public struct UploadStreamInfo
         {
             public readonly Stream Stream;
             public readonly long Length;
@@ -1232,7 +1226,7 @@ namespace BestHTTP
             // Under WEBGL EnumerateHeaders and GetEntityBody are used instead of this function.
 #if !UNITY_WEBGL || UNITY_EDITOR
             string requestPathAndQuery =
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
                     HasProxy ? this.Proxy.GetRequestPath(CurrentUri) :
 #endif
                     CurrentUri.GetRequestPathAndQueryURL();
