@@ -104,7 +104,7 @@ public class ApiPanel : MonoBehaviour
 
     public void Call(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>
-        InvokeCallerBag(successAction, failedAction, true, controller: EventStrings.Req_Call, method: method, args);
+        InvokeCallerBag(successAction, failedAction, true,  method: method, args);
     public void InvokeRk(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Rk, method: method, args);
@@ -114,7 +114,7 @@ public class ApiPanel : MonoBehaviour
         InvokeBag(successAction, failedAction, true, controller, method, args);
 
     public void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
-        bool closeBusyAfterInvoke, string controller, string method,
+        bool closeBusyAfterInvoke, string method,
         object[] args)
     {
         SetBusy(this);
@@ -130,13 +130,13 @@ public class ApiPanel : MonoBehaviour
         //bag.Data = args;
         //bag.Size = args.Length;
         var serializeBag = Json.Serialize(bag); //DataBag.SerializeBag(method, args);
-        Client.InvokeCaller(controller, result =>
+        Client.HttpInvoke(method, serializeBag, result =>
         {
             var dataBag = DataBag.DeserializeBag(result);
             if (!dataBag.IsValid()) failedAction?.Invoke(result);
             else successAction.Invoke(dataBag);
             if (closeBusyAfterInvoke) SetBusy(false);
-        }, serializeBag);
+        });
     }
 
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
