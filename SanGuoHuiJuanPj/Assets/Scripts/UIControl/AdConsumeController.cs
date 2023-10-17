@@ -15,6 +15,8 @@ public class AdConsumeController : MonoBehaviour
     private UnityAction<ViewBag> consumeAction;
     private IViewBag requestVb;
     private bool closeIfSuccess;
+    private object[] requestObj;
+
     public void Init()
     {
         freeButton.onClick.RemoveAllListeners();
@@ -35,10 +37,19 @@ public class AdConsumeController : MonoBehaviour
         ticketButton.interactable = value > 0;
     }
 
+    //public void SetCallBackAction(UnityAction<bool> watchAction, UnityAction<ViewBag> onSuccessConsume,
+    //    IViewBag viewBag, bool closeOnSuccess)
+    //{
+    //    requestVb = viewBag;
+    //    watchAdAction = watchAction;
+    //    consumeAction = onSuccessConsume;
+    //    closeIfSuccess = closeOnSuccess;
+    //    UpdateTickets();
+    //}
     public void SetCallBackAction(UnityAction<bool> watchAction, UnityAction<ViewBag> onSuccessConsume,
-        IViewBag viewBag, bool closeOnSuccess)
+        bool closeOnSuccess, params object[] args)
     {
-        requestVb = viewBag;
+        requestObj = args;
         watchAdAction = watchAction;
         consumeAction = onSuccessConsume;
         closeIfSuccess = closeOnSuccess;
@@ -47,14 +58,22 @@ public class AdConsumeController : MonoBehaviour
 
     private void OnTicketConsumeInvoke()
     {
-        ApiPanel.instance.InvokeVb(vb =>
-        {
-            var tickets = vb.GetInt(0);
-            PlayerDataForGame.instance.UpdateFreeAdTicket(tickets);
-            consumeAction.Invoke(vb);
-            UpdateTickets();
-            if (closeIfSuccess) Off();
-        }, PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_ConsumeAdTicket, requestVb);
+        //ApiPanel.instance.InvokeVb(vb =>
+        //{
+        //    var tickets = vb.GetInt(0);
+        //    PlayerDataForGame.instance.UpdateFreeAdTicket(tickets);
+        //    consumeAction.Invoke(vb);
+        //    UpdateTickets();
+        //    if (closeIfSuccess) Off();
+        //}, PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_ConsumeAdTicket, requestVb);
+        ApiPanel.instance.CallVb(vb =>
+            {
+                var tickets = vb.GetInt(0);
+                PlayerDataForGame.instance.UpdateFreeAdTicket(tickets);
+                consumeAction.Invoke(vb);
+                UpdateTickets();
+                if (closeIfSuccess) Off();
+            }, PlayerDataForGame.instance.ShowStringTips, EventStrings.Call_ConsumeAdTicket, requestObj);
     }
 
     public void ButtonsInteractive(bool isActive)

@@ -3,6 +3,7 @@ using System;
 
 using BestHTTP.Connections;
 using BestHTTP.Extensions;
+using BestHTTP.PlatformSupport.Memory;
 using BestHTTP.WebSocket.Frames;
 
 namespace BestHTTP.WebSocket
@@ -80,9 +81,11 @@ namespace BestHTTP.WebSocket
             this._internalRequest.DisableCache = true;
 #endif
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
             this._internalRequest.Proxy = this.Parent.GetProxy(this.Uri);
 #endif
+
+            this._internalRequest.OnBeforeRedirection += InternalRequest_OnBeforeRedirection;
 
             if (this.Parent.OnInternalRequestCreated != null)
             {
@@ -95,6 +98,16 @@ namespace BestHTTP.WebSocket
                     HTTPManager.Logger.Exception("OverHTTP1", "CreateInternalRequest", ex, this.Parent.Context);
                 }
             }
+        }
+
+        private bool InternalRequest_OnBeforeRedirection(HTTPRequest originalRequest, HTTPResponse response, Uri redirectUri)
+        {
+            // We have to re-select/reset the implementation in the parent Websocket, as the redirected request might gets served over a HTTP/2 connection!
+            this.Parent.SelectImplementation(redirectUri, originalRequest.GetFirstHeaderValue("Origin"), originalRequest.GetFirstHeaderValue("Sec-WebSocket-Protocol"))
+                .StartOpen();
+
+            originalRequest.Callback = null;
+            return false;
         }
 
         public override void StartClose(UInt16 code, string message)
@@ -330,6 +343,16 @@ namespace BestHTTP.WebSocket
         public override void Send(byte[] buffer, ulong offset, ulong count)
         {
             webSocket.Send(buffer, offset, count);
+        }
+
+        public override void SendAsBinary(BufferSegment data)
+        {
+            webSocket.Send(WebSocketFrameTypes.Binary, data);
+        }
+
+        public override void SendAsText(BufferSegment data)
+        {
+            webSocket.Send(WebSocketFrameTypes.Text, data);
         }
 
         public override void Send(WebSocketFrame frame)

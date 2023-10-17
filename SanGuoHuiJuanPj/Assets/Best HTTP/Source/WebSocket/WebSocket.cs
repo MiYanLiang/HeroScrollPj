@@ -21,6 +21,22 @@ namespace BestHTTP.WebSocket
         /// </summary>
         public static uint MaxFragmentSize = UInt16.MaxValue / 2;
 
+#if !UNITY_WEBGL || UNITY_EDITOR
+        public static IExtension[] GetDefaultExtensions()
+        {
+#if !BESTHTTP_DISABLE_GZIP
+            return new IExtension[] { new PerMessageCompression(/*compression level: */           Decompression.Zlib.CompressionLevel.Default,
+                                                             /*clientNoContextTakeover: */     false,
+                                                             /*serverNoContextTakeover: */     false,
+                                                             /*clientMaxWindowBits: */         Decompression.Zlib.ZlibConstants.WindowBitsMax,
+                                                             /*desiredServerMaxWindowBits: */  Decompression.Zlib.ZlibConstants.WindowBitsMax,
+                                                             /*minDatalengthToCompress: */     PerMessageCompression.MinDataLengthToCompressDefault) };
+#else
+            return null;
+#endif
+        }
+#endif
+
         public WebSocketStates State { get { return this.implementation.State; } }
 
         /// <summary>
@@ -41,7 +57,7 @@ namespace BestHTTP.WebSocket
         public bool StartPingThread { get; set; }
 
         /// <summary>
-        /// The delay between two Pings in milliseconds. Minimum value is 100, default is 1000.
+        /// The delay between two Pings in milliseconds. Minimum value is 100ms, default is 10 seconds.
         /// </summary>
         public int PingFrequency { get; set; }
 
@@ -132,13 +148,8 @@ namespace BestHTTP.WebSocket
         public WebSocket(Uri uri)
             :this(uri, string.Empty, string.Empty)
         {
-#if (!UNITY_WEBGL || UNITY_EDITOR) && !BESTHTTP_DISABLE_GZIP
-            this.Extensions = new IExtension[] { new PerMessageCompression(/*compression level: */           Decompression.Zlib.CompressionLevel.Default,
-                                                                           /*clientNoContextTakeover: */     false,
-                                                                           /*serverNoContextTakeover: */     false,
-                                                                           /*clientMaxWindowBits: */         Decompression.Zlib.ZlibConstants.WindowBitsMax,
-                                                                           /*desiredServerMaxWindowBits: */  Decompression.Zlib.ZlibConstants.WindowBitsMax,
-                                                                           /*minDatalengthToCompress: */     PerMessageCompression.MinDataLengthToCompressDefault) };
+#if (!UNITY_WEBGL || UNITY_EDITOR)
+            this.Extensions = WebSocket.GetDefaultExtensions();
 #endif
         }
 
@@ -146,13 +157,8 @@ namespace BestHTTP.WebSocket
         public WebSocket(Uri uri, string origin, string protocol)
             :this(uri, origin, protocol, null)
         {
-#if !BESTHTTP_DISABLE_GZIP
-            this.Extensions = new IExtension[] { new PerMessageCompression(/*compression level: */           Decompression.Zlib.CompressionLevel.Default,
-                                                                           /*clientNoContextTakeover: */     false,
-                                                                           /*serverNoContextTakeover: */     false,
-                                                                           /*clientMaxWindowBits: */         Decompression.Zlib.ZlibConstants.WindowBitsMax,
-                                                                           /*desiredServerMaxWindowBits: */  Decompression.Zlib.ZlibConstants.WindowBitsMax,
-                                                                           /*minDatalengthToCompress: */     PerMessageCompression.MinDataLengthToCompressDefault) };
+#if (!UNITY_WEBGL || UNITY_EDITOR)
+            this.Extensions = WebSocket.GetDefaultExtensions();
 #endif
         }
 #endif
@@ -176,16 +182,28 @@ namespace BestHTTP.WebSocket
 
 #if !UNITY_WEBGL || UNITY_EDITOR
             this.Extensions = extensions;
+#endif
 
+            SelectImplementation(uri, origin, protocol);
+
+            // Under WebGL when only the WebSocket protocol is used Setup() isn't called, so we have to call it here.
+            HTTPManager.Setup();
+        }
+
+        internal WebSocketBaseImplementation SelectImplementation(Uri uri, string origin, string protocol)
+        {
+#if !UNITY_WEBGL || UNITY_EDITOR
 #if !BESTHTTP_DISABLE_ALTERNATE_SSL && !BESTHTTP_DISABLE_HTTP2
             if (HTTPManager.HTTP2Settings.WebSocketOverHTTP2Settings.EnableWebSocketOverHTTP2 && HTTPProtocolFactory.IsSecureProtocol(uri))
             {
                 // Try to find a HTTP/2 connection that supports the connect protocol.
-                var con = BestHTTP.Core.HostManager.GetHost(uri.Host).GetHostDefinition(Core.HostDefinition.GetKeyFor(new UriBuilder("https", uri.Host, uri.Port).Uri
-#if !BESTHTTP_DISABLE_PROXY
+                var connectionKey = Core.HostDefinition.GetKeyFor(new UriBuilder("https", uri.Host, uri.Port).Uri
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
                 , GetProxy(uri)
 #endif
-                )).Find(c => {
+                    );
+
+                var con = BestHTTP.Core.HostManager.GetHost(uri.Host).GetHostDefinition(connectionKey).Find(c => {
                     var httpConnection = c as HTTPConnection;
                     var http2Handler = httpConnection?.requestHandler as Connections.HTTP2.HTTP2Handler;
 
@@ -199,7 +217,7 @@ namespace BestHTTP.WebSocket
                     var httpConnection = con as HTTPConnection;
                     var http2Handler = httpConnection?.requestHandler as Connections.HTTP2.HTTP2Handler;
 
-                    this.implementation = new OverHTTP2(this, http2Handler, uri, origin, protocol);
+                    this.implementation = new OverHTTP2(this, uri, origin, protocol);
                 }
             }
 #endif
@@ -210,13 +228,14 @@ namespace BestHTTP.WebSocket
             this.implementation = new WebGLBrowser(this, uri, origin, protocol);
 #endif
 
-            // Under WebGL when only the WebSocket protocol is used Setup() isn't called, so we have to call it here.
-            HTTPManager.Setup();
+            return this.implementation;
         }
 
 #if !UNITY_WEBGL || UNITY_EDITOR
         internal void FallbackToHTTP1()
         {
+            HTTPManager.Logger.Verbose("WebSocket", "FallbackToHTTP1", this.Context);
+
             if (this.implementation == null)
                 return;
 
@@ -266,6 +285,34 @@ namespace BestHTTP.WebSocket
             this.implementation.Send(buffer, offset, count);
         }
 
+        /// <summary>
+        /// Will send the data in one or more binary frame and takes ownership over it calling BufferPool.Release when sent.
+        /// </summary>
+        public void SendAsBinary(BufferSegment data)
+        {
+            if (!IsOpen)
+            {
+                BufferPool.Release(data);
+                return;
+            }
+
+            this.implementation.SendAsBinary(data);
+        }
+
+        /// <summary>
+        /// Will send data as a text frame and takes owenership over the memory region releasing it to the BufferPool as soon as possible.
+        /// </summary>
+        public void SendAsText(BufferSegment data)
+        {
+            if (!IsOpen)
+            {
+                BufferPool.Release(data);
+                return;
+            }
+
+            this.implementation.SendAsText(data);
+        }
+
 #if !UNITY_WEBGL || UNITY_EDITOR
         /// <summary>
         /// It will send the given frame to the server.
@@ -301,7 +348,7 @@ namespace BestHTTP.WebSocket
             this.implementation.StartClose(code, message);
         }
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
         internal Proxy GetProxy(Uri uri)
         {
             // WebSocket is not a request-response based protocol, so we need a 'tunnel' through the proxy
@@ -319,7 +366,7 @@ namespace BestHTTP.WebSocket
 
 #if !UNITY_WEBGL || UNITY_EDITOR
 
-        public static byte[] EncodeCloseData(UInt16 code, string message)
+        public static BufferSegment EncodeCloseData(UInt16 code, string message)
         {
             //If there is a body, the first two bytes of the body MUST be a 2-byte unsigned integer
             // (in network byte order) representing a status code with value /code/ defined in Section 7.4 (http://tools.ietf.org/html/rfc6455#section-7.4). Following the 2-byte integer,
@@ -337,7 +384,9 @@ namespace BestHTTP.WebSocket
                 buff = Encoding.UTF8.GetBytes(message);
                 ms.Write(buff, 0, buff.Length);
 
-                return ms.ToArray();
+                buff = ms.ToArray();
+
+                return buff.AsBuffer(buff.Length);
             }
         }
 

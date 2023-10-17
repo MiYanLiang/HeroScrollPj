@@ -308,7 +308,7 @@ namespace BestHTTP.SignalRCore.Transports
                             // Parse and dispatch messages only if the transport is still in connected state
                             if (this.State == TransportStates.Connecting)
                             {
-                                int idx = Array.IndexOf<byte>(resp.Data, (byte)JsonProtocol.Separator, 0);
+                                int idx = resp.Data != null ? Array.IndexOf<byte>(resp.Data, (byte)JsonProtocol.Separator, 0) : -1;
                                 if (idx > 0)
                                 {
                                     base.HandleHandshakeResponse(System.Text.Encoding.UTF8.GetString(resp.Data, 0, idx));

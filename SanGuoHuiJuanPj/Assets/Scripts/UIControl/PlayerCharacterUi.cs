@@ -107,8 +107,11 @@ public class PlayerCharacterUi : MonoBehaviour
         void ApiRequest(CharacterUpdateInfos updateInfo,Expression<Func<object>> ex)
         {
             var func = ex.Compile();
-            ApiPanel.instance.InvokeVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
-                EventStrings.Req_UpdateCharacterInfo, ViewBag.Instance().SetValues(updateInfo, func()));
+            //ApiPanel.instance.InvokeVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
+            //    EventStrings.Req_UpdateCharacterInfo, ViewBag.Instance().SetValues(updateInfo, func()));
+            ApiPanel.instance.CallVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
+                EventStrings.Call_UpdateCharacterInfo,
+                DataBag.SerializeBag(EventStrings.Call_UpdateCharacterInfo, updateInfo, func()));
         }
     }
 
@@ -142,8 +145,10 @@ public class PlayerCharacterUi : MonoBehaviour
         if (Character.IsValidCharacter())//完整信息才请求
         {
             PlayerDataForGame.instance.Character = global::Character.Instance(Character);
-            ApiPanel.instance.InvokeVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
-                EventStrings.Req_CreateCharacter, ViewBag.Instance().PlayerCharacterDto(Character.ToDto()), false);
+            //ApiPanel.instance.InvokeVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
+            //    EventStrings.Req_CreateCharacter, ViewBag.Instance().PlayerCharacterDto(Character.ToDto()), false);
+            ApiPanel.instance.CallVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
+                EventStrings.Call_CreateCharacter, Character.ToDto());
             return;
         }
 
@@ -167,7 +172,7 @@ public class PlayerCharacterUi : MonoBehaviour
         {
             if(success)
             {
-                PlayerDataForGame.instance.NotifyDataUpdate();
+                ApiPanel.instance.SyncSaved(PlayerDataForGame.instance.NotifyDataUpdate);
                 Show();
                 return;
             }

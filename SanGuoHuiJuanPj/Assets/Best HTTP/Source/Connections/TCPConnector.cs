@@ -49,7 +49,7 @@ namespace BestHTTP.Connections
             string negotiatedProtocol = HTTPProtocolFactory.W3C_HTTP1;
 
             Uri uri =
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
                 request.HasProxy ? request.Proxy.Address :
 #endif
                 request.CurrentUri;
@@ -185,7 +185,7 @@ namespace BestHTTP.Connections
                 /*if (Stream.CanTimeout)
                     Stream.ReadTimeout = Stream.WriteTimeout = (int)Request.Timeout.TotalMilliseconds;*/
 
-#if !BESTHTTP_DISABLE_PROXY
+#if !BESTHTTP_DISABLE_PROXY && (!UNITY_WEBGL || UNITY_EDITOR)
                 if (request.HasProxy)
                 {
                     try

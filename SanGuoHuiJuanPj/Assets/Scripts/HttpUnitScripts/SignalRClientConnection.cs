@@ -7,7 +7,6 @@ using BestHTTP.SignalRCore.Messages;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.Events;
-using static Assets.System.WarModule.CardState;
 
 public class SignalRClientConnection
 {

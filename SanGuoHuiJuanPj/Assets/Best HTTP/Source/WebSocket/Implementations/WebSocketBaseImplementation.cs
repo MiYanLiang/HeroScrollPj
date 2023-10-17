@@ -71,7 +71,7 @@ namespace BestHTTP.WebSocket
             this.LastMessageReceived = DateTime.MinValue;
 
             // Set up some default values.
-            this.Parent.PingFrequency = 1000;
+            this.Parent.PingFrequency = 10_000;
             this.Parent.CloseAfterNoMessage = TimeSpan.FromSeconds(2);
 #endif
         }
@@ -82,6 +82,8 @@ namespace BestHTTP.WebSocket
         public abstract void Send(string message);
         public abstract void Send(byte[] buffer);
         public abstract void Send(byte[] buffer, ulong offset, ulong count);
+        public abstract void SendAsBinary(BufferSegment data);
+        public abstract void SendAsText(BufferSegment data);
 
 #if !UNITY_WEBGL || UNITY_EDITOR
         protected abstract void CreateInternalRequest();

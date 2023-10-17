@@ -108,6 +108,7 @@ public class SignalRClient : MonoBehaviour
         }
     }
 
+    private string _signalRAccessToken;
     public async Task<bool> TokenLogin(SignalRConnectionInfo connectionInfo)
     {
         isBusy = true;
@@ -117,9 +118,11 @@ public class SignalRClient : MonoBehaviour
             return false;
         }
 
-        var result = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
+        var isSuccess = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
+        if(isSuccess)
+            _signalRAccessToken = connectionInfo.AccessToken;
         isBusy = false;
-        return result;
+        return isSuccess;
     }
 
     public void SynchronizeSaved(UnityAction onCompleteAction)
@@ -253,6 +256,36 @@ public class SignalRClient : MonoBehaviour
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
     }
+
+    public void HttpInvoke(string method, string serializedBag,Action<string> callback,
+        CancellationTokenSource tokenSource = default)
+    {
+        if (SignalRClientConnection.Status != ConnectionStates.Connected)
+        {
+            ReconnectServer(isSuccessReconnect =>
+            {
+                if(isSuccessReconnect) InvokeRequest(callback);
+                else callback?.Invoke("服务器已失联...");
+            });
+            return;
+        }
+        InvokeRequest(callback);
+        return;
+
+        async void InvokeRequest(Action<string> invokeCallback)
+        {
+            var response = await Http.SendAsync(HttpMethod.Post, 
+                $"{Server.ApiServer}{method}", serializedBag,
+                new (string, string)[]
+                {
+                    ("bearer", _signalRAccessToken)
+                },
+                tokenSource?.Token ?? default);
+            var text = await response.Content.ReadAsStringAsync();
+            invokeCallback?.Invoke(text);
+        }
+    }
+
     public void InvokeCaller(string method, UnityAction<string> recallAction, string serializedBag,
         CancellationTokenSource tokenSource = default)
     {

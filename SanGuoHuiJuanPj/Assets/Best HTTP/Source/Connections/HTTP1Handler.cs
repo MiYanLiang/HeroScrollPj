@@ -116,7 +116,7 @@ namespace BestHTTP.Connections
                     exceptionMessage = "null";
                 else
                 {
-                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    System.Text.StringBuilder sb = PlatformSupport.Text.StringBuilderPool.Get(1);
 
                     Exception exception = e;
                     int counter = 1;
@@ -130,7 +130,7 @@ namespace BestHTTP.Connections
                             sb.AppendLine();
                     }
 
-                    exceptionMessage = sb.ToString();
+                    exceptionMessage = PlatformSupport.Text.StringBuilderPool.ReleaseAndGrab(sb);
                 }
                 HTTPManager.Logger.Verbose("HTTP1Handler", exceptionMessage, this.Context, this.conn.CurrentRequest.Context);
 

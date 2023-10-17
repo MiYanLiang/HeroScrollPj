@@ -1,11 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using Assets.Editor;
+﻿using Assets.Editor;
 using UnityEngine;
-using UnityEditor;
 using CorrelateLib;
 
 public class Configuration : MonoBehaviour
@@ -25,6 +19,7 @@ public class ServerFields
     public ServerFields(ConfigAsset configAsset)
     {
         ServerUrl = configAsset.ServerUrl;
+        ApiServer = configAsset.ApiServer;
         INSTANCE_ID_API = configAsset.INSTANCE_ID_API;
         PLAYER_UPLOAD_COUNT_API = configAsset.PLAYER_UPLOAD_COUNT_API;
         PLAYER_REG_ACCOUNT_API = configAsset.PLAYER_REG_ACCOUNT_API;
@@ -48,6 +43,7 @@ public class ServerFields
     public ServerFields() { }
 
     public string ServerUrl { get; set; }
+    public string ApiServer { get; set; }
     public string PLAYER_SAVE_DATA_UPLOAD_API { get; set; }
     public string INSTANCE_ID_API { get; set; }
     public string PLAYER_REG_ACCOUNT_API { get; set; }

@@ -274,10 +274,10 @@ namespace BestHTTP.Caching
             return info;
         }
 
-        internal static HTTPResponse GetFullResponse(HTTPRequest request)
+        internal static void GetFullResponse(HTTPRequest request)
         {
             if (!IsSupported)
-                return null;
+                return;
 
             CheckSetup();
 
@@ -286,9 +286,9 @@ namespace BestHTTP.Caching
             using (new ReadLock(rwLock))
             {
                 if (!library.TryGetValue(request.CurrentUri, out info))
-                    return null;
+                    return;
 
-                return info.ReadResponseTo(request);
+                info.ReadResponseTo(request);
             }
         }
 
@@ -364,7 +364,7 @@ namespace BestHTTP.Caching
             {
                 if (pragmas.Exists(headerValue =>
                 {
-                    string value = headerValue.ToLower();
+                    string value = headerValue.ToLowerInvariant();
                     return value.Contains("no-store") || value.Contains("no-cache");
                 }))
                     return false;

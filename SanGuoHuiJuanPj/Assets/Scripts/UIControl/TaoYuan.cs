@@ -115,7 +115,8 @@ using UnityEngine.UI;
     {
         if (TimeSystemControl.instance.IsJinNangAvailable())
         {
-            ApiPanel.instance.InvokeVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Req_JinNang);
+            //ApiPanel.instance.InvokeVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Req_JinNang);
+            ApiPanel.instance.CallVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Call_JinNang);
             return;
         }
         OnJinNangFailed(string.Empty);
@@ -260,10 +261,14 @@ using UnityEngine.UI;
             UIManager.instance.ShowOrHideGuideObj(1, false);
         }
 
-        ApiPanel.instance.InvokeVb(viewBag =>
+        //ApiPanel.instance.InvokeVb(viewBag =>
+        //        OnChestRecallAction(UIManager.instance.WarChestRecallAction(viewBag), chestUi),
+        //    PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_WarChest,
+        //    ViewBag.Instance().SetValues(chestId, consume));
+        ApiPanel.instance.CallVb(viewBag =>
                 OnChestRecallAction(UIManager.instance.WarChestRecallAction(viewBag), chestUi),
-            PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_WarChest,
-            ViewBag.Instance().SetValues(chestId, consume));
+            PlayerDataForGame.instance.ShowStringTips, EventStrings.Call_WarChest,
+            DataBag.SerializeBag(EventStrings.Call_WarChest, chestId, consume));
     }
 
     public void OnChestRecallAction(PlayerDataDto player, TaoYuanChestUI chestUi)

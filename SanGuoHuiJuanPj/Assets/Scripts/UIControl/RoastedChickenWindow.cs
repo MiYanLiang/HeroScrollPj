@@ -23,7 +23,7 @@ public class RoastedChickenWindow : MonoBehaviour
         AdConsumeUi.SetCallBackAction(success =>
         {
             if (success) RequestChickenApi(1);
-        }, OnSuccessRequestChicken, ViewBag.Instance().SetValue(2), false);//ticketsAction = 2
+        }, OnSuccessRequestChicken, false, 2);//ticketsAction = 2
         CloseButton.onClick.RemoveAllListeners();
         CloseButton.onClick.AddListener(Off);
         Off();
@@ -51,12 +51,18 @@ public class RoastedChickenWindow : MonoBehaviour
 
     private void RequestChickenApi(int chickenId)
     {
-        ApiPanel.instance.InvokeVb(OnSuccessRequestChicken, msg =>
+        //ApiPanel.instance.InvokeVb(OnSuccessRequestChicken, msg =>
+        //    {
+        //        PlayerDataForGame.instance.ShowStringTips(msg);
+        //        ButtonsInteractive(true);
+        //    }, EventStrings.Req_Chicken,
+        //    ViewBag.Instance().SetValue(chickenId));
+        ApiPanel.instance.CallVb(OnSuccessRequestChicken, msg =>
             {
                 PlayerDataForGame.instance.ShowStringTips(msg);
                 ButtonsInteractive(true);
-            }, EventStrings.Req_Chicken,
-            ViewBag.Instance().SetValue(chickenId));
+            }, EventStrings.Call_Chicken,
+            DataBag.SerializeBag(EventStrings.Call_Chicken, chickenId));
     }
 
     private void OnSuccessRequestChicken(ViewBag bag)

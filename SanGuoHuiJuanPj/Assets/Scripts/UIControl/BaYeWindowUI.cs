@@ -112,7 +112,7 @@ public class BaYeWindowUI : MiniWindowUI
     public void ShowAdButton(UnityAction<bool> onClickAction)
     {
         adConsume.SetCallBackAction(onClickAction.Invoke, _ => onClickAction.Invoke(true),
-            ViewBag.Instance().SetValue(0), true);
+            true, 0);
         adConsume.ShowWithUpdate();
     }
 }

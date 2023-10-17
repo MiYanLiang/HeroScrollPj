@@ -52,7 +52,7 @@ public class TradableGameCardUi : MonoBehaviour
     public void SetAd(UnityAction<bool> action)
     {
         SetState(States.Ad);
-        AdConsume.SetCallBackAction(action, _ => action.Invoke(true), ViewBag.Instance().SetValue(0), true);
+        AdConsume.SetCallBackAction(action, _ => action.Invoke(true), true, 0);
     }
 
     public void SetPrice(int price, UnityAction buyAction)

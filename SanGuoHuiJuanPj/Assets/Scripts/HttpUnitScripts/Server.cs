@@ -16,6 +16,7 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } 
     public static string RESET_GAMEPLAY_API { get; private set; }
     public static string GameServer { get; private set; }
+    public static string ApiServer { get; private set; }
     public static string TokenLogin { get; private set; }
 #else
     // todo: CDN正式服
@@ -27,7 +28,7 @@ public static class Server
     // Todo: 测试服
     //private static string ServerUrl { get; set; } = "https://herotestfuncapi.azurewebsites.net/api/";
     //private static string ServerUrl { get; set; } = "http://localhost:7071/api/";
-    private static string ServerUrl { get; set; } = "http://localhost:8081/api/";
+    //private static string ServerUrl { get; set; } = "http://localhost:8081/api/";
     public static string PLAYER_SAVE_DATA_UPLOAD_API { get; private set; } = "UploadSaveData";
     public static string INSTANCE_ID_API { get; private set; } = "GenerateUserId";
     public static string REQUEST_USERNAME_API { get; private set; } = "RequestUsername";
@@ -38,10 +39,13 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } = "OneClickSignIn"; //"DeviceSignIn";
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
     public static string TokenLogin { get; private set; } = "TokenLogin";
-    public static string GameServer { get; private set; } = "https://motahero.azurewebsites.net/api/";
+
+    public static string GameServer { get; private set; } = "http://43.138.221.139/login/";
+    //"https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
-    public static string ApiServer { get; private set; } =
-        "http://localhost:7071/api/";
+    public static string ApiServer { get; private set; } = "http://43.138.221.139/api/";
+        //"https://heroscrollapi.azurewebsites.net/api/";
+        //"http://localhost:7071/api/";
         //"https://herotestfuncapi.azurewebsites.net/api/";
 #endif
 
@@ -60,6 +64,7 @@ public static class Server
         isInitialized = true;
 #if !UNITY_EDITOR
         GameServer = fields.ServerUrl;
+        ApiServer = fields.ApiServer;
         PLAYER_SAVE_DATA_UPLOAD_API = fields.PLAYER_SAVE_DATA_UPLOAD_API;
         INSTANCE_ID_API = fields.INSTANCE_ID_API;
         REQUEST_USERNAME_API = fields.REQUEST_USERNAME_API;

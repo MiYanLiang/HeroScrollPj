@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
+using BestHTTP.PlatformSupport.Text;
 
 #if NETFX_CORE
     using Windows.Security.Cryptography;
@@ -26,10 +26,10 @@ namespace BestHTTP.Extensions
         /// </summary>
         public static string AsciiToString(this byte[] bytes)
         {
-            StringBuilder sb = new StringBuilder(bytes.Length);
+            StringBuilder sb = StringBuilderPool.Get(bytes.Length); //new StringBuilder(bytes.Length);
             foreach (byte b in bytes)
                 sb.Append(b <= 0x7f ? (char)b : '?');
-            return sb.ToString();
+            return StringBuilderPool.ReleaseAndGrab(sb);
         }
 
         /// <summary>
@@ -86,6 +86,21 @@ namespace BestHTTP.Extensions
 
         #region Other Extensions
 
+        public static BufferSegment AsBuffer(this byte[] bytes)
+        {
+            return new BufferSegment(bytes, 0, bytes.Length);
+        }
+
+        public static BufferSegment AsBuffer(this byte[] bytes, int length)
+        {
+            return new BufferSegment(bytes, 0, length);
+        }
+
+        public static BufferSegment AsBuffer(this byte[] bytes, int offset, int length)
+        {
+            return new BufferSegment(bytes, offset, length);
+        }
+
         public static string GetRequestPathAndQueryURL(this Uri uri)
         {
             string requestPathAndQuery = uri.GetComponents(UriComponents.PathAndQuery, UriFormat.UriEscaped);
@@ -100,8 +115,8 @@ namespace BestHTTP.Extensions
         public static string[] FindOption(this string str, string option)
         {
             //s-maxage=2678400, must-revalidate, max-age=0
-            string[] options = str.ToLower().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            option = option.ToLower();
+            string[] options = str.ToLowerInvariant().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            option = option.ToLowerInvariant();
 
             for (int i = 0; i < options.Length; ++i)
                 if (options[i].Contains(option))
@@ -266,11 +281,11 @@ namespace BestHTTP.Extensions
 #else
             using (var md5 = Cryptography.MD5.Create()) {
                 var hash = md5.ComputeHash(input.Data, input.Offset, input.Count);
-                var sb = new StringBuilder(hash.Length);
+                var sb = StringBuilderPool.Get(hash.Length); //new StringBuilder(hash.Length);
                 for (int i = 0; i < hash.Length; ++i)
                     sb.Append(hash[i].ToString("x2"));
                 BufferPool.Release(hash);
-                return sb.ToString();
+                return StringBuilderPool.ReleaseAndGrab(sb);
             }
 #endif
         }

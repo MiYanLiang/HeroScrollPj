@@ -26,7 +26,7 @@ public class BaYeCityOptionUi: MonoBehaviour
         {
             if (success)
                 onAction.Invoke(true);
-        }, _ => onAction.Invoke(true), ViewBag.Instance().SetValue(0), true);
+        }, _ => onAction.Invoke(true), true, 0);
     }
 
     [Serializable]

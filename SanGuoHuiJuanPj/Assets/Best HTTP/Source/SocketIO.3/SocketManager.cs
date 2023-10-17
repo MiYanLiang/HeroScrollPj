@@ -8,6 +8,7 @@ using BestHTTP.Extensions;
 using BestHTTP.SocketIO3.Parsers;
 using BestHTTP.SocketIO3.Events;
 using BestHTTP.Logger;
+using BestHTTP.PlatformSupport.Memory;
 
 namespace BestHTTP.SocketIO3
 {
@@ -111,6 +112,11 @@ namespace BestHTTP.SocketIO3
         /// Logging context of this socket.io connection.
         /// </summary>
         public LoggingContext Context { get; private set; }
+
+        /// <summary>
+        /// Called for every packet received from the server.
+        /// </summary>
+        public Action<SocketManager, IncomingPacket> OnIncomingPacket;
 
         #endregion
 
@@ -225,8 +231,10 @@ namespace BestHTTP.SocketIO3
             this.PreviousState = States.Initial;
             this.Parser = parser ?? new DefaultJsonParser();
 
+#if !BESTHTTP_DISABLE_WEBSOCKET
             if (uri.Scheme.StartsWith("ws"))
                 options.ConnectWith = TransportTypes.WebSocket;
+#endif
         }
 
         #endregion
@@ -355,7 +363,11 @@ namespace BestHTTP.SocketIO3
             lastPingReceived = DateTime.MinValue;
 
             if (removeSockets && OfflinePackets != null)
+            {
+                foreach (var packet in OfflinePackets)
+                    BufferPool.Release(packet.PayloadData);
                 OfflinePackets.Clear();
+            }
 
             // Remove the references from the dictionary too.
             if (removeSockets)
@@ -523,7 +535,8 @@ namespace BestHTTP.SocketIO3
         /// </summary>
         void IManager.SendPacket(OutgoingPacket packet)
         {
-            HTTPManager.Logger.Information("SocketManager", "SendPacket " + packet.ToString(), this.Context);
+            if (HTTPManager.Logger.Level <= Loglevels.Information)
+                HTTPManager.Logger.Information("SocketManager", "SendPacket " + packet.ToString(), this.Context);
 
             ITransport trans = SelectTransport();
 
@@ -541,7 +554,10 @@ namespace BestHTTP.SocketIO3
             else
             {
                 if (packet.IsVolatile)
+                {
+                    BufferPool.Release(packet.PayloadData);
                     return;
+                }
 
                 HTTPManager.Logger.Information("SocketManager", "SendPacket - Offline stashing packet", this.Context);
 
@@ -564,7 +580,16 @@ namespace BestHTTP.SocketIO3
                 return;
             }
 
-            switch(packet.TransportEvent)
+            try
+            {
+                this.OnIncomingPacket?.Invoke(this, packet);
+            }
+            catch (Exception ex)
+            {
+                HTTPManager.Logger.Exception(nameof(SocketManager), $"{nameof(this.OnIncomingPacket)}", ex, this.Context);
+            }
+
+            switch (packet.TransportEvent)
             {
                 case TransportEventTypes.Open:
                     if (Handshake == null)

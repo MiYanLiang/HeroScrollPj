@@ -376,29 +376,41 @@ public class PlayerDataForGame : MonoBehaviour
     public void SendTroopToWarApi()
     {
         //todo: 暂时霸业不请求Api
-        if(WarType != WarTypes.Expedition)
+        if (WarType != WarTypes.Expedition)
         {
             WarReward = new WarReward(string.Empty, selectedWarId, 0);
             return;
         }
+
         var cards = hstData.heroSaveData.Concat(hstData.towerSaveData).Concat(hstData.trapSaveData)
             .Enlist(CurrentWarForceId).Select(c => c.ToDto()).ToList();
-        ApiPanel.instance.InvokeVb(vb =>
-            {
-                WarReward = new WarReward(vb.Values[0].ToString(), selectedWarId, 0);
-                var troop = vb.GetTroopDto();
-                UpdateTroopEnlist(troop);
-            }, msg =>
-            {
-                ShowStringTips(msg);
-                WarReward = new WarReward(string.Empty, selectedWarId, 0);
-            }, EventStrings.Req_TroopToCampaign,
-            ViewBag.Instance().TroopDto(new TroopDto
-                {
-                    EnList = cards.GroupBy(c => c.Type, c => c.CardId).ToDictionary(c => c.Key, c => c.ToArray()),
-                    ForceId = CurrentWarForceId
-                }
-            ).SetValues(selectedWarId, UIManager.instance.expedition.CurrentMode.Id));
+        var troopDto = new TroopDto
+        {
+            EnList = cards.GroupBy(c => c.Type, c => c.CardId).ToDictionary(c => c.Key, c => c.ToArray()),
+            ForceId = CurrentWarForceId
+        };
+        //ApiPanel.instance.InvokeVb(SuccessAction, FailedAction, EventStrings.Req_TroopToCampaign,
+        //    ViewBag.Instance().TroopDto(troopDto)
+        //        .SetValues(selectedWarId, UIManager.instance.expedition.CurrentMode.Id));
+        ApiPanel.instance.CallVb(SuccessAction, FailedAction, EventStrings.Call_TroopToCampaign,
+            DataBag.SerializeBag(EventStrings.Call_TroopToCampaign, 
+                selectedWarId, 
+                UIManager.instance.expedition.CurrentMode.Id,
+                troopDto));
+        return;
+
+        void FailedAction(string msg)
+        {
+            ShowStringTips(msg);
+            WarReward = new WarReward(string.Empty, selectedWarId, 0);
+        }
+
+        void SuccessAction(ViewBag vb)
+        {
+            WarReward = new WarReward(vb.Values[0].ToString(), selectedWarId, 0);
+            var troop = vb.GetTroopDto();
+            UpdateTroopEnlist(troop);
+        }
     }
 
     public void UpdateTroopEnlist(TroopDto troop)
