@@ -710,14 +710,13 @@ public class UIManager : MonoBehaviour
         //    }, msg => CardMergeErrorMessage(card),
         //    EventStrings.Req_CardMerge,
         //    ViewBag.Instance().SetValues(new object[] { card.CardId, card.Type }));
-        ApiPanel.instance.CallVb(vb =>
+        ApiPanel.instance.Call(b =>
             {
-                var player = vb.GetPlayerDataDto();
-                var dto = vb.GetGameCardDto();
+                var player = b.Get<PlayerDataDto>(0);
+                var dto = b.Get<GameCardDto>(1);
                 CardMergedUpdate(dto, player);
             }, _ => CardMergeErrorMessage(card),
-            EventStrings.Call_CardMerge,
-            DataBag.SerializeBag(EventStrings.Call_CardMerge, card.CardId, card.Type));
+            EventStrings.Call_CardMerge, card.CardId, card.Type);
 
         void CardMergedUpdate(GameCardDto dto, PlayerDataDto player)
         {

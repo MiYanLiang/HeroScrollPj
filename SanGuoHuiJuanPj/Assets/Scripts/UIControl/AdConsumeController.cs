@@ -73,8 +73,7 @@ public class AdConsumeController : MonoBehaviour
                 consumeAction.Invoke(vb);
                 UpdateTickets();
                 if (closeIfSuccess) Off();
-            }, PlayerDataForGame.instance.ShowStringTips, EventStrings.Call_ConsumeAdTicket,
-            DataBag.SerializeBag(EventStrings.Call_ConsumeAdTicket, requestObj));
+            }, PlayerDataForGame.instance.ShowStringTips, EventStrings.Call_ConsumeAdTicket, requestObj);
     }
 
     public void ButtonsInteractive(bool isActive)

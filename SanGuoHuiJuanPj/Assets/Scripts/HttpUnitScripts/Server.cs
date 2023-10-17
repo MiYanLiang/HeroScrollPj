@@ -39,11 +39,13 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } = "OneClickSignIn"; //"DeviceSignIn";
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
     public static string TokenLogin { get; private set; } = "TokenLogin";
-    public static string GameServer { get; private set; } = "https://motahero.azurewebsites.net/api/";
+
+    public static string GameServer { get; private set; } = "http://43.138.221.139/login/";
+    //"https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
-    public static string ApiServer { get; private set; } = 
+    public static string ApiServer { get; private set; } = "http://43.138.221.139/api/";
         //"https://heroscrollapi.azurewebsites.net/api/";
-        "http://localhost:7071/api/";
+        //"http://localhost:7071/api/";
         //"https://herotestfuncapi.azurewebsites.net/api/";
 #endif
 
