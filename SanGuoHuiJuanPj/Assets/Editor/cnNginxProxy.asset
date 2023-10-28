@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47dce7a34b74320499b89990464516a9, type: 3}
+  m_Name: cnNginxProxy
+  m_EditorClassIdentifier: 
+  ServerUrl: http://43.138.221.139/login/
+  ApiServer: http://43.138.221.139/api/
+  PLAYER_SAVE_DATA_UPLOAD_API: UploadSaveData
+  INSTANCE_ID_API: GenerateUserId
+  REQUEST_USERNAME_API: RequestUsername
+  PLAYER_REG_ACCOUNT_API: RegUser
+  PLAYER_UPLOAD_COUNT_API: UploadCount
+  USER_LOGIN_API: Login
+  SIGNALR_LOGIN_API: UserSignin
+  DEVICE_LOGIN_API: OneClickSignIn
+  RESET_GAMEPLAY_API: ResetGamePlay
+  TOKEN_LOGIN_API: TokenLogin
+  GetWarsV1: GetWarsV1
+  GetStageV1: GetStageV1
+  GetGetFormationV1: GetFormationV1
+  GetCheckPointResultV1: GetCheckPointResultV1
+  GetCheckPointResultV2: GetCheckPointResultV2
+  StartChallengeV1: StartChallengeV1
+  SubmitFormationV1: SubmitFormationV1
+  CancelChallengeV1: CancelChallengeV1
