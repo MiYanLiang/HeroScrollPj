@@ -54,29 +54,6 @@ public class ApiPanel : MonoBehaviour
         });
     }
 
-    public void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
-        IViewBag bag = default) =>
-        InvokeVb(successAction, failedAction, method, bag, true);
-
-    private void InvokeVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
-        IViewBag bag,bool closeBusyAfterInvoke)
-    {
-        SetBusy(this);
-#if UNITY_EDITOR
-        if (isSkipApi)
-        {
-            successAction.Invoke(new ViewBag());
-            return;
-        }
-#endif
-        Client.Invoke(method, result =>
-        {
-            var viewBag = Json.Deserialize<ViewBag>(result);
-            if (viewBag == null) failedAction?.Invoke(result);
-            else successAction.Invoke(viewBag);
-            if(closeBusyAfterInvoke) SetBusy(false);
-        }, bag);
-    }
 #if UNITY_EDITOR
     public static string TestUserQuery(string username) =>
         $"username={username}&clientVersion={Application.version}&ServiceZone=-1&RUserId=test";
@@ -113,7 +90,7 @@ public class ApiPanel : MonoBehaviour
         string method, params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller, method, args);
 
-    public void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
+    private void InvokeCallerBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
         bool closeBusyAfterInvoke, string method,
         object[] args)
     {
@@ -139,7 +116,7 @@ public class ApiPanel : MonoBehaviour
         });
     }
 
-    public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
+    private void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction,
         bool closeBusyAfterInvoke, string controller, string method,
         object[] args)
     {

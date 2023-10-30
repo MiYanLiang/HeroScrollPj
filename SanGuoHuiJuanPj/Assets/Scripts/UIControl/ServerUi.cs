@@ -12,8 +12,9 @@ public class ServerUi : MonoBehaviour
     public bool IsActive { get; private set; }
     public int Zone { get; private set; }
     public string Title { get; private set; }
+    public string ApiUrl { get; private set; }
 
-    public void Init(int zone, string title,bool isNew,DateTime startDate, DateTime closeDate)
+    public void Init(int zone, string title, bool isNew, DateTime startDate, DateTime closeDate, string apiUrl)
     {
         ZoneText.text = $"{zone}";
         Zone = zone;
@@ -30,6 +31,7 @@ public class ServerUi : MonoBehaviour
         IsActive = isStartServing && !isCloseServing;
         SelectButton.interactable = IsActive;
         gameObject.SetActive(!isCloseServing);
+        ApiUrl = apiUrl;
     }
 
     public void OnSelected(bool selected) => SelectedImage.gameObject.SetActive(selected);

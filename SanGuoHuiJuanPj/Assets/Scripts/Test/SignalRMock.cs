@@ -16,26 +16,52 @@ public class SignalRMock : MonoBehaviour
         if (isCalled) return;
         isCalled = true;
         var username = _inputField.text;
-        var url = $"{Server.ApiServer}SignalRTestLogin?{ApiPanel.TestUserQuery(username)}";
-        Http.Post(url, string.Empty, text =>
+        Http.Post("ServerSignIn", Json.Serialize(new object[]
+            { 25, 0, "4.0"}), text =>
         {
-            var bag = DataBag.DeserializeBag(text);
-            if (bag == null)
+            var info = Json.Deserialize<SignalRConnectionInfo>(text);
+            if (info == null)
             {
                 PlayerDataForGame.instance.ShowStringTips(text);
-                throw new NotImplementedException($"连接不到测试服： {text}");
+                throw new NotImplementedException($"测试服链接错误： {text}");
             }
 
-            var info = bag.Get<SignalRConnectionInfo>(0);
             TokenLogin(info);
         }, "SignalRLoginTest");
+        //var url = $"{Server.ApiServer}SignalRTestLogin?{ApiPanel.TestUserQuery(username)}";
+        //Http.Post(url, string.Empty, text =>
+        //{
+        //    var bag = DataBag.DeserializeBag(text);
+        //    if (bag == null)
+        //    {
+        //        PlayerDataForGame.instance.ShowStringTips(text);
+        //        throw new NotImplementedException($"连接不到测试服： {text}");
+        //    }
+        //
+        //    var info = bag.Get<SignalRConnectionInfo>(0);
+        //    TokenLogin(info);
+        //}, "SignalRLoginTest");
     }
 
-    private async void TokenLogin(SignalRConnectionInfo info)
+    private void TokenLogin(SignalRConnectionInfo info)
     {
-        await _signalRClient.TokenLogin(info);
+        _signalRClient.TokenLogin(info, success =>
+        {
+            if (success)
+                _apiPanel.SyncSaved(() =>
+                {
+                    GameSystem.Instance.Init();
+                    GameSystem.Instance.SetScene(GameSystem.GameScene.MainScene);
+                    gameObject.SetActive(false);
+                });
+        });
+    }
+
+    public void SyncSaved()
+    {
         _apiPanel.SyncSaved(() =>
         {
+            XDebug.Log<SignalRMock>("SyncSaved!");
             GameSystem.Instance.Init();
             GameSystem.Instance.SetScene(GameSystem.GameScene.MainScene);
             gameObject.SetActive(false);
