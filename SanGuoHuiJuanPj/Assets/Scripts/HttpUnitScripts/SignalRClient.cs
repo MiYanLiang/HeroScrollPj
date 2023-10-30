@@ -109,20 +109,21 @@ public class SignalRClient : MonoBehaviour
     }
 
     private string _signalRAccessToken;
-    public async Task<bool> TokenLogin(SignalRConnectionInfo connectionInfo)
+    public async void TokenLogin(SignalRConnectionInfo connectionInfo,Action<bool> callbackAction)
     {
         isBusy = true;
         if (connectionInfo == null)
         {
             isBusy = false;
-            return false;
+            callbackAction?.Invoke(false);
+            return;
         }
 
         var isSuccess = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
         if(isSuccess)
             _signalRAccessToken = connectionInfo.AccessToken;
         isBusy = false;
-        return isSuccess;
+        callbackAction?.Invoke(isSuccess);
     }
 
     public void SynchronizeSaved(UnityAction onCompleteAction)
@@ -158,16 +159,18 @@ public class SignalRClient : MonoBehaviour
 
     public void Disconnect(UnityAction callbackAction) => SignalRClientConnection.CloseConnection(callbackAction);
 
-    public async void ReconnectServer(Action<bool> callBackAction = null)
+    public void ReconnectServer(Action<bool> callBackAction = null)
     {
         if (isBusy) return;
         isBusy = true;
-        var success = await SignalRClientConnection.HubReconnectTask();
-        callBackAction?.Invoke(success);
-        IsLogged = success;
-        var msg = success ? "重连成功！" : "重连失败，请重新登录。";
-        PlayerDataForGame.instance.ShowStringTips(msg);
-        isBusy = false;
+        SignalRClientConnection.HubReconnectTask(success =>
+        {
+            callBackAction?.Invoke(success);
+            IsLogged = success;
+            var msg = success ? "重连成功！" : "重连失败，请重新登录。";
+            PlayerDataForGame.instance.ShowStringTips(msg);
+            isBusy = false;
+        });
     }
 
     private bool IsLogged { get; set; }

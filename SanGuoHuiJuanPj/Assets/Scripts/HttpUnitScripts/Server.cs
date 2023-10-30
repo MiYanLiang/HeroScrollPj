@@ -40,10 +40,14 @@ public static class Server
     public static string RESET_GAMEPLAY_API { get; private set; } = "ResetGamePlay";
     public static string TokenLogin { get; private set; } = "TokenLogin";
 
-    public static string GameServer { get; private set; } = "http://43.138.221.139/login/";
+    public static string GameServer { get; private set; } =
+    "http://heroscroll.icefoxz.com/login/";
     //"https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
-    public static string ApiServer { get; private set; } = "http://43.138.221.139/api/";
+    public static string ApiServer { get; private set; } =
+        "http://43.138.221.139/api/";
+        //"http://heroscroll.icefoxz.com/api/";
+        //"https://herostatetest.azurewebsites.net/api/";
         //"https://heroscrollapi.azurewebsites.net/api/";
         //"http://localhost:7071/api/";
         //"https://herotestfuncapi.azurewebsites.net/api/";
