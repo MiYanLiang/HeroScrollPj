@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using CorrelateLib;
 using UnityEngine;
@@ -16,7 +16,7 @@ public static class Server
     public static string DEVICE_LOGIN_API { get; private set; } 
     public static string RESET_GAMEPLAY_API { get; private set; }
     public static string GameServer { get; private set; }
-    public static string ApiServer { get; private set; }
+    public static string ApiServer { get; set; }
     public static string TokenLogin { get; private set; }
 #else
     // todo: CDN正式服
@@ -42,11 +42,12 @@ public static class Server
 
     public static string GameServer { get; private set; } =
     "http://heroscroll.icefoxz.com/login/";
+    //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     //"http://localhost:8081/api/";
-    public static string ApiServer { get; private set; } =
-        "http://43.138.221.139/api/";
-        //"http://heroscroll.icefoxz.com/api/";
+    public static string ApiServer { get; set; } =
+        "http://heroscroll.icefoxz.com/api/";
+        //"http://43.138.221.139/api/";
         //"https://herostatetest.azurewebsites.net/api/";
         //"https://heroscrollapi.azurewebsites.net/api/";
         //"http://localhost:7071/api/";

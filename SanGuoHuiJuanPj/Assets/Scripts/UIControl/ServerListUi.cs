@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CorrelateLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -35,7 +36,7 @@ public class ServerListUi : SignInBaseUi
             var i1 = i;
             s.SelectButton.onClick.AddListener(() => OnSelect(i1));
             Servers.Add(s);
-            s.Init(server.Zone, server.Title, server == servers[^1], server.StartDate, server.CloseDate);
+            s.Init(server.Zone, server.Title, server == servers[^1], server.StartDate, server.CloseDate, server.ApiUrl);
         }
 
         OnSelect(GamePref.LastServiceZone);
@@ -50,11 +51,18 @@ public class ServerListUi : SignInBaseUi
     {
         if (index < 0 || (Servers.Count > index && !Servers[index].IsActive))
             index = Servers.Count - 1;//默认服务选项
+        ServerUi selectedServerUi = null;
         for (var i = 0; i < Servers.Count; i++)
         {
             var ui = Servers[i];
-            ui.OnSelected(i == index);
+            var isSelect = i == index;
+            ui.OnSelected(isSelect);
+            if (isSelect)
+                selectedServerUi = ui;
         }
+        if (selectedServerUi == null)
+            throw new NullReferenceException("Selected ServerUi Not Found!");
+        Server.ApiServer = selectedServerUi.ApiUrl+"/api/";
         SelectedServerIndex = index;
     }
 
@@ -71,6 +79,7 @@ public class ServerListUi : SignInBaseUi
     {
         public int Zone { get; set; }
         public string Title { get; set; }
+        public string ApiUrl { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime CloseDate { get; set; }
     }
