@@ -34,7 +34,7 @@ public class SignalRClientConnection
             PreferedTransport = TransportTypes.WebSocket
         });
         conn.CustomNegotiationResult(NegotiationResult.Instance(url, token));
-        conn.AuthenticationProvider = new AzureSignalRServiceAuthenticator(conn, token);
+        conn.AuthenticationProvider = new CustomNegoAuthenticator(conn, token);
         return conn;
     }
 
@@ -79,9 +79,9 @@ public class SignalRClientConnection
         _conn.OnReconnecting += OnReconnecting;
         _conn.OnError += OnError;
         Application.quitting += OnDisconnect;
+        _conn.On(EventStrings.ServerCall, OnServerCall);
 
         await _conn.ConnectAsync();
-        _conn.On(EventStrings.ServerCall, OnServerCall);
         StatusChanged(_conn.State, "连接成功！");
 
         async void CloseConn()
@@ -97,29 +97,37 @@ public class SignalRClientConnection
         }
     }
 
-    private async void OnError(HubConnection conn, string error)
+    private void OnError(HubConnection conn, string error)
     {
         PlayerDataForGame.instance.ShowStringTips("网络连接异常！重新连接...");
-        var isSuccess = await HubReconnectTask();
-        var msg = "网络重连失败！";
-        if (isSuccess) msg = "重新连接！";
-        PlayerDataForGame.instance.ShowStringTips(msg);
+        HubReconnectTask(isSuccess =>
+        {
+            var msg = "网络重连失败！";
+            if (isSuccess) msg = "重新连接！";
+            PlayerDataForGame.instance.ShowStringTips(msg);
+        });
     }
 
-    public async Task<bool> HubReconnectTask()
+    public async void HubReconnectTask(Action<bool> callbackAction)
     {
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        if (Status == ConnectionStates.Connected)
+        {
+            callbackAction?.Invoke(true);
+            return;
+        }
         try
         {
             if (ConnectionInfo == null)
                 throw new NullReferenceException("ConnectionInfo = null!");
             Status = ConnectionStates.Reconnecting;
             await HubConnectAsync();
-            return true;
+            callbackAction?.Invoke(true);
         }
-        catch (Exception)
+        catch (Exception e)
         {
             PlayerDataForGame.instance.ShowStringTips("服务器尝试链接失败，请稍后重试。");
-            return false;
+            callbackAction?.Invoke(false);
         }
     }
 
@@ -134,30 +142,47 @@ public class SignalRClientConnection
     {
         try
         {
-            if (_conn.State != ConnectionStates.Connected)
+            switch (_conn.State)
             {
-                if (_conn.State == ConnectionStates.Closed)
+                case ConnectionStates.Connected:
+                    return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+                case ConnectionStates.Closed:
+                case ConnectionStates.Reconnecting:
                 {
-                    var reconnectSuccess = await HubReconnectTask();
-                    if (!reconnectSuccess)
+                    HubReconnectTask(CallbackAction);
+                    async void CallbackAction(bool reconnectSuccess)
                     {
-                        PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
-                        return null;
+                        if (!reconnectSuccess)
+                            FailedToInvoke();
+                        else
+                            await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
                     }
+
+                    break;
                 }
-                else
-                {
-                    PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
-                    return null;
-                }
+                case ConnectionStates.Initial:
+                case ConnectionStates.Authenticating:
+                case ConnectionStates.Negotiating:
+                case ConnectionStates.Redirected:
+                case ConnectionStates.CloseInitiated:
+                default:
+                    return FailedToInvoke();
             }
+
             return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
         }
         catch (Exception e)
         {
             return default;
         }
+
+        TResult FailedToInvoke()
+        {
+            PlayerDataForGame.instance.ShowStringTips("登录超时，请重新登录。");
+            return null;
+        }
     }
+
 
     #region Event
 
@@ -206,9 +231,11 @@ public class SignalRClientConnection
         await _conn.CloseAsync();
         _isClosing = false;
     }
-    private sealed class AzureSignalRServiceAuthenticator : IAuthenticationProvider
+
+    // 已经协商后的认证器, 用AccessToken来认证
+    private sealed class CustomNegoAuthenticator : IAuthenticationProvider
     {
-        public string AccessToken { get; set; }
+        private string AccessToken { get; }
 
         /// <summary>
         /// No pre-auth step required for this type of authentication
@@ -233,7 +260,7 @@ public class SignalRClientConnection
 
         private HubConnection _connection;
 
-        public AzureSignalRServiceAuthenticator(HubConnection connection, string accessToken)
+        public CustomNegoAuthenticator(HubConnection connection, string accessToken)
         {
             this._connection = connection;
             AccessToken = accessToken;
@@ -279,10 +306,11 @@ public class SignalRClientConnection
 
         private Uri PrepareUriImpl(Uri uri)
         {
-            string query = string.IsNullOrEmpty(uri.Query) ? "" : uri.Query + "&";
-            UriBuilder uriBuilder = new UriBuilder(uri.Scheme, uri.Host, uri.Port, uri.AbsolutePath,
-                query + "access_token=" + AccessToken);
-            return uriBuilder.Uri;
+            var query = string.IsNullOrEmpty(uri.Query) ? "" : uri.Query + "&";
+            if (uri.Query.StartsWith("?"))
+                query = query[1..];
+            var url = $"{uri.Scheme}://{uri.Host}:{uri.Port}{uri.AbsolutePath}?{query}access_token={AccessToken}";
+            return new Uri(url);
         }
     }
 }

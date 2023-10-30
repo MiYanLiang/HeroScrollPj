@@ -62,7 +62,7 @@ public static class Http
     public static async Task<HttpResponseMessage> PostAsync(string url, string content,
         CancellationToken token = default) => await SendAsync(HttpMethod.Post, url, content, token);
 
-    public static async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string content, CancellationToken token = default)
+    private static async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string content, CancellationToken token = default)
     {
         try
         {

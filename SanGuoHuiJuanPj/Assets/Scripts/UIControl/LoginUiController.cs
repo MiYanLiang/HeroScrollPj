@@ -146,16 +146,16 @@ public class LoginUiController : MonoBehaviour
             async Task LoginZone()
             {
                 var result = await SignalRClient.instance.NegoToken(zone, 0);
-                await UiResponse(result);
+                UiResponse(result);
             }
 
             async Task CreateNewUserData()
             {
                 var result = await SignalRClient.instance.NegoToken(zone, 1);
-                await UiResponse(result);
+                UiResponse(result);
             }
 
-            async Task UiResponse(SignalRClient.SigninResult result)
+            void UiResponse(SignalRClient.SigninResult result)
             {
                 switch (result.State)
                 {
@@ -172,13 +172,16 @@ public class LoginUiController : MonoBehaviour
                             serverList.SetMessage("客户端请求异常，请联系管理员。");
                             return;
                         }
-                        var isSuccess = await SignalRClient.instance.TokenLogin(info);
-                        if (!isSuccess)
+
+                        SignalRClient.instance.TokenLogin(info, isSuccess =>
                         {
-                            serverList.SetMessage("登录失败，请重新登录。");
-                            return;
-                        }
-                        OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
+                            if (!isSuccess)
+                            {
+                                serverList.SetMessage("登录失败，请重新登录。");
+                                return;
+                            }
+                            OnLoggedInAction?.Invoke(login.username.text, login.password.text, 1, 0);
+                        });
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

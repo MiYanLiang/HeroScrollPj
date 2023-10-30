@@ -61,7 +61,8 @@ public class SystemTimer : MonoBehaviour
     private int connectionFailureCount;
     private string currentClock;
 
-    public string CurrentClock => clockMap[TimeSystemControl.instance.NowHour];
+    public string CurrentClock =>
+        clockMap == null ? SysTime.Now.ToLocalTime().Hour.ToString() : clockMap[TimeSystemControl.instance.NowHour];
 
     private Dictionary<int, string> clockMap;
     /// <summary>
