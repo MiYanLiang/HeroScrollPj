@@ -142,10 +142,14 @@ public class SignalRClientConnection
     {
         try
         {
+            const string SignalRCall = "SignalRCall";
+            var list = args.ToList();
+            list.Insert(0, method);
+            var message = Json.Serialize(list);
             switch (_conn.State)
             {
                 case ConnectionStates.Connected:
-                    return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+                    return await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
                 case ConnectionStates.Closed:
                 case ConnectionStates.Reconnecting:
                 {
@@ -155,7 +159,7 @@ public class SignalRClientConnection
                         if (!reconnectSuccess)
                             FailedToInvoke();
                         else
-                            await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+                            await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
                     }
 
                     break;
@@ -169,10 +173,11 @@ public class SignalRClientConnection
                     return FailedToInvoke();
             }
 
-            return await _conn.InvokeAsync<TResult>(method, cancellationToken, args);
+            return await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
         }
         catch (Exception e)
         {
+            XDebug.Log<SignalRClientConnection>(e.ToString());
             return default;
         }
 

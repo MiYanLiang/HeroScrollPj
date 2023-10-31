@@ -16,8 +16,8 @@ public class SignalRMock : MonoBehaviour
         if (isCalled) return;
         isCalled = true;
         var username = _inputField.text;
-        Http.Post("ServerSignIn", Json.Serialize(new object[]
-            { 25, 0, "4.0"}), text =>
+        Http.Post("http://localhost:7071/api/ServerSignIn", Json.Serialize(new object[]
+            { 25, -1, "4.0"}), text =>
         {
             var info = Json.Deserialize<SignalRConnectionInfo>(text);
             if (info == null)

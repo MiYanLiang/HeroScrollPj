@@ -91,7 +91,7 @@ public class VsWarListController : MonoBehaviour
         void RequestRkReward(UnityAction callBack)
         {
             ApiPanel.instance.InvokeBag(SuccessGetReward, PlayerDataForGame.instance.ShowStringTips,
-                EventStrings.Rk_GetReward, string.Empty, war.WarId);
+                EventStrings.Req_Rk_GetReward, string.Empty, war.WarId);
 
             void SuccessGetReward(DataBag bag)
             {

@@ -206,7 +206,7 @@ public class SignalRClient : MonoBehaviour
         action?.Invoke(content);
     }
 
-    public void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
+    private void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
     {
         if (SignalRClientConnection.Status == ConnectionStates.Connected)
@@ -232,7 +232,6 @@ public class SignalRClient : MonoBehaviour
             UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
         }
     }
-
 
     public void Invoke(string method, UnityAction<string> recallAction, string serializedBag,
         CancellationTokenSource tokenSource = default)
