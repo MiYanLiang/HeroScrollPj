@@ -10,14 +10,16 @@ public class SignalRMock : MonoBehaviour
     [SerializeField] private ApiPanel _apiPanel;
     [SerializeField] private InputField _inputField;
     private bool isCalled = false;
+    [SerializeField] private string _serverSignInUrl = "https://localhost:5001/api/ServerSignIn";
+    [SerializeField] private int _userId = 25;
+    [SerializeField] private int _serverId = -1;
 #if UNITY_EDITOR
     public void CallLogin()
     {
         if (isCalled) return;
         isCalled = true;
-        var username = _inputField.text;
-        Http.Post("http://localhost:7071/api/ServerSignIn", Json.Serialize(new object[]
-            { 25, -1, "4.0"}), text =>
+        Http.Post(_serverSignInUrl, Json.Serialize(new object[]
+            { _userId, _serverId, "4.0"}), text =>
         {
             var info = Json.Deserialize<SignalRConnectionInfo>(text);
             if (info == null)

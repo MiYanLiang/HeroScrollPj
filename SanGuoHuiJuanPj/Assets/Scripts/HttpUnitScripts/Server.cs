@@ -42,9 +42,9 @@ public static class Server
 
     public static string GameServer { get; private set; } =
     "http://heroscroll.icefoxz.com/login/";
+    //"http://localhost:7071/api/";
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
-    //"http://localhost:8081/api/";
     public static string ApiServer { get; set; } =
         "http://heroscroll.icefoxz.com/api/";
         //"http://43.138.221.139/api/";
