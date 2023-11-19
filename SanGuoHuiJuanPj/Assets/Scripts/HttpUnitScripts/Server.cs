@@ -46,12 +46,12 @@ public static class Server
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     public static string ApiServer { get; set; } =
-        "http://heroscroll.icefoxz.com/api/";
-        //"http://43.138.221.139/api/";
-        //"https://herostatetest.azurewebsites.net/api/";
-        //"https://heroscrollapi.azurewebsites.net/api/";
-        //"http://localhost:7071/api/";
-        //"https://herotestfuncapi.azurewebsites.net/api/";
+    "https://localhost:5001/api/";
+    //"http://heroscroll.icefoxz.com/api/";
+    //"http://43.138.221.139/api/";
+    //"https://herostatetest.azurewebsites.net/api/";
+    //"https://heroscrollapi.azurewebsites.net/api/";
+    //"http://localhost:7071/api/";
 #endif
 
     private static bool isInitialized;

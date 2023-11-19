@@ -76,7 +76,7 @@ public class AdManager : AdControllerBase
 
     public void Init()
     {
-        if (isInit) throw XDebug.Throw<AdManager>("Duplicate init!");
+        if (isInit) return;
         //if (AdAgentBase.instance != null) return;
         isInit = true;
         InstanceAdControllerType(Ads.Pangle);

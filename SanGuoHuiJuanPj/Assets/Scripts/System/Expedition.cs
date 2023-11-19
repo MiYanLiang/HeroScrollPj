@@ -87,6 +87,7 @@ public class Expedition : MonoBehaviour
             var yuanZhengMode = DataTable.GameMode[yz.Index];
             InitYuanZhengButton(yz, yuanZhengMode);
         }
+
     }
 
     private void InitYuanZhengButton(YuanZhengField yz, GameModeTable yuanZhengMode)
