@@ -2172,7 +2172,7 @@ namespace Assets.System.WarModule
                 default: throw MilitaryNotValidError(this);
             }
         }
-        private float IntelligentRate => 40f;
+        private float IntelligentRate => 80f;
         protected override void MilitaryPerforms(int skill = 1)
         {
             var targets = Chessboard.GetRivals(this,
