@@ -55,8 +55,12 @@ namespace Assets.HttpUnitScripts
         {
             isRequestingCharacter = true;
             //ApiPanel.instance.InvokeVb(OnCharactersApiRespond,OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters,ViewBag.Instance());
-            ApiPanel.instance.CallVb(OnCharactersApiRespond, OnFailedToGetCharacters,
-                EventStrings.Call_OnlineCharacters);
+            //ApiPanel.instance.CallVb(vb=>OnCharactersApiRespond(vb.GetCharacterDtos()), OnFailedToGetCharacters, EventStrings.Call_OnlineCharacters);
+            ApiPanel.instance.InvokeBag(b =>
+            {
+                var chars = b.Get<CharacterDto[]>(0);
+                OnCharactersApiRespond(chars);
+            }, OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters, EventStrings.Req_OnlineCharacters);
         }
 
         private void OnFailedToGetCharacters(string failedMessage)
@@ -65,10 +69,10 @@ namespace Assets.HttpUnitScripts
             XDebug.Log<MapService>(failedMessage);
         }
 
-        private void OnCharactersApiRespond(ViewBag vb)
+        private void OnCharactersApiRespond(CharacterDto[] chars)
         {
             isRequestingCharacter = false;
-            GenerateCards(vb.GetCharacterDtos());
+            GenerateCards(chars);
         }
     }
 }

@@ -86,6 +86,14 @@ public class ApiPanel : MonoBehaviour
         params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller: EventStrings.Req_Rk, method: method, args);
 
+    /// <summary>
+    /// Controller = EventString
+    /// </summary>
+    /// <param name="successAction"></param>
+    /// <param name="failedAction"></param>
+    /// <param name="controller"></param>
+    /// <param name="method"></param>
+    /// <param name="args"></param>
     public void InvokeBag(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string controller,
         string method, params object[] args) =>
         InvokeBag(successAction, failedAction, true, controller, method, args);

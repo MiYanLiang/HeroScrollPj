@@ -174,8 +174,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             case ActivityFragment.FragmentTypes.Chessboard:
                 tween.Join(UpdateChessboardFragment((ChessboardFragment)fg, section));
                 break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
 
         return tween;
@@ -256,7 +254,7 @@ public class ChessboardVisualizeManager : MonoBehaviour
             case RespondAct.Responds.Ease:
                 return ChessmanStyle.DamageColor.Gray;
             default:
-                throw new ArgumentOutOfRangeException(nameof(respondKind), respondKind, null);
+                return ChessmanStyle.DamageColor.Gray;
         }
     }
 
@@ -340,8 +338,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 case ActivityRecord.Types.JiBanAttack:
                     yield return OnPlayJiBanAttack(rec);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
             FilterDeathChessman();
             yield return new WaitForSeconds(CardAnimator.instance.Misc.OnRoundEnd);
@@ -498,8 +494,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     break;
                 case CombatStyle.Types.None:
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
 
             exTween.Join(GetCardResponds());
@@ -523,8 +517,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                     counterTween.Join(CardAnimator.instance.ChessboardConduct(Chessboard));
                     yield return FullScreenRouse().WaitForCompletion();
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
 
             var counterRes = counter.Responds.FirstOrDefault()?.ExeId ?? -1;
@@ -579,8 +571,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                 case RespondAct.Responds.Kill:
                 case RespondAct.Responds.Suicide:
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
 
             var isRePos = anim.RePos >= 0;
@@ -1064,8 +1054,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
                             .WaitForCompletion();
                         mainTween.Join(CardAnimator.instance.MoveTween(major, origin));
                         break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
             }
 
@@ -1210,8 +1198,6 @@ public class ChessboardVisualizeManager : MonoBehaviour
             case ExecuteAct.Conducts.Chained:
                 AddToSection(section,Effect.GetBuffDamageAudioId(CardState.Cons.Chained));
                 break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
 
         void AddToSection(AudioSection sec,int id)

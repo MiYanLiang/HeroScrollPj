@@ -1258,9 +1258,8 @@ namespace Assets.System.WarModule
             var bonds = ActivatedJiBans.Where(j => j.IsChallenger == op.IsChallenger).ToList();
             if (bonds.Count > 0)
                 damage += bonds.Sum(b => b.Operator.OnDamageAddOn(op));
-            return damage;
+            return damage <= 0 ? 1 : damage;
         }
-
 
         public bool OnCounterTriggerPass(ChessOperator counterOp,ChessOperator counterTarget)
         {

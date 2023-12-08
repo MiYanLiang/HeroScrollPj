@@ -189,9 +189,9 @@ public class FightCardData : IChessman
         Speed = speed;
         Damage = damage;
         StatesUi = new Dictionary<int, EffectStateUi>();
-        status = ChessStatus.Instance(hitpoint, hitpoint, Pos, new Dictionary<int, int>(), new List<int>(), 0);
-        Style = CombatStyle.Instance(military, armedType, combatType, element, Damage, level, hitpoint, speed, force,
-            intelligent, info.GameSetRecovery, info.Rare, magicResist, armor, dodge);
+        status = ChessStatus.Instance(hp: hitpoint, maxHp: hitpoint, pos: Pos, states: new Dictionary<int, int>(), last: new List<int>(), lastHeal: 0);
+        Style = CombatStyle.Instance(military: military, armedType: armedType, combat: combatType, element: element, strength: Damage, level: level, hitPoint: hitpoint, speed: speed, troop: force,
+            intelligent: intelligent, recovery: info.GameSetRecovery, rare: info.Rare, magicResist: magicResist, armor: armor, dodge: dodge);
     }
 
     public GameCard Card { get; }

@@ -250,9 +250,14 @@ namespace Assets.System.WarModule
     /// <summary>
     /// 权利精灵
     /// </summary>
-    public class ThroneSprite : StrengthSprite
+    public class ThroneSprite : RoundSprite
     {
+        private Func<IChessOperator, bool> OpCondition => op => op.CardType == GameCardType.Hero;//支持所有英雄单位
+        private int BuffRespond(CardState.Cons con, IChessOperator op) => con == CardState.Cons.StrengthUp ? Value : 0;
         public override int TypeId => (int)Kinds.Throne;
+
+        public override int ServedBuff(CardState.Cons buff, IChessOperator op) =>
+            op == null ? 0 : OpCondition(op) ? BuffRespond(buff, op) : 0;
 
         public override void RoundStart(IChessOperator op, ChessboardOperator chessboard)
         {
