@@ -115,8 +115,10 @@ using UnityEngine.UI;
     {
         if (TimeSystemControl.instance.IsJinNangAvailable())
         {
-            //ApiPanel.instance.InvokeVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Req_JinNang);
-            ApiPanel.instance.CallVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Call_JinNang);
+            //ApiPanel.instance.CallVb(OnOpenJinNang, OnJinNangFailed, EventStrings.Call_JinNang);
+            ApiPanel.instance.InvokeBag(
+                b => OnOpenJinNang(b.Get<JinNangDto>(0), b.Get<PlayerDataDto>(1), b.Get<string>(2)), OnJinNangFailed,
+                EventStrings.Req_JinNang, EventStrings.Req_JinNang);
             return;
         }
         OnJinNangFailed(string.Empty);
@@ -124,11 +126,11 @@ using UnityEngine.UI;
 
     public void OnShowJiBanWindow() => jiBanController.Show();
 
-    public void OnOpenJinNang(ViewBag viewBag)
+    public void OnOpenJinNang(JinNangDto jinNang,PlayerDataDto playerDto,string doubleToken)
     {
-        var jinNang = viewBag.GetJinNang();
-        var doubleToken = viewBag.Values[0].ToString();
-        var playerDto = viewBag.GetPlayerDataDto();
+        //var jinNang = viewBag.GetJinNang();
+        //var doubleToken = viewBag.Values[0].ToString();
+        //var playerDto = viewBag.GetPlayerDataDto();
         ConsumeManager.instance.SaveChangeUpdatePlayerData(playerDto);
         var textColor = jinNang.Color == 1 ? ColorDataStatic.name_deepRed : ColorDataStatic.name_brown;
         jinNangUi.OnInstanceReward(jinNang.Text, textColor, jinNang.Sign, jinNang.Stamina, jinNang.YuanBao, doubleToken,

@@ -36,8 +36,6 @@ public class CardAnimator : MonoBehaviour
             case CombatStyle.Types.Range:
                 tween.Join(RangePreActAnimation(card));
                 break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
         return tween;
     }

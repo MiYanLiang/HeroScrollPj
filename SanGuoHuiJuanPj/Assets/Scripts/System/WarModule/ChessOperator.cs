@@ -325,6 +325,7 @@ namespace Assets.System.WarModule
             // 扣除血量的方法,血量最低为0
             void SubtractHp(int damage)
             {
+                damage = damage < 0 ? 0 : damage;
                 status.SubtractHp(damage);
                 if (status.IsDeath)
                     OnDeadTrigger(offender, damage);

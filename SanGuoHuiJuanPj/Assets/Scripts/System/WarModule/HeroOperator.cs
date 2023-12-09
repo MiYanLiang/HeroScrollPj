@@ -1149,7 +1149,7 @@ namespace Assets.System.WarModule
         //触发概率
         private int SkillRate(IChessOperator op) => 30 + StateIntelligentDiff(op) / 3;
         //武力百分比扣除
-        private int BuffRate => -15;//暂时让武力-15%
+        private int BuffRate => -99;//暂时让武力-15%
         //目标数量
         private int Targets()
         {
@@ -1185,9 +1185,8 @@ namespace Assets.System.WarModule
                 if (!Chessboard.IsRandomPass(rate))
                     continue;
                 //生成精灵
-                Chessboard.InstanceSprite<ThroneSprite>(target: target, lasting: InstanceId,
-                    value: BuffRate,
-                    actId: 0, skill: 1);
+                Chessboard.InstanceSprite<ThroneSprite>(target: target, lasting: 1, value: BuffRate, actId: 0,
+                    skill: 1);
             }
         }
     }

@@ -373,11 +373,9 @@ public class WarsUIManager : MonoBehaviour
                 UnlockProgress = ca.unLockCount,
                 WarId = ca.warId
             };
-            //var viewBag = ViewBag.Instance()
-            //    .WarCampaignDto(warCampaignDto)
-            //    .SetValues(reward.Token, reward.Chests);
 
-            //ApiPanel.instance.InvokeVb(vb =>
+            //var db = DataBag.SerializeBag(EventStrings.Call_WarReward, reward.Token, reward.Chests, warCampaignDto);
+            //ApiPanel.instance.CallVb(vb =>
             //    {
             //        var player = vb.GetPlayerDataDto();
             //        var campaign = vb.GetWarCampaignDto();
@@ -388,21 +386,19 @@ public class WarsUIManager : MonoBehaviour
             //        war.unLockCount = campaign.UnlockProgress;
             //        ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 0);
             //    }, PlayerDataForGame.instance.ShowStringTips,
-            //    EventStrings.Req_WarReward, viewBag);   
-            var db = DataBag.SerializeBag(EventStrings.Call_WarReward, reward.Token, reward.Chests, warCampaignDto);
-            ApiPanel.instance.CallVb(vb =>
+            //    EventStrings.Call_WarReward, db);
+            ApiPanel.instance.InvokeBag(b =>
                 {
-                    var player = vb.GetPlayerDataDto();
-                    var campaign = vb.GetWarCampaignDto();
-                    var chests = vb.GetPlayerWarChests();
+                    var player = b.Get<PlayerDataDto>(0);
+                    var campaign = b.Get<WarCampaignDto>(1);
+                    var chests = b.Get<int[]>(2);
                     PlayerDataForGame.instance.gbocData.fightBoxs.AddRange(chests);
                     var war = PlayerDataForGame.instance.warsData.warUnlockSaveData
                         .First(c => c.warId == campaign.WarId);
                     war.unLockCount = campaign.UnlockProgress;
                     ConsumeManager.instance.SaveChangeUpdatePlayerData(player, 0);
                 }, PlayerDataForGame.instance.ShowStringTips,
-                EventStrings.Call_WarReward, db);
-
+                EventStrings.Req_WarReward, EventStrings.Req_WarReward, reward.Token, reward.Chests, warCampaignDto);
             GameSystem.Instance.DisplayStaminaUiChangeEffect = true;
         }
 
