@@ -57,11 +57,9 @@ public class ApiPanel : MonoBehaviour
 #if UNITY_EDITOR
     public static string TestUserQuery(string username) =>
         $"username={username}&clientVersion={Application.version}&ServiceZone=-1&RUserId=test";
-#endif
     public void CallTest(string username,UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args)
     {
-#if UNITY_EDITOR
         SetBusy(true);
         var queryString = TestUserQuery(username);
         var jsonBag = DataBag.SerializeBag(method, args);
@@ -74,10 +72,8 @@ public class ApiPanel : MonoBehaviour
             else
                 failedAction(text);
         }, method);
-#else
-        Call(successAction, failedAction, method, args);
-#endif
     }
+#endif
 
     public void Call(UnityAction<DataBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args) =>

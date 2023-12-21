@@ -1,33 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
-using Beebyte.Obfuscator;
-using BestHTTP.Examples;
 using BestHTTP.JSON.LitJson;
 using BestHTTP.PlatformSupport.Memory;
-using BestHTTP.SignalR;
-using BestHTTP.SignalR.Hubs;
 using BestHTTP.SignalRCore;
-using BestHTTP.SignalRCore.Authentication;
-using BestHTTP.SignalRCore.Encoders;
 using CorrelateLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
-using UnityEngine.Accessibility;
 using UnityEngine.Events;
-using UnityEngine.UIElements;
 using ConnectionStates = BestHTTP.SignalRCore.ConnectionStates;
 using Json = CorrelateLib.Json;
 
-[Skip]
 /// <summary>
 /// Signal客户端
 /// </summary>
@@ -45,6 +34,7 @@ public class SignalRClient : MonoBehaviour
     public int Zone { get; private set; } = -1;
     [SerializeField] private int _signalRRequestRetries = 5;
     [SerializeField] private GameObject _signalRRequestPanel;
+    private RetryCaller _retryCaller = new RetryCaller();
 
     private void DisplayPanel(bool display) => _signalRRequestPanel.SetActive(display);
     private SignalRClientConnection SignalRClientConnection { get; set; }
@@ -159,7 +149,15 @@ public class SignalRClient : MonoBehaviour
 
     public void Disconnect(UnityAction callbackAction) => SignalRClientConnection.CloseConnection(callbackAction);
 
-    public void ReconnectServer(Action<bool> callBackAction = null)
+    public async Task<bool> ReconnectServer()
+    {
+        var success = await SignalRClientConnection.HubReconnectTask();
+        IsLogged = success;
+        var msg = success ? "重连成功！" : "重连失败，请重新登录。";
+        PlayerDataForGame.instance.ShowStringTips(msg);
+        return success;
+    }
+    public void ReconnectServer(Action<bool> callBackAction)
     {
         if (isBusy) return;
         isBusy = true;
@@ -169,8 +167,8 @@ public class SignalRClient : MonoBehaviour
             IsLogged = success;
             var msg = success ? "重连成功！" : "重连失败，请重新登录。";
             PlayerDataForGame.instance.ShowStringTips(msg);
-            isBusy = false;
         });
+        isBusy = false;
     }
 
     private bool IsLogged { get; set; }
@@ -207,74 +205,44 @@ public class SignalRClient : MonoBehaviour
     }
 
     private void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
-        CancellationTokenSource tokenSource = default)
+        CancellationTokenSource tokenSource = default) =>
+        SetRetryAwaitOnMainThread(() => HubRequestByViewBag(method, bag, tokenSource), recallAction);
+
+    private async void SetRetryAwaitOnMainThread(Func<Task<string>> call, UnityAction<string> successResult)
     {
-        if (SignalRClientConnection.Status == ConnectionStates.Connected)
-        {
-            InvokeRequest();
-            return;
-        }
-
-        ReconnectServer(isSuccess =>
-        {
-            if (isSuccess)
+        await _retryCaller.RetryAwait(call
+            , result =>
             {
-                InvokeRequest();
-                return;
-            }
+                UnityMainThread.thread.RunNextFrame(() => successResult(result));
+                RetryPanel.ResetUi();
+            },
+            OnReconnectRetry);
+        return;
 
-            throw new InvalidOperationException("登录异常，请重新登录！");
-        });
-
-        async void InvokeRequest()
+        async Task<bool> OnReconnectRetry(string message)
         {
-            var result = await HubRequestByViewBag(method, bag, tokenSource);
-            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+            var retry = await RetryPanel.StartRetryAsync();
+            //注意这里返回false，表示不再重试
+            if (!retry) return retry;
+            //中间安插一个重连服务器的操作再重试
+            var isSuccess = await ReconnectServer();
+            if (isSuccess) return retry;
+            PlayerDataForGame.instance.ShowStringTips("服务器已失联...");
+            return retry;
         }
     }
 
     public void Invoke(string method, UnityAction<string> recallAction, string serializedBag,
-        CancellationTokenSource tokenSource = default)
-    {
-        if (SignalRClientConnection.Status == ConnectionStates.Connected)
-        {
-            InvokeRequest();
-            return;
-        }
-
-        ReconnectServer(isSuccess =>
-        {
-            if (isSuccess)
-            {
-                InvokeRequest();
-                return;
-            }
-            throw new InvalidOperationException("登录异常，请重新登录！");
-        });
-
-        async void InvokeRequest()
-        {
-            var result = await HubRequestByDataBag(method, serializedBag, tokenSource);
-            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
-        }
-    }
+        CancellationTokenSource tokenSource = default) =>
+        SetRetryAwaitOnMainThread(() => HubRequestByDataBag(method, serializedBag, tokenSource), recallAction);
 
     public void HttpInvoke(string method, string serializedBag,Action<string> callback,
         CancellationTokenSource tokenSource = default)
     {
-        if (SignalRClientConnection.Status != ConnectionStates.Connected)
-        {
-            ReconnectServer(isSuccessReconnect =>
-            {
-                if(isSuccessReconnect) InvokeRequest(callback);
-                else callback?.Invoke("服务器已失联...");
-            });
-            return;
-        }
-        InvokeRequest(callback);
+        SetRetryAwaitOnMainThread(HttpRequestAsync, m => callback(m));
         return;
 
-        async void InvokeRequest(Action<string> invokeCallback)
+        async Task<string> HttpRequestAsync()
         {
             var response = await Http.SendAsync(HttpMethod.Post, 
                 $"{Server.ApiServer}{method}", serializedBag,
@@ -284,34 +252,21 @@ public class SignalRClient : MonoBehaviour
                 },
                 tokenSource?.Token ?? default);
             var text = await response.Content.ReadAsStringAsync();
-            invokeCallback?.Invoke(text);
+            return text;
         }
     }
 
     public void InvokeCaller(string method, UnityAction<string> recallAction, string serializedBag,
         CancellationTokenSource tokenSource = default)
     {
-        if (SignalRClientConnection.Status == ConnectionStates.Connected)
-        {
-            InvokeRequest();
-            return;
-        }
+        SetRetryAwaitOnMainThread(InvokeRequest, recallAction);
+        return;
 
-        ReconnectServer(isSuccess =>
-        {
-            if (isSuccess)
-            {
-                InvokeRequest();
-                return;
-            }
-            throw new InvalidOperationException("登录异常，请重新登录！");
-        });
-
-        async void InvokeRequest()
+        async Task<string> InvokeRequest()
         {
             CallerGuid = Guid.NewGuid();
             var result = await HubRequestByCallerBag(method, serializedBag, CallerGuid.ToString(), tokenSource);
-            UnityMainThread.thread.RunNextFrame(() => recallAction?.Invoke(result));
+            return result;
         }
     }
     private static Guid CallerGuid { get; set; }
@@ -362,7 +317,6 @@ public class SignalRClient : MonoBehaviour
     }
 
     #endregion
-
 
     public class SigninResult
     {

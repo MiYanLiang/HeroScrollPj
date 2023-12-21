@@ -19,7 +19,6 @@ public class SignalRClientConnection
     /// </summary>
     public ConnectionStates Status { get; private set; }
     private SignalRConnectionInfo ConnectionInfo { get; set; }
-
     public SignalRClientConnection()
     {
     }
@@ -110,24 +109,26 @@ public class SignalRClientConnection
 
     public async void HubReconnectTask(Action<bool> callbackAction)
     {
+        var result = await HubReconnectTask();
+        callbackAction?.Invoke(result);
+    }
+    public async Task<bool> HubReconnectTask()
+    {
         await Task.Delay(TimeSpan.FromSeconds(1));
         if (Status == ConnectionStates.Connected)
-        {
-            callbackAction?.Invoke(true);
-            return;
-        }
+            return true;
         try
         {
             if (ConnectionInfo == null)
                 throw new NullReferenceException("ConnectionInfo = null!");
             Status = ConnectionStates.Reconnecting;
             await HubConnectAsync();
-            callbackAction?.Invoke(true);
+            return true;
         }
         catch (Exception e)
         {
             PlayerDataForGame.instance.ShowStringTips("服务器尝试链接失败，请稍后重试。");
-            callbackAction?.Invoke(false);
+            return false;
         }
     }
 
@@ -146,39 +147,15 @@ public class SignalRClientConnection
             var list = args.ToList();
             list.Insert(0, method);
             var message = Json.Serialize(list);
-            switch (_conn.State)
+            return _conn.State switch
             {
-                case ConnectionStates.Connected:
-                    return await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
-                case ConnectionStates.Closed:
-                case ConnectionStates.Reconnecting:
-                {
-                    HubReconnectTask(CallbackAction);
-                    async void CallbackAction(bool reconnectSuccess)
-                    {
-                        if (!reconnectSuccess)
-                            FailedToInvoke();
-                        else
-                            await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
-                    }
-
-                    break;
-                }
-                case ConnectionStates.Initial:
-                case ConnectionStates.Authenticating:
-                case ConnectionStates.Negotiating:
-                case ConnectionStates.Redirected:
-                case ConnectionStates.CloseInitiated:
-                default:
-                    return FailedToInvoke();
-            }
-
-            return await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message);
+                ConnectionStates.Connected => await _conn.InvokeAsync<TResult>(SignalRCall, cancellationToken, message),
+                _ => FailedToInvoke()
+            };
         }
         catch (Exception e)
         {
-            XDebug.Log<SignalRClientConnection>(e.ToString());
-            return default;
+            return FailedToInvoke();
         }
 
         TResult FailedToInvoke()

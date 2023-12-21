@@ -5,10 +5,7 @@ using DG.Tweening;
 using System.Collections;
 using System;
 using System.Linq;
-
-using Beebyte.Obfuscator;
 using CorrelateLib;
-using Newtonsoft.Json;
 using UnityEngine.Events;
 
 public class UIManager : MonoBehaviour
@@ -622,7 +619,7 @@ public class UIManager : MonoBehaviour
     /// <summary> 
     /// 开始对战 
     /// </summary> 
-    [SkipRename]public void OnClickStartExpedition()
+    public void OnClickStartExpedition()
     {
         if (PlayerDataForGame.instance.selectedWarId < 0 || expedition.RecordedExpeditionWarId < 0)
         {

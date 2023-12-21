@@ -1,9 +1,8 @@
-﻿using System;
+﻿using CorrelateLib;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Beebyte.Obfuscator;
-using CorrelateLib;
-using Newtonsoft.Json;
 
 #region 玩家数据相关类
 
@@ -103,7 +102,7 @@ public interface IUserSaveArchive
     /// </summary>
     string RewardsRecord { get; set; }
 }
-[Skip]
+
 public class GetBoxOrCodeData
 {
     //战役宝箱
@@ -111,24 +110,24 @@ public class GetBoxOrCodeData
     //兑换码
     public List<string> redemptionCodeGotList = new List<string>();
 }
-[Skip]
+
 public class RCode
 {
     public int id;      //兑换码id
     public bool isGot;  //是否领取过
 }
 
-[Skip]
-public class GameCard : IGameCard,IComparable<GameCard>
+
+public class GameCard : IGameCard, IComparable<GameCard>
 {
-    public static GameCard InstanceHero(int cardId, int level, 
-        int arouse = 0, 
+    public static GameCard InstanceHero(int cardId, int level,
+        int arouse = 0,
         int deputy1Id = -1, int deputy1Level = -1,
         int deputy2Id = -1, int deputy2Level = -1,
         int deputy3Id = -1, int deputy3Level = -1,
         int deputy4Id = -1, int deputy4Level = -1,
-        int chips = 0) => Instance(cardId: cardId, type: GameCardType.Hero, level: level, 
-        arouse: arouse, 
+        int chips = 0) => Instance(cardId: cardId, type: GameCardType.Hero, level: level,
+        arouse: arouse,
         deputy1Id: deputy1Id, deputy1Level: deputy1Level,
         deputy2Id: deputy2Id, deputy2Level: deputy2Level,
         deputy3Id: deputy3Id, deputy3Level: deputy3Level,
@@ -142,16 +141,16 @@ public class GameCard : IGameCard,IComparable<GameCard>
         Instance(cardId, GameCardType.Trap, level);
 
     public static GameCard Instance(GameCardDto dto) =>
-        Instance(cardId: dto.CardId, type: (int)dto.Type, level: dto.Level, arouse: dto.Arouse, 
-            deputy1Id: dto.Deputy1Id, deputy1Level: dto.Deputy1Level, 
-            deputy2Id: dto.Deputy2Id, deputy2Level: dto.Deputy2Level, 
-            deputy3Id: dto.Deputy3Id, deputy3Level: dto.Deputy3Level, 
-            deputy4Id: dto.Deputy4Id, deputy4Level: dto.Deputy4Level, 
+        Instance(cardId: dto.CardId, type: (int)dto.Type, level: dto.Level, arouse: dto.Arouse,
+            deputy1Id: dto.Deputy1Id, deputy1Level: dto.Deputy1Level,
+            deputy2Id: dto.Deputy2Id, deputy2Level: dto.Deputy2Level,
+            deputy3Id: dto.Deputy3Id, deputy3Level: dto.Deputy3Level,
+            deputy4Id: dto.Deputy4Id, deputy4Level: dto.Deputy4Level,
             chips: dto.Chips);
 
     public static GameCard Instance(IGameCard card)
     {
-        return Instance(cardId: card.CardId, type: card.Type, level: card.Level, 
+        return Instance(cardId: card.CardId, type: card.Type, level: card.Level,
             arouse: card.Arouse, deputy1Id: card.Deputy1Id,
             deputy1Level: card.Deputy1Level, deputy2Id: card.Deputy2Id,
             deputy2Level: card.Deputy2Level, deputy3Id: card.Deputy3Id,
@@ -159,8 +158,8 @@ public class GameCard : IGameCard,IComparable<GameCard>
             deputy4Level: card.Deputy4Level, chips: card.Chips);
     }
 
-    public static GameCard Instance(int cardId, GameCardType type, int level, 
-        int arouse = 0, 
+    public static GameCard Instance(int cardId, GameCardType type, int level,
+        int arouse = 0,
         int deputy1Id = -1, int deputy1Level = -1,
         int deputy2Id = -1, int deputy2Level = -1,
         int deputy3Id = -1, int deputy3Level = -1,
@@ -171,7 +170,7 @@ public class GameCard : IGameCard,IComparable<GameCard>
         deputy4Id: deputy4Id, deputy4Level: deputy4Level,
         chips: chips);
 
-    public static GameCard Instance(int cardId, int type, int level, int arouse = 0, 
+    public static GameCard Instance(int cardId, int type, int level, int arouse = 0,
         int deputy1Id = -1, int deputy1Level = -1,
         int deputy2Id = -1, int deputy2Level = -1,
         int deputy3Id = -1, int deputy3Level = -1,
@@ -298,7 +297,7 @@ public class GameCard : IGameCard,IComparable<GameCard>
 /// <summary>
 /// 武将，士兵，塔等 信息存档数据类
 /// </summary>
-[Skip]
+
 public class HSTDataClass
 {
     private List<GameCard> _heroSaveData;
@@ -319,7 +318,7 @@ public class HSTDataClass
     //技能
     public List<GameCard> spellSaveData { get; set; }
 }
-[Skip]
+
 public class UnlockWarCount
 {
     public int warId;           //战役id
@@ -329,7 +328,7 @@ public class UnlockWarCount
 /// <summary>
 /// 霸业管理类
 /// </summary>
-[Skip]
+
 public class BaYeDataClass
 {
     public long lastBaYeActivityTime;
@@ -367,7 +366,7 @@ public class BaYeDataClass
         set => openedChest1 = value;
     }
 }
-[Skip]
+
 public class BaYeCityEvent
 {
     public List<int> ExpList { get; set; } = new List<int>();
@@ -376,7 +375,7 @@ public class BaYeCityEvent
     public int CityId { get; set; }
     public int EventId { get; set; }
 }
-[Skip]
+
 public class BaYeStoryEvent
 {
     public int StoryId { get; set; }
@@ -386,9 +385,9 @@ public class BaYeStoryEvent
     public int ExpReward { get; set; }
     public int YvQueReward { get; set; }
     public int YuanBaoReward { get; set; }
-    public Dictionary<int,int> ZhanLing { get; set; }
+    public Dictionary<int, int> ZhanLing { get; set; }
 }
-[Skip]
+
 public class WarsDataClass
 {
     //战役解锁进度
@@ -398,7 +397,7 @@ public class WarsDataClass
         var war = warUnlockSaveData.FirstOrDefault(w => w.warId == warId);
         if (war == null)
         {
-            war = new UnlockWarCount {warId = warId};
+            war = new UnlockWarCount { warId = warId };
             warUnlockSaveData.Add(war);
         }
         return war;
@@ -422,21 +421,21 @@ public class DeskReward
 
     public DeskReward()
     {
-        
+
     }
-    public DeskReward(int yuanBao, int yuQue, int exp, int stamina,int adPass ,List<CardReward> cards)
+    public DeskReward(int yuanBao, int yuQue, int exp, int stamina, int adPass, List<CardReward> cards)
     {
         YuanBao = yuanBao;
         YuQue = yuQue;
         Exp = exp;
         AdPass = adPass;
         Stamina = stamina;
-        this.cards = cards.Select(c => new {GameCardInfo.GetInfo((GameCardType) c.cardType, c.cardId).Rare, c})
+        this.cards = cards.Select(c => new { GameCardInfo.GetInfo((GameCardType)c.cardType, c.cardId).Rare, c })
             .OrderByDescending(c => c.c.cardType).ThenBy(c => c.Rare).Select(c => c.c).ToList();
     }
 }
 
-[Skip]
+
 //宝箱卡片类
 public class CardReward
 {

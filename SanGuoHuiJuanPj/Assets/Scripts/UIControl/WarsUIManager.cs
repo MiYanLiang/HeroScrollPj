@@ -1,5 +1,4 @@
 ﻿using Assets;
-using Beebyte.Obfuscator;
 using CorrelateLib;
 using DG.Tweening;
 using System;
@@ -765,7 +764,6 @@ public class WarsUIManager : MonoBehaviour
     /// 刷新商店列表
     /// </summary>
     /// <param name="refreshCost">刷新所需金币</param>
-    [Skip]
     private bool UpdateShoppingList(int refreshCost = 0)
     {
         if (refreshCost != 0)
