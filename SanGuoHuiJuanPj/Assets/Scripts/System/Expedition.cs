@@ -30,6 +30,7 @@ public class Expedition : MonoBehaviour
     private GameModeTable currentMode;//当前选择的难度
     public GameModeTable CurrentMode => currentMode;
     public StaminaCost SelectedWarStaminaCost => currentMode.StaminaCost;
+    private Dictionary<int, Color> _btnColors;
 
     public void Init()
     {
@@ -41,6 +42,8 @@ public class Expedition : MonoBehaviour
 
     private void InitWarModes()
     {
+        var isInitColors = _btnColors == null;
+        if (isInitColors) _btnColors = new Dictionary<int, Color>();
         var lastAvailableStageIndex = 0; //最远可战的战役索引
         var warModes = DataTable.GameMode.Values.Where(m => m.WarList != null).ToList();
         //新手-困难关卡入口初始化
@@ -57,7 +60,8 @@ public class Expedition : MonoBehaviour
             var textUi = uiBtn.GetComponentInChildren<Text>();
             textUi.text = warMode.Title;
             var isUnlock = IsWarUnlock(warMode);
-            textUi.color = isUnlock ? Color.white : Color.gray;
+            if (isInitColors) _btnColors.Add(i, textUi.color);
+            SetBtnColor(warMode, textUi, i);
             if (isUnlock)
             {
                 lastAvailableStageIndex = i;
@@ -82,12 +86,22 @@ public class Expedition : MonoBehaviour
         InitWarsListInfo(lastAvailableStageIndex, true);
 
         //远征关卡
-        foreach (var yz in SpecialWar)
+        for (var i = 0; i < SpecialWar.Length; i++)
         {
+            var yz = SpecialWar[i];
+            var warMode = DataTable.GameMode[yz.Index];
+            var textUi = yz.Button.GetComponentInChildren<Text>();
+            if (isInitColors) _btnColors.Add(yz.Index, textUi.color);
+            SetBtnColor(warMode, textUi, yz.Index);
             var yuanZhengMode = DataTable.GameMode[yz.Index];
             InitYuanZhengButton(yz, yuanZhengMode);
         }
+    }
 
+    private void SetBtnColor(GameModeTable warMode, Text textUi, int btnIndex)
+    {
+        var isUnlock = IsWarUnlock(warMode);
+        textUi.color = isUnlock ? _btnColors[btnIndex] : Color.gray;
     }
 
     private void InitYuanZhengButton(SpecialWarField yz, GameModeTable yuanZhengMode)
@@ -95,13 +109,11 @@ public class Expedition : MonoBehaviour
         var yzButton = yz.Button;
         var yzIndex = yz.Index;
         indexWarModeMap.Add(yzIndex, yuanZhengMode);
-        var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
         var textUi = yzButton.GetComponentInChildren<Text>();
-        textUi.color = isYuanZhengUnlock ? Color.white : Color.gray;
+        var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
         if (isYuanZhengUnlock)
         {
             textUi.text = yuanZhengMode.Title;
-            textUi.color = Color.white;
             yzButton.GetComponent<Button>().onClick.AddListener(() =>
             {
                 InitWarsListInfo(yzIndex);
