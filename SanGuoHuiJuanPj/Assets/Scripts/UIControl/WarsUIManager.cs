@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -154,8 +155,8 @@ public class WarsUIManager : MonoBehaviour
         if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition &&
             string.IsNullOrWhiteSpace(PlayerDataForGame.instance.WarReward.Token))
         {
-            ExpeditionFinalize(false);
-            yield return null;
+            yield return ExpeditionFinalize(false).ToCoroutine();
+            yield break;
         }
 
         switch (PlayerDataForGame.instance.WarType)
@@ -308,7 +309,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //战役结束
-    public void ExpeditionFinalize(bool isWin)
+    public UniTask ExpeditionFinalize(bool isWin)
     {
         Time.timeScale = 1f;
         var reward = PlayerDataForGame.instance.WarReward;
@@ -406,6 +407,7 @@ public class WarsUIManager : MonoBehaviour
         PlayerDataForGame.instance.isNeedSaveData = true;
         LoadSaveData.instance.SaveGameData(3);
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
+        return UniTask.CompletedTask;
     }
 
     //初始化父级关卡

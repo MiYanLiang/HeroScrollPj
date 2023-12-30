@@ -66,7 +66,7 @@ public class AdConsumeController : MonoBehaviour
         //    UpdateTickets();
         //    if (closeIfSuccess) Off();
         //}, PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_ConsumeAdTicket, requestVb);
-        ApiPanel.instance.CallVb(vb =>
+        ApiPanel.instance.HttpCallVb(vb =>
             {
                 var tickets = vb.GetInt(0);
                 PlayerDataForGame.instance.UpdateFreeAdTicket(tickets);

@@ -26,9 +26,7 @@ public class SignalRClient : MonoBehaviour
     
     public static SignalRClient instance;
 
-    public event UnityAction<ConnectionStates,string> OnStatusChanged;
     private Dictionary<string, UnityAction<string>> _actions;
-    private bool isBusy;
     public ApiPanel ApiPanel;
     public string LoginToken { get; set; }
     public int Zone { get; private set; } = -1;
@@ -38,21 +36,16 @@ public class SignalRClient : MonoBehaviour
 
     private void DisplayPanel(bool display) => _signalRRequestPanel.SetActive(display);
     private SignalRClientConnection SignalRClientConnection { get; set; }
+    public ConnectionStates? Status => SignalRClientConnection?.Status;
 
-    private void Awake()
+    public void Init()
     {
         instance = this;
-    }
-
-    private void Start()
-    {
         //Login();
         _actions = new Dictionary<string, UnityAction<string>>();
         if (SignalRClientConnection == null)
         {
             SignalRClientConnection = new SignalRClientConnection();
-            SignalRClientConnection.OnStatusChanged += OnStatusChange;
-            SignalRClientConnection.OnStatusChanged += OnStatusChanged;
             SignalRClientConnection.OnServerCall += OnServerCall;
             SignalRClientConnection.OnRequestError += () => PlayerDataForGame.instance.ShowStringTips("请求失败，请确保网络稳定。重试中...");
         }
@@ -60,15 +53,6 @@ public class SignalRClient : MonoBehaviour
         if (ServerPanel != null) ServerPanel.Init(this);
         ApiPanel.Init(this);
     }
-
-    private void OnStatusChange(ConnectionStates status, string msg)
-    {
-#if UNITY_EDITOR
-        DebugLog($"链接状态更变：{status}\n{msg}");
-#endif
-        ApiPanel.SetBusy(status != ConnectionStates.Connected);
-    }
-
 
     void OnApplicationQuit()
     {
@@ -79,7 +63,7 @@ public class SignalRClient : MonoBehaviour
     void OnApplicationFocus(bool isFocus)
     {
         if (!IsLogged || !isFocus) return;
-        if (SignalRClientConnection.Status != ConnectionStates.Connected) ReconnectServer();
+        if (SignalRClientConnection.Status != ConnectionStates.Connected) ReconnectServerWithTips();
     }
 
     public async Task<SigninResult> NegoToken(int zone, int createNew)
@@ -98,23 +82,20 @@ public class SignalRClient : MonoBehaviour
         }
     }
 
-    private string _signalRAccessToken;
     public async void TokenLogin(SignalRConnectionInfo connectionInfo,Action<bool> callbackAction)
     {
-        isBusy = true;
         if (connectionInfo == null)
         {
-            isBusy = false;
             callbackAction?.Invoke(false);
             return;
         }
 
         var isSuccess = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
-        if(isSuccess)
-            _signalRAccessToken = connectionInfo.AccessToken;
-        isBusy = false;
+        if (isSuccess)
+            _connInfo = connectionInfo;
         callbackAction?.Invoke(isSuccess);
     }
+    private SignalRConnectionInfo _connInfo;
 
     public void SynchronizeSaved(UnityAction onCompleteAction)
     {
@@ -149,26 +130,13 @@ public class SignalRClient : MonoBehaviour
 
     public void Disconnect(UnityAction callbackAction) => SignalRClientConnection.CloseConnection(callbackAction);
 
-    public async Task<bool> ReconnectServer()
+    public async Task<bool> ReconnectServerWithTips()
     {
         var success = await SignalRClientConnection.HubReconnectTask();
         IsLogged = success;
         var msg = success ? "重连成功！" : "重连失败，请重新登录。";
         PlayerDataForGame.instance.ShowStringTips(msg);
         return success;
-    }
-    public void ReconnectServer(Action<bool> callBackAction)
-    {
-        if (isBusy) return;
-        isBusy = true;
-        SignalRClientConnection.HubReconnectTask(success =>
-        {
-            callBackAction?.Invoke(success);
-            IsLogged = success;
-            var msg = success ? "重连成功！" : "重连失败，请重新登录。";
-            PlayerDataForGame.instance.ShowStringTips(msg);
-        });
-        isBusy = false;
     }
 
     private bool IsLogged { get; set; }
@@ -206,40 +174,36 @@ public class SignalRClient : MonoBehaviour
 
     private void Invoke(string method, UnityAction<string> recallAction, IViewBag bag = default,
         CancellationTokenSource tokenSource = default) =>
-        SetRetryAwaitOnMainThread(() => HubRequestByViewBag(method, bag, tokenSource), recallAction);
+        SetRetryAwaitOnMainThread(() => HubRequestByViewBag(method, bag, tokenSource), recallAction, method);
 
-    private async void SetRetryAwaitOnMainThread(Func<Task<string>> call, UnityAction<string> successResult)
+    private async void SetRetryAwaitOnMainThread(Func<Task<string>> call, UnityAction<string> successResult,string methodName)
     {
         await _retryCaller.RetryAwait(call
-            , result =>
-            {
-                UnityMainThread.thread.RunNextFrame(() => successResult(result));
-                RetryPanel.ResetUi();
-            },
-            OnReconnectRetry);
+            , result => UnityMainThread.thread.RunNextFrame(() => successResult(result)),
+            ReconnectRetry);
         return;
 
-        async Task<bool> OnReconnectRetry(string message)
+        async Task<bool> ReconnectRetry(string message)
         {
-            var retry = await RetryPanel.StartRetryAsync();
+            var retry = await RetryPanel.AwaitRetryAsync(methodName);
             //注意这里返回false，表示不再重试
-            if (!retry) return retry;
+            if (!retry) return false;
             //中间安插一个重连服务器的操作再重试
-            var isSuccess = await ReconnectServer();
-            if (isSuccess) return retry;
+            var isSuccess = await ReconnectServerWithTips();
+            if (isSuccess) return true;
             PlayerDataForGame.instance.ShowStringTips("服务器已失联...");
-            return retry;
+            return true;
         }
     }
 
     public void Invoke(string method, UnityAction<string> recallAction, string serializedBag,
         CancellationTokenSource tokenSource = default) =>
-        SetRetryAwaitOnMainThread(() => HubRequestByDataBag(method, serializedBag, tokenSource), recallAction);
+        SetRetryAwaitOnMainThread(() => HubRequestByDataBag(method, serializedBag, tokenSource), recallAction, method);
 
     public void HttpInvoke(string method, string serializedBag,Action<string> callback,
         CancellationTokenSource tokenSource = default)
     {
-        SetRetryAwaitOnMainThread(HttpRequestAsync, m => callback(m));
+        SetRetryAwaitOnMainThread(HttpRequestAsync, m => callback(m), method);
         return;
 
         async Task<string> HttpRequestAsync()
@@ -248,7 +212,7 @@ public class SignalRClient : MonoBehaviour
                 $"{Server.ApiServer}{method}", serializedBag,
                 new (string, string)[]
                 {
-                    ("bearer", _signalRAccessToken)
+                    ("bearer", _connInfo.AccessToken)
                 },
                 tokenSource?.Token ?? default);
             var text = await response.Content.ReadAsStringAsync();
@@ -256,22 +220,23 @@ public class SignalRClient : MonoBehaviour
         }
     }
 
-    public void InvokeCaller(string method, UnityAction<string> recallAction, string serializedBag,
-        CancellationTokenSource tokenSource = default)
-    {
-        SetRetryAwaitOnMainThread(InvokeRequest, recallAction);
-        return;
+    //public void InvokeCaller(string method, UnityAction<string> recallAction, string serializedBag,
+    //    CancellationTokenSource tokenSource = default)
+    //{
+    //    SetRetryAwaitOnMainThread(InvokeRequest, recallAction, method);
+    //    return;
 
-        async Task<string> InvokeRequest()
-        {
-            CallerGuid = Guid.NewGuid();
-            var result = await HubRequestByCallerBag(method, serializedBag, CallerGuid.ToString(), tokenSource);
-            return result;
-        }
-    }
+    //    async Task<string> InvokeRequest()
+    //    {
+    //        CallerGuid = Guid.NewGuid();
+    //        var result = await HubRequestByCallerBag(method, serializedBag, CallerGuid.ToString(), tokenSource);
+    //        return result;
+    //    }
+    //}
     private static Guid CallerGuid { get; set; }
 
     private readonly TimeSpan _requestTimeOut = TimeSpan.FromMinutes(1);
+
     private async Task<string> HubRequestByViewBag(string method, IViewBag bag = default,
         CancellationTokenSource tokenSource = default)
     {

@@ -18,7 +18,11 @@ public class MiniWindowUI : MonoBehaviour
 
     public virtual void Show(Dictionary<int, int> rewardMap,Action<MiniWindowElementUI> extraSetAction = null)
     {
-        if (items.Count > 0) items.ForEach(element => Destroy(element.gameObject));
+        if (items.Count > 0) items.ForEach(element =>
+        {
+            if (element != null && element.gameObject != null)
+                Destroy(element.gameObject);
+        });
         items.Clear();
         foreach (var set in rewardMap)
         {

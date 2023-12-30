@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using BestHTTP.SignalRCore;
+﻿using System.Collections.Generic;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,7 +12,6 @@ public class ServerPanel : MonoBehaviour
         TimeOut,
         Other
     }
-    private int count;
     public Button reconnectButton;
     public Button exitButton;
     public Text serverMaintenance;
@@ -22,7 +19,6 @@ public class ServerPanel : MonoBehaviour
     public Text Message;
     public Text exceptionMsg;
     private SignalRClient SignalR;
-    private bool isDisconnectRequested = false;
 
     private Dictionary<Text, States> StateSet
     {
@@ -46,8 +42,7 @@ public class ServerPanel : MonoBehaviour
     {
         SignalR = signalR;
         SignalR.SubscribeAction(EventStrings.SC_Disconnect, ServerCallDisconnect);
-        SignalR.OnStatusChanged += OnStatusChanged;
-        reconnectButton.onClick.AddListener(Reconnect);
+        reconnectButton.onClick.AddListener(ReconnectWithTips);
         exitButton.onClick.AddListener(Application.Quit);
         exitButton.gameObject.SetActive(false);
         gameObject.SetActive(false);
@@ -70,27 +65,9 @@ public class ServerPanel : MonoBehaviour
         }
     }
 
-    private void OnStatusChanged(ConnectionStates state, string message)
-    {
-        StopAllCoroutines();
-        gameObject.SetActive(state != ConnectionStates.Connected);
-        UpdateReconnectBtn(state);
-        switch (state)
-        {
-            case ConnectionStates.Negotiating:
-            case ConnectionStates.Reconnecting:
-                StartCoroutine(Counting(state));
-                return;
-            case ConnectionStates.Closed:
-                Reconnect();
-                break;
-        }
-    }
-
     //当服务器强制离线
     private void ServerCallDisconnect(string message)
     {
-        isDisconnectRequested = true;
         exitButton.gameObject.SetActive(true);
         SignalR.Disconnect(Disconnected);
         StopAllCoroutines();
@@ -115,26 +92,5 @@ public class ServerPanel : MonoBehaviour
         }
     }
 
-    private void UpdateReconnectBtn(ConnectionStates status)
-    {
-        reconnectButton.gameObject.SetActive(status != ConnectionStates.Connected);
-        reconnectButton.interactable = status == ConnectionStates.Closed;
-    }
-
-    IEnumerator Counting(ConnectionStates state)
-    {
-        UpdateReconnectBtn(state);
-        while (true)
-        {
-            Debug.Log($"等待......{count}");
-            yield return new WaitForSeconds(1);
-            count++;
-        }
-    }
-
-    private void Reconnect()
-    {
-        if (!isDisconnectRequested) SignalR.ReconnectServer();
-    }
-
+    private async void ReconnectWithTips() => await SignalR.ReconnectServerWithTips();
 }

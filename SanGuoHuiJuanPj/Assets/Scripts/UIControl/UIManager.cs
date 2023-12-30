@@ -482,6 +482,7 @@ public class UIManager : MonoBehaviour
     public void DisableCityEventUi(int cityId)
     {
         var eventUi = GetBaYeCityEventUi(cityId);
+        if (eventUi == null) return;
         eventUi.Disable();
         eventUi.forceFlag.Hide();
         eventUi.InactiveCityColor();
@@ -576,7 +577,7 @@ public class UIManager : MonoBehaviour
         //    PlayerDataForGame.instance.ShowStringTips,
         //    EventStrings.Req_WarChest,
         //    ViewBag.Instance().SetValues(warChestId, 3));        
-        ApiPanel.instance.CallVb(bag => WarChestRecallAction(bag),
+        ApiPanel.instance.HttpCallVb(bag => WarChestRecallAction(bag),
             PlayerDataForGame.instance.ShowStringTips,
             EventStrings.Call_WarChest,
             DataBag.SerializeBag(EventStrings.Call_WarChest, warChestId, 3));
@@ -776,7 +777,7 @@ public class UIManager : MonoBehaviour
         //    ViewBag.Instance()
         //        .SetValues(Barrack.SelectedForce, card.IsFight > 0)
         //        .GameCardDto(card.ToDto()));
-        ApiPanel.instance.CallVb(vb =>
+        ApiPanel.instance.HttpCallVb(vb =>
             {
                 var troop = vb.GetTroopDto();
                 PlayerDataForGame.instance.UpdateTroopEnlist(troop);
@@ -812,7 +813,7 @@ public class UIManager : MonoBehaviour
             //    },
             //    EventStrings.Req_CardSell,
             //    ViewBag.Instance().SetValues(new object[] {gameCard.CardId, gameCard.Type}));
-            ApiPanel.instance.CallVb(vb =>
+            ApiPanel.instance.HttpCallVb(vb =>
                 {
                     var player = vb.GetPlayerDataDto();
                     var gameCards = vb.GetPlayerGameCardDtos();
@@ -1140,7 +1141,7 @@ public class UIManager : MonoBehaviour
         //    }, PlayerDataForGame.instance.ShowStringTips,
         //    EventStrings.Req_RCode, ViewBag.Instance().SetValue(code));        
         
-        ApiPanel.instance.CallVb(vb =>
+        ApiPanel.instance.HttpCallVb(vb =>
             {
                 var rC = vb.GetRCode();
                 var py = vb.GetPlayerDataDto();

@@ -392,7 +392,7 @@ public class PlayerDataForGame : MonoBehaviour
         //ApiPanel.instance.InvokeVb(SuccessAction, FailedAction, EventStrings.Req_TroopToCampaign,
         //    ViewBag.Instance().TroopDto(troopDto)
         //        .SetValues(selectedWarId, UIManager.instance.expedition.CurrentMode.Id));
-        ApiPanel.instance.CallVb(SuccessAction, FailedAction, EventStrings.Call_TroopToCampaign,
+        ApiPanel.instance.HttpCallVb(SuccessAction, FailedAction, EventStrings.Call_TroopToCampaign,
             DataBag.SerializeBag(EventStrings.Call_TroopToCampaign, 
                 selectedWarId, 
                 UIManager.instance.expedition.CurrentMode.Id,

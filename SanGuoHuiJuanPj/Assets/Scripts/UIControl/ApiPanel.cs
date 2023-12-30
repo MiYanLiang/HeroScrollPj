@@ -2,6 +2,7 @@
 using System.Collections;
 using Assets.Scripts.Utl;
 using CorrelateLib;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -33,13 +34,13 @@ public class ApiPanel : MonoBehaviour
     }
 
     // 支持旧的vb序列化
-    public void CallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+    public void HttpCallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         params object[] args)
     {
         var jsonBag = DataBag.SerializeBag(method, args);
-        CallVb(successAction, failedAction, method, jsonBag);
+        HttpCallVb(successAction, failedAction, method, jsonBag);
     }
-    public void CallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
+    public void HttpCallVb(UnityAction<ViewBag> successAction, UnityAction<string> failedAction, string method,
         string dataBagJson)
     {
         SetBusy(true);
@@ -171,7 +172,7 @@ public class ApiPanel : MonoBehaviour
         });
     }
 
-    public void SetBusy(bool busy)
+    private void SetBusy(bool busy)
     {
         UnityMainThread.thread.RunNextFrame(() =>
         {
@@ -180,24 +181,23 @@ public class ApiPanel : MonoBehaviour
         });
     }
 
-    private void ClientReconnect()
+    private async void ClientReconnect()
     {
-        StopAllCoroutines();
-        StartCoroutine(DelayedReLogin());
-    }
+        await DelayedReLogin();
+        return;
 
-    private IEnumerator DelayedReLogin()
-    {
-        yield return new WaitForSeconds(1.5f);
-        Client.ReconnectServer(CallBack);
-    }
+        async UniTask DelayedReLogin()
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(1));
+            var isSuccess = await Client.ReconnectServerWithTips();
 
-    private void CallBack(bool isSuccess)
-    {
 #if UNITY_EDITOR
-        XDebug.Log<ServerPanel>(
-            $"Connection success = {isSuccess}");
+            XDebug.Log<ServerPanel>(
+                $"Connection success = {isSuccess}");
 #endif
-        SetBusy(false);
+            SetBusy(false);
+        }
     }
+
+
 }
