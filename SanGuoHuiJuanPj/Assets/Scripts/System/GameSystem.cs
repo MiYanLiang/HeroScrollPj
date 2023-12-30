@@ -41,6 +41,7 @@ public class GameSystem : MonoBehaviour
     public PrefabManager prefabManager;
     public AdManager adManager;
     public Canvas systemCanvas;
+    public RetryPanel retryPanel;
     public ServerRequestExceptionWindow ServerException;
     #endregion
     private static ServerRequestExceptionWindow _serverException;
@@ -59,6 +60,7 @@ public class GameSystem : MonoBehaviour
     public virtual void Init()
     {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
+        retryPanel?.Init();
         Configuration = configuration;
         LoginUi = loginUiController;
         TimeSystemControl = timeSystemControl;

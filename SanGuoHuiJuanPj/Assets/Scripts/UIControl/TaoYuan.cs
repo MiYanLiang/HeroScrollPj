@@ -6,12 +6,12 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Assets.Scripts.Utl;
-using Beebyte.Obfuscator;
+
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
 
-[Skip]public class TaoYuan : MonoBehaviour
+public class TaoYuan : MonoBehaviour
 {
     public int openJiuTanYBNums;   //开酒坛所需元宝
     public int maxZhanYiChests = 100;//战役宝箱上限

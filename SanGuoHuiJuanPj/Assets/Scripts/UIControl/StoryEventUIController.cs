@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Beebyte.Obfuscator;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -50,7 +49,7 @@ public class StoryEventUIController : MonoBehaviour
         ui.Set(level, color);
     }
 
-    [SkipRename]public void OnStoryEventClick(int eventPoint)
+    public void OnStoryEventClick(int eventPoint)
     {
         var sEvent = PlayerDataForGame.instance.baYe.storyMap[eventPoint];
         OnClickAudioPlay(sEvent.Type);
