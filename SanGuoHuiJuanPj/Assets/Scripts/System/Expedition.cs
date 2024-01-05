@@ -5,6 +5,7 @@ using System.Linq;
 using CorrelateLib;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 //征战页面
@@ -14,12 +15,11 @@ public class Expedition : MonoBehaviour
     public Image stageTipUi;//模式说明
     public Text stageTipForceName;
     public Button[] difficultyButtons;
-    [SerializeField] private YuanZhengField[] yuanZhengFields;
+    [FormerlySerializedAs("yuanZhengFields")][SerializeField] private SpecialWarField[] SpecialWar;
     public WarStageBtnUi warStageBtnPrefab;
     public ScrollRect warStageScrollRect;
 
     public ForceSelectorUi warForceSelectorUi; //战役势力选择器
-    private int lastAvailableStageIndex; //最远可战的战役索引
     private List<WarStageBtnUi> stages;
     private int recordedExpeditionWarId = -1;//当前选择战役的WarId
     public int RecordedExpeditionWarId => recordedExpeditionWarId;
@@ -30,6 +30,7 @@ public class Expedition : MonoBehaviour
     private GameModeTable currentMode;//当前选择的难度
     public GameModeTable CurrentMode => currentMode;
     public StaminaCost SelectedWarStaminaCost => currentMode.StaminaCost;
+    private Dictionary<int, Color> _btnColors;
 
     public void Init()
     {
@@ -41,7 +42,9 @@ public class Expedition : MonoBehaviour
 
     private void InitWarModes()
     {
-        lastAvailableStageIndex = 0;
+        var isInitColors = _btnColors == null;
+        if (isInitColors) _btnColors = new Dictionary<int, Color>();
+        var lastAvailableStageIndex = 0; //最远可战的战役索引
         var warModes = DataTable.GameMode.Values.Where(m => m.WarList != null).ToList();
         //新手-困难关卡入口初始化
         for (var i = 0; i < difficultyButtons.Length; i++)
@@ -57,7 +60,8 @@ public class Expedition : MonoBehaviour
             var textUi = uiBtn.GetComponentInChildren<Text>();
             textUi.text = warMode.Title;
             var isUnlock = IsWarUnlock(warMode);
-            textUi.color = isUnlock ? Color.white : Color.gray;
+            if (isInitColors) _btnColors.Add(i, textUi.color);
+            SetBtnColor(warMode, textUi, i);
             if (isUnlock)
             {
                 lastAvailableStageIndex = i;
@@ -82,26 +86,34 @@ public class Expedition : MonoBehaviour
         InitWarsListInfo(lastAvailableStageIndex, true);
 
         //远征关卡
-        foreach (var yz in yuanZhengFields)
+        for (var i = 0; i < SpecialWar.Length; i++)
         {
+            var yz = SpecialWar[i];
+            var warMode = DataTable.GameMode[yz.Index];
+            var textUi = yz.Button.GetComponentInChildren<Text>();
+            if (isInitColors) _btnColors.Add(yz.Index, textUi.color);
+            SetBtnColor(warMode, textUi, yz.Index);
             var yuanZhengMode = DataTable.GameMode[yz.Index];
             InitYuanZhengButton(yz, yuanZhengMode);
         }
-
     }
 
-    private void InitYuanZhengButton(YuanZhengField yz, GameModeTable yuanZhengMode)
+    private void SetBtnColor(GameModeTable warMode, Text textUi, int btnIndex)
+    {
+        var isUnlock = IsWarUnlock(warMode);
+        textUi.color = isUnlock ? _btnColors[btnIndex] : Color.gray;
+    }
+
+    private void InitYuanZhengButton(SpecialWarField yz, GameModeTable yuanZhengMode)
     {
         var yzButton = yz.Button;
         var yzIndex = yz.Index;
         indexWarModeMap.Add(yzIndex, yuanZhengMode);
-        var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
         var textUi = yzButton.GetComponentInChildren<Text>();
-        textUi.color = isYuanZhengUnlock ? Color.white : Color.gray;
+        var isYuanZhengUnlock = IsWarUnlock(yuanZhengMode);
         if (isYuanZhengUnlock)
         {
             textUi.text = yuanZhengMode.Title;
-            textUi.color = Color.white;
             yzButton.GetComponent<Button>().onClick.AddListener(() =>
             {
                 InitWarsListInfo(yzIndex);
@@ -148,12 +160,13 @@ public class Expedition : MonoBehaviour
         stages.Clear();
 
         var lastStageWarId = -1;
-        var yz = yuanZhengFields.FirstOrDefault(yz => yz.Index == warMode.Id);
+        var yz = SpecialWar.FirstOrDefault(yz => yz.Index == warMode.Id);
         if (yz!=null)
         {
-            var warId = yz.IsTieXue
-                ? 120 //铁血远征的WarId固定是120
-                : DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].YuanZhengWarTableId;
+            var warId = yz.SpWar == SpecialWarField.SpWars.YuanZheng 
+                ? DataTable.PlayerLevelConfig[PlayerDataForGame.instance.pyData.Level].YuanZhengWarTableId 
+                : yz.WarId;
+
             lastStageWarId = warId;
             InitWarListUi(warId);
         }
@@ -208,7 +221,7 @@ public class Expedition : MonoBehaviour
     private void OnSelectDifficultyUiScale(int index)
     {
         var scaleUp = new Vector2(1.2f, 1.2f);
-        foreach (var yz in yuanZhengFields)
+        foreach (var yz in SpecialWar)
         {
             yz.Button.transform.localScale = index == yz.Index ? scaleUp : Vector2.one;
         }
@@ -269,7 +282,7 @@ public class Expedition : MonoBehaviour
         //    EventStrings.Req_Achievement,
         //    ViewBag.Instance().SetValue(playerUnlockProgress.warId));
 
-        ApiPanel.instance.CallVb(SuccessAction, PlayerDataForGame.instance.ShowStringTips,
+        ApiPanel.instance.HttpCallVb(SuccessAction, PlayerDataForGame.instance.ShowStringTips,
             EventStrings.Call_Achievement,
             DataBag.SerializeBag(EventStrings.Call_Achievement, playerUnlockProgress.warId));
         return;
@@ -309,17 +322,25 @@ public class Expedition : MonoBehaviour
         }
     }
 
-    [Serializable] private class YuanZhengField
+    [Serializable] private class SpecialWarField
     {
+        public enum SpWars
+        {
+            [InspectorName("洪荒")]HongHuang,
+            [InspectorName("远征")]YuanZheng,
+            [InspectorName("铁血")]TieXue,
+        }
         [SerializeField] private int 按键索引;
         [SerializeField] private Button 按键;
-        [SerializeField] private bool 是铁血远征;
+        [SerializeField] private SpWars 是铁血远征;
+        [Header("-1是给远征根据玩家等级动态给予WarId")][SerializeField] private int _warId = -1;
 
         /// <summary>
         /// 是否是铁血远征
         /// </summary>
-        public bool IsTieXue => 是铁血远征;
+        public SpWars SpWar => 是铁血远征;
         public int Index => 按键索引;
         public Button Button => 按键;
+        public int WarId => _warId;
     }
 }

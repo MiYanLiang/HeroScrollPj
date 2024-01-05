@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CorrelateLib;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +16,7 @@ public class SignalRMock : MonoBehaviour
     [SerializeField] private int _userId = 25;
     [SerializeField] private int _serverId = -1;
 #if UNITY_EDITOR
-    public void CallLogin()
+    [Button]public void CallLogin()
     {
         if (isCalled) return;
         isCalled = true;
@@ -56,6 +58,7 @@ public class SignalRMock : MonoBehaviour
                     GameSystem.Instance.SetScene(GameSystem.GameScene.MainScene);
                     gameObject.SetActive(false);
                 });
+            PlayerDataForGame.instance.ShowStringTips(success ? "登录成功" : "登录失败");
         });
     }
 
@@ -68,6 +71,16 @@ public class SignalRMock : MonoBehaviour
             GameSystem.Instance.SetScene(GameSystem.GameScene.MainScene);
             gameObject.SetActive(false);
         });
+    }
+
+    [Button]public void GetOnlineCharacters()
+    {
+        ApiPanel.instance.InvokeBag(b =>
+        {
+            var chars = b.Get<List<CharacterDto>>(0);
+            var text = Json.Serialize(chars);
+            Debug.Log(text);
+        }, Debug.Log, EventStrings.Req_OnlineCharacters, EventStrings.Req_OnlineCharacters);
     }
 #endif
 }

@@ -28,6 +28,7 @@ public class PlayerCharacterUi : MonoBehaviour
     public Button NicknameEditButton;
     public Button GenderEditButton;
     public Button SignEditButton;
+    public GameObject CloseAppWindow;
     private ComponentActivateSwitch<Button> mapper;
     public Character Character { get; private set; }
     public event UnityAction OnCloseAction;
@@ -109,7 +110,7 @@ public class PlayerCharacterUi : MonoBehaviour
             var func = ex.Compile();
             //ApiPanel.instance.InvokeVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
             //    EventStrings.Req_UpdateCharacterInfo, ViewBag.Instance().SetValues(updateInfo, func()));
-            ApiPanel.instance.CallVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
+            ApiPanel.instance.HttpCallVb(OnSuccessUpdateCharacter, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Call_UpdateCharacterInfo,
                 DataBag.SerializeBag(EventStrings.Call_UpdateCharacterInfo, updateInfo, func()));
         }
@@ -147,7 +148,7 @@ public class PlayerCharacterUi : MonoBehaviour
             PlayerDataForGame.instance.Character = global::Character.Instance(Character);
             //ApiPanel.instance.InvokeVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
             //    EventStrings.Req_CreateCharacter, ViewBag.Instance().PlayerCharacterDto(Character.ToDto()), false);
-            ApiPanel.instance.CallVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
+            ApiPanel.instance.HttpCallVb(OnCreateCharacterSuccess, PlayerDataForGame.instance.ShowStringTips,
                 EventStrings.Call_CreateCharacter, Character.ToDto());
             return;
         }
@@ -168,16 +169,8 @@ public class PlayerCharacterUi : MonoBehaviour
 
     private void OnCreateCharacterSuccess(ViewBag vb)
     {
-        SignalRClient.instance.ReconnectServer(success =>
-        {
-            if(success)
-            {
-                ApiPanel.instance.SyncSaved(PlayerDataForGame.instance.NotifyDataUpdate);
-                Show();
-                return;
-            }
-            PlayerDataForGame.instance.ShowStringTips("角色创建了！但网络似乎有问题，请重登游戏。");
-        });
+        CloseAppWindow.gameObject.SetActive(true);
+        PlayerDataForGame.instance.ShowStringTips("角色创建了！请重登游戏。");
     }
 }
 

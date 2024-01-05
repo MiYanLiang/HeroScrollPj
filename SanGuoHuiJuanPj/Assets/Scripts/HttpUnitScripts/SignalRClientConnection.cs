@@ -5,19 +5,20 @@ using System.Threading.Tasks;
 using BestHTTP.SignalRCore;
 using BestHTTP.SignalRCore.Messages;
 using CorrelateLib;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class SignalRClientConnection
 {
-    public event UnityAction<ConnectionStates,string> OnStatusChanged;
     public event Action<string, string> OnServerCall;
     public event Action OnRequestError;
     private HubConnection _conn;
+
     /// <summary>
     /// SignalR 网络状态
     /// </summary>
-    public ConnectionStates Status { get; private set; }
+    public ConnectionStates Status => _conn?.State ?? ConnectionStates.Closed;
     private SignalRConnectionInfo ConnectionInfo { get; set; }
     public SignalRClientConnection()
     {
@@ -37,7 +38,6 @@ public class SignalRClientConnection
         return conn;
     }
 
-
     //Hub connection
     public async Task<bool> ConnectSignalRAsync(SignalRConnectionInfo connectionInfo)
     {
@@ -52,7 +52,6 @@ public class SignalRClientConnection
         }
         catch (Exception e)
         {
-            StatusChanged(_conn?.State ?? ConnectionStates.Closed, $"连接失败！{e}");
             if (!cancellationToken.IsCancellationRequested)
                 cancellationToken.Cancel();
             return false;
@@ -65,23 +64,18 @@ public class SignalRClientConnection
     {
         if (_conn != null)
         {
-            _conn.OnClosed -= OnConnectionClose;
-            _conn.OnReconnected -= OnReconnected;
-            _conn.OnReconnecting -= OnReconnecting;
-            _conn.OnError -= OnError;
+            _conn.OnError -= Error;
             Application.quitting -= OnDisconnect;
-            CloseConn();//不用await，因为这个链接有可能释放不了而导致永远等待。
+            CloseConn(); //不用await，因为这个链接有可能释放不了而导致永远等待。
         }
+
         _conn = InstanceHub(ConnectionInfo.Url, ConnectionInfo.AccessToken);
-        _conn.OnClosed += OnConnectionClose;
-        _conn.OnReconnected += OnReconnected;
-        _conn.OnReconnecting += OnReconnecting;
-        _conn.OnError += OnError;
+        _conn.OnError += Error;
         Application.quitting += OnDisconnect;
         _conn.On(EventStrings.ServerCall, OnServerCall);
 
         await _conn.ConnectAsync();
-        StatusChanged(_conn.State, "连接成功！");
+        return;
 
         async void CloseConn()
         {
@@ -94,25 +88,19 @@ public class SignalRClientConnection
                 // ignored
             }
         }
-    }
 
-    private void OnError(HubConnection conn, string error)
-    {
-        PlayerDataForGame.instance.ShowStringTips("网络连接异常！重新连接...");
-        HubReconnectTask(isSuccess =>
+        async void Error(HubConnection conn, string error)
         {
+            PlayerDataForGame.instance.ShowStringTips("网络连接异常！重新连接...");
+            var isSuccess = await HubReconnectTask();
             var msg = "网络重连失败！";
             if (isSuccess) msg = "重新连接！";
             PlayerDataForGame.instance.ShowStringTips(msg);
-        });
+        }
     }
 
-    public async void HubReconnectTask(Action<bool> callbackAction)
-    {
-        var result = await HubReconnectTask();
-        callbackAction?.Invoke(result);
-    }
-    public async Task<bool> HubReconnectTask()
+    //尝试重连一次
+    public async UniTask<bool> HubReconnectTask()
     {
         await Task.Delay(TimeSpan.FromSeconds(1));
         if (Status == ConnectionStates.Connected)
@@ -121,7 +109,6 @@ public class SignalRClientConnection
         {
             if (ConnectionInfo == null)
                 throw new NullReferenceException("ConnectionInfo = null!");
-            Status = ConnectionStates.Reconnecting;
             await HubConnectAsync();
             return true;
         }
@@ -130,12 +117,6 @@ public class SignalRClientConnection
             PlayerDataForGame.instance.ShowStringTips("服务器尝试链接失败，请稍后重试。");
             return false;
         }
-    }
-
-    private void StatusChanged(ConnectionStates status, string message)
-    {
-        Status = status;
-        OnStatusChanged?.Invoke(status, message);
     }
 
     public async Task<TResult> HubInvokeAsync<TResult>(string method, CancellationToken cancellationToken,
@@ -155,6 +136,7 @@ public class SignalRClientConnection
         }
         catch (Exception e)
         {
+            RetryPanel.PresetMessage(e.ToString());
             return FailedToInvoke();
         }
 
@@ -167,23 +149,6 @@ public class SignalRClientConnection
 
 
     #region Event
-
-    /// <summary>
-    /// 当客户端尝试重新连接服务器
-    /// </summary>
-    private void OnReconnecting(HubConnection hub, string message) => StatusChanged(hub.State, message);
-
-    /// <summary>
-    /// 当客户端重新连线
-    /// </summary>
-    private void OnReconnected(HubConnection hub) => StatusChanged(hub.State, hub.State.ToString());
-
-    /// <summary>
-    /// 当客户端断线的处理方法
-    /// </summary>
-    private void OnConnectionClose(HubConnection hub) => StatusChanged(hub.State, hub.State.ToString());
-
-
     private void OnDisconnect() => Disconnect();
     private async void Disconnect(UnityAction onActionDone = null)
     {

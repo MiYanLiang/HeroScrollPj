@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,18 +13,41 @@ namespace Assets.Scripts.Utl
     {
         internal static UnityMainThread thread;
         public ExceptionHandlerUi ExceptionPanel;
-        private Queue<UnityAction> jobs = new Queue<UnityAction>();
+        private ConcurrentQueue<UnityAction> jobs = new ConcurrentQueue<UnityAction>();
         void Awake()
         {
-            thread = this;
+            if(!thread)
+            {
+                thread = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
             ExceptionPanel.Init();
         }
 
         void Update()
         {
-            while (jobs.Count > 0) jobs.Dequeue().Invoke();
+            while (jobs.TryDequeue(out var action))
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    // 日志记录或其他异常处理
+                    Debug.LogError($"Exception occurred during MainThreadDispatcher action: {ex}");
+                }
+            }
         }
 
-        internal void RunNextFrame(UnityAction newJob) => jobs.Enqueue(newJob);
+        internal void RunNextFrame(UnityAction newJob)
+        {
+            if (newJob == null) throw new ArgumentNullException(nameof(newJob));
+            jobs.Enqueue(newJob);
+        }
     }
 }

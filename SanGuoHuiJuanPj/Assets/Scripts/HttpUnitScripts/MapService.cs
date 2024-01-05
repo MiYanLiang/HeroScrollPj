@@ -56,11 +56,16 @@ namespace Assets.HttpUnitScripts
             isRequestingCharacter = true;
             //ApiPanel.instance.InvokeVb(OnCharactersApiRespond,OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters,ViewBag.Instance());
             //ApiPanel.instance.CallVb(vb=>OnCharactersApiRespond(vb.GetCharacterDtos()), OnFailedToGetCharacters, EventStrings.Call_OnlineCharacters);
-            ApiPanel.instance.InvokeBag(b =>
+            ApiPanel.instance.HttpCallVb(vb =>
             {
-                var chars = b.Get<CharacterDto[]>(0);
+                var chars = vb.GetCharacterDtos();
                 OnCharactersApiRespond(chars);
-            }, OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters, EventStrings.Req_OnlineCharacters);
+            }, OnFailedToGetCharacters, EventStrings.Call_OnlineCharacters);
+            //ApiPanel.instance.InvokeBag(b =>
+            //{
+            //    var chars = b.Get<CharacterDto[]>(0);
+            //    OnCharactersApiRespond(chars);
+            //}, OnFailedToGetCharacters, EventStrings.Req_OnlineCharacters, EventStrings.Req_OnlineCharacters);
         }
 
         private void OnFailedToGetCharacters(string failedMessage)

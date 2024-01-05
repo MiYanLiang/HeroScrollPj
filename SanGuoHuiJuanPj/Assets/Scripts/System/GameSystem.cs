@@ -43,6 +43,7 @@ public class GameSystem : MonoBehaviour
     public Canvas systemCanvas;
     public RetryPanel retryPanel;
     public ServerRequestExceptionWindow ServerException;
+    public SignalRClient SignalRClient;
     #endregion
     private static ServerRequestExceptionWindow _serverException;
     //method properties/fields
@@ -60,6 +61,7 @@ public class GameSystem : MonoBehaviour
     public virtual void Init()
     {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
+        SignalRClient.Init();
         retryPanel?.Init();
         Configuration = configuration;
         LoginUi = loginUiController;

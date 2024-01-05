@@ -11,6 +11,7 @@ public class GameSystemMock : GameSystem
 #if UNITY_EDITOR
         if (AutoStart) Init();
 #endif
+        SignalRClient.Init();
     }
 
 #if UNITY_EDITOR

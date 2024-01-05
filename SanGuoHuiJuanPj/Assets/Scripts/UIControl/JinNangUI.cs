@@ -83,7 +83,7 @@ public class JinNangUI: MonoBehaviour
             {
                 //ApiPanel.instance.InvokeVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
                 //    EventStrings.Req_TokenResources, ViewBag.Instance().SetValue(token));
-                ApiPanel.instance.CallVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
+                ApiPanel.instance.HttpCallVb(OnSuccessDoubleReward, PlayerDataForGame.instance.ShowStringTips,
                     EventStrings.Call_TokenResources, DataBag.SerializeBag(EventStrings.Call_TokenResources, token));
             }
         });

@@ -267,7 +267,7 @@ public class TaoYuan : MonoBehaviour
         //        OnChestRecallAction(UIManager.instance.WarChestRecallAction(viewBag), chestUi),
         //    PlayerDataForGame.instance.ShowStringTips, EventStrings.Req_WarChest,
         //    ViewBag.Instance().SetValues(chestId, consume));
-        ApiPanel.instance.CallVb(viewBag =>
+        ApiPanel.instance.HttpCallVb(viewBag =>
                 OnChestRecallAction(UIManager.instance.WarChestRecallAction(viewBag), chestUi),
             PlayerDataForGame.instance.ShowStringTips, EventStrings.Call_WarChest,
             DataBag.SerializeBag(EventStrings.Call_WarChest, chestId, consume));
