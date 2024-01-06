@@ -22707,6 +22707,13 @@ MonoBehaviour:
   ApiPanel: {fileID: 1081135909737326204}
   _signalRRequestRetries: 2
   _signalRRequestPanel: {fileID: 6478486815126858997}
+  customSignalRServer: 0
+  _connInfo:
+    Url: https://localhost:5001/
+    AccessToken: 
+    Arrangement: 0
+    IsNewRegistered: 0
+    Username: yx10022
   RejectServer: 0
 --- !u!224 &5562767576563375050
 RectTransform:
