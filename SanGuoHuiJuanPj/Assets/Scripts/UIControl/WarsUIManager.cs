@@ -360,7 +360,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //战役结束
-    public UniTask ExpeditionFinalize(bool isWin)
+    public void ExpeditionFinalize(bool isWin)
     {
         Time.timeScale = 1f;
         var reward = PlayerDataForGame.instance.WarReward;
@@ -458,7 +458,6 @@ public class WarsUIManager : MonoBehaviour
         PlayerDataForGame.instance.isNeedSaveData = true;
         LoadSaveData.instance.SaveGameData(3);
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-        return UniTask.CompletedTask;
     }
 
     //初始化父级关卡
