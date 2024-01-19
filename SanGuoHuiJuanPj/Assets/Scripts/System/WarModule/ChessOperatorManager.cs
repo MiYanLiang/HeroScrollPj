@@ -323,8 +323,8 @@ namespace Assets.System.WarModule
                 case 6: op = new FireWallOperator(); break;
                 case 7: op = new PoisonSpringOperator(); break;
                 case 8: op = new BladeWallOperator(); break;
-                case 9: op = new GunShiOperator(); break;
-                case 10: op = new GunMuOperator(); break;
+                case 9: case 38: case 39: case 40: case 41: case 42: case 43: case 44: op = new GunShiOperator(); break;
+                case 10: case 45: case 46: case 47: case 48: case 49: case 50: case 51: op = new GunMuOperator(); break;
                 case 11: op = new TreasureOperator(); break;
                 case 12: op = new WarChestOperator(); break;
                 case 13: op = new HuoGunShiOperator(); break;
