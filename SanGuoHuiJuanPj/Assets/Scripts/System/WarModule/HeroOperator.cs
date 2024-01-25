@@ -2396,14 +2396,14 @@ namespace Assets.System.WarModule
         {
             switch (Style.Military)
             {
-                case 191: return 30;
-                case 192: return 30;
+                case 191: return 15;
+                case 192: return 20;
                 case 193: return 50;
                 default: throw MilitaryNotValidError(this);
             }
         }
         private int CriticalAddOn => 5;
-        private int RouseAddOn => 15;
+        private int RouseAddOn => 10;
 
         protected override void MilitaryPerforms(int skill = 1)
         {
