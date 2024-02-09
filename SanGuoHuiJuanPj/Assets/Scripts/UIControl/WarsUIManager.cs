@@ -141,81 +141,132 @@ public class WarsUIManager : MonoBehaviour
                 ExpeditionFinalize(false);
                 return;
             }
+
             StartCoroutine(OnPlayerWin());
         });
         chessboardManager.OnResourceUpdate.AddListener(OnResourceUpdate);
-        WarBoard.OnRoundPause += OnRoundPause; 
+        WarBoard.OnRoundPause += OnRoundPause;
         WarBoard.Chessboard.SetStartWarUi(OnRoundStartClick);
+        return;
+
+        IEnumerator Initialize()
+        {
+            //if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition &&
+            //    string.IsNullOrWhiteSpace(PlayerDataForGame.instance.WarReward.Token))
+            //{
+            //    yield return ExpeditionFinalize(false).ToCoroutine();
+            //    yield break;
+            //}
+
+            switch (PlayerDataForGame.instance.WarType)
+            {
+                //战斗金币
+                case PlayerDataForGame.WarTypes.Expedition:
+                    GoldForCity = PlayerDataForGame.instance.zhanYiColdNums;
+                    break;
+                case PlayerDataForGame.WarTypes.Baye:
+                    GoldForCity = PlayerDataForGame.instance.baYe.gold;
+                    cityLevel = baYeCityLevel;
+                    break;
+                case PlayerDataForGame.WarTypes.None:
+                    throw XDebug.Throw<WarsUIManager>($"未确认战斗类型[{PlayerDataForGame.WarTypes.None}]，请在调用战斗场景前预设战斗类型。");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            indexLastGuanQiaId = 0;
+            PassCheckpoints = new bool[DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints];
+            cardMoveSpeed = 2f;
+            nowGuanQiaIndex = 0;
+            point0Pos = point0Tran.position;
+            point1Pos = point1Tran.position;
+            point2Pos = point2Tran.position;
+
+            Input.multiTouchEnabled = false; //限制多指拖拽
+            isGettingStage = false;
+            //------------Awake----------------//
+            PlayerDataForGame.instance.lastSenceIndex = 2;
+            SanXuanWindow.Init();
+            SanXuanWindow.AdConsume.SetCallBackAction(success =>
+            {
+                if (success)
+                    UpdateQiYuInventory();
+            }, _ => UpdateQiYuInventory(), true, 0);
+            QuizWindow.Init();
+            //adRefreshBtn.onClick.AddListener(WatchAdForUpdateQiYv);
+            gameOverWindow.Init();
+            GenericWindow.Init();
+            yield return new WaitUntil(() => PlayerDataForGame.instance.WarReward != null);
+            InitMainUiShow();
+
+            InitCardToRack();
+
+            InitState();
+        }
+
+        //初始化关卡
+        void InitState()
+        {
+            currentEvent = EventTypes.初始;
+            //尝试展示指引
+            //ShowOrHideGuideObj(0, true);
+            var checkpointId = DataTable.War[PlayerDataForGame.instance.selectedWarId].BeginPoint;
+            var checkpoint = DataTable.Checkpoint[checkpointId];
+            InstanceStage(checkpoint);
+            PreInitNextStage(new[] { checkpoint.Id });
+        }
+
+        //初始化卡牌列表
+        void InitCardToRack()
+        {
+            var forceId = PlayerDataForGame.instance.CurrentWarForceId;
+#if UNITY_EDITOR
+            if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
+            {
+                var hst = PlayerDataForGame.instance.hstData;
+                PlayerDataForGame.instance.fightHeroId
+                    .Select(id => GameCard.Instance(hst.heroSaveData.First(h => h.CardId == id)))
+                    .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
+                        GameCard.InstanceTower(id, GetLevel(hst.towerSaveData, id))))
+                    .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
+                        GameCard.InstanceTrap(id, GetLevel(hst.trapSaveData, id))))
+                    .ToList().ForEach(c => WarBoard.CreateCardToRack(c, null));
+                return;
+            }
+
+            int GetLevel(List<GameCard> list, int id) => list.First(c => c.CardId == id).Level;
+#endif
+            PlayerDataForGame.instance.fightHeroId.Clear();
+            PlayerDataForGame.instance.fightTowerId.Clear();
+            PlayerDataForGame.instance.fightTrapId.Clear();
+
+            var hstData = PlayerDataForGame.instance.hstData;
+            //临时记录武将存档信息
+            hstData.heroSaveData.Enlist(forceId).ToList()
+                .ForEach(c => WarBoard.CreateCardToRack(c, null));
+            hstData.towerSaveData.Enlist(forceId).ToList()
+                .ForEach(c => WarBoard.CreateCardToRack(c, null));
+            hstData.trapSaveData.Enlist(forceId).ToList()
+                .ForEach(c => WarBoard.CreateCardToRack(c, null));
+        }
+
+        //初始化场景内容
+        void InitMainUiShow()
+        {
+            battleNameText.text = DataTable.War[PlayerDataForGame.instance.selectedWarId].Title;
+            var py = PlayerDataForGame.instance;
+            string flagShort;
+            if (py.Character != null && py.Character.IsValidCharacter() && !string.IsNullOrWhiteSpace(py.Character.Name))
+                flagShort = py.Character.Name.First().ToString();
+            else flagShort = "玩";
+            infoUis.Short.text = flagShort;
+            UpdateInfoUis();
+            UpdateLevelInfo();
+            UpdateBattleSchedule();
+        }
     }
 
     private void OnRoundPause() => waitForRoundStart = true;
-
-    IEnumerator Initialize()
-    {
-        if (PlayerDataForGame.instance.WarType == PlayerDataForGame.WarTypes.Expedition &&
-            string.IsNullOrWhiteSpace(PlayerDataForGame.instance.WarReward.Token))
-        {
-            yield return ExpeditionFinalize(false).ToCoroutine();
-            yield break;
-        }
-
-        switch (PlayerDataForGame.instance.WarType)
-        {
-            //战斗金币
-            case PlayerDataForGame.WarTypes.Expedition:
-                GoldForCity = PlayerDataForGame.instance.zhanYiColdNums;
-                break;
-            case PlayerDataForGame.WarTypes.Baye:
-                GoldForCity = PlayerDataForGame.instance.baYe.gold;
-                cityLevel = baYeCityLevel;
-                break;
-            case PlayerDataForGame.WarTypes.None:
-                throw XDebug.Throw<WarsUIManager>($"未确认战斗类型[{PlayerDataForGame.WarTypes.None}]，请在调用战斗场景前预设战斗类型。");
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        indexLastGuanQiaId = 0;
-        PassCheckpoints = new bool[DataTable.War[PlayerDataForGame.instance.selectedWarId].CheckPoints];
-        cardMoveSpeed = 2f;
-        nowGuanQiaIndex = 0;
-        point0Pos = point0Tran.position;
-        point1Pos = point1Tran.position;
-        point2Pos = point2Tran.position;
-
-        Input.multiTouchEnabled = false; //限制多指拖拽
-        isGettingStage = false;
-        //------------Awake----------------//
-        PlayerDataForGame.instance.lastSenceIndex = 2;
-        SanXuanWindow.Init();
-        SanXuanWindow.AdConsume.SetCallBackAction(success =>
-        {
-            if (success)
-                UpdateQiYuInventory();
-        }, _ => UpdateQiYuInventory(), true, 0);
-        QuizWindow.Init();
-        //adRefreshBtn.onClick.AddListener(WatchAdForUpdateQiYv);
-        gameOverWindow.Init();
-        GenericWindow.Init();
-        yield return new WaitUntil(() => PlayerDataForGame.instance.WarReward != null);
-        InitMainUiShow();
-
-        InitCardToRack();
-
-        InitState();
-    }
-
-    //初始化关卡
-    private void InitState()
-    {
-        currentEvent = EventTypes.初始;
-        //尝试展示指引
-        //ShowOrHideGuideObj(0, true);
-        var checkpointId = DataTable.War[PlayerDataForGame.instance.selectedWarId].BeginPoint;
-        var checkpoint = DataTable.Checkpoint[checkpointId];
-        InstanceStage(checkpoint);
-        PreInitNextStage(new[] { checkpoint.Id });
-    }
 
     private GameStage InstanceStage(CheckpointTable checkPoint)
     {
@@ -309,7 +360,7 @@ public class WarsUIManager : MonoBehaviour
     }
 
     //战役结束
-    public UniTask ExpeditionFinalize(bool isWin)
+    public void ExpeditionFinalize(bool isWin)
     {
         Time.timeScale = 1f;
         var reward = PlayerDataForGame.instance.WarReward;
@@ -407,7 +458,6 @@ public class WarsUIManager : MonoBehaviour
         PlayerDataForGame.instance.isNeedSaveData = true;
         LoadSaveData.instance.SaveGameData(3);
         GamePref.SaveBaYe(PlayerDataForGame.instance.baYe);
-        return UniTask.CompletedTask;
     }
 
     //初始化父级关卡
@@ -929,56 +979,6 @@ public class WarsUIManager : MonoBehaviour
         if (cardType != GameCardType.Hero || rarity != 1) return info;
         if (GameSystem.MapService.GetCharacterInRandom(50, out var cha)) info.Rename(cha.Name, cha.Nickname, cha.Sign);
         return info;
-    }
-
-    //初始化卡牌列表
-    private void InitCardToRack()
-    {
-        var forceId = PlayerDataForGame.instance.CurrentWarForceId;
-#if UNITY_EDITOR
-        if (forceId == -2) //-2为测试用不重置卡牌，直接沿用卡牌上的阵容
-        {
-            var hst = PlayerDataForGame.instance.hstData;
-            PlayerDataForGame.instance.fightHeroId
-                .Select(id => GameCard.Instance(hst.heroSaveData.First(h => h.CardId == id)))
-                .Concat(PlayerDataForGame.instance.fightTowerId.Select(id =>
-                    GameCard.InstanceTower(id, GetLevel(hst.towerSaveData, id))))
-                .Concat(PlayerDataForGame.instance.fightTrapId.Select(id =>
-                    GameCard.InstanceTrap(id, GetLevel(hst.trapSaveData, id))))
-                .ToList().ForEach(c => WarBoard.CreateCardToRack(c,null));
-            return;
-        }
-
-        int GetLevel(List<GameCard> list, int id) => list.First(c => c.CardId == id).Level;
-#endif
-        PlayerDataForGame.instance.fightHeroId.Clear();
-        PlayerDataForGame.instance.fightTowerId.Clear();
-        PlayerDataForGame.instance.fightTrapId.Clear();
-
-        var hstData = PlayerDataForGame.instance.hstData;
-        //临时记录武将存档信息
-        hstData.heroSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c,null));
-        hstData.towerSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c,null));
-        hstData.trapSaveData.Enlist(forceId).ToList()
-            .ForEach(c => WarBoard.CreateCardToRack(c, null));
-    }
-
-
-    //初始化场景内容
-    private void InitMainUiShow()
-    {
-        battleNameText.text = DataTable.War[PlayerDataForGame.instance.selectedWarId].Title;
-        var py = PlayerDataForGame.instance;
-        string flagShort;
-        if (py.Character != null && py.Character.IsValidCharacter() && !string.IsNullOrWhiteSpace(py.Character.Name))
-            flagShort = py.Character.Name.First().ToString();
-        else flagShort = "玩";
-        infoUis.Short.text = flagShort;
-        UpdateInfoUis();
-        UpdateLevelInfo();
-        UpdateBattleSchedule();
     }
 
     //刷新战役进度显示

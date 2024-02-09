@@ -12,6 +12,7 @@ using BestHTTP.SignalRCore;
 using CorrelateLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 using ConnectionStates = BestHTTP.SignalRCore.ConnectionStates;
@@ -89,13 +90,29 @@ public class SignalRClient : MonoBehaviour
             callbackAction?.Invoke(false);
             return;
         }
-
+#if UNITY_EDITOR
+        //测试用, 直接连接到本地服务器
+        if (customSignalRServer)
+        {
+            var res = await Http.PostAsync(_connInfo.Url + "api/TestServerSignIn", Json.Serialize(new[]
+            {
+                connectionInfo.Username
+            }));
+            var infoText = await res.Content.ReadAsStringAsync();
+            connectionInfo = Json.Deserialize<SignalRConnectionInfo>(infoText);
+        }
+#endif
         var isSuccess = await SignalRClientConnection.ConnectSignalRAsync(connectionInfo);
         if (isSuccess)
             _connInfo = connectionInfo;
         callbackAction?.Invoke(isSuccess);
     }
-    private SignalRConnectionInfo _connInfo;
+#if UNITY_EDITOR
+    [SerializeField]private bool customSignalRServer;
+    private  Action<bool> loginCallbackAction;
+    
+#endif
+    [SerializeField]private SignalRConnectionInfo _connInfo;
 
     public void SynchronizeSaved(UnityAction onCompleteAction)
     {
@@ -347,14 +364,19 @@ public class SignalRClient : MonoBehaviour
     }
 }
 
+[Serializable]
 public class SignalRConnectionInfo
 {
-    public string Url { get; set; }
-    public string AccessToken { get; set; }
-    public int Arrangement { get; set; }
-    public int IsNewRegistered { get; set; }
-    public string Username { get; set; }
+    public string Url;
+    public string AccessToken;
+    public int Arrangement;
+    public int IsNewRegistered;
+    public string Username;
 
+    public SignalRConnectionInfo()
+    {
+        
+    }
     public SignalRConnectionInfo(string url, string accessToken, string username, int arrangement,
         int isNewRegistered)
     {
