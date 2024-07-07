@@ -177,29 +177,27 @@ public class PlayerDataForGame : MonoBehaviour
     /// 跳转场景 
     /// </summary>
     /// <param name="scene"></param>
-    /// <param name="isRequestSyncData">是否请求同步存档</param>
     /// <param name="untilTrue">加载锁，直到返回true才会转换场景</param> 
-    public void JumpSceneFun(GameSystem.GameScene scene, bool isRequestSyncData, Func<bool> untilTrue = null)
+    public void JumpSceneFun(GameSystem.GameScene scene, Func<bool> untilTrue = null)
     {
         if (isJumping) return;
         Time.timeScale = 1;
         loadingImg.DOPause();
-        StartCoroutine(ShowTransitionEffect(scene, isRequestSyncData, untilTrue));
+        StartCoroutine(ShowTransitionEffect(scene, untilTrue));
     }
 
-    IEnumerator ShowTransitionEffect(GameSystem.GameScene scene, bool isRequestSyncData,Func<bool> untilTrue)
+    IEnumerator ShowTransitionEffect(GameSystem.GameScene scene,Func<bool> untilTrue)
     {
         isJumping = true;
         IsCompleteLoading = false;
-        if(isRequestSyncData)
+        isRequestingSaveFile = true;
+        if (Arrangement == 0)
         {
-            isRequestingSaveFile = true;
-            if (Arrangement == 0)
-            {
-                LoadSaveData.instance.LoadByJson();
-                isRequestingSaveFile = false;
-            }else ApiPanel.instance.SyncSaved(() => isRequestingSaveFile = false);
+            LoadSaveData.instance.LoadByJson();
+            isRequestingSaveFile = false;
         }
+        else ApiPanel.instance.SyncSaved(() => isRequestingSaveFile = false);
+
         loadingImg.gameObject.SetActive(true);
         loadingImg.DOFade(1, fadeSpeed/2);
 

@@ -672,7 +672,7 @@ public class UIManager : MonoBehaviour
         if (PlayerDataForGame.instance.isJumping) yield break;
         PlayerDataForGame.instance.SendTroopToWarApi();
         yield return new WaitForSeconds(1f);
-        PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.WarScene, false, () => PlayerDataForGame.instance.WarReward != null);
+        PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.WarScene, () => PlayerDataForGame.instance.WarReward != null);
     }
 
     /// <summary> 
@@ -1276,7 +1276,7 @@ public class UIManager : MonoBehaviour
 
     public void AccountInfo() => GameSystem.LoginUi.OnAction(LoginUiController.ActionWindows.Info);
 
-    public void ReloadMainScene() => PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.MainScene, false);
+    public void ReloadMainScene() => PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.MainScene);
 
     public void Exit()
     {

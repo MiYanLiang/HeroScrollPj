@@ -83,7 +83,7 @@ public class StartSceneUIManager : MonoBehaviour
         AudioController0.instance.ChangeAudioClip(12);
         AudioController0.instance.PlayAudioSource(0);
         TimeSystemControl.instance.InitIsTodayFirstLoadingGame();
-        PlayerDataForGame.instance.JumpSceneFun(scene, isRequestSyncData);
+        PlayerDataForGame.instance.JumpSceneFun(scene);
     }
 
     /// <summary>
