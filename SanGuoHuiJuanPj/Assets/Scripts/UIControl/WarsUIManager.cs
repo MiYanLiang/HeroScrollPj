@@ -1,4 +1,4 @@
-﻿using Assets;
+using Assets;
 using CorrelateLib;
 using DG.Tweening;
 using System;
