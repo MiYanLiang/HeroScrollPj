@@ -1071,7 +1071,7 @@ public class WarsUIManager : MonoBehaviour
         PlayAudioClip(13);
         isGettingStage = true; //限制返回主城时还能进入关卡
         if (PlayerDataForGame.instance.isJumping) return;
-        PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.MainScene, true);
+        PlayerDataForGame.instance.JumpSceneFun(GameSystem.GameScene.MainScene);
     }
 
     /// <summary>
