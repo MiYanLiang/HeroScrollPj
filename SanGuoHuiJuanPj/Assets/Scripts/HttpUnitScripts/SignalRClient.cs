@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
+using static Assets.System.WarModule.RespondAct;
 using ConnectionStates = BestHTTP.SignalRCore.ConnectionStates;
 using Json = CorrelateLib.Json;
 
@@ -64,7 +65,15 @@ public class SignalRClient : MonoBehaviour
     void OnApplicationFocus(bool isFocus)
     {
         if (!IsLogged || !isFocus) return;
-        if (SignalRClientConnection.Status != ConnectionStates.Connected) ReconnectServerWithTips();
+        switch (SignalRClientConnection.Status)
+        {
+            case ConnectionStates.Connected:
+            case ConnectionStates.Reconnecting:
+                return;
+            default:
+                ReconnectServerWithTips();
+                break;
+        }
     }
 
     public async Task<SigninResult> NegoToken(int zone, int createNew)
@@ -74,8 +83,8 @@ public class SignalRClient : MonoBehaviour
             Zone = zone;
             var content =
                 Json.Serialize(new TokenLoginModel(LoginToken, zone, float.Parse(Application.version), createNew));
-            var response = await Http.PostAsync(Server.TokenLogin, content);
-            return new SigninResult(response, await response.Content.ReadAsStringAsync());
+            var res = await Http.PostAsync(Server.TokenLogin, content, true);
+            return new SigninResult(res.isSuccess, res.code, res.data);
         }
         catch (Exception)
         {
@@ -97,8 +106,8 @@ public class SignalRClient : MonoBehaviour
             var res = await Http.PostAsync(_connInfo.Url + "api/TestServerSignIn", Json.Serialize(new[]
             {
                 connectionInfo.Username
-            }));
-            var infoText = await res.Content.ReadAsStringAsync();
+            }), true);
+            var infoText = res.data;
             connectionInfo = Json.Deserialize<SignalRConnectionInfo>(infoText);
         }
 #endif
@@ -204,7 +213,7 @@ public class SignalRClient : MonoBehaviour
         {
             var retry = await RetryPanel.AwaitRetryAsync(methodName);
             //注意这里返回false，表示不再重试
-            if (!retry) return false;
+            if (!retry || SignalRClientConnection.Status == ConnectionStates.Reconnecting) return false;
             //中间安插一个重连服务器的操作再重试
             var isSuccess = await ReconnectServerWithTips();
             if (isSuccess) return true;
@@ -225,14 +234,13 @@ public class SignalRClient : MonoBehaviour
 
         async Task<string> HttpRequestAsync()
         {
-            var response = await Http.SendAsync(HttpMethod.Post, 
+            var response = await Http.SendAsync(HttpMethod.Post,
                 $"{Server.ApiServer}{method}", serializedBag,
                 new (string, string)[]
                 {
                     ("bearer", _connInfo.AccessToken)
-                },
-                tokenSource?.Token ?? default);
-            var text = await response.Content.ReadAsStringAsync();
+                });
+            var text = response.data;
             return text;
         }
     }
@@ -344,6 +352,30 @@ public class SignalRClient : MonoBehaviour
 
             Code = (int)response.StatusCode;
             Content = content;
+        }
+
+        public SigninResult(bool isSuccess, HttpStatusCode code, string data)
+        {
+            if (!isSuccess)
+            {
+                State = SignInStates.Failed;
+                Message = code == HttpStatusCode.HttpVersionNotSupported
+                    ? "服务器维护中..."
+                    : "登录失败。";
+            }
+            else if (code == HttpStatusCode.NoContent)
+            {
+                State = SignInStates.NoContent;
+                Message = "该区并无数据，\n是否创建新角色";
+            }
+            else
+            {
+                State = SignInStates.Success;
+                Message = "登录成功!";
+            }
+
+            Code = (int)code;
+            Content = data;
         }
     }
 

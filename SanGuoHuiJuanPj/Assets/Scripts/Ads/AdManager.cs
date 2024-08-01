@@ -79,18 +79,13 @@ public class AdManager : AdControllerBase
         if (isInit) return;
         //if (AdAgentBase.instance != null) return;
         isInit = true;
-        InstanceAdControllerType(Ads.Pangle);
-        InstanceAdControllerType(Ads.Unity);
+        InitControllers();
         AdAgent?.Init(this);
-#if !UNITY_EDITOR
-        StartCoroutine(NextSecondRequestCache());
-#endif
     }
 
-    private IEnumerator NextSecondRequestCache()
+    void InitControllers()
     {
-        yield return new WaitForSeconds(1);
-        ControllersAdResolve();
+        foreach (var ad in AdFields.Select(a=>a.Ad).Distinct()) InstanceAdControllerType(ad);
     }
 
     public override void RequestShow(UnityAction<bool, string> requestAction)
@@ -111,7 +106,6 @@ public class AdManager : AdControllerBase
             if (success)
             {
                 requestAction?.Invoke(true, string.Empty);
-                ControllersAdResolve();
                 return;
             }
 
@@ -119,7 +113,6 @@ public class AdManager : AdControllerBase
             controller.RequestShow((s, m) =>
             {
                 requestAction?.Invoke(s, m);
-                ControllersAdResolve();
             });
         }
     }
@@ -127,17 +120,4 @@ public class AdManager : AdControllerBase
 
     public override void RequestLoad(UnityAction<bool, string> loadingAction) => loadingAction(true, string.Empty);
 
-    private void ControllersAdResolve()
-    {
-        PangleResolve(PangleController);
-    }
-
-    private void PangleResolve(AdControllerBase controller)
-    {
-        //var adController = (PangleAdController)controller;
-        //if (adController.Status == AdAgentBase.States.None ||
-        //    adController.Status == AdAgentBase.States.Closed ||
-        //    adController.Status == AdAgentBase.States.FailedToLoad)
-        //    adController.RequestLoad(adController.OnRequestLoadResult);
-    }
 }

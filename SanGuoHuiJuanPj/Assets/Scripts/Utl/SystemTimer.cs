@@ -144,12 +144,12 @@ public class SystemTimer : MonoBehaviour
     {
         var sw = new Stopwatch();
         sw.Start();
-        var response = await Http.GetAsync(TaobaoTimeStampApi);
+        var response = await Http.GetAsync(TaobaoTimeStampApi, false);
         sw.Stop();
 #if UNITY_EDITOR
         //DebugLog($"服务器返回[{jsonApi}]"+$"DateTimeNow:[{DateTime.Now.Ticks}]");
 #endif
-        if (!response.IsSuccess())
+        if (!response.isSuccess)
         {
             if (connectionFailureCount >= RetryLimit)
             {
@@ -166,7 +166,7 @@ public class SystemTimer : MonoBehaviour
 
         try
         {
-            var jsonApi = await response.Content.ReadAsStringAsync();
+            var jsonApi = response.data;
             var apiObj = Json.Deserialize<TaobaoJsonApi>(jsonApi);
             var serverTicks = long.Parse(apiObj.data.t);
             var serverTimeNow = UnixToDateTime(serverTicks).AddTicks(sw.ElapsedTicks);

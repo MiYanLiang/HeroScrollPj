@@ -41,26 +41,30 @@ public static class Server
     public static string TokenLogin { get; private set; } = "TokenLogin";
 
     public static string GameServer { get; private set; } =
-    "http://heroscroll.icefoxz.com/login/";
-    //"http://localhost:7071/api/";
+    "http://81.70.19.131/api";
+    //"https://localhost:5001/api/";
+    //"http://heroscroll.icefoxz.com/login/";
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     public static string ApiServer { get; set; } =
-    "https://localhost:5001/api/";
+    "https://81.70.19.131/api";
+    //"https://localhost:5001/api/";
     //"http://heroscroll.icefoxz.com/api/";
     //"http://43.138.221.139/api/";
     //"https://herostatetest.azurewebsites.net/api/";
     //"https://heroscrollapi.azurewebsites.net/api/";
-    //"http://localhost:7071/api/";
 #endif
 
     private static bool isInitialized;
     public static HttpClient InstanceClient()
     {
-        return new HttpClient()
+        var client = new HttpClient(new HttpClientHandler
         {
-            BaseAddress = new Uri(GameServer)
-        };
+            ServerCertificateCustomValidationCallback = (msg,cer,chain,errors)=>true,
+        });
+        var serverAddress = GameServer.Replace("/api", string.Empty);
+        client.BaseAddress = new Uri(serverAddress);
+        return client;
     }
 
     public static void Initialize(ServerFields fields)

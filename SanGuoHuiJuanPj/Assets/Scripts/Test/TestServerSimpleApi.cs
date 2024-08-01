@@ -40,8 +40,8 @@ public class TestServerSimpleApi : MonoBehaviour
 
     private async void RequestTestServerList()
     {
-        var respond = await Http.GetAsync(ServerGetListApi);
-        var json = await respond.Content.ReadAsStringAsync();
+        var respond = await Http.GetAsync(ServerGetListApi, false);
+        var json = respond.data;
         var list = Json.DeserializeList<TestStageUi.SimpleFormation>(json);
         UpdateTestStateList(list);
     }
@@ -95,11 +95,11 @@ public class TestServerSimpleApi : MonoBehaviour
 
     private async void CallChallengeApi(ChallengeSet challengeSet)
     {
-        var response = await Http.PostAsync(ServerChallengeApi, Json.Serialize(challengeSet));
+        var response = await Http.PostAsync(ServerChallengeApi, Json.Serialize(challengeSet), true);
         isBusy = false;
-        if (!response.IsSuccessStatusCode)
+        if (!response.isSuccess)
             return;
-        var json = await response.Content.ReadAsStringAsync();
+        var json = response.data;
         var result = Json.Deserialize<Versus.WarResult>(json);
         Versus.PlayResult(result);
     }

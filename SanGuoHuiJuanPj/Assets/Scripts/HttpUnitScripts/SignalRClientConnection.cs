@@ -69,7 +69,10 @@ public class SignalRClientConnection
             CloseConn(); //不用await，因为这个链接有可能释放不了而导致永远等待。
         }
 
-        _conn = InstanceHub(ConnectionInfo.Url, ConnectionInfo.AccessToken);
+        var url = ConnectionInfo.Url.StartsWith("http://")
+            ? ConnectionInfo.Url.TrimEnd('/') + "?access_token=" + ConnectionInfo.AccessToken 
+            : ConnectionInfo.Url;
+        _conn = InstanceHub(url, ConnectionInfo.AccessToken);
         _conn.OnError += Error;
         Application.quitting += OnDisconnect;
         _conn.On(EventStrings.ServerCall, OnServerCall);
@@ -92,6 +95,7 @@ public class SignalRClientConnection
         async void Error(HubConnection conn, string error)
         {
             PlayerDataForGame.instance.ShowStringTips("网络连接异常！重新连接...");
+            if (Status == ConnectionStates.Reconnecting) return;
             var isSuccess = await HubReconnectTask();
             var msg = "网络重连失败！";
             if (isSuccess) msg = "重新连接！";
@@ -103,6 +107,7 @@ public class SignalRClientConnection
     public async UniTask<bool> HubReconnectTask()
     {
         await Task.Delay(TimeSpan.FromSeconds(1));
+
         if (Status == ConnectionStates.Connected)
             return true;
         try

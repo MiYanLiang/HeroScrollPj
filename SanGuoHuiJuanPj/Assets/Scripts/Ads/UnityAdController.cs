@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using UnityEngine.Advertisements;
 using UnityEngine.Events;
 
@@ -21,7 +22,7 @@ public class UnityAdController : AdControllerBase
     {
 #if !UNITY_EDITOR
         Advertisement.Initialize(GameId, isDevTest);
-        LoadUnityAd(null);
+        LoadUnityAd(((_, _) => { }));
 #endif
     }
 

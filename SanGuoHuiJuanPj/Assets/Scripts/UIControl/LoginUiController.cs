@@ -200,8 +200,8 @@ public class LoginUiController : MonoBehaviour
         async Task RequestApiReset()
         {
             var response =
-                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedServer.Zone}", SignalRClient.instance.LoginToken);
-            var message = await response.Content.ReadAsStringAsync();
+                await Http.PostAsync($"{Server.RESET_GAMEPLAY_API}?zone={serverList.SelectedServer.Zone}", SignalRClient.instance.LoginToken, true);
+            var message = response.data;
             serverList.SetMessage(message);
         }
     }
@@ -220,9 +220,9 @@ public class LoginUiController : MonoBehaviour
 
     private async Task ResetAccountApi()
     {
-        var response = await Http.PostAsync(Server.RESET_GAMEPLAY_API,Json.Serialize(Server.GetUserInfo(resetAccount.username.text, resetAccount.password.text)));
+        var response = await Http.PostAsync(Server.RESET_GAMEPLAY_API,Json.Serialize(Server.GetUserInfo(resetAccount.username.text, resetAccount.password.text)), true);
         var message = "账号重置成功！";
-        if (!response.IsSuccessStatusCode) message = $"请求失败[{(int)response.StatusCode}]!";
+        if (!response.isSuccess) message = $"请求失败[{(int)response.code}]!";
         UnityMainThread.thread.RunNextFrame(() =>
         {
             OnResetAccountAction?.Invoke();
@@ -252,8 +252,8 @@ public class LoginUiController : MonoBehaviour
 
         async Task ReqChangePassword()
         {
-            var response = await Http.PostAsync(nameof(ChangePasswordApi), bag);
-            var message = await response.Content.ReadAsStringAsync();
+            var response = await Http.PostAsync(nameof(ChangePasswordApi), bag, true);
+            var message = response.data;
             var databag = DataBag.DeserializeBag(message);
             if (!databag.IsValid())
             {
@@ -306,7 +306,7 @@ public class LoginUiController : MonoBehaviour
         try
         {
             userInfo = await Http.PostAsync<UserInfo>(Server.PLAYER_REG_ACCOUNT_API,
-                Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)));
+                Json.Serialize(Server.GetUserInfo(register.username.text, register.password.text)), true);
         }
         catch (Exception)//为了防止任务报错
         {
@@ -353,12 +353,12 @@ public class LoginUiController : MonoBehaviour
     private async Task OneClickLogin()
     {
         var response = await Http.PostAsync(Server.DEVICE_LOGIN_API,
-            Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)));
-        if (!response.IsSuccessStatusCode)
+            Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)), true);
+        if (!response.isSuccess)
         {
-            DebugLog($"连接失败！[{response.StatusCode}]");
+            DebugLog($"连接失败！[{response.code}]");
             var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-            switch (response.StatusCode)
+            switch (response.code)
             {
                 case HttpStatusCode.Unauthorized:
                     severBackCode = ServerBackCode.ERR_PW_ERROR;
@@ -372,7 +372,7 @@ public class LoginUiController : MonoBehaviour
             return;
         }
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = response.data;
         var bag = DataBag.DeserializeBag(content);
         if (!bag.IsValid())
         {
@@ -387,12 +387,12 @@ public class LoginUiController : MonoBehaviour
     private async Task AccountLogin()
     {
         var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API,
-            Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)));
-        if (!response.IsSuccessStatusCode)
+            Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)), true);
+        if (!response.isSuccess)
         {
-            DebugLog($"连接失败！[{response.StatusCode}]");
+            DebugLog($"连接失败！[{response.code}]");
             var severBackCode = ServerBackCode.ERR_INVALIDOPERATION;
-            switch (response.StatusCode)
+            switch (response.code)
             {
                 case HttpStatusCode.Unauthorized:
                     severBackCode = ServerBackCode.ERR_PW_ERROR;
@@ -406,7 +406,7 @@ public class LoginUiController : MonoBehaviour
             return;
         }
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = response.data;
         var bag = DataBag.DeserializeBag(content);
         if (!bag.IsValid())
         {
@@ -440,14 +440,14 @@ public class LoginUiController : MonoBehaviour
     private async Task RequestUsernameToRegister()
     {
         var content = Json.Serialize(Server.GetUserInfo(null, null));
-        var response = await Http.PostAsync(Server.REQUEST_USERNAME_API, content);
+        var response = await Http.PostAsync(Server.REQUEST_USERNAME_API, content, true);
 
-        var uJson = await response.Content.ReadAsStringAsync();
+        var uJson = response.data;
         var user = Json.Deserialize<UserInfo>(uJson);
-        var isSuccess = response.IsSuccessStatusCode;
-        if (!isSuccess && response.StatusCode != HttpStatusCode.Unauthorized)
+        var isSuccess = response.isSuccess;
+        if (!isSuccess && response.code != HttpStatusCode.Unauthorized)
         {
-            OnLoginPageErrorDisplay((int)response.StatusCode);
+            OnLoginPageErrorDisplay((int)response.code);
             return;
         }
 

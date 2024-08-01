@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BestHTTP.SignalRCore;
 using CorrelateLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -92,5 +93,9 @@ public class ServerPanel : MonoBehaviour
         }
     }
 
-    private async void ReconnectWithTips() => await SignalR.ReconnectServerWithTips();
+    private async void ReconnectWithTips()
+    {
+        if (SignalR.Status == ConnectionStates.Reconnecting) return;
+        await SignalR.ReconnectServerWithTips();
+    }
 }

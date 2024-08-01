@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using Assets.Scripts.Utl;
+using BestHTTP.SignalRCore;
 using CorrelateLib;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -72,7 +73,7 @@ public class ApiPanel : MonoBehaviour
                 successAction(bag);
             else
                 failedAction(text);
-        }, method);
+        }, true, method);
     }
 #endif
 
@@ -189,12 +190,18 @@ public class ApiPanel : MonoBehaviour
         async UniTask DelayedReLogin()
         {
             await UniTask.Delay(TimeSpan.FromSeconds(1));
-            var isSuccess = await Client.ReconnectServerWithTips();
+            if(Client.Status != ConnectionStates.Connected)
+            {
+                if (Client.Status != ConnectionStates.Reconnecting)
+                {
+                    var isSuccess = await Client.ReconnectServerWithTips();
 
 #if UNITY_EDITOR
-            XDebug.Log<ServerPanel>(
-                $"Connection success = {isSuccess}");
+                    XDebug.Log<ServerPanel>(
+                        $"Connection success = {isSuccess}");
 #endif
+                }
+            }
             SetBusy(false);
         }
     }

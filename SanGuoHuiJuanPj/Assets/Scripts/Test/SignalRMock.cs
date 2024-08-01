@@ -31,7 +31,7 @@ public class SignalRMock : MonoBehaviour
             }
 
             TokenLogin(info);
-        }, "SignalRLoginTest");
+        }, false, "SignalRLoginTest");
         //var url = $"{Server.ApiServer}SignalRTestLogin?{ApiPanel.TestUserQuery(username)}";
         //Http.Post(url, string.Empty, text =>
         //{

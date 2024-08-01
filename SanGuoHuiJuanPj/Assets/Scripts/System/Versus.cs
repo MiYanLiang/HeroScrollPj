@@ -51,33 +51,33 @@ public class Versus : MonoBehaviour
     public const string CancelChallengeV1 = "CancelChallengeV1";
 
     public static void GetRkWars(Action<DataBag> apiAction) => Http.Get($"{RkApi}/{GetWarsV1}?charId={TestCharId}",
-        result => apiAction(OnProcessApi(result)), GetWarsV1);
+        result => apiAction(OnProcessApi(result)),true ,GetWarsV1);
 
     public static void GetRkWarStageInfo(int warId,int warIsd ,Action<DataBag> apiAction) => Http.Get(
-        $"{RkApi}/{GetStageV1}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", result => apiAction(OnProcessApi(result)), GetStageV1);
+        $"{RkApi}/{GetStageV1}?warId={warId}&warIsd={warIsd}&charId={TestCharId}", result => apiAction(OnProcessApi(result)), true, GetStageV1);
     public static void GetRkCheckpointFormation(int warId, int index, Action<DataBag> apiAction) => 
         Http.Get(
             $"{RkApi}/{GetGetFormationV1}?warId={warId}&charId={TestCharId}&index={index}",
-            result => apiAction(OnProcessApi(result)), GetGetFormationV1);
+            result => apiAction(OnProcessApi(result)), true, GetGetFormationV1);
 
     public static void GetRkCheckPointWarResult(int warId, int index, Action<DataBag> apiAction) =>
         Http.Get($"{RkApi}/{GetCheckPointResultV2}?warId={warId}&index={index}&charId={TestCharId}", result => apiAction(OnProcessApi(result)),
-            GetCheckPointResultV2);
+            true, GetCheckPointResultV2);
 
     public static void PostRkStartChallenge(int warId, int warIsd, int troopId, Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{StartChallengeV1}?charId={TestCharId}&warId={warId}&warIsd={warIsd}&troopId={troopId}",
             string.Empty,
-            result => apiAction(OnProcessApi(result)), StartChallengeV1);
+            result => apiAction(OnProcessApi(result)), true, StartChallengeV1);
 
     public static void PostRkSubmitFormation(int warId, int index, string content,
         Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{SubmitFormationV1}?charId={TestCharId}&warId={warId}&index={index}",
-            content, result => apiAction(OnProcessApi(result)),
+            content, result => apiAction(OnProcessApi(result)), true,
             SubmitFormationV1);
 
     public static void PostRkCancelChallenge(int warId, Action<DataBag> apiAction) =>
         Http.Post($"{RkApi}/{CancelChallengeV1}?warId={warId}&charId={TestCharId}", string.Empty, result => apiAction(OnProcessApi(result)),
-            CancelChallengeV1);
+            true, CancelChallengeV1);
 #else
     public static string GetWarsV1 { get; set; }
     public static string GetStageV1 { get; set; }
