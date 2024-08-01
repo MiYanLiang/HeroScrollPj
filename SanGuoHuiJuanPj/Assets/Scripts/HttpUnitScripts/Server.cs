@@ -41,8 +41,8 @@ public static class Server
     public static string TokenLogin { get; private set; } = "TokenLogin";
 
     public static string GameServer { get; private set; } =
-    "http://heroscroll.icefoxz.com/login/";
-    //"http://localhost:7071/api/";
+    "https://81.70.19.131/api/";
+    //"http://heroscroll.icefoxz.com/login/";
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     public static string ApiServer { get; set; } =
@@ -57,7 +57,10 @@ public static class Server
     private static bool isInitialized;
     public static HttpClient InstanceClient()
     {
-        return new HttpClient()
+        return new HttpClient(new HttpClientHandler()
+        {
+            ServerCertificateCustomValidationCallback = ((message, certificate2, arg3, arg4) => true)
+        })
         {
             BaseAddress = new Uri(GameServer)
         };
