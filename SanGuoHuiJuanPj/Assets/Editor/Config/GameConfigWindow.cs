@@ -1,13 +1,8 @@
 ﻿using CorrelateLib;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Windows;
 using File = System.IO.File;
 
 namespace Assets.Editor.Config
@@ -29,7 +24,7 @@ namespace Assets.Editor.Config
 
         public static bool isMessageDisplay;
         [MenuItem("GameConfig/Window")]
-        static void Init()
+        public static void Init()
         {
             var window = GetWindow<GameConfigWindow>();
             window.Show();

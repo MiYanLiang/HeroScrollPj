@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using CorrelateLib;
 using UnityEngine;
+using static System.Net.WebRequestMethods;
 
 public static class Server
 {
@@ -41,13 +42,17 @@ public static class Server
     public static string TokenLogin { get; private set; } = "TokenLogin";
 
     public static string GameServer { get; private set; } =
-    "http://81.70.19.131/api";
+    "https://82.157.210.245/api";
+    //"https://hero.icefoxz.com/api";
+    //"http://81.70.19.131/api";
     //"https://localhost:5001/api/";
     //"http://heroscroll.icefoxz.com/login/";
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     public static string ApiServer { get; set; } =
-    "https://81.70.19.131/api";
+    "https://82.157.210.245/api";
+     //"https://hero.icefoxz.com/api";
+    //"https://81.70.19.131/api";
     //"https://localhost:5001/api/";
     //"http://heroscroll.icefoxz.com/api/";
     //"http://43.138.221.139/api/";
@@ -62,7 +67,7 @@ public static class Server
         {
             ServerCertificateCustomValidationCallback = (msg,cer,chain,errors)=>true,
         });
-        var serverAddress = GameServer.Replace("/api", string.Empty);
+        var serverAddress = GameServer.TrimEnd("/api/".ToCharArray());
         client.BaseAddress = new Uri(serverAddress);
         return client;
     }

@@ -48,7 +48,11 @@ public class AdTestUi : MonoBehaviour
             return;
         }
 
-        AdControllers = new AdControllerBase[] { manager.PangleController, manager.UnityAdController };
+        AdControllers = new AdControllerBase[]
+        {
+            manager.PangleController, 
+            //manager.UnityAdController
+        };
         foreach (var ad in AdControllers)
         {
             var ui = Instantiate(AdPrefab, ScrollRect.content.transform);
