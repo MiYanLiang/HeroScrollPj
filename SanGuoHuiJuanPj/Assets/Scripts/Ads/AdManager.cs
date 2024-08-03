@@ -27,7 +27,7 @@ public class AdManager : AdControllerBase
     public AdAgentBase AdAgent => adAgent;
     //public DoNewAdController DoNewAdController { get; private set; }
     //public AdmobController AdmobController { get; private set; }
-    public UnityAdController UnityAdController { get; private set; }
+    //public UnityAdController UnityAdController { get; private set; }
     //public MoPubController MoPubController { get; private set; }
     //public IronSourceController IronSourceController { get; private set; }
     public override string StatusDetail => Status.ToString();
@@ -49,11 +49,12 @@ public class AdManager : AdControllerBase
         {
             case Ads.Unity:
             {
-                var ad = gameObject.AddComponent<UnityAdController>();
-                UnityAdController = ad;
-                ad.Name = Ads.Unity.ToString();
-                ad.Init();
-                return ad;
+            //    var ad = gameObject.AddComponent<UnityAdController>();
+            //    UnityAdController = ad;
+            //    ad.Name = Ads.Unity.ToString();
+            //    ad.Init();
+            //    return ad;
+            return null;
             }
             case Ads.Pangle:
             {
@@ -109,11 +110,11 @@ public class AdManager : AdControllerBase
                 return;
             }
 
-            controller = UnityAdController;
-            controller.RequestShow((s, m) =>
-            {
-                requestAction?.Invoke(s, m);
-            });
+            //controller = UnityAdController;
+            //controller.RequestShow((s, m) =>
+            //{
+            //    requestAction?.Invoke(s, m);
+            //});
         }
     }
 
