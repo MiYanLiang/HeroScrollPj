@@ -386,8 +386,8 @@ public class LoginUiController : MonoBehaviour
 
     private async Task AccountLogin()
     {
-        var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API,
-            Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)), true);
+        var response = await Http.PostAsync(Server.SIGNALR_LOGIN_API, Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)), true);
+        //var response = await Http.PostAsync(Server.GameServer, Json.Serialize(Server.GetUserInfo(login.username.text, login.password.text)), true);
         if (!response.isSuccess)
         {
             DebugLog($"连接失败！[{response.code}]");
@@ -445,7 +445,7 @@ public class LoginUiController : MonoBehaviour
         var uJson = response.data;
         var user = Json.Deserialize<UserInfo>(uJson);
         var isSuccess = response.isSuccess;
-        if (!isSuccess && response.code != HttpStatusCode.Unauthorized)
+        if (!isSuccess)
         {
             OnLoginPageErrorDisplay((int)response.code);
             return;
