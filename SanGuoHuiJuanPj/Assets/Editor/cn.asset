@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47dce7a34b74320499b89990464516a9, type: 3}
   m_Name: cn
   m_EditorClassIdentifier: 
-  ServerUrl: https://81.70.19.131/api/
-  ApiServer: https://81.70.19.131/api/
+  ServerUrl: https://82.157.210.245/api/
+  ApiServer: https://82.157.210.245/api/
   PLAYER_SAVE_DATA_UPLOAD_API: UploadSaveData
   INSTANCE_ID_API: GenerateUserId
   REQUEST_USERNAME_API: RequestUsername
