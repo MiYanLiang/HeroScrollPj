@@ -42,18 +42,20 @@ public static class Server
     public static string TokenLogin { get; private set; } = "TokenLogin";
 
     public static string GameServer { get; private set; } =
-    "https://82.157.210.245/api";
+    "https://localhost:5001/api/";
+    //"https://82.157.210.245/api";
+        //"https://43.138.221.139/login/";
     //"https://hero.icefoxz.com/api";
     //"http://81.70.19.131/api";
-    //"https://localhost:5001/api/";
     //"http://heroscroll.icefoxz.com/login/";
     //"http://43.138.221.139/login/";
     //"https://motahero.azurewebsites.net/api/";
     public static string ApiServer { get; set; } =
-    "https://82.157.210.245/api";
-     //"https://hero.icefoxz.com/api";
+    "https://localhost:5001/api/";
+    //"https://82.157.210.245/api";
+    //"http://43.138.221.139/api/";
+    //"https://hero.icefoxz.com/api";
     //"https://81.70.19.131/api";
-    //"https://localhost:5001/api/";
     //"http://heroscroll.icefoxz.com/api/";
     //"http://43.138.221.139/api/";
     //"https://herostatetest.azurewebsites.net/api/";
@@ -149,7 +151,11 @@ public static class Server
                 break;
             case ServerBackCode.ERR_INVALIDOPERATION:
             default:
-                message = "服务器响应错误";
+                message = code switch
+                {
+                    401 => "设备已绑定，无法注册。",
+                    _ => $"错误 = {code}"
+                };
                 break;
         }
 
